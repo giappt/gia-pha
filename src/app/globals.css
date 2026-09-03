@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 15, 23, 42;
+  --surface-bg: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 248, 250, 252;
+    --surface-bg: #090e1a;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background-color: var(--surface-bg);
+  background-image: 
+    radial-gradient(ellipse 70% 45% at 50% -5%, rgba(16, 185, 129, 0.07), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 85% 20%, rgba(245, 158, 11, 0.04), transparent 60%);
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-image: 
+      radial-gradient(ellipse 70% 45% at 50% -5%, rgba(16, 185, 129, 0.12), transparent 70%),
+      radial-gradient(ellipse 40% 30% at 85% 20%, rgba(245, 158, 11, 0.05), transparent 60%);
+  }
+}
