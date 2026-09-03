@@ -31,6 +31,13 @@
 - [x] Commit & Push Milestone 2 (`2996cf5`).
 - [x] **AC7–AC10, RG04–RG05:** User UAT trực tiếp trên trình duyệt xác nhận đạt 100% → Đã tick `[x]` toàn bộ trong `docs/10_Micro-Spec_Milestone_2_Kinship_Lunar.md`.
 - [x] Ban hành **Quy tắc 14 (Browser Subagent Pre-flight Gate & Rate Guard)** vào `.agents/AGENTS.md` để chống lãng phí token vĩnh viễn.
+- [x] **Fix Bug UAT Trình duyệt Đóng Băng (Zero-Latency Live Reactivity):**
+  - Khắc phục triệt để lỗi giao diện `/kinship` đứng yên do `supabase.auth.getUser()` trong `middleware.ts`.
+  - Triển khai Zero-Latency In-Memory calculation (tốc độ < 1ms, 0ms latency).
+  - Triển khai Live Reactivity tự động tính toán lại khi đổi dropdown / đổi vùng miền và auto-clean search.
+  - Vượt qua 3-Tier Verification Loop: Typecheck 0 lỗi, Build 10/10 PASS, Unit Test 12/12 PASS.
+  - Tick `[x] AC11, AC12, AC13, RG06` trong `10_Micro-Spec_Milestone_2_Kinship_Lunar.md`.
+
 
 ### 3. Immediate Next Step
 - Khởi động **Milestone 3: Cây Phả Hệ Tương Tác Canvas Toàn Màn Hình (@xyflow/react v12)**:

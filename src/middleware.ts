@@ -13,7 +13,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - images, icons (public media)
+     * - api/kinship (Zero-latency public kinship endpoint)
      */
-    '/((?!_next/static|_next/image|favicon.ico|icons|images|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icons|images|api/kinship|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
+

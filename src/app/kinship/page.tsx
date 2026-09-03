@@ -35,6 +35,9 @@ interface MemberOption {
 }
 
 import { MOCK_CLAN_MEMBERS } from '@/lib/kinship-engine/mock-data';
+import { findLowestCommonAncestor } from '@/lib/kinship-engine/lca-finder';
+import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
+import type { Member } from '@/types/database';
 
 const INITIAL_MEMBERS: MemberOption[] = MOCK_CLAN_MEMBERS.map((m) => ({
   id: m.id,
@@ -48,29 +51,58 @@ const INITIAL_MEMBERS: MemberOption[] = MOCK_CLAN_MEMBERS.map((m) => ({
   has_parents: Boolean(m.father_id || m.mother_id),
 }));
 
+const MEMBERS_MAP = new Map<string, Member>(MOCK_CLAN_MEMBERS.map((m) => [m.id, m]));
+
+/**
+ * Tính toán quan hệ xưng hô tức thì 0ms (In-Memory Zero-Latency)
+ * Hoạt động 100% offline, không bị ảnh hưởng bởi nghẽn mạng hay middleware auth
+ */
+function computeKinshipDirect(pA: string, pB: string, reg: KinshipRegion): KinshipResolution | null {
+  if (!pA || !pB || pA === pB) return null;
+  const memberA = MEMBERS_MAP.get(pA);
+  const memberB = MEMBERS_MAP.get(pB);
+  if (!memberA || !memberB) return null;
+
+  const lcaResult = findLowestCommonAncestor(pA, pB, MEMBERS_MAP);
+  const resolution = resolveKinshipTerms(lcaResult, memberA, memberB, reg);
+
+  const isMember1Unlinked = !memberA.father_id && !memberA.mother_id && memberA.generation_number > 1;
+  const isMember2Unlinked = !memberB.father_id && !memberB.mother_id && memberB.generation_number > 1;
+  if (lcaResult.relationshipType === 'unrelated' && (isMember1Unlinked || isMember2Unlinked)) {
+    const unlinkedName = isMember1Unlinked ? memberA.full_name : memberB.full_name;
+    resolution.explanation = `Thành viên "${unlinkedName}" chưa được liên kết cha/mẹ trong cây phả hệ, do đó chưa thể xác định quan hệ xưng hô.`;
+  }
+
+  return resolution;
+}
+
+const DEFAULT_A = '30000000-0000-0000-0000-000000000001'; // Hải (Chi 1)
+const DEFAULT_B = '30000000-0000-0000-0000-000000000003'; // Hùng (Chi 2)
+
 export default function KinshipPage() {
-  const [members, setMembers] = useState<MemberOption[]>(INITIAL_MEMBERS);
-  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [members] = useState<MemberOption[]>(INITIAL_MEMBERS);
 
   // Selection states: Mặc định chọn Hải (Chi 1) và Hùng (Chi 2)
-  const [personAId, setPersonAId] = useState<string>('30000000-0000-0000-0000-000000000001');
-  const [personBId, setPersonBId] = useState<string>('30000000-0000-0000-0000-000000000003');
+  const [personAId, setPersonAId] = useState<string>(DEFAULT_A);
+  const [personBId, setPersonBId] = useState<string>(DEFAULT_B);
   const [region, setRegion] = useState<KinshipRegion>('north');
 
   // Search filter states
   const [searchA, setSearchA] = useState('');
   const [searchB, setSearchB] = useState('');
 
-  // Resolution states
-  const [result, setResult] = useState<KinshipResolution | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
+  // Resolution states: Khởi tạo kết quả NGAY LẬP TỨC 0ms trên client
+  const [result, setResult] = useState<KinshipResolution | null>(() =>
+    computeKinshipDirect(DEFAULT_A, DEFAULT_B, 'north')
+  );
+  const [isCalculating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Accordion state for smart folding middle generations
   const [isExpandedMiddle, setIsExpandedMiddle] = useState(false);
 
-  // Tra cứu vai vế xưng hô
-  const handleCalculate = async (pA = personAId, pB = personBId, reg = region) => {
+  // Tra cứu vai vế xưng hô tức thì 0ms (In-Memory Live Reactive)
+  const handleCalculate = (pA = personAId, pB = personBId, reg = region) => {
     if (!pA || !pB) {
       setErrorMessage('Vui lòng chọn đầy đủ cả 2 thành viên để xác định vai vế.');
       return;
@@ -83,63 +115,40 @@ export default function KinshipPage() {
       return;
     }
 
-    try {
-      setIsCalculating(true);
-      setErrorMessage(null);
-      setIsExpandedMiddle(false); // Reset trạng thái nén khi tính toán mới
+    setErrorMessage(null);
+    setIsExpandedMiddle(false);
 
-      const res = await fetch(
-        `/api/kinship?p1=${encodeURIComponent(pA)}&p2=${encodeURIComponent(
-          pB
-        )}&region=${encodeURIComponent(reg)}`
-      );
-      const json = await res.json();
-
-      if (!res.ok || !json.success) {
-        setErrorMessage(json.error || 'Không thể tra cứu quan hệ phả hệ.');
-        setResult(null);
-      } else {
-        setResult(json.data);
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Lỗi mạng khi kết nối máy chủ.');
+    const directRes = computeKinshipDirect(pA, pB, reg);
+    if (directRes) {
+      setResult(directRes);
+    } else {
+      setErrorMessage('Không tìm thấy dữ liệu phả hệ của thành viên được chọn.');
       setResult(null);
-    } finally {
-      setIsCalculating(false);
     }
   };
 
-  // 1. Fetch & Auto-calculate on initial mount or URL parameters
+  // 1. Đồng bộ URL parameters nếu truy cập qua deep link
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const p1 = urlParams.get('p1') || '30000000-0000-0000-0000-000000000001';
-    const p2 = urlParams.get('p2') || '30000000-0000-0000-0000-000000000003';
-    const reg = (urlParams.get('region') as KinshipRegion) || 'north';
+    const p1 = urlParams.get('p1');
+    const p2 = urlParams.get('p2');
+    const reg = (urlParams.get('region') as KinshipRegion) || region;
 
-    setPersonAId(p1);
-    setPersonBId(p2);
-    setRegion(reg);
-    handleCalculate(p1, p2, reg);
-
-    // Đồng bộ thêm dữ liệu mới từ backend nếu có
-    fetch('/api/kinship?action=members')
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.success && json.data?.members) {
-          setMembers(json.data.members);
-        }
-      })
-      .catch((e) => console.error('Error fetching members:', e));
+    if (p1 && p2) {
+      setPersonAId(p1);
+      setPersonBId(p2);
+      setRegion(reg);
+      handleCalculate(p1, p2, reg);
+    }
   }, []);
 
-  // 3. Đảo vai A ↔ B (TC07)
+  // 2. Đảo vai A ↔ B (TC07)
   const handleSwapRoles = () => {
     const tempA = personAId;
     const tempB = personBId;
     setPersonAId(tempB);
     setPersonBId(tempA);
 
-    // Nếu đã có kết quả trước đó, tự động tính lại ngay lập tức
     if (tempB && tempA && tempB !== tempA) {
       handleCalculate(tempB, tempA, region);
     }
@@ -225,8 +234,12 @@ export default function KinshipPage() {
                   id="person-a-select"
                   value={personAId}
                   onChange={(e) => {
-                    setPersonAId(e.target.value);
+                    const newA = e.target.value;
+                    setPersonAId(newA);
                     setErrorMessage(null);
+                    if (newA && personBId && newA !== personBId) {
+                      handleCalculate(newA, personBId, region);
+                    }
                   }}
                   className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
                 >
@@ -285,8 +298,12 @@ export default function KinshipPage() {
                   id="person-b-select"
                   value={personBId}
                   onChange={(e) => {
-                    setPersonBId(e.target.value);
+                    const newB = e.target.value;
+                    setPersonBId(newB);
                     setErrorMessage(null);
+                    if (personAId && newB && personAId !== newB) {
+                      handleCalculate(personAId, newB, region);
+                    }
                   }}
                   className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
                 >
@@ -313,6 +330,8 @@ export default function KinshipPage() {
               type="button"
               id="sample-tc08-btn"
               onClick={() => {
+                setSearchA('');
+                setSearchB('');
                 const idHai = '30000000-0000-0000-0000-000000000001';
                 const idMinh = '40000000-0000-0000-0000-000000000001';
                 setPersonAId(idHai);
@@ -327,6 +346,8 @@ export default function KinshipPage() {
               type="button"
               id="sample-tc10-btn"
               onClick={() => {
+                setSearchA('');
+                setSearchB('');
                 const idHung = '30000000-0000-0000-0000-000000000003';
                 const idHai = '30000000-0000-0000-0000-000000000001';
                 setPersonAId(idHung);
@@ -342,6 +363,8 @@ export default function KinshipPage() {
               type="button"
               id="sample-tc09-btn"
               onClick={() => {
+                setSearchA('');
+                setSearchB('');
                 const idKhoi = '10000000-0000-0000-0000-000000000001';
                 const idAn = '70000000-0000-0000-0000-000000000001';
                 setPersonAId(idKhoi);
@@ -356,6 +379,8 @@ export default function KinshipPage() {
               type="button"
               id="sample-tc11-btn"
               onClick={() => {
+                setSearchA('');
+                setSearchB('');
                 const idNam = '40000000-0000-0000-0000-000000000002';
                 const idTam = '40000000-0000-0000-0000-000000000003';
                 setPersonAId(idNam);
@@ -367,6 +392,7 @@ export default function KinshipPage() {
               🤝 Con Nuôi (Nam & Tâm)
             </button>
           </div>
+
 
           {/* Region Segmented Controls */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -433,7 +459,7 @@ export default function KinshipPage() {
             <button
               type="button"
               id="calculate-kinship-btn"
-              disabled={isCalculating || isLoadingMembers || isSamePerson}
+              disabled={isSamePerson}
               onClick={() => handleCalculate()}
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-sm shadow-emerald-700/20 transition-all"
             >
