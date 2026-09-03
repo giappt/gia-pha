@@ -1,6 +1,6 @@
 ---
 Parent-Profile: software-engineer
-Profile-Version: 4
+Profile-Version: 5
 ---
 
 # PROJECT-SCOPED RULES (FAT - FAMILY TREE MANAGEMENT SYSTEM)
@@ -38,10 +38,14 @@ Dưới đây là các nguyên tắc TỐI THƯỢNG mà AI Agent BẮT BUỘC P
 ## 5. 3-TIER VERIFICATION LOOP (VÒNG LẶP KIỂM CHỨNG 3 TẦNG)
 - Code xong **TUYỆT ĐỐI CẤM** báo cáo hoàn thành ngay cho User.
 - Bắt buộc chạy qua 3 tầng kiểm chứng:
-  1. **Tầng 1 (Compile & Build):** `next build` / TypeScript sạch 100% 0 lỗi.
-  2. **Tầng 2 (Thực thi Test Cases Tự động):** Chạy Unit Test hoặc dùng `browser_subagent` tự động mở trình duyệt click, tương tác và kiểm tra DOM/Console log khớp với từng Test Case trong Spec.
-  3. **Tầng 3 (Regression Guard):** Kiểm tra các tính năng lân cận (pan/zoom, tìm kiếm, modal, dark mode) để chống thoái lui.
-- Chỉ khi TẤT CẢ Test Cases báo PASS thực nghiệm mới được phép tick `- [x] AC` trong Micro-Spec và mời User UAT.
+  1. **Tầng 1 (Compile & Build):** `next build` / TypeScript sạch 100% 0 lỗi (`npm run typecheck`).
+  2. **Tầng 2 (Thực thi Test Cases Phân Tách - Decoupled Verification):**
+     - **Với Logic / Thuật toán / Data / API:** Bắt buộc chạy Unit Test (`npm test` / scripts) Pass 100%. Bằng chứng thực nghiệm là Test Log output.
+     - **Với Giao diện UI / Visual / CSS / Text / Static DOM:**
+       - 🚫 **LỆNH CẤM TRÌNH DUYỆT (BROWSER ACTIVE OVERRIDE):** Khi User đang mở trình duyệt (Browser State is `[ACTIVE]`) HOẶC đối với các tinh chỉnh UI (đổi text, ẩn/hiển thị thẻ, đổi màu, sửa layout tĩnh) $\rightarrow$ **CẤM TUYỆT ĐỐI dùng `browser_subagent`**. Mọi khâu thẩm định giao diện thuộc về User UAT trực tiếp trên màn hình đang mở.
+       - Chỉ được triệu hồi `browser_subagent` khi: (1) Headless mode không có User ngồi máy; HOẶC (2) User đích thân yêu cầu chạy browser subagent; HOẶC (3) Luồng E2E tương tác phức tạp qua nhiều trang.
+  3. **Tầng 3 (Regression Guard):** Chạy Unit test chống thoái lui và kiểm tra build để bảo vệ các tính năng lân cận.
+- Sau khi Tầng 1 và Unit Test Tầng 2 đạt PASS 100%, AI được phép tick `- [x] AC` và kính mời User nghiệm thu thực tế (Human UAT).
 
 ## 6. HUMAN-IN-THE-LOOP & TEMPLATE
 - **Human-in-the-loop:** Ở mỗi bước chuyển tiếp giữa các Phase tài liệu hoặc giữa khâu "Lên Spec" và "Code", luôn phải **DỪNG LẠI** và hỏi ý kiến User. Chỉ code khi được phép.
@@ -81,15 +85,15 @@ Naming_Convention: Identical
 ## 13. SPEC CONTRACT & TEST TRUTH HIERARCHY (CẤP BẬC CHÂN LÝ SPEC & TEST)
 - **Mục 7 trong Micro-Spec là Chân lý Tối cao:** Mã nguồn (Code) chỉ là công nhân phục tùng Test Cases trong Spec.
 - **Quy trình Trạng thái Rạch ròi:** Mọi tiêu chí test ban đầu phải ở dạng `- [ ] AC_i`. Code thi công cho đến khi test PASS 100% mới được chuyển sang `- [x] AC_i`.
-- **Cấm Tick [x] bằng niềm tin:** Bắt buộc phải có bằng chứng thực nghiệm (Test Log / Browser Run Output) chứng minh AC thỏa mãn trước khi báo User nghiệm thu.
+- **Cấm Tick [x] bằng niềm tin:** Bắt buộc phải có bằng chứng thực nghiệm rõ ràng: (1) Với Logic: Output log Unit Test pass 100%; (2) Với UI: Compile/Typecheck 0 lỗi + DOM review sạch + nghiệm thu hiển thị thực tế (Human UAT).
 
-## 14. BROWSER SUBAGENT PRE-FLIGHT GATE & RATE GUARD (CỔNG KIỂM ĐỊNH TRÌNH DUYỆT & CHỐNG LÃNG PHÍ TOKEN)
-- **Cấm dùng Browser để mò lỗi (No Trial-and-Error Debugging):** Tuyệt đối cấm dùng `browser_subagent` để mò lỗi hoặc thử-sai trạng thái UI. Mọi phân tích trạng thái bất đồng bộ, hydration hay rendering phải giải quyết trước bằng đọc code, phân tích console log, hoặc chạy lệnh `curl`.
-- **Pre-flight Gate Bắt buộc:** Trước khi triệu hồi `browser_subagent`, hệ thống bắt buộc phải thỏa mãn 3 điều kiện tiên quyết:
+## 14. BROWSER SUBAGENT PRE-FLIGHT GATE & RATE GUARD (CỔNG KIỂM ĐỊNH TRÌNH DUYỆT & KHÓA NGĂN SÁCH BƯỚC)
+- **Cấm tuyệt đối dùng Browser để mò lỗi (No Trial-and-Error):** Tuyệt đối cấm để `browser_subagent` tự ý mò mẫm, cuộn trang, click dò dẫm hàng chục bước. Mọi phân tích trạng thái phải giải quyết bằng đọc code hoặc API test trước.
+- **Browser Active Override:** Khi User đang mở trình duyệt (Browser State is `[ACTIVE]`) HOẶC chỉ là chỉnh sửa UI tĩnh $\rightarrow$ **CẤM GỌI SUBAGENT**. Mời User kiểm tra trực tiếp.
+- **Pre-flight Gate Bắt buộc (Khi được phép dùng subagent):**
   1. Compile & Build pass 100% 0 lỗi (`next build` / `npm run typecheck`).
   2. Toàn bộ Unit Test thực thi PASS 100%.
-  3. Dùng `curl` kiểm tra endpoint cục bộ để xác nhận payload API trả về đúng và đầy đủ cấu trúc mong đợi.
-- **Quy tắc Single-Shot Verification:** Gom toàn bộ kịch bản test và chụp bằng chứng vào **1 lần chạy browser subagent duy nhất**. Tuyệt đối không chia nhỏ thành nhiều lần gọi liên tiếp.
-- **Dừng lại khi Thất bại (Hard Stop on Failure):** Nếu lần chạy browser đầu tiên thất bại hoặc phát sinh lỗi ngoài dự kiến $\rightarrow$ DỪNG LẠI NGAY LẬP TỨC và xin ý kiến User (hoặc mời User UAT bằng tay), nghiêm cấm tự ý retry liên tục làm cạn kiệt quota (`429 Resource Exhausted`).
-- **Khóa Độ Phân Giải (Resolution Anchor):** Mọi lệnh giao task cho subagent bắt buộc phải yêu cầu resize viewport về chuẩn cố định `1280x800` ngay ở bước đầu tiên để tránh trượt tọa độ giao diện responsive (do viewport mặc định 2510px gây click trượt ra ngoài lề).
+  3. Dùng `curl` kiểm tra endpoint cục bộ để xác nhận payload API trả về đúng.
+- **Khóa Ngân Sách Bước Cứng (Hard Step Budget $\le 5$ actions):** Mọi task giao cho `browser_subagent` bắt buộc phải có câu lệnh giới hạn: *"Dừng lại ngay sau tối đa 3-5 hành động. Tuyệt đối cấm tự ý click/scroll/type lặp lại thử-sai."* Nếu một thao tác không thành công ngay lần đầu $\rightarrow$ DỪNG LẠI NGAY LẬP TỨC và báo cáo, nghiêm cấm retry liên tục gây cạn kiệt quota (`429 Resource Exhausted`).
+- **Khóa Độ Phân Giải (Resolution Anchor):** Mọi lệnh giao task cho subagent bắt buộc phải yêu cầu resize viewport về chuẩn cố định `1280x800` ngay ở bước đầu tiên.
 

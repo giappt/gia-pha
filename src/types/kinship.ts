@@ -11,6 +11,33 @@ export type RelationshipType =
   | 'in_law'
   | 'unrelated';
 
+export type KinshipCategory =
+  | 'direct'
+  | 'same_gen'
+  | 'paternal_uncle_aunt'
+  | 'maternal_uncle_aunt'
+  | 'in_law_descendant'
+  | 'grand_collateral';
+
+export interface KinshipTermRule {
+  id: string;
+  category: KinshipCategory;
+  categoryLabel: string;
+  name: string;
+  context: string;
+  termSenior: string; // B gọi A khi A là vai trên
+  termJunior: string; // A gọi B khi B là vai dưới
+  note?: string;
+}
+
+export type CustomKinshipDictionary = Record<
+  string,
+  {
+    termSenior: string;
+    termJunior: string;
+  }
+>;
+
 export interface KinshipPathNode {
   id: string;
   name: string;
@@ -43,6 +70,15 @@ export interface ComparisonFacts {
   summary: string;
 }
 
+export interface KinshipContextualTerms {
+  formalTermAtoB: string; // Trong nghi lễ họ tộc (VD: "Bác họ", "Cháu họ")
+  formalTermBtoA: string;
+  dailyTermAtoB: string; // Giao tiếp thường nhật / theo tuổi tác (VD: "Bác", "Anh/Chị", "Em")
+  dailyTermBtoA: string;
+  guidanceA: string; // "Bạn xưng: Cháu — Gọi đối phương: Bác"
+  guidanceB: string;
+}
+
 export interface KinshipResolution {
   termAtoB: string; // A gọi B là gì (VD: "Bác họ", "Chú họ", "Anh họ")
   termBtoA: string; // B gọi A là gì (VD: "Cháu họ", "Em họ")
@@ -58,6 +94,7 @@ export interface KinshipResolution {
   customsBadge?: string; // Huy hiệu nguyên tắc phong tục
   proverbQuote?: string; // Lời tục ngữ / danh ngôn cổ phong
   comparisonFacts?: ComparisonFacts; // Bảng so sánh trực diện tương quan
+  contextual?: KinshipContextualTerms; // Gợi ý xưng hô theo ngữ cảnh họ tộc vs đời thường
 }
 
 export interface LunarDate {

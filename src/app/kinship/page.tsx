@@ -38,6 +38,7 @@ import { MOCK_CLAN_MEMBERS } from '@/lib/kinship-engine/mock-data';
 import { findLowestCommonAncestor } from '@/lib/kinship-engine/lca-finder';
 import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
 import type { Member } from '@/types/database';
+import type { CustomKinshipDictionary } from '@/types/kinship';
 
 const INITIAL_MEMBERS: MemberOption[] = MOCK_CLAN_MEMBERS.map((m) => ({
   id: m.id,
@@ -57,14 +58,19 @@ const MEMBERS_MAP = new Map<string, Member>(MOCK_CLAN_MEMBERS.map((m) => [m.id, 
  * Tính toán quan hệ xưng hô tức thì 0ms (In-Memory Zero-Latency)
  * Hoạt động 100% offline, không bị ảnh hưởng bởi nghẽn mạng hay middleware auth
  */
-function computeKinshipDirect(pA: string, pB: string, reg: KinshipRegion): KinshipResolution | null {
+function computeKinshipDirect(
+  pA: string,
+  pB: string,
+  reg: KinshipRegion,
+  customDict?: CustomKinshipDictionary | null
+): KinshipResolution | null {
   if (!pA || !pB || pA === pB) return null;
   const memberA = MEMBERS_MAP.get(pA);
   const memberB = MEMBERS_MAP.get(pB);
   if (!memberA || !memberB) return null;
 
   const lcaResult = findLowestCommonAncestor(pA, pB, MEMBERS_MAP);
-  const resolution = resolveKinshipTerms(lcaResult, memberA, memberB, reg);
+  const resolution = resolveKinshipTerms(lcaResult, memberA, memberB, reg, customDict);
 
   const isMember1Unlinked = !memberA.father_id && !memberA.mother_id && memberA.generation_number > 1;
   const isMember2Unlinked = !memberB.father_id && !memberB.mother_id && memberB.generation_number > 1;
@@ -86,6 +92,7 @@ export default function KinshipPage() {
   const [personAId, setPersonAId] = useState<string>(DEFAULT_A);
   const [personBId, setPersonBId] = useState<string>(DEFAULT_B);
   const [region, setRegion] = useState<KinshipRegion>('north');
+  const [customDict, setCustomDict] = useState<CustomKinshipDictionary | null>(null);
 
   // Search filter states
   const [searchA, setSearchA] = useState('');
@@ -102,7 +109,12 @@ export default function KinshipPage() {
   const [isExpandedMiddle, setIsExpandedMiddle] = useState(false);
 
   // Tra cứu vai vế xưng hô tức thì 0ms (In-Memory Live Reactive)
-  const handleCalculate = (pA = personAId, pB = personBId, reg = region) => {
+  const handleCalculate = (
+    pA = personAId,
+    pB = personBId,
+    reg = region,
+    dict = customDict
+  ) => {
     if (!pA || !pB) {
       setErrorMessage('Vui lòng chọn đầy đủ cả 2 thành viên để xác định vai vế.');
       return;
@@ -118,7 +130,7 @@ export default function KinshipPage() {
     setErrorMessage(null);
     setIsExpandedMiddle(false);
 
-    const directRes = computeKinshipDirect(pA, pB, reg);
+    const directRes = computeKinshipDirect(pA, pB, reg, dict);
     if (directRes) {
       setResult(directRes);
     } else {
@@ -127,19 +139,45 @@ export default function KinshipPage() {
     }
   };
 
-  // 1. Đồng bộ URL parameters nếu truy cập qua deep link
+  // 1. Đồng bộ URL parameters nếu truy cập qua deep link & nạp quy ước vùng miền + từ điển tùy biến từ Cài đặt
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const p1 = urlParams.get('p1');
     const p2 = urlParams.get('p2');
-    const reg = (urlParams.get('region') as KinshipRegion) || region;
+    const regParam = urlParams.get('region') as KinshipRegion | null;
 
-    if (p1 && p2) {
-      setPersonAId(p1);
-      setPersonBId(p2);
-      setRegion(reg);
-      handleCalculate(p1, p2, reg);
-    }
+    fetch('/api/clan-settings')
+      .then((res) => res.json())
+      .then((json) => {
+        const loadedDict = json.data?.custom_kinship_dictionary || null;
+        if (loadedDict && Object.keys(loadedDict).length > 0) {
+          setCustomDict(loadedDict);
+        }
+
+        if (p1 && p2) {
+          setPersonAId(p1);
+          setPersonBId(p2);
+          const activeReg = regParam || (json.data?.default_kinship_region as KinshipRegion) || region;
+          setRegion(activeReg);
+          handleCalculate(p1, p2, activeReg, loadedDict);
+        } else {
+          const defaultReg = (!regParam && json.data?.default_kinship_region)
+            ? (json.data.default_kinship_region as KinshipRegion)
+            : (regParam || region);
+          setRegion(defaultReg);
+          handleCalculate(personAId, personBId, defaultReg, loadedDict);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching clan settings:', err);
+        if (p1 && p2) {
+          setPersonAId(p1);
+          setPersonBId(p2);
+          const activeReg = regParam || region;
+          setRegion(activeReg);
+          handleCalculate(p1, p2, activeReg);
+        }
+      });
   }, []);
 
   // 2. Đảo vai A ↔ B (TC07)
@@ -150,7 +188,7 @@ export default function KinshipPage() {
     setPersonBId(tempA);
 
     if (tempB && tempA && tempB !== tempA) {
-      handleCalculate(tempB, tempA, region);
+      handleCalculate(tempB, tempA, region, customDict);
     }
   };
 
@@ -167,7 +205,29 @@ export default function KinshipPage() {
 
   const isSamePerson = Boolean(personAId && personBId && personAId === personBId);
 
-  // Chuẩn bị danh sách node trung gian của 2 nhánh để vẽ Cây Chữ V
+  // Nhận diện Quan Hệ Trực Hệ (Cha - Con, Ông - Cháu, Cụ - Chắt)
+  // Khi 1 trong 2 người chính là Tổ Tiên / LCA của người kia (khoảng cách thế hệ 1 chiều)
+  const isDirectLineage = Boolean(
+    result &&
+      (result.relationshipType === 'parent_child' ||
+        result.relationshipType === 'direct_ancestor' ||
+        (result.lcaNode &&
+          (result.lcaNode.id === selectedPersonA?.id ||
+            result.lcaNode.id === selectedPersonB?.id)))
+  );
+
+  // Chuỗi phả hệ trực hệ từ Tiền Bối (trên) xuống Hậu Bối (dưới)
+  const directLineageNodes: KinshipPathNode[] = React.useMemo(() => {
+    if (!result || !isDirectLineage) return [];
+    if (result.generationDelta >= 0 && result.pathB && result.pathB.length > 0) {
+      return [...result.pathB].reverse();
+    } else if (result.pathA && result.pathA.length > 0) {
+      return [...result.pathA].reverse();
+    }
+    return [];
+  }, [result, isDirectLineage]);
+
+  // Chuẩn bị danh sách node trung gian của 2 nhánh để vẽ Cây Chữ V (khi quan hệ phân nhánh)
   // pathA trong KinshipResolution có thứ tự: [A, parent1, ..., LCA]
   // Để vẽ từ LCA xuống A: bỏ LCA (ở đỉnh), đảo ngược lại để đi từ trên xuống
   const branchNodesA: KinshipPathNode[] =
@@ -328,6 +388,22 @@ export default function KinshipPage() {
             </span>
             <button
               type="button"
+              id="sample-direct-btn"
+              onClick={() => {
+                setSearchA('');
+                setSearchB('');
+                const idKhoi = '10000000-0000-0000-0000-000000000001';
+                const idBinh = '20000000-0000-0000-0000-000000000001';
+                setPersonAId(idKhoi);
+                setPersonBId(idBinh);
+                handleCalculate(idKhoi, idBinh, region);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700/80 transition-all cursor-pointer shadow-xs"
+            >
+              🌱 Trực Hệ Bố - Con (Khởi & Bình)
+            </button>
+            <button
+              type="button"
               id="sample-tc08-btn"
               onClick={() => {
                 setSearchA('');
@@ -393,12 +469,11 @@ export default function KinshipPage() {
             </button>
           </div>
 
-
-          {/* Region Segmented Controls */}
+          {/* Region Setting Controls & Calculate Button */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                Phong tục vùng miền:
+                Quy ước dòng họ:
               </span>
               <div className="inline-flex rounded-lg border border-slate-200/80 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-950 text-xs font-medium">
                 <button
@@ -407,7 +482,7 @@ export default function KinshipPage() {
                   onClick={() => {
                     setRegion('north');
                     if (personAId && personBId && personAId !== personBId) {
-                      handleCalculate(personAId, personBId, 'north');
+                      handleCalculate(personAId, personBId, 'north', customDict);
                     }
                   }}
                   className={`px-3 py-1 rounded-md transition-all ${
@@ -416,7 +491,7 @@ export default function KinshipPage() {
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
-                  Miền Bắc (Trọng Nhánh)
+                  Miền Bắc
                 </button>
                 <button
                   type="button"
@@ -424,7 +499,7 @@ export default function KinshipPage() {
                   onClick={() => {
                     setRegion('central');
                     if (personAId && personBId && personAId !== personBId) {
-                      handleCalculate(personAId, personBId, 'central');
+                      handleCalculate(personAId, personBId, 'central', customDict);
                     }
                   }}
                   className={`px-3 py-1 rounded-md transition-all ${
@@ -441,7 +516,7 @@ export default function KinshipPage() {
                   onClick={() => {
                     setRegion('south');
                     if (personAId && personBId && personAId !== personBId) {
-                      handleCalculate(personAId, personBId, 'south');
+                      handleCalculate(personAId, personBId, 'south', customDict);
                     }
                   }}
                   className={`px-3 py-1 rounded-md transition-all ${
@@ -450,9 +525,16 @@ export default function KinshipPage() {
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
-                  Miền Nam (Trọng Tuổi)
+                  Miền Nam
                 </button>
               </div>
+              <Link
+                href="/admin/settings"
+                title="Thay đổi mặc định trong Cài đặt Dòng họ"
+                className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5 ml-1"
+              >
+                (Cài đặt ⚙️)
+              </Link>
             </div>
 
             {/* Tra cứu Button */}
@@ -565,17 +647,21 @@ export default function KinshipPage() {
               </div>
             </div>
 
-            {/* SƠ ĐỒ CÂY PHẢ HỆ MINI CHỮ V NGƯỢC (INVERTED-V KINSHIP TREE) */}
-            {result.relationshipType !== 'unrelated' && result.lcaName && (
+            {/* SƠ ĐỒ CÂY PHẢ HỆ TRỰC QUAN (TRỰC HỆ HOẶC CHỮ V NGƯỢC) */}
+            {result.relationshipType !== 'unrelated' && (
               <div className="px-6 sm:px-8 space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     <GitBranch className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>Sơ Đồ Cây Phả Hệ Trực Quan (Inverted-V Kinship Tree)</span>
+                    <span>
+                      {isDirectLineage
+                        ? 'Sơ Đồ Dòng Trực Hệ Dọc (Vertical Direct Lineage)'
+                        : 'Sơ Đồ Cây Phả Hệ Trực Quan (Inverted-V Kinship Tree)'}
+                    </span>
                   </h2>
 
                   <Link
-                    href="/"
+                    href={`/?focus=${personAId},${personBId}`}
                     id="deep-link-tree-btn"
                     className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline"
                   >
@@ -584,188 +670,220 @@ export default function KinshipPage() {
                   </Link>
                 </div>
 
-                <div
-                  id="inverted-v-tree"
-                  className="p-5 sm:p-7 rounded-2xl bg-gradient-to-b from-slate-50/80 to-slate-100/50 dark:from-slate-950 dark:to-slate-900 border border-slate-200/70 dark:border-slate-800"
-                >
-                  {/* Đỉnh chóp: Tổ tiên chung gần nhất (LCA) */}
-                  <div className="flex flex-col items-center">
-                    <div
-                      id="lca-apex-node"
-                      className="px-5 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300/80 dark:border-amber-700 shadow-sm text-center max-w-md w-full relative z-10"
-                    >
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-bold uppercase tracking-wider mb-1">
-                        <Crown className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-                        <span>Tổ Tiên Chung Gần Nhất (LCA)</span>
-                      </div>
-                      <div className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                        {result.lcaNode?.name || result.lcaName}
-                      </div>
-                      <div className="text-xs text-amber-800/90 dark:text-amber-300/80 mt-0.5">
-                        {result.lcaNode?.birthYear ? `Sinh năm ${result.lcaNode.birthYear} · ` : ''}
-                        Điểm khởi nguồn rẽ nhánh huyết thống
-                      </div>
+                {isDirectLineage ? (
+                  /* 1. SƠ ĐỒ DÒNG TRỰC HỆ DỌC (Dành cho quan hệ Cha-Con, Ông-Cháu, Cụ-Chắt) */
+                  <div
+                    id="direct-lineage-tree"
+                    className="p-5 sm:p-7 rounded-2xl bg-gradient-to-b from-slate-50/80 to-slate-100/50 dark:from-slate-950 dark:to-slate-900 border border-slate-200/70 dark:border-slate-800"
+                  >
+                    <div className="max-w-md mx-auto flex flex-col items-center">
+                      {directLineageNodes.map((node, idx) => {
+                        const isTop = idx === 0;
+                        const isBottom = idx === directLineageNodes.length - 1;
+                        const isTargetA = node.id === selectedPersonA?.id;
+                        const isTargetB = node.id === selectedPersonB?.id;
+
+                        return (
+                          <React.Fragment key={node.id}>
+                            {/* Trục nối dọc thẳng đứng nét liền thuần túy giữa các thế hệ */}
+                            {idx > 0 && (
+                              <div className="w-0.5 h-7 bg-emerald-600 dark:bg-emerald-500 my-1 rounded-full" />
+                            )}
+
+                            {/* Node thành viên trên dòng trực hệ */}
+                            <div
+                              className={`w-full p-4 rounded-xl border transition-all ${
+                                isTop
+                                  ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-300/90 dark:border-amber-700 shadow-sm'
+                                  : isBottom
+                                  ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-2xs'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  {isTop && <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />}
+                                  <span className={`text-sm font-extrabold ${isBottom ? 'text-white' : 'text-slate-900 dark:text-slate-100'}`}>
+                                    {node.name}
+                                  </span>
+                                </div>
+                                <span
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                    isTop
+                                      ? 'bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
+                                      : isBottom
+                                      ? 'bg-emerald-700/90 text-white'
+                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                  }`}
+                                >
+                                  Đời {node.generationNumber}
+                                </span>
+                              </div>
+                              <div className={`flex flex-wrap items-center gap-2 mt-1.5 text-xs ${isBottom ? 'text-emerald-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                                {node.birthYear ? <span>Sinh: {node.birthYear}</span> : null}
+                                {node.isSeniorBranch !== undefined && (
+                                  <span>· {node.isSeniorBranch ? 'Chi Trưởng' : 'Chi Thứ'}</span>
+                                )}
+                                {node.isAdopted && (
+                                  <span className="px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-semibold">
+                                    Con Nuôi
+                                  </span>
+                                )}
+                                {isTargetA && <span className="font-semibold ml-auto opacity-80">(Người A)</span>}
+                                {isTargetB && <span className="font-semibold ml-auto opacity-80">(Người B)</span>}
+                              </div>
+                            </div>
+                          </React.Fragment>
+                        );
+                      })}
                     </div>
 
-                    {/* SVG Connector rẽ sang 2 nhánh */}
-                    <svg
-                      className="w-full max-w-lg h-10 text-slate-300 dark:text-slate-700 my-1 hidden sm:block"
-                      viewBox="0 0 400 40"
-                      fill="none"
-                    >
-                      <path
-                        d="M200,0 L200,16 Q200,28 120,28 L60,28 L60,40"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeDasharray="4 2"
-                      />
-                      <path
-                        d="M200,0 L200,16 Q200,28 280,28 L340,28 L340,40"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeDasharray="4 2"
-                      />
-                    </svg>
-                  </div>
-
-                  {/* 2 Cột nhánh: Cột A (Trái) & Cột B (Phải) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 pt-2">
-                    {/* CỘT A (Bên Trái) */}
-                    <div className="space-y-3">
-                      <div className="text-center sm:text-left text-xs font-bold text-slate-500 uppercase tracking-wider pb-1 border-b border-slate-200/60 dark:border-slate-800">
-                        Nhánh của {selectedPersonA?.full_name || 'Người A'}
+                    {/* Thanh Cầu Nối Quan Hệ ở Đáy */}
+                    <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 px-2">
+                      <div className="text-xs text-slate-600 dark:text-slate-400 text-center sm:text-left">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          Mối quan hệ trực diện:
+                        </span>{' '}
+                        {result.termAtoB} <span className="text-slate-400">⇄</span> {result.termBtoA}
                       </div>
 
-                      <div className="space-y-2.5">
-                        {renderBranchNodes(
-                          branchNodesA,
-                          isExpandedMiddle,
-                          selectedPersonA?.id
-                        )}
-                      </div>
-                    </div>
-
-                    {/* CỘT B (Bên Phải) */}
-                    <div className="space-y-3">
-                      <div className="text-center sm:text-right text-xs font-bold text-slate-500 uppercase tracking-wider pb-1 border-b border-slate-200/60 dark:border-slate-800">
-                        Nhánh của {selectedPersonB?.full_name || 'Người B'}
-                      </div>
-
-                      <div className="space-y-2.5">
-                        {renderBranchNodes(
-                          branchNodesB,
-                          isExpandedMiddle,
-                          selectedPersonB?.id
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Nút Toggle Nén Tầng Trung Gian nếu cách nhau >= 4 đời */}
-                  {hasMiddleFolding && (
-                    <div className="flex justify-center pt-4">
                       <button
                         type="button"
-                        id="toggle-fold-generations-btn"
-                        onClick={() => setIsExpandedMiddle(!isExpandedMiddle)}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-800 transition-all shadow-xs"
+                        onClick={handleSwapRoles}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-700 shadow-2xs hover:scale-102 active:scale-98 transition-all"
                       >
-                        {isExpandedMiddle ? (
-                          <>
-                            <ChevronUp className="w-3.5 h-3.5" />
-                            <span>Thu gọn các thế hệ trung gian</span>
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="w-3.5 h-3.5" />
-                            <span>Mở rộng toàn bộ các thế hệ trung gian</span>
-                          </>
-                        )}
+                        <ArrowRightLeft className="w-3 h-3 text-emerald-600" />
+                        <span>Đổi vai A ↔ B</span>
                       </button>
                     </div>
-                  )}
+                  </div>
+                ) : (
+                  /* 2. SƠ ĐỒ CÂY CHỮ V NGƯỢC (Dành cho anh em, họ hàng phân nhánh) */
+                  <div
+                    id="inverted-v-tree"
+                    className="p-5 sm:p-7 rounded-2xl bg-gradient-to-b from-slate-50/80 to-slate-100/50 dark:from-slate-950 dark:to-slate-900 border border-slate-200/70 dark:border-slate-800"
+                  >
+                    {/* Đỉnh chóp: Tổ tiên chung gần nhất (LCA) */}
+                    <div className="flex flex-col items-center">
+                      <div
+                        id="lca-apex-node"
+                        className="px-5 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300/80 dark:border-amber-700 shadow-sm text-center max-w-md w-full relative z-10"
+                      >
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-bold uppercase tracking-wider mb-1">
+                          <Crown className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                          <span>Tổ Tiên Chung Gần Nhất (LCA)</span>
+                        </div>
+                        <div className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                          {result.lcaNode?.name || result.lcaName}
+                        </div>
+                        <div className="text-xs text-amber-800/90 dark:text-amber-300/80 mt-0.5">
+                          {result.lcaNode?.birthYear ? `Sinh năm ${result.lcaNode.birthYear} · ` : ''}
+                          Điểm khởi nguồn rẽ nhánh huyết thống
+                        </div>
+                      </div>
 
-                  {/* Thanh Cầu Nối Quan Hệ ở Đáy */}
-                  <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 px-2">
-                    <div className="text-xs text-slate-600 dark:text-slate-400 text-center sm:text-left">
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">
-                        Mối quan hệ trực diện:
-                      </span>{' '}
-                      {result.termAtoB} <span className="text-slate-400">⇄</span>{' '}
-                      {result.termBtoA}
+                      {/* Đường nối phả hệ vuông góc 90 độ nét liền (Orthogonal Square Connectors) */}
+                      <div className="w-full max-w-4xl mx-auto hidden sm:block">
+                        {/* Trục đứng từ LCA đi xuống */}
+                        <div className="w-0.5 h-5 bg-emerald-600 dark:bg-emerald-500 mx-auto" />
+
+                        {/* Khung rẽ nhánh 2 cột đồng bộ với grid-cols-2 gap-6 sm:gap-10 */}
+                        <div className="grid grid-cols-2 gap-6 sm:gap-10 w-full relative">
+                          {/* Nửa trái (Cột A): Nối từ tâm cột (50%) sang mép phải, rẽ vuông góc 90 độ xuống đỉnh card */}
+                          <div className="relative h-6">
+                            <div className="absolute left-1/2 right-[-12px] sm:right-[-20px] top-0 h-0.5 bg-emerald-600 dark:bg-emerald-500" />
+                            <div className="absolute left-1/2 top-0 w-0.5 h-6 -translate-x-1/2 bg-emerald-600 dark:bg-emerald-500" />
+                          </div>
+
+                          {/* Nửa phải (Cột B): Nối từ mép trái sang tâm cột (50%), rẽ vuông góc 90 độ xuống đỉnh card */}
+                          <div className="relative h-6">
+                            <div className="absolute left-[-12px] sm:left-[-20px] right-1/2 top-0 h-0.5 bg-emerald-600 dark:bg-emerald-500" />
+                            <div className="absolute left-1/2 top-0 w-0.5 h-6 -translate-x-1/2 bg-emerald-600 dark:bg-emerald-500" />
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleSwapRoles}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-700 shadow-2xs hover:scale-102 active:scale-98 transition-all"
-                    >
-                      <ArrowRightLeft className="w-3 h-3 text-emerald-600" />
-                      <span>Đổi vai A ↔ B</span>
-                    </button>
+                    {/* 2 Cột nhánh: Cột A (Trái) & Cột B (Phải) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 pt-2">
+                      {/* CỘT A (Bên Trái) */}
+                      <div className="space-y-3">
+                        <div className="text-center sm:text-left text-xs font-bold text-slate-500 uppercase tracking-wider pb-1 border-b border-slate-200/60 dark:border-slate-800">
+                          Nhánh của {selectedPersonA?.full_name || 'Người A'}
+                        </div>
+
+                        <div className="space-y-2.5">
+                          {renderBranchNodes(
+                            branchNodesA,
+                            isExpandedMiddle,
+                            selectedPersonA?.id
+                          )}
+                        </div>
+                      </div>
+
+                      {/* CỘT B (Bên Phải) */}
+                      <div className="space-y-3">
+                        <div className="text-center sm:text-right text-xs font-bold text-slate-500 uppercase tracking-wider pb-1 border-b border-slate-200/60 dark:border-slate-800">
+                          Nhánh của {selectedPersonB?.full_name || 'Người B'}
+                        </div>
+
+                        <div className="space-y-2.5">
+                          {renderBranchNodes(
+                            branchNodesB,
+                            isExpandedMiddle,
+                            selectedPersonB?.id
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Nút Toggle Nén Tầng Trung Gian nếu cách nhau >= 4 đời */}
+                    {hasMiddleFolding && (
+                      <div className="flex justify-center pt-4">
+                        <button
+                          type="button"
+                          id="toggle-fold-generations-btn"
+                          onClick={() => setIsExpandedMiddle(!isExpandedMiddle)}
+                          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-800 transition-all shadow-xs"
+                        >
+                          {isExpandedMiddle ? (
+                            <>
+                              <ChevronUp className="w-3.5 h-3.5" />
+                              <span>Thu gọn các thế hệ trung gian</span>
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-3.5 h-3.5" />
+                              <span>Mở rộng toàn bộ các thế hệ trung gian</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Thanh Cầu Nối Quan Hệ ở Đáy */}
+                    <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 px-2">
+                      <div className="text-xs text-slate-600 dark:text-slate-400 text-center sm:text-left">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          Mối quan hệ trực diện:
+                        </span>{' '}
+                        {result.termAtoB} <span className="text-slate-400">⇄</span>{' '}
+                        {result.termBtoA}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleSwapRoles}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-700 shadow-2xs hover:scale-102 active:scale-98 transition-all"
+                      >
+                        <ArrowRightLeft className="w-3 h-3 text-emerald-600" />
+                        <span>Đổi vai A ↔ B</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
-
-            {/* THẺ DIỄN GIẢI PHONG TỤC CẤU TRÚC HÓA */}
-            <div id="cultural-customs-card" className="p-6 sm:p-8 pt-0 space-y-4">
-              <h2 className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                <Info className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Căn Cứ Phong Tục & Đối Sánh Tương Quan</span>
-              </h2>
-
-              <div className="p-5 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-100/80 dark:border-emerald-900/30 space-y-4">
-                {/* Khối 1: Huy hiệu Nguyên Tắc Vùng Miền */}
-                {result.customsBadge && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-100/80 dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-200 text-xs font-bold">
-                    <span>⚖️</span>
-                    <span>{result.customsBadge}</span>
-                  </div>
-                )}
-
-                {/* Khối 2: Tục Ngữ / Lời Cổ Phong */}
-                {result.proverbQuote && (
-                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200/60 dark:border-emerald-800/40 shadow-2xs">
-                    <Quote className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                    <div className="text-sm font-semibold italic text-slate-800 dark:text-slate-200">
-                      {result.proverbQuote}
-                    </div>
-                  </div>
-                )}
-
-                {/* Khối 3: Bảng Đối Sánh Tương Quan Trực Diện */}
-                {result.comparisonFacts && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div className="p-3 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800">
-                      <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-0.5">
-                        {result.comparisonFacts.labelA}
-                      </div>
-                      <div className="text-xs text-slate-600 dark:text-slate-400">
-                        {result.comparisonFacts.detailA}
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800">
-                      <div className="text-xs font-bold text-teal-700 dark:text-teal-400 mb-0.5">
-                        {result.comparisonFacts.labelB}
-                      </div>
-                      <div className="text-xs text-slate-600 dark:text-slate-400">
-                        {result.comparisonFacts.detailB}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Diễn giải chi tiết */}
-                <div
-                  id="cultural-explanation"
-                  className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-1 border-t border-emerald-200/40 dark:border-emerald-900/20"
-                >
-                  {result.explanation}
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -839,7 +957,7 @@ function renderNodeItem(node: KinshipPathNode, isTarget: boolean) {
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-bold tracking-tight">{node.name}</span>
-        {node.relation && (
+        {node.relation && node.relation !== 'Bản thân' && (
           <span
             className={`text-[10px] px-2 py-0.5 rounded-full ${
               isTarget

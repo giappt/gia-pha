@@ -141,4 +141,171 @@ describe('Kinship Engine Test Suite (Comprehensive 7-Generation Clan)', () => {
       'Thông tin so sánh phải ghi nhận rõ thành viên là Con Nuôi'
     );
   });
+
+  it('TC16 & TC19: Quan hệ Trực Hệ Cha-Con & Xưng Hô Ngữ Cảnh', () => {
+    const khoi = membersMap.get('10000000-0000-0000-0000-000000000001')!; // Cụ Khởi Tổ
+    const binh = membersMap.get('20000000-0000-0000-0000-000000000001')!; // Cụ Bình Chi 1
+
+    const lca = findLowestCommonAncestor(khoi.id, binh.id, membersMap);
+    assert.strictEqual(lca.relationshipType, 'parent_child');
+    assert.strictEqual(lca.distanceA, 0, 'Khoảng cách từ Khởi lên LCA là 0');
+    assert.strictEqual(lca.distanceB, 1, 'Khoảng cách từ Bình lên LCA là 1');
+
+    const res = resolveKinshipTerms(lca, khoi, binh, 'north');
+    assert.strictEqual(res.termAtoB, 'Con');
+    assert.strictEqual(res.termBtoA, 'Bố');
+
+    // Contextual addressing
+    assert.ok(res.contextual, 'Phải có trường contextual');
+    assert.strictEqual(res.contextual?.formalTermAtoB, 'Con');
+    assert.strictEqual(res.contextual?.formalTermBtoA, 'Bố');
+    assert.ok(res.contextual?.guidanceA.includes('Xưng "Bố"'), 'Chỉ dẫn xưng gọi cho Khởi');
+    assert.ok(res.contextual?.guidanceB.includes('Xưng "Con"'), 'Chỉ dẫn xưng gọi cho Bình');
+  });
+
+  // TC23: Danh mục từ điển xưng hô mẫu cho 3 miền
+  it('TC23: Master Presets cho 3 miền có đầy đủ 16 mối quan hệ cốt lõi', async () => {
+    const { getRegionalPresetDictionary } = await import(
+      '../src/lib/kinship-engine/regional-dictionaries'
+    );
+    const northRules = getRegionalPresetDictionary('north');
+    const centralRules = getRegionalPresetDictionary('central');
+    const southRules = getRegionalPresetDictionary('south');
+
+    assert.ok(northRules.length >= 32, 'Miền Bắc phải có ít nhất 32 quan hệ');
+    assert.ok(centralRules.length >= 32, 'Miền Trung phải có ít nhất 32 quan hệ');
+    assert.ok(southRules.length >= 32, 'Miền Nam phải có ít nhất 32 quan hệ');
+
+    // Kiểm tra đặc trưng vùng miền
+    const northFather = northRules.find((r) => r.id === 'parent_father');
+    assert.strictEqual(northFather?.termSenior, 'Bố');
+
+    const centralMother = centralRules.find((r) => r.id === 'parent_mother');
+    assert.strictEqual(centralMother?.termSenior, 'Mẹ (Mạ)');
+
+    const southBrother = southRules.find((r) => r.id === 'sibling_brother');
+    assert.strictEqual(southBrother?.termSenior, 'Anh Hai (Anh)');
+  });
+
+  // TC24 & TC25: Áp dụng từ điển tùy biến vào lõi Kinship Engine
+  it('TC24 & TC25: Áp dụng custom_kinship_dictionary tùy biến của dòng họ vào resolveKinshipTerms', () => {
+    const khoi = membersMap.get(ID_KHOI)!;
+    const binh = membersMap.get(ID_BINH)!;
+    const lca = findLowestCommonAncestor(khoi.id, binh.id, membersMap);
+
+    // Mặc định miền Bắc: Bố - Con
+    const defaultRes = resolveKinshipTerms(lca, khoi, binh, 'north');
+    assert.strictEqual(defaultRes.termBtoA, 'Bố');
+
+    // Tùy biến dòng họ: Bố -> "Cha", Con -> "Con trai"
+    const customRes = resolveKinshipTerms(lca, khoi, binh, 'north', {
+      parent_father: {
+        termSenior: 'Cha',
+        termJunior: 'Con trai',
+      },
+    });
+
+    assert.strictEqual(customRes.termBtoA, 'Cha', 'Bình gọi Khởi là Cha theo từ điển tùy biến');
+    assert.strictEqual(customRes.termAtoB, 'Con trai', 'Khởi gọi Bình là Con trai theo từ điển tùy biến');
+
+    // Thử với chú cháu: Cụ Cường và Ông Hải
+    const cuong = membersMap.get(ID_CUONG)!;
+    const hai = membersMap.get(ID_HAI)!;
+    const lcaUncle = findLowestCommonAncestor(cuong.id, hai.id, membersMap);
+
+    const customUncleRes = resolveKinshipTerms(lcaUncle, cuong, hai, 'north', {
+      uncle_junior: {
+        termSenior: 'Chú út gia tộc',
+        termJunior: 'Cháu ruột',
+      },
+    });
+    assert.strictEqual(customUncleRes.termBtoA, 'Chú út gia tộc');
+    assert.strictEqual(customUncleRes.termAtoB, 'Cháu ruột');
+  });
+
+  // TC26: Master Presets 32+ Mối quan hệ thân tộc cốt lõi (Bao gồm Thím, Mợ, Cậu, Dì, Dượng, Dâu, Rể)
+  it('TC26: Master Presets bao quát đầy đủ 6 nhóm thân tộc: Bên Nội, Bên Ngoại, Hôn phối & Dâu/Rể', async () => {
+    const { getRegionalPresetDictionary } = await import(
+      '../src/lib/kinship-engine/regional-dictionaries'
+    );
+    const northRules = getRegionalPresetDictionary('north');
+    const southRules = getRegionalPresetDictionary('south');
+
+    // 1. Bên Nội: Thím, Dượng
+    const thimNorth = northRules.find((r) => r.id === 'aunt_junior_wife');
+    assert.ok(thimNorth, 'Phải có quy tắc Vợ của Chú (Thím)');
+    assert.strictEqual(thimNorth?.termSenior, 'Thím');
+
+    const duongNorth = northRules.find((r) => r.id === 'uncle_junior_husband');
+    assert.ok(duongNorth, 'Phải có quy tắc Chồng của Cô');
+    assert.strictEqual(duongNorth?.termSenior, 'Chú dượng (Chú rể)');
+
+    const duongSouth = southRules.find((r) => r.id === 'uncle_junior_husband');
+    assert.strictEqual(duongSouth?.termSenior, 'Dượng');
+
+    // 2. Bên Ngoại: Cậu, Mợ, Dì, Dượng ngoại
+    const cau = northRules.find((r) => r.id === 'uncle_maternal_junior');
+    assert.strictEqual(cau?.termSenior, 'Cậu');
+
+    const mo = northRules.find((r) => r.id === 'aunt_maternal_junior_wife');
+    assert.strictEqual(mo?.termSenior, 'Mợ');
+
+    const di = northRules.find((r) => r.id === 'aunt_maternal_junior');
+    assert.strictEqual(di?.termSenior, 'Dì');
+
+    // 3. Dâu / Rể ngang hàng và thế hệ dưới
+    const chiDau = northRules.find((r) => r.id === 'sister_in_law');
+    assert.ok(chiDau, 'Phải có Chị dâu');
+
+    const anhRe = northRules.find((r) => r.id === 'brother_in_law');
+    assert.ok(anhRe, 'Phải có Anh rể');
+
+    const conDau = northRules.find((r) => r.id === 'daughter_in_law');
+    assert.ok(conDau, 'Phải có Con dâu');
+
+    const conRe = northRules.find((r) => r.id === 'son_in_law');
+    assert.ok(conRe, 'Phải có Con rể');
+  });
+
+  // TC27: Kiểm tra tính năng lọc phân nhóm và tìm kiếm từ điển
+  it('TC27: Bộ lọc phân nhóm và tìm kiếm lọc chính xác các quan hệ', async () => {
+    const { getRegionalPresetDictionary } = await import(
+      '../src/lib/kinship-engine/regional-dictionaries'
+    );
+    const northRules = getRegionalPresetDictionary('north');
+
+    // Lọc nhóm Bên Ngoại
+    const maternalRules = northRules.filter((r) => r.category === 'maternal_uncle_aunt');
+    assert.strictEqual(maternalRules.length, 6, 'Nhóm Cậu/Dì bên ngoại phải có 6 quan hệ');
+
+    // Lọc nhóm Dâu Rể con cháu
+    const inLawDescendants = northRules.filter((r) => r.category === 'in_law_descendant');
+    assert.strictEqual(inLawDescendants.length, 4, 'Nhóm Dâu/Rể con cháu phải có 4 quan hệ');
+
+    // Tìm kiếm theo từ khóa "Thím"
+    const searchThim = northRules.filter((r) =>
+      r.name.toLowerCase().includes('thím') || r.termSenior.toLowerCase().includes('thím')
+    );
+    assert.ok(searchThim.length >= 1, 'Tìm kiếm từ khóa "thím" phải ra kết quả');
+  });
+
+  // TC28: Tùy biến và áp dụng danh xưng Dâu/Rể/Thím/Mợ
+  it('TC28: Tùy biến và áp dụng danh xưng Thím, Mợ, Dượng trong customDictionary', async () => {
+    const customDict = {
+      aunt_junior_wife: {
+        termSenior: 'Thím út',
+        termJunior: 'Cháu cưng',
+      },
+      aunt_maternal_junior_wife: {
+        termSenior: 'Mợ hai',
+        termJunior: 'Cháu ngoại',
+      },
+    };
+
+    assert.strictEqual(customDict.aunt_junior_wife.termSenior, 'Thím út');
+    assert.strictEqual(customDict.aunt_maternal_junior_wife.termSenior, 'Mợ hai');
+  });
 });
+
+
+
