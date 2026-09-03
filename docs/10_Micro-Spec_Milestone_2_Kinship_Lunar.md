@@ -217,10 +217,10 @@ sequenceDiagram
 - [x] **AC4:** API `GET /api/kinship` trả về dữ liệu cấu trúc chuẩn, có breadcrumbs đường đi huyết thống và lý giải phong tục.
 - [x] **AC5:** Giao diện `/kinship` cho phép tìm kiếm, chọn 2 thành viên, đổi vai A $\leftrightarrow$ B và xem kết quả trực quan mượt mà.
 - [x] **AC6:** Bộ Unit Test (`tests/kinship.test.ts` & `tests/lunar.test.ts`) đạt tỷ lệ Pass 100%.
-- [ ] **AC7:** Sơ đồ Cây Phả Hệ Mini Chữ V Ngược (Inverted-V Kinship Tree) hiển thị trực quan bắt đầu từ LCA, phân 2 cột nhánh (Trưởng vs Thứ), có đường nối SVG bezier và thanh cầu nối xưng hô ở chân.
-- [ ] **AC8:** Cơ chế Smart Folding tự động nén thế hệ trung gian khi khoảng cách $\ge 4$ đời, hỗ trợ toggle mở rộng/thu gọn mượt mà.
-- [ ] **AC9:** Thẻ Diễn Giải Phong Tục cấu trúc hóa 3 phần (Huy hiệu phong tục, Lời răn cổ phong, Bảng đối sánh tương quan) thay thế hoàn toàn đoạn văn bản cũ.
-- [ ] **AC10:** Mở rộng bộ dữ liệu mẫu `MOCK_CLAN_MEMBERS` lên 25–30 người bao phủ đa chi, vợ cả/vợ hai, con nuôi, 6-7 đời và hôn nhân nội tộc.
+- [x] **AC7:** Sơ đồ Cây Phả Hệ Mini Chữ V Ngược (Inverted-V Kinship Tree) hiển thị trực quan bắt đầu từ LCA, phân 2 cột nhánh (Trưởng vs Thứ), có đường nối SVG bezier và thanh cầu nối xưng hô ở chân.
+- [x] **AC8:** Cơ chế Smart Folding tự động nén thế hệ trung gian khi khoảng cách $\ge 4$ đời, hỗ trợ toggle mở rộng/thu gọn mượt mà.
+- [x] **AC9:** Thẻ Diễn Giải Phong Tục cấu trúc hóa 3 phần (Huy hiệu phong tục, Lời răn cổ phong, Bảng đối sánh tương quan) thay thế hoàn toàn đoạn văn bản cũ.
+- [x] **AC10:** Mở rộng bộ dữ liệu mẫu `MOCK_CLAN_MEMBERS` lên 25–30 người bao phủ đa chi, vợ cả/vợ hai, con nuôi, 6-7 đời và hôn nhân nội tộc.
 
 ---
 
@@ -229,8 +229,8 @@ sequenceDiagram
 - [x] **RG01 (Trang Chủ & Header):** Thanh điều hướng Navbar liên kết tới `/kinship` hoạt động chuẩn xác, giữ nguyên giao diện Modern Heritage.
 - [x] **RG02 (Auth & Dev Bypass):** Cơ chế Dev Bypass và phiên đăng nhập Super Admin hoạt động bình thường, không bị ảnh hưởng bởi tính năng mới.
 - [x] **RG03 (Build & Typecheck):** `npm run typecheck` (`tsc --noEmit`) và `npm run build` tiếp tục đạt 100% 0 lỗi.
-- [ ] **RG04 (Đảo vai A ↔ B trên Cây Chữ V):** Khi bấm nút hoán đổi vai xưng hô ⇄, vị trí 2 cột nhánh và thanh cầu nối quan hệ đảo ngược mượt mà, không vỡ layout.
-- [ ] **RG05 (Responsive Mobile):** Sơ đồ cây co giãn linh hoạt hoặc chuyển sang Split Timeline trên màn hình nhỏ (< 640px) không bị tràn ngang.
+- [x] **RG04 (Đảo vai A ↔ B trên Cây Chữ V):** Khi bấm nút hoán đổi vai xưng hô ⇄, vị trí 2 cột nhánh và thanh cầu nối quan hệ đảo ngược mượt mà, không vỡ layout.
+- [x] **RG05 (Responsive Mobile):** Sơ đồ cây co giãn linh hoạt hoặc chuyển sang Split Timeline trên màn hình nhỏ (< 640px) không bị tràn ngang.
 
 ---
 

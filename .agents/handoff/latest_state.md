@@ -1,33 +1,47 @@
 # STATE MANIFEST
 ### 1. Key Context
-- **Dự án:** FAT (Family Tree Management System - Quản Lý Gia Phả Dòng Họ).
-- **Tech Stack:** Next.js 14 App Router, TypeScript, TailwindCSS, Supabase Cloud (PostgreSQL + Auth), Lucide Icons, Shadcn/Radix UI.
-- **Git State:** Đã commit toàn bộ Milestone 1 và push thành công lên nhánh chính `origin/main` (commit `ea25b68: add ms 01`).
-- **Giao diện:** Đã hoàn tất chuyển đổi sang phong cách Modern Vietnamese Heritage (nền trắng sứ, quầng sáng ngọc bích Emerald `#059669`, viền hairline 1px `border-slate-200/60`, font Be Vietnam Pro, loại bỏ hoàn toàn cấu trúc bo tròn lồng hộp box-in-box).
-- **Cơ chế Dev Mock Login (Bypass Google OAuth):**
-  - Đã tích hợp `/api/auth/dev-login` (chỉ mở ở `development`) cấp quyền Super Admin (`giap.pt.90@gmail.com`) qua cookie `fat_dev_user`.
-  - Giúp phát triển và test tính năng quản trị mượt mà ngay cả khi môi trường mạng chặn Google OAuth / Supabase Auth.
-- **Tính năng Cài đặt Dòng họ (`/admin/settings`):**
-  - Đã xây dựng layout bảo vệ phân quyền `src/app/admin/layout.tsx`.
-  - Đã tạo trang cài đặt `src/app/admin/settings/page.tsx` cho phép đổi tên dòng họ với giới hạn cứng `maxLength={40}` (tối thiểu 2 ký tự), có bộ đếm ký tự `(X/40)` và Live Preview box.
-  - Đã tạo API `PATCH /api/clan-settings` và cơ chế chống vỡ giao diện Hero trên trang chủ (`text-balance`, `break-words`, adaptive font size).
-- **Milestone 2 - Trạng thái Spec:**
-  - Đã khởi tạo hoàn chỉnh file Đặc tả Vi mô `docs/10_Micro-Spec_Milestone_2_Kinship_Lunar.md` theo đúng mẫu chuẩn và quy tắc kiến trúc (Tách rời Lõi Đồ thị DAG tìm LCA và Bộ Từ điển Vùng miền; Lõi Lịch Âm - Dương UTC+7; Giao diện `/kinship`).
+- **Dự án:** FAT — Family Tree Management System (Gia Phả Dòng Họ)
+- **Nhánh Git:** `main` — commit `2996cf5` "code milestone 2" đã push lên `origin/main`.
+- **Trạng thái Milestone 1:** Hoàn thành 100% (Next.js 14, Supabase, Modern Vietnamese Heritage UI, Dev Mock Auth, Clan Settings).
+- **Trạng thái Milestone 2 — Kinship Engine & Lịch Âm:**
+  - **Lõi backend hoàn chỉnh:** `lca-finder.ts`, `regional-dictionaries.ts`, `vietnamese-lunar.ts`, `api/kinship/route.ts`.
+  - **Bộ dữ liệu mẫu:** `mock-data.ts` gồm 26 thành viên, 7 thế hệ, 3 chi, vợ cả/vợ hai, con nuôi, hôn nhân nội tộc.
+  - **UI Kinship page:** `src/app/kinship/page.tsx` — Sơ đồ Cây Chữ V Ngược từ LCA, Smart Folding, Thẻ Phong Tục Cấu Trúc Hóa, 4 nút kịch bản mẫu.
+  - **Unit tests:** 12/12 PASS (kinship + lunar).
+  - **Build:** 10/10 routes, 0 lỗi TypeScript.
+- **Tài liệu đã đồng bộ:** `05_Technical-Blueprint.md` (§4 Milestone 2/3/4), `03_DB-Schema.md` (`is_adopted`), `04_UI-UX-Flow.md` (S-03), `10_Micro-Spec_Milestone_2_Kinship_Lunar.md` (TC08–TC11, AC7–AC10, RG04–RG05).
+- **Bài học quan trọng ghi nhận:** Lạm dụng `browser_subagent` 4 lần liên tiếp gây 429 quota exhausted; quy trình đúng là verify bằng `curl` trước rồi gọi browser 1 lần duy nhất. Khởi tạo state `'use client'` từ mock data trực tiếp (không chỉ dựa `useEffect` fetch).
+- **Dev server:** `npm run dev` đang chạy tại `http://localhost:3000`.
 
 ### 2. Task Checklist
-- [x] Khởi tạo dự án Next.js 14, Supabase client/server/middleware, TailwindCSS và font Be Vietnam Pro (Milestone 1).
-- [x] Tái thiết kế toàn bộ giao diện từ box-in-box cũ kỹ sang Modern Vietnamese Heritage tươi sáng.
-- [x] Xây dựng cơ chế Dev Mock Login Bypass Google OAuth khi mạng nội bộ bị chặn.
-- [x] Xây dựng trang Cài đặt Dòng họ `/admin/settings`, API `/api/clan-settings` kèm giới hạn 40 ký tự chống vỡ giao diện.
-- [x] Commit và Push toàn bộ mã nguồn Milestone 1 lên GitHub (`origin/main`).
-- [x] Khởi tạo tài liệu Đặc tả Kỹ thuật Vi mô `docs/10_Micro-Spec_Milestone_2_Kinship_Lunar.md` cho Milestone 2.
-- [ ] Chạy lệnh `/feature-code` để thi công mã nguồn Milestone 2:
-  - [ ] Xây dựng `src/lib/kinship-engine/lca-finder.ts` (Lõi toán học đồ thị tìm LCA, tính khoảng cách thế hệ $\Delta G$).
-  - [ ] Xây dựng `src/lib/kinship-engine/regional-dictionaries.ts` (Từ điển xưng hô 3 miền Bắc - Trung - Nam).
-  - [ ] Xây dựng `src/lib/lunar/vietnamese-lunar.ts` (Quy đổi Âm - Dương UTC+7, Tháng Nhuận & Can Chi).
-  - [ ] Xây dựng API `/api/kinship/route.ts` (Phân tích huyết thống & breadcrumbs).
-  - [ ] Xây dựng Màn hình Tra cứu Vai vế `/kinship` (`src/app/kinship/page.tsx`).
-  - [ ] Viết bộ Unit Test (`tests/kinship.test.ts`, `tests/lunar.test.ts`) kiểm chứng 100% 7 kịch bản Test Cases trong Spec.
+- [x] Khởi tạo dự án Next.js 14, Supabase, TailwindCSS, font Be Vietnam Pro (Milestone 1).
+- [x] Tái thiết kế giao diện Modern Vietnamese Heritage.
+- [x] Dev Mock Login Bypass Google OAuth.
+- [x] Trang Cài đặt Dòng họ `/admin/settings`.
+- [x] Commit & Push Milestone 1.
+- [x] Khởi tạo tài liệu Micro-Spec Milestone 2.
+- [x] Xây dựng `lca-finder.ts` (LCA + khoảng cách thế hệ).
+- [x] Xây dựng `regional-dictionaries.ts` (Từ điển xưng hô 3 miền + `attachStructuredMetadata`).
+- [x] Xây dựng `vietnamese-lunar.ts` (Âm - Dương UTC+7, Can Chi).
+- [x] Xây dựng API `/api/kinship/route.ts`.
+- [x] Xây dựng `/kinship/page.tsx` (Cây Chữ V Ngược, Smart Folding, Thẻ Phong Tục, 4 nút mẫu).
+- [x] Mở rộng `mock-data.ts` lên 26 thành viên, 7 đời, 3 chi.
+- [x] Unit tests 12/12 PASS + Build 10/10 PASS.
+- [x] Đồng bộ kiến trúc vào `05_Technical-Blueprint.md`, `03_DB-Schema.md`, `04_UI-UX-Flow.md`.
+- [x] Commit & Push Milestone 2 (`2996cf5`).
+- [x] **AC7–AC10, RG04–RG05:** User UAT trực tiếp trên trình duyệt xác nhận đạt 100% → Đã tick `[x]` toàn bộ trong `docs/10_Micro-Spec_Milestone_2_Kinship_Lunar.md`.
+- [x] Ban hành **Quy tắc 14 (Browser Subagent Pre-flight Gate & Rate Guard)** vào `.agents/AGENTS.md` để chống lãng phí token vĩnh viễn.
 
 ### 3. Immediate Next Step
-- Chạy lệnh `/feature-code` để bắt đầu thi công mã nguồn cho Milestone 2 (Lõi Thuật toán Kinship Engine & Lịch Âm) bám sát 100% tài liệu `docs/10_Micro-Spec_Milestone_2_Kinship_Lunar.md`.
+- Khởi động **Milestone 3: Cây Phả Hệ Tương Tác Canvas Toàn Màn Hình (@xyflow/react v12)**:
+  - Chạy `/feature-brainstorm` hoặc `/feature-spec` cho Milestone 3.
+  - Thiết kế Canvas đồ thị phả hệ lớn: Node tùy biến phong cách Jade Heritage, hỗ trợ Đa thê (vợ cả/hai), Con nuôi, Ghost Node 🔗 khi kết hôn nội tộc, và tiếp nhận Deep Link focus camera từ `/kinship`.
+
+### 4. Process Fix Applied — Quy tắc 14 Bổ Sung vào AGENTS.md
+- Đã chính thức luật hóa **Quy tắc 14** vào `.agents/AGENTS.md`:
+  1. Cấm dùng browser để debug mò lỗi.
+  2. Cổng Pre-flight bắt buộc: Build pass 0 lỗi + Unit test pass 100% + curl verify API hợp lệ trước khi gọi browser.
+  3. Single-shot verification: Gom toàn bộ kịch bản test vào 1 lần chạy browser duy nhất.
+  4. Hard stop khi fail: Dừng lại hỏi User, tuyệt đối không retry làm cháy quota.
+  5. Luôn neo viewport chuẩn 1280x800 ở bước đầu tiên.
+

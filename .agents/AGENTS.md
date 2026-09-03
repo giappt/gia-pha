@@ -82,3 +82,14 @@ Naming_Convention: Identical
 - **Mục 7 trong Micro-Spec là Chân lý Tối cao:** Mã nguồn (Code) chỉ là công nhân phục tùng Test Cases trong Spec.
 - **Quy trình Trạng thái Rạch ròi:** Mọi tiêu chí test ban đầu phải ở dạng `- [ ] AC_i`. Code thi công cho đến khi test PASS 100% mới được chuyển sang `- [x] AC_i`.
 - **Cấm Tick [x] bằng niềm tin:** Bắt buộc phải có bằng chứng thực nghiệm (Test Log / Browser Run Output) chứng minh AC thỏa mãn trước khi báo User nghiệm thu.
+
+## 14. BROWSER SUBAGENT PRE-FLIGHT GATE & RATE GUARD (CỔNG KIỂM ĐỊNH TRÌNH DUYỆT & CHỐNG LÃNG PHÍ TOKEN)
+- **Cấm dùng Browser để mò lỗi (No Trial-and-Error Debugging):** Tuyệt đối cấm dùng `browser_subagent` để mò lỗi hoặc thử-sai trạng thái UI. Mọi phân tích trạng thái bất đồng bộ, hydration hay rendering phải giải quyết trước bằng đọc code, phân tích console log, hoặc chạy lệnh `curl`.
+- **Pre-flight Gate Bắt buộc:** Trước khi triệu hồi `browser_subagent`, hệ thống bắt buộc phải thỏa mãn 3 điều kiện tiên quyết:
+  1. Compile & Build pass 100% 0 lỗi (`next build` / `npm run typecheck`).
+  2. Toàn bộ Unit Test thực thi PASS 100%.
+  3. Dùng `curl` kiểm tra endpoint cục bộ để xác nhận payload API trả về đúng và đầy đủ cấu trúc mong đợi.
+- **Quy tắc Single-Shot Verification:** Gom toàn bộ kịch bản test và chụp bằng chứng vào **1 lần chạy browser subagent duy nhất**. Tuyệt đối không chia nhỏ thành nhiều lần gọi liên tiếp.
+- **Dừng lại khi Thất bại (Hard Stop on Failure):** Nếu lần chạy browser đầu tiên thất bại hoặc phát sinh lỗi ngoài dự kiến $\rightarrow$ DỪNG LẠI NGAY LẬP TỨC và xin ý kiến User (hoặc mời User UAT bằng tay), nghiêm cấm tự ý retry liên tục làm cạn kiệt quota (`429 Resource Exhausted`).
+- **Khóa Độ Phân Giải (Resolution Anchor):** Mọi lệnh giao task cho subagent bắt buộc phải yêu cầu resize viewport về chuẩn cố định `1280x800` ngay ở bước đầu tiên để tránh trượt tọa độ giao diện responsive (do viewport mặc định 2510px gây click trượt ra ngoài lề).
+
