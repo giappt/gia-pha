@@ -51,7 +51,13 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
     termBtoA: string; // B gọi A là gì (VD: "Cháu họ", "Em họ")
     explanation: string; // Diễn giải phong tục (VD: "B là con bác trưởng, A là con chú thứ")
     region: KinshipRegion;
-    breadcrumbs: string[]; // Chuỗi mắt xích: ["Nguyễn Văn A", "Bố: Nguyễn Văn C", "Cụ Tổ: Nguyễn Văn Tổ", "Bác: Nguyễn Văn D", "Nguyễn Văn B"]
+    breadcrumbs: string[]; // Chuỗi mắt xích
+    generationDelta: number;
+    relationshipType: RelationshipType;
+    lcaName?: string | null;
+    lcaNode?: KinshipPathNode | null;
+    pathA: KinshipPathNode[]; // Nhánh thế hệ từ A lên LCA
+    pathB: KinshipPathNode[]; // Nhánh thế hệ từ B lên LCA
   }
   ```
 
@@ -154,18 +160,26 @@ sequenceDiagram
   - `selectedRegion: KinshipRegion`
   - `result: KinshipResolution | null`
   - `isLoading: boolean`
-  - `searchTerm: string`
+  - `searchTermA: string`, `searchTermB: string`
+  - `isExpandedMiddleGenerations: boolean` (Trạng thái mở rộng nén thế hệ trung gian khi $\ge 4$ đời)
 - **Luồng xử lý UI:**
   1. Người dùng vào trang `/kinship`.
   2. Hai hộp chọn thành viên độc lập (Người hỏi & Người được hỏi) có thanh tìm kiếm tên gõ tức thì.
-  3. Có thể bấm nút **[Đổi vai]** để đảo ngược vị trí A $\leftrightarrow$ B.
+  3. Có thể bấm nút **[Đổi vai ⇄]** để đảo ngược vị trí A $\leftrightarrow$ B (kèm tự động tính lại).
   4. Lựa chọn radio vùng miền (Bắc / Trung / Nam).
   5. Bấm **[Xác Định Vai Vế Xưng Hô]** $\rightarrow$ Gọi API `/api/kinship`.
   6. Hiển thị thẻ kết quả nổi bật:
      - Khung xưng hô 2 chiều lớn: *"A gọi B là: **Bác Họ**"* & *"B gọi A là: **Cháu Họ**"*.
-     - Huy hiệu thế hệ: *"Cùng thế hệ (Đời thứ 4)"* hoặc *"Cách nhau 1 thế hệ"*.
-     - Chuỗi sơ đồ mắt xích huyết thống (Visual Breadcrumbs Path) với icon mũi tên rõ ràng.
-     - Lời diễn giải nguồn cội phong tục.
+     - Huy hiệu thế hệ: *"Cùng thế hệ"* hoặc *"Cách nhau N thế hệ"*.
+     - **Sơ đồ Cây Phả Hệ Mini Chữ V Ngược (Inverted-V Kinship Tree):**
+       - Bắt đầu từ **Tổ tiên chung gần nhất (LCA)** (không lấy thừa từ Root).
+       - Phân làm 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ) với đường line cong SVG bezier mềm mại.
+       - Tích hợp cơ chế **Nén Tầng Trung Gian (Smart Folding)**: Nếu khoảng cách $\ge 4$ đời, mặc định nén các thế hệ giữa thành nút `[🔽 Nén N thế hệ - Bấm để mở rộng]`.
+       - Thanh Cầu nối quan hệ dưới chân nối giữa A và B kèm nút bấm `[🔍 Xem trên Cây Phả Hệ Tổng]`.
+     - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:**
+       - Huy hiệu phong tục vùng miền (VD: `Phong tục Miền Bắc: Tôn vai Nhánh Trưởng`).
+       - Lời răn / Tục ngữ cổ phong (VD: *"Bé bằng củ khoai, cứ vai Bác là gọi Anh"*).
+       - Bảng đối sánh trực diện (Người A: Chi Trưởng, Sinh 1955 $\leftrightarrow$ Người B: Chi Thứ, Sinh 1952).
 
 ---
 
@@ -191,22 +205,32 @@ sequenceDiagram
 | **TC05** | Chọn Trùng 1 Người | UI / E2E | Trang `/kinship` đã tải | Chọn Người A và Người B cùng là 1 người | Nút Tra cứu bị disable hoặc báo lỗi: "Vui lòng chọn 2 người khác nhau" | Error Handling |
 | **TC06** | Thành Viên Chưa Nối Phả | UI / E2E | Thành viên C không có father_id và mother_id | Bấm Tra cứu A và C | Hiển thị thông báo: "Chưa thể xác định do chưa liên kết phả hệ" | Edge Case |
 | **TC07** | Đảo Vai (A ↔ B) | UI / E2E | Đang hiển thị kết quả A gọi B | Bấm nút [Đổi vai] | Đảo ngược kết quả B gọi A lên đầu ngay lập tức | Happy Path |
+| **TC08** | Cây Chữ V Ngược Xuất Phát Từ LCA | UI / E2E | Chọn 2 người cùng ông nội (Đời 3) trong cây 7 đời | Bấm [Xác Định Vai Vế Xưng Hô] | Đỉnh cây hiển thị đúng Ông nội (LCA), KHÔNG hiển thị thừa các đời 2, 1 (Root) | Happy Path |
+| **TC09** | Nén Tầng Trung Gian (Smart Folding) | UI / E2E | Chọn 2 người cách nhau $\ge 4$ đời (Đời 1 và Đời 6) | Bấm [Xác Định Vai Vế] $\rightarrow$ Bấm nút [🔽 Nén N thế hệ] | Ban đầu nén gọn các tầng giữa; bấm vào bung mở rộng mượt mà | Happy Path |
+| **TC10** | Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa | UI / E2E | Tra cứu Dũng (Chi Trưởng) và Hùng (Chi Thứ) | Quan sát khối Diễn giải phong tục | Hiển thị đủ 3 khối: Huy hiệu vùng miền, Tục ngữ cổ phong, Bảng đối sánh trực diện | UI / Visual |
+| **TC11** | Phả Hệ Đa Thê & Con Nuôi | Unit Test | Dữ liệu mẫu mở rộng 25–30 người có vợ cả/hai, con nuôi | Chạy `findLowestCommonAncestor` & `resolveKinshipTerms` | Xác định đúng quan hệ con cùng cha khác mẹ và xưng hô cho con nuôi | Happy Path |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu (Acceptance Criteria)
-- [ ] **AC1:** Thuật toán `findLowestCommonAncestor` tìm chính xác Tổ tiên chung gần nhất và khoảng cách thế hệ giữa 2 người bất kỳ trên đồ thị phả hệ.
-- [ ] **AC2:** Bộ từ điển xưng hô `resolveKinshipTerms` ánh xạ đúng danh xưng 2 chiều cho anh em ruột, con chú con bác, chú-cháu, ông-cháu theo 3 miền Bắc/Trung/Nam.
-- [ ] **AC3:** Bộ chuyển đổi `vietnamese-lunar.ts` quy đổi chính xác Âm - Dương theo múi giờ UTC+7 và xuất đúng tên Năm Can Chi (Thập Can + Thập Nhị Chi).
-- [ ] **AC4:** API `GET /api/kinship` trả về dữ liệu cấu trúc chuẩn, có breadcrumbs đường đi huyết thống và lý giải phong tục.
-- [ ] **AC5:** Giao diện `/kinship` cho phép tìm kiếm, chọn 2 thành viên, đổi vai A $\leftrightarrow$ B và xem kết quả trực quan mượt mà.
-- [ ] **AC6:** Bộ Unit Test (`tests/kinship.test.ts` & `tests/lunar.test.ts`) đạt tỷ lệ Pass 100%.
+- [x] **AC1:** Thuật toán `findLowestCommonAncestor` tìm chính xác Tổ tiên chung gần nhất và khoảng cách thế hệ giữa 2 người bất kỳ trên đồ thị phả hệ.
+- [x] **AC2:** Bộ từ điển xưng hô `resolveKinshipTerms` ánh xạ đúng danh xưng 2 chiều cho anh em ruột, con chú con bác, chú-cháu, ông-cháu theo 3 miền Bắc/Trung/Nam.
+- [x] **AC3:** Bộ chuyển đổi `vietnamese-lunar.ts` quy đổi chính xác Âm - Dương theo múi giờ UTC+7 và xuất đúng tên Năm Can Chi (Thập Can + Thập Nhị Chi).
+- [x] **AC4:** API `GET /api/kinship` trả về dữ liệu cấu trúc chuẩn, có breadcrumbs đường đi huyết thống và lý giải phong tục.
+- [x] **AC5:** Giao diện `/kinship` cho phép tìm kiếm, chọn 2 thành viên, đổi vai A $\leftrightarrow$ B và xem kết quả trực quan mượt mà.
+- [x] **AC6:** Bộ Unit Test (`tests/kinship.test.ts` & `tests/lunar.test.ts`) đạt tỷ lệ Pass 100%.
+- [ ] **AC7:** Sơ đồ Cây Phả Hệ Mini Chữ V Ngược (Inverted-V Kinship Tree) hiển thị trực quan bắt đầu từ LCA, phân 2 cột nhánh (Trưởng vs Thứ), có đường nối SVG bezier và thanh cầu nối xưng hô ở chân.
+- [ ] **AC8:** Cơ chế Smart Folding tự động nén thế hệ trung gian khi khoảng cách $\ge 4$ đời, hỗ trợ toggle mở rộng/thu gọn mượt mà.
+- [ ] **AC9:** Thẻ Diễn Giải Phong Tục cấu trúc hóa 3 phần (Huy hiệu phong tục, Lời răn cổ phong, Bảng đối sánh tương quan) thay thế hoàn toàn đoạn văn bản cũ.
+- [ ] **AC10:** Mở rộng bộ dữ liệu mẫu `MOCK_CLAN_MEMBERS` lên 25–30 người bao phủ đa chi, vợ cả/vợ hai, con nuôi, 6-7 đời và hôn nhân nội tộc.
 
 ---
 
 ## 8. BẢO VỆ CHỐNG THOÁI LUI (REGRESSION GUARD CHECKLIST)
 
-- [ ] **RG01 (Trang Chủ & Header):** Thanh điều hướng Navbar liên kết tới `/kinship` hoạt động chuẩn xác, giữ nguyên giao diện Modern Heritage.
-- [ ] **RG02 (Auth & Dev Bypass):** Cơ chế Dev Bypass và phiên đăng nhập Super Admin hoạt động bình thường, không bị ảnh hưởng bởi tính năng mới.
-- [ ] **RG03 (Build & Typecheck):** `npx.cmd tsc --noEmit` và `npm.cmd run build` tiếp tục đạt 100% 0 lỗi.
+- [x] **RG01 (Trang Chủ & Header):** Thanh điều hướng Navbar liên kết tới `/kinship` hoạt động chuẩn xác, giữ nguyên giao diện Modern Heritage.
+- [x] **RG02 (Auth & Dev Bypass):** Cơ chế Dev Bypass và phiên đăng nhập Super Admin hoạt động bình thường, không bị ảnh hưởng bởi tính năng mới.
+- [x] **RG03 (Build & Typecheck):** `npm run typecheck` (`tsc --noEmit`) và `npm run build` tiếp tục đạt 100% 0 lỗi.
+- [ ] **RG04 (Đảo vai A ↔ B trên Cây Chữ V):** Khi bấm nút hoán đổi vai xưng hô ⇄, vị trí 2 cột nhánh và thanh cầu nối quan hệ đảo ngược mượt mà, không vỡ layout.
+- [ ] **RG05 (Responsive Mobile):** Sơ đồ cây co giãn linh hoạt hoặc chuyển sang Split Timeline trên màn hình nhỏ (< 640px) không bị tràn ngang.
 
 ---
 

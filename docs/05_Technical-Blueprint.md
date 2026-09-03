@@ -139,16 +139,29 @@ _(Nguyên tắc: Milestone N phải nghiệm thu hoàn hảo 100% 0 lỗi mới 
 - **Mục tiêu:** Khởi tạo base Next.js 14 App Router, chạy migration SQL lên Supabase, tích hợp Supabase Auth (Google OAuth 2.0), lưu session an toàn và phân quyền `viewer` / `super_admin`.
 - **Thư mục/File:** `src/lib/supabase/`, `src/app/(auth)/`, `src/types/database.ts`.
 
-### MILESTONE 2: Lõi Thuật Toán Gia Phả (Kinship Engine & Lịch Âm)
-- **Mục tiêu:** Xây dựng unit test độc lập cho thuật toán tìm tổ tiên chung gần nhất (LCA), tính độ lệch thế hệ, ánh xạ từ điển xưng hô vùng miền (`kinship-engine.ts`) và bộ chuyển đổi Âm - Dương / Năm Can Chi (`vietnamese-lunar.ts`).
-- **Thư mục/File:** `src/lib/kinship-engine/`, `src/lib/lunar/`, các file unit test `tests/`.
+### MILESTONE 2: Lõi Thuật Toán Gia Phả (Kinship Engine & Lịch Âm) & Giao Diện Tra Cứu Vai Vế
+- **Mục tiêu:**
+  - Xây dựng unit test độc lập cho thuật toán tìm tổ tiên chung gần nhất (LCA), tính độ lệch thế hệ, ánh xạ từ điển xưng hô vùng miền (`kinship-engine.ts`) và bộ chuyển đổi Âm - Dương / Năm Can Chi (`vietnamese-lunar.ts`).
+  - **Sơ đồ Cây Phả Hệ Mini Chữ V Ngược (Inverted-V Kinship Tree):** Vẽ đồ thị nhánh huyết thống trực quan chỉ lấy từ điểm giao nhau LCA (không lấy thừa từ Root), tích hợp cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời để giao diện luôn gọn gàng và không bị tràn cuộn.
+  - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:** Bỏ đoạn văn dài, chia thành khối Quy tắc vùng miền, Tục ngữ cổ phong và Bảng đối sánh tương quan trực diện (nhánh họ vs tuổi đời).
+  - **Tập Dữ Liệu Kiểm Thử Toàn Diện (Comprehensive Clan Seed):** Mở rộng bộ dữ liệu mẫu đa dạng (6-7 đời, nhiều chi, vợ cả đã mất / vợ hai, con nuôi, hôn nhân nội tộc) để kiểm chứng 100% các ca thực tế.
+- **Thư mục/File:** `src/lib/kinship-engine/`, `src/lib/lunar/`, `src/app/kinship/`, `src/app/api/kinship/`, các file unit test `tests/`.
 
 ### MILESTONE 3: Màn hình Cây Phả Hệ Tương Tác & Ghost Node 🔗 Canvas
-- **Mục tiêu:** Dựng cây đồ thị trực quan bằng React Flow (`@xyflow/react`), hỗ trợ Pan/Zoom, hiển thị `MemberNode` (Nam/Nữ) và `GhostNode` (🔗 viền nét đứt khi kết hôn nội tộc), tính năng tìm kiếm Spotlight và Toggle xem Nhánh Nội / Toàn bộ.
+- **Mục tiêu:**
+  - Dựng cây đồ thị toàn thể trực quan bằng React Flow (`@xyflow/react`) và `dagre`, hỗ trợ Pan/Zoom vô cực, Minimap, Drag & Drop, 60 FPS Virtualization.
+  - **Hiển Thị Đa Thê & Con Nuôi:** Hiển thị rõ ràng các cặp vợ chồng (Vợ cả Chánh thất, Vợ hai Kế thất, trạng thái còn sống / đã mất) và huy hiệu phân biệt Con nuôi.
+  - **Cơ Chế Ghost Node 🔗 (Hôn Nhân Nội Tộc):** Hiển thị Node phản chiếu viền nét đứt kèm icon 🔗 tại nhánh hôn phối, click vào tự động lướt camera sang vị trí Node gốc ở chi bên kia.
+  - **Liên Kết Trải Nghiệm Liên Màn Hình (Deep Linking from /kinship):** Trên sơ đồ tra cứu vai vế `/kinship` có nút `[🔍 Xem trên Cây Phả Hệ Tổng]`, bấm vào sẽ điều hướng về trang chủ `/` và camera tự động pan/zoom focus làm nổi bật 2 node A & B trên cây tổng.
+  - Tính năng tìm kiếm Spotlight và Toggle xem Nhánh Nội / Toàn bộ.
 - **Thư mục/File:** `src/components/tree/`, `src/app/page.tsx`, `src/app/api/tree/route.ts`.
 
 ### MILESTONE 4: Quản lý Thành Viên Đa Tầng (Popup 1 Cấp, Excel Import & Node Chưa Nối)
-- **Mục tiêu:** Form thêm/sửa thành viên giới hạn đúng 1 cấp, ưu tiên nhập Ngày mất Âm lịch; tính năng import hàng trăm người từ file Excel; khay quản lý các thành viên chưa nối phả (`UnlinkedDrawer.tsx`) và cơ chế tự động nối cây khi sửa Bố/Mẹ.
+- **Mục tiêu:**
+  - **Form Quản Lý Thành Viên 1 Cấp:** Nhập thông tin thành viên, ưu tiên Ngày mất Âm lịch; hỗ trợ chọn Mẹ ruột (trong trường hợp bố có nhiều vợ cả/vợ hai); đánh dấu Con nuôi (`is_adopted`).
+  - **Phát Hiện Hôn Nhân Nội Tộc Tự Động:** Khi ghép cặp vợ chồng mà phối ngẫu đã tồn tại trong dòng họ $\rightarrow$ Hệ thống tự động kích hoạt cờ Ghost Node 🔗.
+  - **Khay Thành Viên Chưa Nối Phả (`UnlinkedDrawer.tsx`):** Quản lý danh sách thành viên mồ côi / dâu rể chưa nối nhánh, hỗ trợ kéo thả hoặc chọn Bố/Mẹ để nối liền vào cây.
+  - **Bulk Excel Import:** Nhập liệu hàng loạt hàng trăm thành viên từ file Excel, hỗ trợ ánh xạ cột Mẹ (Vợ 1/Vợ 2) và cột Con nuôi.
 - **Thư mục/File:** `src/components/modals/`, `src/lib/excel/`, `src/app/admin/import/`.
 
 ### MILESTONE 5: Lịch Giỗ 30 Ngày, Vercel Cron & PWA Web Push Notification

@@ -83,12 +83,18 @@ flowchart TD
 - **Empty:** Hai ô nhập người trống kèm hình minh họa ấm cúng: *"Chọn 2 thành viên bất kỳ để biết cách xưng hô chuẩn mực theo phong tục dòng họ"*.
 - **Calculating:** Hiệu ứng vẽ đường đi huyết thống kết nối giữa 2 người (100ms).
 - **Success:**
-  - Khối kết quả nổi bật: 
+  - Khối kết quả nổi bật 2 chiều: 
     - Chiều đi: **`A gọi B là: Bác họ (Xưng Cháu)`**
     - Chiều về: **`B gọi A là: Cháu họ (Xưng Bác)`**
-  - Sơ đồ breadcrumbs trực quan: `A` $\rightarrow$ `Bố` $\rightarrow$ `Ông nội` $\rightarrow$ **`Cụ Tổ chung`** $\leftarrow$ `Ông C` $\leftarrow$ `B`.
-  - Căn cứ giải thích: *"B thuộc nhánh Trưởng (con Cụ Cả), bố của A thuộc nhánh Thứ. Theo tục họ miền Bắc, B là vai Bác của A."*
-- **No Relation (Không chung gốc):** Thông báo lịch sự: *"Hai người này không cùng huyết thống nội tộc trong cây gia phả (Dâu/Rể ngoại tộc)"*.
+  - **Sơ đồ Cây Phả Hệ Mini Chữ V Ngược (Inverted-V Kinship Tree):** 
+    - Đỉnh chóp là Tổ tiên chung gần nhất (LCA), rẽ xuống 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ).
+    - Có cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời (nén các đời giữa thành nút bấm `[🔽 Nén N thế hệ - Bấm mở rộng]`).
+    - Nút liên kết: `[🔍 Xem trên Cây Phả Hệ Lớn]` lướt camera trên `S-01` focus vào 2 node.
+  - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:**
+    - Huy hiệu nguyên tắc dòng họ (`Phong tục Miền Bắc: Tôn vai Nhánh Trưởng`).
+    - Câu đối / tục ngữ cổ phong (`"Bé bằng củ khoai, cứ vai Bác là gọi Anh"`).
+    - Bảng đối sánh tương quan trực diện giữa 2 người.
+- **No Relation (Không chung gốc):** Thông báo lịch sự: *"Hai người này không cùng huyết thống nội tộc trong cây gia phả (Dâu/Rể ngoại tộc hoặc thành viên chưa nối phả)"*.
 
 ### 3.3. Màn hình S-04: Lịch Giỗ 30 Ngày
 - **Empty:** *"Trong 30 ngày tới không có ngày giỗ nào của dòng họ"*.
@@ -199,22 +205,34 @@ flowchart TD
 +-----------------------------------------------------------------------------------+
 |  ← Quay lại Cây phả hệ           CÔNG CỤ TRA CỨU VAI VẾ XƯNG HÔ                   |
 +-----------------------------------------------------------------------------------+
-|  Chọn Người thứ nhất (Người gọi):         Chọn Người thứ hai (Người được gọi):    |
-|  [ 🔍 Tôi: Nguyễn Văn Nam (Đời 6)  ▼ ]    [ 🔍 Ông: Nguyễn Văn Dực (Đời 5)   ▼ ]  |
+|  Chọn Người thứ nhất (A):                 Chọn Người thứ hai (B):                 |
+|  [ 🔍 Tôi: Nguyễn Văn Nam (Đời 6)  ▼ ]    [ 🔍 Bác: Nguyễn Văn Dực (Đời 5)   ▼ ]  |
 |                                                                                   |
-|                                 [ XÁC ĐỊNH VAI VẾ ]                               |
+|                               [ ⇄ ĐỔI VAI XƯNG HÔ ]                               |
+|                               [ XÁC ĐỊNH VAI VẾ ]                                 |
 +-----------------------------------------------------------------------------------+
 |  KẾT QUẢ XƯNG HÔ 2 CHIỀU:                                                         |
+|    👉 Bạn gọi Bác Dực là:  👑 BÁC HỌ (Xưng Cháu)                                  |
+|    👈 Bác Dực gọi bạn là:  🌱 CHÁU HỌ (Xưng Bác)                                  |
++-----------------------------------------------------------------------------------+
+|  SƠ ĐỒ CÂY PHẢ HỆ MINI (INVERTED-V KINSHIP TREE - XUẤT PHÁT TỪ LCA):              |
 |                                                                                   |
-|    👉 Bạn gọi Ông Dực là:  👑 BÁC HỌ (Xưng Cháu)                                  |
-|    👈 Ông Dực gọi bạn là:  🌱 CHÁU HỌ (Xưng Bác)                                  |
+|                       [ 👑 TỔ TIÊN CHUNG: CỤ AN (ĐỜI 4) ]                         |
+|                                 /             \                                   |
+|                   (Nhánh Trưởng)               (Nhánh Thứ)                        |
+|                               /                 \                                 |
+|            [ Bác: Nguyễn Văn Dực (Đời 5) ]    [ Bố: Nguyễn Văn Bình (Đời 5) ]     |
+|                         │                                │                        |
+|                         │                     [ Bạn: Nguyễn Văn Nam (Đời 6) ]     |
+|                         │                                │                        |
+|                         └═══════[ CẦU NỐI XƯNG HÔ ]══════┘                        |
 |                                                                                   |
-|  SƠ ĐỒ ĐƯỜNG ĐI HUYẾT THỐNG:                                                      |
-|  [Bạn (Nam)] ──(con)──> [Bố] ──(con)──> [Cụ Tổ Chung (Đời 4)] <──(con)── [Ông Dực]|
-|                                                                                   |
-|  📜 Căn cứ xưng hô:                                                               |
-|  Ông Dực là con của Cụ Cả (Nhánh Trưởng), Bố bạn là con của Cụ Ba (Nhánh Thứ).    |
-|  Theo phong tục văn hóa dòng họ miền Bắc: Cứ vai Bác là gọi Bác.                  |
+|             [🔍 Xem vị trí 2 người trên Cây Phả Hệ Tổng Thể]                      |
++-----------------------------------------------------------------------------------+
+|  📜 CĂN CỨ PHONG TỤC & ĐỐI SÁNH TƯƠNG QUAN:                                       |
+|  • Nguyên tắc: Phong tục Miền Bắc (Tôn vai Nhánh Trưởng)                          |
+|  • Tục ngữ: "Bé bằng củ khoai, cứ vai Bác là gọi Anh"                             |
+|  • Đối sánh: Bác Dực thuộc con Cụ Cả (Nhánh Trưởng); Bố bạn thuộc con Cụ Ba.      |
 +-----------------------------------------------------------------------------------+
 ```
 

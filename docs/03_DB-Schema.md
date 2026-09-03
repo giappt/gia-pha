@@ -83,6 +83,7 @@ Thực thể trung tâm của cây phả hệ. Mỗi người thực tế chỉ 
 | `generation_level` | `INTEGER` | Nullable, Default: `1` | Đời thứ mấy trong dòng họ (Cụ tổ = 1) |
 | `birth_order` | `INTEGER` | Nullable, Default: `1` | Thứ tự sinh trong nhà (1: con cả, 2: con thứ...) |
 | `is_root` | `BOOLEAN` | Required, Default: `false` | Đánh dấu là Cụ tổ / Gốc của dòng họ |
+| `is_adopted` | `BOOLEAN` | Required, Default: `false` | Đánh dấu con nuôi (phân biệt con đẻ / con nuôi) |
 | `created_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm tạo |
 | `updated_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm cập nhật cuối |
 

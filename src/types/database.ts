@@ -56,6 +56,9 @@ export interface Member {
   biography: string | null;
   generation_number: number;
   birth_order: number;
+  is_senior_branch?: boolean | null;
+  is_adopted?: boolean | null;
+  spouse_ids?: string[];
   created_at: string;
   updated_at: string;
 }
