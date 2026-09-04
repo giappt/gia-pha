@@ -44,7 +44,7 @@ graph TD
     subgraph PHASE 3: EXECUTION (Vòng lặp Thi công Chuẩn Kỹ Nghệ)
         S9["/feature-brainstorm (Bước 9) <br/> Thiết kế sâu, Root Cause & Blast Radius"]:::phase3
         S10["/feature-spec (Bước 10) <br/> Routing Spec, Sinh Test Matrix & Regression Guard"]:::phase3
-        S11["/feature-code (Bước 11) <br/> Code + 3-Tier Verification (Build, Test, Proof)"]:::phase3
+        S11["/feature-code (Bước 11) <br/> Code + Test song hành <br/> Build → Automated Test → Human UAT"]:::phase3
         S12["/feature-fix (Bước 12) <br/> Fast-Track Fix (Vá nhanh typo/CSS)"]:::loopFill
         
         S85 --> S9 --> S10 --> S11
@@ -66,12 +66,12 @@ Dưới đây là chi tiết và nguyên tắc kết nối của pipeline 13 bư
 - **4. `/doc-ui`**: Thiết kế luồng UX/UI -> Tạo `04_UI-UX-Flow.md`.
 - **5. `/doc-tech`**: Chốt ngôn ngữ, thư viện, API (dựa trên 01~04) -> Tạo `05_Technical-Blueprint.md`.
 - **6. `/doc-security`**: Lập mô hình bảo mật rủi ro -> Tạo `06_Security-Threat-Model.md`.
-- **7. `/doc-qa`**: Lập chiến lược kiểm thử -> Tạo `07_Test-QA-Strategy.md`.
+- **7. `/doc-qa`**: Lập chiến lược kiểm thử -> Tạo `07_Test-QA-Strategy.md` **VÀ dựng hạ tầng test chạy được thật** (runner + script + `Test_Dir` + 1 smoke test đã chạy xanh), rồi ghi khối `[VERIFY_COMMANDS]` vào `.agents/AGENTS.md`. Không có bước này thì `/feature-code` sẽ bị chặn ở Bước 11.
 - **8. `/doc-deploy`**: Chốt phương án triển khai -> Tạo `08_Deployment-Environments.md`.
 - **8.5. `/doc-readme`**: Lệnh trung tâm tổng hợp thông tin từ File 01, 05, 08 -> Sinh ra/Cập nhật `README.md` ngoài root. (Nên gọi bất cứ khi nào kiến trúc có thay đổi).
 - **9. `/feature-brainstorm`**: Bộ não tư duy chiều sâu của hệ thống. Dùng cho: Tính năng mới, Mở rộng tính năng cũ, hoặc Mổ xẻ căn nguyên lỗi hóc búa (Root Cause Analysis). Lập Kế hoạch đồng bộ & Ma trận vùng ảnh hưởng (Blast Radius).
 - **10. `/feature-spec`**: Định tuyến Spec (Nhánh A: Tạo mới vs Nhánh B: Cập nhật Spec cũ) + Thiết lập Hợp đồng Nghiệm thu qua Bảng Test Cases Ma Trận (Given - When - Then) và Regression Guard Checklist.
-- **11. `/feature-code`**: Thi công mã nguồn bám sát Spec + Thực thi Vòng lặp Kiểm thử 3 Tầng (Build $\rightarrow$ Automated Test Cases $\rightarrow$ Regression Check). Chỉ tick `[x]` vào AC khi có bằng chứng thực nghiệm Pass.
+- **11. `/feature-code`**: Bị **chặn** nếu `[VERIFY_COMMANDS].Test` chưa khai báo (quay về `/doc-qa`). Thi công mã nguồn bám sát Spec + viết test song hành + Thực thi Vòng lặp Kiểm chứng Bằng Code Thật 3 Tầng (Build $\rightarrow$ Automated Test Suite $\rightarrow$ **Human UAT**). Chỉ tick `[x]` vào AC Mục 7.1 khi log terminal chứng minh; Mục 7.2 để User tự nghiệm thu.
 - **12. `/feature-fix`**: Làn sửa nhanh có kiểm soát (Fast-Track) cho các lỗi nhỏ, typo, lệch màu CSS. Tự động leo thang sang `/feature-brainstorm` nếu phát hiện lỗi kiến trúc phức tạp.
 
 **Nhóm Kho Ý tưởng (Idea Backlog) — gác/quản lý ý tưởng làm sau:**
@@ -85,7 +85,6 @@ Song song pipeline, dùng khi có ý tưởng nhưng chưa muốn làm ngay. Kho
 
 **Các lệnh Global/Meta khác (Dành cho Agent):**
 - **/g-architect:** Phiên làm việc cấp cao để tái cấu trúc, thiết kế và nâng cấp trực tiếp hệ thống Profile Agent.
-- **/g-context:** Kiểm tra mức độ chiếm dụng Context Window (% context, tokens) của phiên làm việc.
 - **/local-review:** Rà soát sổ tay bài học (`brain/scratch/lessons_learned.md`) và đề xuất luật mới.
 - **/local-update:** Thực thi việc ghi đè luật mới đã duyệt vào `.agents/AGENTS.md`.
 

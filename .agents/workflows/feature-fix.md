@@ -17,12 +17,15 @@ description: "[Bước 12/12] Làn Sửa Nhanh Có Kiểm Soát (Fast-Track Fix)
        > *"Đây là lỗi kiến trúc/logic hóc búa, không thể vá cục bộ. Cần tư duy sâu về nguyên nhân gốc rễ (Root Cause) và ma trận tác động. Đề xuất chuyển sang lệnh `/feature-brainstorm`."*
 
 2. **[SỬA NHANH & CHỐNG THOÁI LUI (FAST FIX & REGRESSION CHECK)]:**
+   Dùng đúng các lệnh đã khai báo tại khối `[VERIFY_COMMANDS]` trong `.agents/AGENTS.md`.
    - Với Cấp độ 1:
+     - 🔴 **[TEST TRƯỚC - RED FIRST]:** Nếu bug chạm vào **logic / dữ liệu / API** (không phải thuần CSS-text), BẮT BUỘC viết trước **1 regression test trong `Test_Dir` tái hiện đúng bug** và xác nhận nó **FAIL**. Không có test đỏ thì không có bằng chứng bug đã được sửa — chỉ là niềm tin.
      - Sửa code tối thiểu, trực diện vào đúng dòng bị lỗi.
-     - Chạy `npm run build` để kiểm tra cú pháp.
-     - Kiểm tra nhanh kịch bản liên quan để không làm gãy UI lân cận.
+     - Chạy lệnh `Typecheck` & `Build` — 0 lỗi.
+     - Chạy lệnh `Test`: test vừa viết phải chuyển từ đỏ sang xanh, và **0 failure mới so với `Known_Failing_Baseline`**.
+     - CẤM sửa/xoá/skip test cũ để lấy màu xanh, và **CẤM tự nâng `Known_Failing_Baseline`** dù vì bất kỳ lý do nào (xem `[R-VERIFY.INTEGRITY]` + `[R-VERIFY.CMD]`). Gặp failure mới không rõ nguồn gốc ⇒ dừng, đưa log, xin User xác nhận.
 
-3. **[BÁO CÁO KẾT QUẢ & MỜI TEST LẠI]:**
-   - Báo cáo rõ ràng: *"Đã sửa xong [Mô tả ngắn]. Kết quả build sạch 0 lỗi."*
-   - Mời User kiểm tra lại trên trình duyệt (UAT).
+3. **[BÁO CÁO KẾT QUẢ & MỜI HUMAN UAT]:**
+   - Báo cáo rõ ràng: *"Đã sửa xong [Mô tả ngắn]"* kèm log terminal cho thấy test regression đã chuyển đỏ → xanh và không có failure mới.
+   - Cung cấp `Dev_URL` để mời User tự kiểm tra lại trên trình duyệt (Human UAT).
    - Nếu lỗi vẫn lặp lại hoặc phức tạp hơn dự kiến $\rightarrow$ Tự động leo thang sang `/feature-brainstorm`.
