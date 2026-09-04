@@ -12,9 +12,9 @@ Hệ thống áp dụng mô hình kim tự tháp kiểm thử 3 tầng kết h�
 
 | **Tầng** | **Phạm vi kiểm thử** | **Công cụ** | **Người phụ trách / Thời điểm** |
 |---|---|---|---|
-| **Unit Test** | Lõi thuật toán độc lập: Tìm LCA, Tính vai vế xưng hô vùng miền, Quy đổi Lịch Âm - Dương, Parser & Validator file Excel, Thuật toán phát hiện chu trình (Cycle Detection). | **Vitest** (Chạy siêu tốc với TypeScript) | AI / Dev viết đồng thời khi code từng module ở `src/lib/` |
-| **Integration Test** | Các Route Handlers (`/api/*`) tương tác với CSDL Supabase: Đệ quy cây gia phả, Phân quyền RLS, Lá chắn Privacy Guard, Duyệt Claim Request, Endpoint Cron Job. | **Vitest** + **Supabase Local / Test Client** | AI / Dev thực hiện cuối mỗi Milestone |
-| **E2E & Browser Test** | Luồng người dùng hoàn chỉnh: Pan/Zoom cây phả hệ, Tìm kiếm Spotlight, Click Ghost Node 🔗 nhảy camera, Modal nhập liệu 1 cấp, Gửi phiếu claim node. | **Playwright** / `browser_subagent` | Thực thi tự động trước khi bàn giao User nghiệm thu |
+| **Unit Test** | Lõi thuật toán độc lập: Tìm LCA, Tính vai vế xưng hô vùng miền, Quy đổi Lịch Âm - Dương, Parser & Validator file Excel, Thuật toán phát hiện chu trình (Cycle Detection), Thuật toán dàn trang cây. | **Node Test Runner / tsx** (`npm test`) | AI / Dev viết đồng thời khi code từng module ở `src/lib/` |
+| **Integration Test** | Các Route Handlers (`/api/*`) tương tác với CSDL Supabase: Đệ quy cây gia phả, Phân quyền RLS, Lá chắn Privacy Guard, Duyệt Claim Request, Endpoint Cron Job. | **Node Test Runner / tsx** | AI / Dev thực hiện cho từng endpoint API |
+| **Visual & UI UAT** | Luồng người dùng & giao diện thị giác: Pan/Zoom cây phả hệ, Tìm kiếm Spotlight, Click Ghost Node 🔗 nhảy camera, Modal nhập liệu, Theme, Responsive. | **Trình duyệt thật của User** | User tự mở trình duyệt nghiệm thu trực quan (Human UAT). Loại bỏ hoàn toàn browser_subagent |
 
 ---
 
@@ -31,11 +31,11 @@ Hệ thống áp dụng mô hình kim tự tháp kiểm thử 3 tầng kết h�
   - Middleware kiểm tra mã bảo mật Cron (`CRON_SECRET`).
 
 ### 2.2. Tiêu chuẩn Hoàn Thành (Definition of Done - DoD):
-Theo đúng **Nguyên tắc Kiểm chứng 3 Tầng** trong `.agents/AGENTS.md`:
-1. **Tầng 1 (Compile & Build):** `next build` và kiểm tra kiểu TypeScript (`tsc --noEmit`) đạt sạch sẽ **100% 0 lỗi, 0 warning**.
-2. **Tầng 2 (Thực thi Test Cases Tự động):** Toàn bộ Unit Test và Integration Test liên quan đến tính năng phải báo **PASS 100%**. Có bằng chứng thực nghiệm (log test hoặc video chạy của `browser_subagent`).
-3. **Tầng 3 (Regression Guard):** Các tính năng cốt lõi lân cận (Pan/Zoom cây, bộ lọc Chi nhánh, trang Lịch giỗ) không bị lỗi thoái lui.
-> 🚫 **Cấm Tick [x] bằng niềm tin:** Chỉ khi cả 3 tầng kiểm chứng đều PASS thực tế mới được phép tick `- [x] AC` trong Micro-Spec và mời User UAT.
+Theo đúng **Nguyên tắc Code-First Verification Loop** trong `.agents/AGENTS.md`:
+1. **Tầng 1 (Compile & Build):** `next build` và kiểm tra kiểu TypeScript (`npm run typecheck`) đạt sạch sẽ **100% 0 lỗi, 0 warning**.
+2. **Tầng 2 (Thực thi Test Cases Tự động):** Toàn bộ Unit Test và Integration Test liên quan đến tính năng trong `tests/` phải báo **PASS 100%**. Có bằng chứng thực nghiệm là output log từ terminal.
+3. **Tầng 3 (Human UAT):** Bàn giao URL cho User tự mở trình duyệt nghiệm thu thị giác theo ý thích. Loại bỏ hoàn toàn sự phụ thuộc vào `browser_subagent`.
+> 🚫 **Cấm Tick [x] bằng niềm tin:** Chỉ khi Tầng 1 và Tầng 2 PASS 100% bằng code thật mới được phép tick `- [x] AC` cho các test case tự động trong Micro-Spec.
 
 ---
 

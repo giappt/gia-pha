@@ -39,7 +39,7 @@ export default async function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md transition-colors">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Left: Brand Logo & Clan Name */}
         <div className="flex items-center gap-3">
@@ -67,7 +67,7 @@ export default async function Navbar() {
         {/* Center: Navigation Links */}
         <nav className="hidden md:flex items-center gap-1">
           <Link
-            href="/"
+            href="/tree"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
           >
             <GitBranch className="w-4 h-4 text-emerald-600" />

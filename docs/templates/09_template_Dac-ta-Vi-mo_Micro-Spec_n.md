@@ -58,17 +58,24 @@ _(Liệt kê các trường hợp rủi ro AI cần viết code bắt lỗi)_
 
 ## 7. MA TRẬN TEST CASES & TIÊU CHÍ NGHIỆM THU (TEST SPECIFICATION)
 
-_(Hợp đồng nghiệm thu bắt buộc. Mỗi tiêu chí phải có cấu trúc Given - When - Then đo đếm được. Trạng thái ban đầu bắt buộc là `- [ ]`)_
+_(Hợp đồng nghiệm thu bắt buộc. Chia làm 2 phân khu rạch ròi: Kiểm thử tự động bằng code trong tests/ và Nghiệm thu thị giác trực tiếp dành cho User. Trạng thái ban đầu bắt buộc là `- [ ]`)_
 
-### 7.1. Bảng Kịch Bản Kiểm Thử Chi Tiết
-| ID | Tên Kịch Bản | Loại Test | Tiền điều kiện (Given) | Thao tác kích hoạt (When) | Kết quả kỳ vọng (Then) | Phân loại |
+### 7.1. Bảng Kịch Bản Kiểm Thử Tự Động (Automated Test Suite trong `Test_Dir`)
+_(Bắt buộc cho mọi logic, thuật toán, dữ liệu, API. Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong `.agents/AGENTS.md` — KHÔNG hard-code tên lệnh/đuôi file ở đây.)_
+
+| ID | Tên Kịch Bản | File Test Dự Kiến | Tiền điều kiện (Given) | Thao tác kích hoạt (When) | Kết quả kỳ vọng (Then) | Phân loại |
 |---|---|---|---|---|---|---|
-| **TC01** | [Tên kịch bản 1] | [Unit / E2E] | [Trạng thái ban đầu] | [Thao tác User / Trigger API] | [Kết quả DOM, DB, Console 0 lỗi] | Happy Path |
-| **TC02** | [Tên kịch bản 2] | [Unit / E2E] | [Trạng thái có dữ liệu cũ] | [Thao tác đè / giao thoa] | [Dữ liệu merge, UI hiển thị đúng] | Edge Case |
+| **TC_UT01** | [Tên Unit Test 1] | `[Test_Dir]/[name]` | [Mock data / Fixture ban đầu] | [Gọi hàm tính toán / xử lý] | [Giá trị trả về, tọa độ, không trùng lặp] | Happy Path |
+| **TC_UT02** | [Tên Unit Test 2] | `[Test_Dir]/[name]` | [Dữ liệu biên / ngoại lệ] | [Gọi hàm với input rỗng/sai lệch] | [Xử lý graceful, trả về fallback an toàn] | Edge Case |
+| **TC_INT01**| [Tên Integration Test] | `[Test_Dir]/[name]` | [Dữ liệu DB mock / Session] | [Gọi API endpoint qua HTTP request] | [HTTP status 200, DTO payload chuẩn] | API Contract |
 
-### 7.2. Danh Sách Tiêu Chí Nghiệm Thu (Acceptance Criteria)
-- [ ] **AC1:** [Mô tả tiêu chí nghiệm thu 1]
-- [ ] **AC2:** [Mô tả tiêu chí nghiệm thu 2]
+### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
+_(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
+
+- [ ] **UAT_01:** [Mô tả kịch bản kiểm tra giao diện, màu sắc, bố cục, khoảng cách]
+- [ ] **UAT_02:** [Mô tả kịch bản tương tác người dùng: Pan, Zoom, click thẻ, mở Modal]
+- [ ] **UAT_03:** [Mô tả kịch bản hiển thị trên các kích thước màn hình responsive]
+- [ ] **UAT_04 (Console sạch):** Mở Developer Console → 0 lỗi đỏ, 0 cảnh báo Hydration. *(Tiêu chí này thuộc về User vì cần mở trình duyệt thật — AI không có quyền tự kiểm.)*
 
 ---
 
@@ -76,12 +83,14 @@ _(Hợp đồng nghiệm thu bắt buộc. Mỗi tiêu chí phải có cấu tr�
 
 _(Danh sách các tính năng lân cận trong Blast Radius bắt buộc phải verify lại sau khi code xong)_
 
-- [ ] **RG01 (TOC Navigation):** Click thử vào các đề mục trên Mục lục -> Đảm bảo Heading ID và cuộn trang hoạt động bình thường.
-- [ ] **RG02 (Wikilink / Internal Navigation):** Click thử vào các liên kết nội bộ -> Đảm bảo chuyển trang trơn tru.
-- [ ] **RG03 (DOM Hydration & Console Clean):** Mở Developer Console -> Đảm bảo 0 lỗi đỏ, 0 cảnh báo Hydration (`div` inside `p`).
+_(Chỉ liệt kê những gì AI tự kiểm chứng được bằng terminal. Mọi tiêu chí cần mở trình duyệt phải nằm ở Mục 7.2 — Human UAT.)_
+
+- [ ] **RG01 (Build & Typecheck Clean):** Chạy lệnh `Typecheck` & `Build` của `[VERIFY_COMMANDS]` — 0 lỗi.
+- [ ] **RG02 (Automated Test Regression):** Chạy lệnh `Test` — 0 failure mới so với `Known_Failing_Baseline`.
+- [ ] **RG03 (Blast Radius):** [Liệt kê các module/tính năng lân cận bị ảnh hưởng và test tự động phủ chúng]
 
 ---
 
 ## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
 
-> "AI ơi, hãy đọc kỹ đặc tả `[Tên_tài_liệu]` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy sinh toàn bộ mã nguồn hoàn chỉnh cho file `[Đường_dẫn_file]`. Thực thi Vòng lặp Kiểm thử 3 Tầng (Build, Unit/Browser Test, Regression Check) và chỉ được tick `[x]` khi có bằng chứng test Pass."
+> "AI ơi, hãy đọc kỹ đặc tả `[Tên_tài_liệu]` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `Test_Dir`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build → Automated Test Suite → Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."

@@ -138,11 +138,14 @@ export default async function HomePage({
       {/* Feature Navigation Cards Grid - Open Architecture, No Box-in-Box */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full mt-4">
         {/* Card 1: Family Tree */}
-        <div className="group relative flex flex-col p-7 rounded-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg hover:shadow-emerald-500/[0.04] transition-all duration-300">
+        <Link
+          href="/tree"
+          className="group relative flex flex-col p-7 rounded-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg hover:shadow-emerald-500/[0.04] transition-all duration-300"
+        >
           <div className="mb-5 flex items-center justify-between">
             <GitBranch className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform duration-200" strokeWidth={1.75} />
             <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/60">
-              Milestone 3
+              Canvas Tương Tác
             </span>
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
@@ -152,10 +155,10 @@ export default async function HomePage({
             Trực quan hóa phả đồ nhiều thế hệ với Pan, Zoom, bộ lọc chi nhánh và giải pháp Ghost Node cho hôn nhân nội tộc.
           </p>
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-            <span>Sắp ra mắt trên Canvas đồ thị</span>
+            <span>Khám Phá Cây Phả Hệ</span>
             <span className="group-hover:translate-x-1 transition-transform">→</span>
           </div>
-        </div>
+        </Link>
 
         {/* Card 2: Kinship Engine */}
         <div className="group relative flex flex-col p-7 rounded-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-slate-200/70 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-lg hover:shadow-blue-500/[0.04] transition-all duration-300">

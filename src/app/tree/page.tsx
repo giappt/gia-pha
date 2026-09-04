@@ -1,0 +1,64 @@
+import { Metadata } from 'next';
+import { createClient } from '@/lib/supabase/server';
+import { SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS } from '@/lib/tree-layout/sample-data';
+import { FamilyTreeCanvas } from '@/components/tree/FamilyTreeCanvas';
+import { MemberRecord, SpouseRelationRecord } from '@/types/tree';
+
+export const metadata: Metadata = {
+  title: 'Cây Phả Hệ Tương Tác - FAT Family Tree',
+  description: 'Màn hình trực quan hóa cây phả hệ gia tộc đa thế hệ, hỗ trợ pan zoom và Ghost Node hôn nhân nội tộc.',
+};
+
+export default async function TreePage() {
+  let members: MemberRecord[] = [];
+  let spouseRelations: SpouseRelationRecord[] = [];
+  let clanName = 'DÒNG HỌ NGUYỄN VĂN';
+
+  try {
+    const supabase = createClient();
+
+    // Lấy thông tin cài đặt dòng họ
+    const { data: clanSettings } = await supabase
+      .from('clan_settings')
+      .select('clan_name')
+      .limit(1)
+      .maybeSingle();
+
+    if (clanSettings?.clan_name) {
+      clanName = clanSettings.clan_name;
+    }
+
+    // Lấy danh sách thành viên
+    const { data: dbMembers, error: memberError } = await supabase
+      .from('members')
+      .select('*')
+      .order('generation_level', { ascending: true })
+      .order('birth_order', { ascending: true });
+
+    // Lấy quan hệ hôn phối
+    const { data: dbRelations } = await supabase
+      .from('spouse_relations')
+      .select('*');
+
+    if (!memberError && dbMembers && dbMembers.length > 0) {
+      members = dbMembers as unknown as MemberRecord[];
+      spouseRelations = (dbRelations || []) as unknown as SpouseRelationRecord[];
+    } else {
+      members = SAMPLE_MEMBERS_28;
+      spouseRelations = SAMPLE_SPOUSE_RELATIONS;
+    }
+  } catch {
+    members = SAMPLE_MEMBERS_28;
+    spouseRelations = SAMPLE_SPOUSE_RELATIONS;
+  }
+
+  return (
+    <div className="w-full h-[calc(100vh-4rem)] flex-1 overflow-hidden flex flex-col">
+      <FamilyTreeCanvas
+        initialMembers={members}
+        initialSpouseRelations={spouseRelations}
+        clanName={clanName}
+      />
+    </div>
+  );
+}
