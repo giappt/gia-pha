@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { calculateTreeLayout, NODE_WIDTH, NODE_HEIGHT, SPOUSE_GAP, LEVEL_HEIGHT } from '../src/lib/tree-layout/genealogy-layout';
 import { SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS } from './fixtures/sample-clan-28';
-import { MemberRecord } from '../src/types/tree';
+import { MemberRecord, SpouseRelationRecord } from '../src/types/tree';
 
 describe('Genealogy Tree Layout Engine Test Suite', () => {
   // TC_UT01: Phân tầng thế hệ & Zero-collision
@@ -387,5 +387,72 @@ describe('Genealogy Tree Layout Engine Test Suite', () => {
   it('Xử lý an toàn khi danh sách thành viên rỗng', () => {
     const result = calculateTreeLayout([], []);
     assert.deepStrictEqual(result, { nodes: [], edges: [] });
+  });
+
+  // TC_UT_LAYOUT_POLY: Dàn trang 3 nhánh con đa thê không cắt chéo dây
+  it('TC_UT_LAYOUT_POLY: Dàn trang 3 nhánh con cho gia đình đa thê và con riêng không cắt chéo dây (0 crossing lines)', () => {
+    const polyMembers: MemberRecord[] = [
+      { id: 'm-chien', full_name: 'Phạm Văn Chiến', gender: 'male', life_status: 'living', generation_level: 1, is_root: true },
+      { id: 'm-mo', full_name: 'Hoàng Thị Mơ', gender: 'female', life_status: 'living', generation_level: 1, is_root: false },
+      { id: 'm-lieu', full_name: 'Đào Thị Liễu', gender: 'female', life_status: 'living', generation_level: 1, is_root: false },
+      // Con riêng khuyết mẹ
+      { id: 'c-single-1', full_name: 'Phạm Văn Khuyết', gender: 'male', life_status: 'living', generation_level: 2, father_id: 'm-chien', mother_id: null, birth_order: 1, is_root: false },
+      // Con bà Mơ
+      { id: 'c-mo-1', full_name: 'Phạm Văn Minh', gender: 'male', life_status: 'living', generation_level: 2, father_id: 'm-chien', mother_id: 'm-mo', birth_order: 1, is_root: false },
+      { id: 'c-mo-2', full_name: 'Phạm Thị Lan', gender: 'female', life_status: 'living', generation_level: 2, father_id: 'm-chien', mother_id: 'm-mo', birth_order: 2, is_root: false },
+      // Con bà Liễu
+      { id: 'c-lieu-1', full_name: 'Phạm Văn Đức', gender: 'male', life_status: 'living', generation_level: 2, father_id: 'm-chien', mother_id: 'm-lieu', birth_order: 1, is_root: false },
+      { id: 'c-lieu-2', full_name: 'Phạm Thị Mai', gender: 'female', life_status: 'living', generation_level: 2, father_id: 'm-chien', mother_id: 'm-lieu', birth_order: 2, is_root: false },
+    ];
+
+    const polySpouses: SpouseRelationRecord[] = [
+      { id: 'rel-chien-mo', member_a_id: 'm-chien', member_b_id: 'm-mo', marriage_order: 1 },
+      { id: 'rel-chien-lieu', member_a_id: 'm-chien', member_b_id: 'm-lieu', marriage_order: 2 },
+    ];
+
+    const { nodes, edges } = calculateTreeLayout(polyMembers, polySpouses);
+
+    assert.strictEqual(nodes.length, 8, 'Phải có đủ 8 nodes');
+
+    // 1. Kiểm tra vị trí ngang của vợ chồng: Chồng < Vợ cả < Vợ hai
+    const nodeChien = nodes.find((n) => n.id === 'm-chien')!;
+    const nodeMo = nodes.find((n) => n.id === 'm-mo')!;
+    const nodeLieu = nodes.find((n) => n.id === 'm-lieu')!;
+
+    assert.ok(nodeChien.position.x < nodeMo.position.x, 'Chồng phải nằm bên trái Vợ Cả');
+    assert.ok(nodeMo.position.x < nodeLieu.position.x, 'Vợ Cả phải nằm bên trái Vợ Hai');
+
+    // 2. Kiểm tra vị trí các cụm con: Cụm con riêng < Cụm con bà Mơ < Cụm con bà Liễu
+    const nodeCSingle = nodes.find((n) => n.id === 'c-single-1')!;
+    const nodeCMo1 = nodes.find((n) => n.id === 'c-mo-1')!;
+    const nodeCMo2 = nodes.find((n) => n.id === 'c-mo-2')!;
+    const nodeCLieu1 = nodes.find((n) => n.id === 'c-lieu-1')!;
+    const nodeCLieu2 = nodes.find((n) => n.id === 'c-lieu-2')!;
+
+    assert.ok(nodeCSingle.position.x < nodeCMo1.position.x, 'Con riêng phải nằm bên trái con bà Mơ');
+    assert.ok(nodeCMo1.position.x < nodeCMo2.position.x, 'Con cả bà Mơ nằm trước con thứ');
+    assert.ok(nodeCMo2.position.x < nodeCLieu1.position.x, 'Cụm con bà Mơ phải nằm bên trái cụm con bà Liễu');
+    assert.ok(nodeCLieu1.position.x < nodeCLieu2.position.x, 'Con cả bà Liễu nằm trước con thứ');
+
+    // 3. Kiểm tra các handles của edge:
+    const edgeSingle = edges.find((e) => e.target === 'c-single-1')!;
+    assert.strictEqual(edgeSingle.sourceHandle, 'children-single', 'Con riêng phải nối từ chân người cha (children-single)');
+
+    const edgeMo1 = edges.find((e) => e.target === 'c-mo-1')!;
+    const edgeMo2 = edges.find((e) => e.target === 'c-mo-2')!;
+    assert.strictEqual(edgeMo1.sourceHandle, 'children-spouse-0', 'Con bà Cả phải nối từ children-spouse-0');
+    assert.strictEqual(edgeMo2.sourceHandle, 'children-spouse-0');
+
+    const edgeLieu1 = edges.find((e) => e.target === 'c-lieu-1')!;
+    const edgeLieu2 = edges.find((e) => e.target === 'c-lieu-2')!;
+    assert.strictEqual(edgeLieu1.sourceHandle, 'children-spouse-1', 'Con bà Hai phải nối từ children-spouse-1');
+    assert.strictEqual(edgeLieu2.sourceHandle, 'children-spouse-1');
+
+    // 4. Kiểm tra dữ liệu mẹ được gắn trên node
+    assert.strictEqual(nodeCSingle.data.motherOrderTitle, 'Chưa rõ mẹ');
+    assert.strictEqual(nodeCMo1.data.motherOrderTitle, 'Con bà cả');
+    assert.strictEqual(nodeCMo1.data.motherName, 'Hoàng Thị Mơ');
+    assert.strictEqual(nodeCLieu1.data.motherOrderTitle, 'Con bà hai');
+    assert.strictEqual(nodeCLieu1.data.motherName, 'Đào Thị Liễu');
   });
 });

@@ -17,6 +17,12 @@ export interface MemberRecord {
   is_root: boolean;
   is_senior?: boolean | null;
   branch_name?: string | null;
+  is_anonymous?: boolean | null;
+  alias_name?: string | null;
+  burial_location?: string | null;
+  notes?: string | null;
+  death_lunar_year_name?: string | null;
+  claimed_by?: string | null;
 }
 
 export interface SpouseRelationRecord {
@@ -62,6 +68,40 @@ export interface TreeNodeData extends Record<string, any> {
   inlawRole?: 'daughter_in_law' | 'son_in_law';
   childRole?: 'paternal_grandchild' | 'maternal_grandchild';
   isSenior?: boolean;
+  isAnonymous?: boolean;
+  aliasName?: string | null;
+  burialLocation?: string | null;
+  notes?: string | null;
+  deathLunarYearName?: string | null;
+  motherName?: string;
+  motherOrderTitle?: string;
+}
+
+export interface ChildrenGroup {
+  motherId: string | null;
+  motherName: string;
+  marriageOrder?: number;
+  children: MemberRecord[];
+}
+
+export interface ImmediateFamily {
+  targetMember: MemberRecord;
+  parents: {
+    father?: MemberRecord;
+    mother?: MemberRecord;
+  };
+  spouses: Array<{
+    member: MemberRecord;
+    relation: SpouseRelationRecord;
+  }>;
+  siblings: MemberRecord[];
+  children: MemberRecord[];
+  childrenGroups?: ChildrenGroup[];
+}
+
+export interface NextAnniversaryInfo {
+  solarDateStr: string;
+  daysLeft: number;
 }
 
 export interface TreeLayoutOptions {

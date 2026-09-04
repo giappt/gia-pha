@@ -379,3 +379,139 @@ export const SAMPLE_SPOUSE_RELATIONS: SpouseRelationRecord[] = [
   { id: 'rel-gen4-nam', member_a_id: 'm-gen4-nam', member_b_id: 'm-gen4-oanh', marriage_order: 1 },
   { id: 'rel-gen4-quynh', member_a_id: 'm-gen4-quynh', member_b_id: 'm-gen4-hung', marriage_order: 1 },
 ];
+
+// ==========================================
+// BỘ DỮ LIỆU GIA ĐÌNH ĐA THÊ & CON RIÊNG (CỤ PHẠM VĂN CHIẾN)
+// Phục vụ kiểm thử trực quan trên Canvas & Drawer (UAT_06, UAT_07)
+// ==========================================
+export const SAMPLE_POLYGAMY_MEMBERS: MemberRecord[] = [
+  // Cụ Phạm Văn Chiến (Người cha có 2 bà vợ và con riêng)
+  {
+    id: 'm-chien',
+    full_name: 'Phạm Văn Chiến',
+    gender: 'male',
+    life_status: 'deceased',
+    birth_year: 1918,
+    death_year: 1992,
+    death_lunar_day: 18,
+    death_lunar_month: 4,
+    generation_level: 1,
+    birth_order: 1,
+    is_root: true,
+    branch_name: 'Chi Trưởng',
+    burial_location: 'Nghĩa trang xứ Đồng Cùng, thôn Thượng',
+    notes: 'Tiền bối lập nghiệp thời cận đại, có 2 phối ngẫu và các con thuộc nhiều dòng.',
+  },
+  // Vợ cả: Cụ bà Hoàng Thị Mơ
+  {
+    id: 'm-mo',
+    full_name: 'Hoàng Thị Mơ',
+    gender: 'female',
+    life_status: 'deceased',
+    birth_year: 1920,
+    death_year: 1980,
+    death_lunar_day: 12,
+    death_lunar_month: 9,
+    generation_level: 1,
+    is_root: false,
+    branch_name: 'Chi Trưởng',
+    burial_location: 'Gò Cây Gạo, thôn Thượng',
+    notes: 'Chính thất (Bà Cả), hạ sinh 2 người con.',
+  },
+  // Vợ hai: Cụ bà Đào Thị Liễu
+  {
+    id: 'm-lieu',
+    full_name: 'Đào Thị Liễu',
+    gender: 'female',
+    life_status: 'deceased',
+    birth_year: 1925,
+    death_year: 2005,
+    death_lunar_day: 25,
+    death_lunar_month: 11,
+    generation_level: 1,
+    is_root: false,
+    branch_name: 'Chi Trưởng',
+    burial_location: 'Khu lăng mộ xứ Cửa Miếu',
+    notes: 'Thứ thất (Bà Hai), hạ sinh 2 người con.',
+  },
+
+  // --- NHÁNH 1: CON RIÊNG KHUYẾT MẸ (mother_id = null) ---
+  {
+    id: 'c-single-1',
+    full_name: 'Phạm Văn Khuyết',
+    gender: 'male',
+    life_status: 'living',
+    birth_year: 1940,
+    generation_level: 2,
+    father_id: 'm-chien',
+    mother_id: null,
+    birth_order: 1,
+    is_root: false,
+    branch_name: 'Chi Trưởng',
+    notes: 'Con riêng của cụ Chiến thời hàn vi, gia phả chưa rõ họ tên thân mẫu.',
+  },
+
+  // --- NHÁNH 2: CÁC CON VỚI BÀ CẢ HOÀNG THỊ MƠ ---
+  {
+    id: 'c-mo-1',
+    full_name: 'Phạm Văn Minh',
+    gender: 'male',
+    life_status: 'living',
+    birth_year: 1943,
+    generation_level: 2,
+    father_id: 'm-chien',
+    mother_id: 'm-mo',
+    birth_order: 2,
+    is_root: false,
+    branch_name: 'Chi Trưởng',
+    notes: 'Trưởng nam của cụ bà Hoàng Thị Mơ.',
+  },
+  {
+    id: 'c-mo-2',
+    full_name: 'Phạm Thị Lan',
+    gender: 'female',
+    life_status: 'living',
+    birth_year: 1946,
+    generation_level: 2,
+    father_id: 'm-chien',
+    mother_id: 'm-mo',
+    birth_order: 3,
+    is_root: false,
+    branch_name: 'Chi Trưởng',
+  },
+
+  // --- NHÁNH 3: CÁC CON VỚI BÀ HAI ĐÀO THỊ LIỄU ---
+  {
+    id: 'c-lieu-1',
+    full_name: 'Phạm Văn Đức',
+    gender: 'male',
+    life_status: 'living',
+    birth_year: 1950,
+    generation_level: 2,
+    father_id: 'm-chien',
+    mother_id: 'm-lieu',
+    birth_order: 4,
+    is_root: false,
+    branch_name: 'Chi Trưởng',
+    notes: 'Con trai trưởng của cụ bà Đào Thị Liễu.',
+  },
+  {
+    id: 'c-lieu-2',
+    full_name: 'Phạm Thị Mai',
+    gender: 'female',
+    life_status: 'living',
+    birth_year: 1953,
+    generation_level: 2,
+    father_id: 'm-chien',
+    mother_id: 'm-lieu',
+    birth_order: 5,
+    is_root: false,
+    branch_name: 'Chi Trưởng',
+  },
+];
+
+export const SAMPLE_POLYGAMY_SPOUSES: SpouseRelationRecord[] = [
+  { id: 'rel-chien-mo', member_a_id: 'm-chien', member_b_id: 'm-mo', marriage_order: 1 },
+  { id: 'rel-chien-lieu', member_a_id: 'm-chien', member_b_id: 'm-lieu', marriage_order: 2 },
+];
+

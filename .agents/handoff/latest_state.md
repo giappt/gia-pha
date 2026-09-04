@@ -1,40 +1,27 @@
 # STATE MANIFEST
 ### 1. Key Context
-- **Dự án:** FAT (Family Tree Management System) — Next.js 14 App Router, TypeScript, TailwindCSS, `@xyflow/react`, Supabase.
-- **Trạng thái Milestone 3.1:** ĐÃ HOÀN THÀNH 100%. Toàn bộ 30/30 tests PASS (`Kinship`, `Lunar`, `Tree API`, `Tree Layout`), `npm.cmd run typecheck` 0 lỗi, `npm.cmd run build` 0 lỗi.
-- **Thành quả cốt lõi Milestone 3.1 đã chốt:**
-  - Hệ trục thước thợ Bus Hierarchy $90^\circ$ phẳng lì (`FamilyBusEdge.tsx`).
-  - Hôn nhân nội tộc đối xứng 2 chiều tuân thủ quy ước *"Nam tả Nữ hữu"* (Chi 1 có Ghost Node Dâu nội tộc bên phải, Chi 2 có Ghost Node Rể nội tộc bên trái, không nhân đôi số đinh).
-  - Công tắc ẩn/hiện Rể nội tộc `showInternalHusbands` trên Toolbar và thẻ con gái.
-  - Flat Seamless Footer cho thẻ thành viên ngăn cách bởi hairline siêu mảnh, khống chế `overflow-hidden` chống tràn viền bo tròn, loại bỏ chú thích ngoại tộc thừa thãi.
-  - Gốc phả đồ tùy biến (Dynamic Focus Root) tự động đổi vai dâu/rể, cháu nội/ngoại theo đồ thị.
-- **Quyết định kiến trúc cho Milestone 3.2:**
-  - Thiết kế **Slide-over Drawer (`MemberDetailDrawer.tsx`)** trượt êm ái từ cạnh phải thay vì Modal Dialog popup ở giữa màn hình, giữ trọn vẹn ngữ cảnh phả đồ bên dưới.
-  - Hiển thị hồ sơ cá nhân toàn diện: Ngày giỗ Âm lịch chuẩn phong tục (Ngày, Tháng, Năm Can Chi), Ngày giỗ Dương lịch kế tiếp, Nơi an táng / Mộ phần (`burial_location`), Tiểu sử phả ký (`notes`).
-  - Bảng thân tộc trực hệ 1 đời: Phụ mẫu, Phu thê (Vợ cả / Vợ hai), Hậu duệ (con đẻ / con nuôi, con trưởng), Huynh đệ.
-  - Cụm hành động nhanh: Đặt làm Gốc, Tra cứu vai vế `/kinship`, Căn giữa phả đồ.
-- **Môi trường vận hành:**
-  - Dev server đang chạy nền tại `http://localhost:3000`.
-  - Baseline tests: 30 tests PASS.
-- **Các file đang thao tác chính:**
-  - `src/components/tree/FamilyTreeCanvas.tsx`
-  - `src/components/tree/MemberNode.tsx`
-  - `src/components/tree/GhostNode.tsx`
-  - `src/components/tree/TreeToolbar.tsx`
-  - `src/lib/tree-layout/genealogy-layout.ts`
-  - `src/types/tree.ts`
-  - `docs/11_Micro-Spec_Milestone_3_Interactive_Tree.md`
+- **Trạng thái Codebase & Kiểm chứng:**
+  - `npm.cmd run typecheck`: 0 lỗi (`tsc --noEmit` exit 0).
+  - `npm.cmd run build`: 0 lỗi, tĩnh hóa thành công 12/12 routes, route `/tree` đạt 73.7 kB.
+  - `npm.cmd test`: **38/38 tests PASS 100%** (SLA layout benchmark 1.787 nodes đạt ~10.55 ms).
+  - Đã bổ sung dataset `SAMPLE_POLYGAMY_MEMBERS` vào `src/lib/tree-layout/sample-data.ts` và nút chọn nhanh `Cụ Chiến (Đa thê & Con riêng)` trên Toolbar.
+- **Phát hiện Visual UAT từ User (Human UAT) kèm ảnh chụp màn hình:**
+  1. *Điểm xuất phát nhánh con Vợ Hai:* Đang rơi vào khe giữa Vợ Cả và Vợ Hai, gây cảm giác thị giác kỳ quặc (nhìn như con của 2 bà vợ).
+  2. *Xung đột thanh Bus (Bus Collision - Hình 2):* Đường bus ngang của cụm con riêng (Khuyết) và cụm con Vợ Cả (Minh, Lan) cùng cao độ $Y = 143\text{px}$, trong khi anh Minh nằm lệch trái dưới chân Cụ Chiến, khiến đường ngang cắt xuyên qua đường dọc của cụ Chiến gây lồng chéo nhau.
+  3. *Băn khoăn về "Con Chung":* Nếu chỉ hạ nhánh từ chân người mẹ thì không thể hiện được huyết thống người cha (nhìn như mẹ đơn thân hoặc con riêng của mẹ), làm gãy liên kết phụ hệ họ nội trên cây.
+- **Hai phương án kiến trúc đang thảo luận chốt phương án:**
+  - **Phương án A (Cụ Chiến ở giữa 2 bà - Đối xứng hoàn hảo):** `[Vợ Cả] ══ ⚪ ══ [Chồng] ══ ⚪ ══ [Vợ Hai]`. Nhánh con chung hạ từ 2 khuyên hôn nhân 2 bên; con riêng khuyết mẹ hạ từ chân Cụ Chiến. Triệt tiêu 100% lồng đường và không rơi vào khe 2 bà.
+  - **Phương án B (Dàn sang phải + Tách cao độ Bus):** Giữ trật tự `[Chồng] ══ [Vợ Cả] ══ [Vợ Hai]`, nhưng tách cao độ bus ngang ($Y_1=130\text{px}$, $Y_2=150\text{px}$, $Y_3=170\text{px}$) và căn chỉnh tọa độ $X$ đàn con thẳng dưới khu vực của mẹ.
 
 ### 2. Task Checklist
-- [x] Nâng cấp toàn diện Luật kiểm thử lên Version 7 (`[R-VERIFY]`, `[VERIFY_COMMANDS]`, 30/30 tests pass).
-- [x] Hoàn thành thi công, kiểm chứng tự động và tinh chỉnh UI Milestone 3.1 (Core Canvas, Bus Hierarchy, Focus Root, Ghost Node nội tộc đối xứng 2 chiều, Flat Seamless Footer).
-- [x] Brainstorm và lập bản quy hoạch kỹ thuật cho Milestone 3.2 (Bảng chi tiết thành viên Member Detail Drawer & Thân tộc trực hệ).
-- [ ] Chạy `/feature-spec` khởi tạo file đặc tả `docs/12_Micro-Spec_Milestone_3.2_Member_Detail_Drawer.md` kèm Ma trận Test Cases.
-- [ ] Mở rộng types `MemberRecord` (`alias_name`, `burial_location`, `notes`, `death_lunar_year_name`) và nạp dữ liệu mẫu phong phú vào `SAMPLE_MEMBERS_28`.
-- [ ] Xây dựng Component `MemberDetailDrawer.tsx` theo chuẩn phong cách Modern Vietnamese Heritage.
-- [ ] Tích hợp `onNodeClick` trên `FamilyTreeCanvas.tsx` để điều khiển mở Drawer và đồng bộ điều hướng camera.
-- [ ] Viết bộ test tự động `tests/member-detail.test.ts` (kiểm thử trích xuất quan hệ tiểu gia đình, tính ngày giỗ) và chạy `npm.cmd test` (mục tiêu $\ge 33$ tests PASS).
-- [ ] Kiểm chứng 3 tầng (Typecheck → Automated Test Suite → Human UAT trên `http://localhost:3000/tree`).
+- [x] Nâng cấp toàn diện Luật kiểm thử lên Version 7 (`[R-VERIFY]`, `[VERIFY_COMMANDS]`, 38/38 tests pass).
+- [x] Hoàn thành thi công Milestone 3.1 (Core Canvas, Bus Hierarchy, Focus Root, Ghost Node nội tộc đối xứng 2 chiều, Flat Seamless Footer).
+- [x] Hoàn thành thi công Milestone 3.2 (Slide-over Drawer, Thân tộc 1 đời, Benchmark 1.500 nodes, phân cụm con đa thê & con riêng).
+- [x] Tích hợp bộ dữ liệu mẫu UAT gia đình Cụ Chiến trực tiếp lên Toolbar.
+- [x] Phát hiện lỗi thị giác UAT: Bus Collision (lồng đường) và nhánh con Vợ Hai rơi vào khe giữa 2 bà.
+- [/] Brainstorm và chốt phương án xử lý cấu trúc cây đa thê con chung (Phương án A: Chồng ở giữa vs Phương án B: Tách cao độ Bus).
+- [ ] Chạy `/feature-spec` cập nhật đặc tả vi mô cho mô hình phân nhánh con đa thê được chọn.
+- [ ] Chạy `/feature-code` thi công sửa thuật toán dàn trang (`genealogy-layout.ts`) và `MemberNode.tsx`, chạy test kiểm chứng.
 
 ### 3. Immediate Next Step
-- Chạy `/feature-spec` để tạo file Đặc tả Vi mô `docs/12_Micro-Spec_Milestone_3.2_Member_Detail_Drawer.md` cho Milestone 3.2.
+- Chốt lựa chọn giữa **Phương án A** (Cụ Chiến ở giữa 2 bà) và **Phương án B** (Xếp sang phải + Tách cao độ Bus), sau đó cập nhật Spec và thi công tinh chỉnh layout.

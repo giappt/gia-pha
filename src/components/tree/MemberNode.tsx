@@ -26,13 +26,19 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
     }
   };
 
-  const borderColor = isDeceased
+  const isAnonymous = !!nodeData?.isAnonymous;
+
+  const borderColor = isAnonymous
+    ? 'border-dashed border-amber-400 dark:border-amber-600/70'
+    : isDeceased
     ? 'border-slate-400/60 dark:border-slate-600/60'
     : isMale
     ? 'border-blue-500/50 hover:border-blue-500'
     : 'border-pink-500/50 hover:border-pink-500';
 
-  const avatarBg = isDeceased
+  const avatarBg = isAnonymous
+    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+    : isDeceased
     ? 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
     : isMale
     ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
@@ -40,13 +46,17 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
 
   // Lấy 2 chữ cái đầu
   const words = fullName.trim().split(' ').filter(Boolean);
-  const initials = words.length > 1
+  const initials = isAnonymous
+    ? 'KD'
+    : words.length > 1
     ? (words[words.length - 2][0] + words[words.length - 1][0]).toUpperCase()
     : words[0]?.[0]?.toUpperCase() || 'TV';
 
   return (
     <div
-      className={`group relative w-[200px] h-[96px] rounded-xl border bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-2.5 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex flex-col justify-between overflow-hidden ${borderColor}`}
+      className={`group relative w-[200px] h-[96px] rounded-xl border bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-2.5 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex flex-col justify-between overflow-hidden cursor-pointer ${
+        isAnonymous ? 'bg-amber-50/30 dark:bg-amber-950/20' : ''
+      } ${borderColor}`}
     >
       {/* Target Handle cho cha mẹ nối xuống (Tàng hình) */}
       <Handle
@@ -70,7 +80,7 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
         className="!opacity-0 !w-0 !h-0 !border-0 !p-0 !min-w-0 !min-h-0 !top-1/2 pointer-events-none"
       />
 
-      {/* Header thẻ: Thế hệ & Huy hiệu trạng thái sinh tử / Cụ Tổ */}
+      {/* Header thẻ: Thế hệ & Huy hiệu trạng thái sinh tử / Cụ Tổ / Khuyết danh */}
       <div className="flex items-center justify-between text-[11px]">
         <div className="flex items-center gap-1 font-semibold text-slate-500 dark:text-slate-400">
           <span>Đời {nodeData.generationLevel}</span>
@@ -79,9 +89,21 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
               (Trưởng)
             </span>
           )}
+          {nodeData.motherOrderTitle && (
+            <span
+              className="text-[9px] font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1 py-0.2 rounded border border-purple-200/60 dark:border-purple-800/60"
+              title={nodeData.motherName ? `Mẹ: ${nodeData.motherName}` : undefined}
+            >
+              {nodeData.motherOrderTitle}
+            </span>
+          )}
         </div>
 
-        {nodeData.isRoot || nodeData.generationLevel === 1 ? (
+        {isAnonymous ? (
+          <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+            Khuyết danh
+          </span>
+        ) : nodeData.isRoot || nodeData.generationLevel === 1 ? (
           <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
             <Sparkles className="w-2.5 h-2.5" /> Cụ Tổ
           </span>
@@ -164,6 +186,27 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
         position={Position.Bottom}
         id="children-joint"
         style={{ top: '48px', left: '210px' }}
+        className="!opacity-0 !w-0 !h-0 !border-0 !p-0 !min-w-0 !min-h-0 pointer-events-none"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="children-spouse-0"
+        style={{ top: '48px', left: '210px' }}
+        className="!opacity-0 !w-0 !h-0 !border-0 !p-0 !min-w-0 !min-h-0 pointer-events-none"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="children-spouse-1"
+        style={{ top: '48px', left: '430px' }}
+        className="!opacity-0 !w-0 !h-0 !border-0 !p-0 !min-w-0 !min-h-0 pointer-events-none"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="children-spouse-2"
+        style={{ top: '48px', left: '650px' }}
         className="!opacity-0 !w-0 !h-0 !border-0 !p-0 !min-w-0 !min-h-0 pointer-events-none"
       />
       <Handle

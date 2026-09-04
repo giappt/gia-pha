@@ -16,17 +16,29 @@ export const SPOUSE_GAP = 20;
 export const SIBLING_GAP = 40;
 export const LEVEL_HEIGHT = 220;
 
+interface ChildCluster {
+  key: string;
+  sourceHandle: string;
+  motherId?: string | null;
+  motherOrderTitle?: string;
+  motherName?: string;
+  children: FamilyUnit[];
+}
+
 interface FamilyUnit {
   primaryMember: MemberRecord;
   spouses: MemberRecord[];
   isSpouseGhost: boolean[];
   children: FamilyUnit[];
+  childClusters?: ChildCluster[];
   width: number;
   x: number;
   y: number;
   inlawRole?: 'daughter_in_law' | 'son_in_law';
   childRole?: 'paternal_grandchild' | 'maternal_grandchild';
   hasLeftHusbandGhost?: boolean;
+  motherOrderTitle?: string;
+  motherName?: string;
 }
 
 /**
@@ -78,15 +90,19 @@ export function calculateTreeLayout(
     }
   });
 
-  // Sắp xếp đàn con: Ưu tiên birth_order trước, rồi đến birth_year
-  childrenMap.forEach((childList) => {
-    childList.sort((a, b) => {
+  function sortMemberList(list: MemberRecord[]) {
+    list.sort((a, b) => {
       if (a.birth_order != null && b.birth_order != null) return a.birth_order - b.birth_order;
       if (a.birth_order != null && b.birth_order == null) return -1;
       if (a.birth_order == null && b.birth_order != null) return 1;
       if (a.birth_year != null && b.birth_year != null) return a.birth_year - b.birth_year;
       return a.full_name.localeCompare(b.full_name);
     });
+  }
+
+  // Sắp xếp đàn con: Ưu tiên birth_order trước, rồi đến birth_year
+  childrenMap.forEach((childList) => {
+    sortMemberList(childList);
   });
 
   // Xác định Con Trưởng (Trưởng Nam): Ưu tiên is_senior gán thủ công, hoặc mặc định con trai lớn nhất trong đàn con
@@ -184,7 +200,22 @@ export function calculateTreeLayout(
     currentVisited.add(primary.id);
 
     const perspective = parentPerspective || getLineagePerspective(primary.id);
-    const spouseIds = spouseMap.get(primary.id) || [];
+    const spouseIds = (spouseMap.get(primary.id) || []).slice();
+    // Sắp xếp spouseIds theo thứ tự kết hôn (marriage_order) tăng dần
+    spouseIds.sort((a, b) => {
+      const relA = spouseRelations.find(
+        (r) =>
+          (r.member_a_id === primary.id && r.member_b_id === a) ||
+          (r.member_a_id === a && r.member_b_id === primary.id)
+      );
+      const relB = spouseRelations.find(
+        (r) =>
+          (r.member_a_id === primary.id && r.member_b_id === b) ||
+          (r.member_a_id === b && r.member_b_id === primary.id)
+      );
+      return (relA?.marriage_order || 1) - (relB?.marriage_order || 1);
+    });
+
     const spouses: MemberRecord[] = [];
     const isSpouseGhost: boolean[] = [];
 
@@ -235,6 +266,7 @@ export function calculateTreeLayout(
 
     // Lấy danh sách con
     let childUnits: FamilyUnit[] = [];
+    let childClusters: ChildCluster[] | undefined;
     const shouldHideChildren =
       isMaternalDaughter && options.showMaternalBranches === false && !focusMember;
 
@@ -262,17 +294,74 @@ export function calculateTreeLayout(
           .map((id) => memberMap.get(id)!)
           .filter((c) => !!c && !currentVisited.has(c.id));
 
-        // Sắp xếp con theo birth_order / birth_year
-        childrenList.sort((a, b) => {
-          if (a.birth_order != null && b.birth_order != null) return a.birth_order - b.birth_order;
-          if (a.birth_order != null && b.birth_order == null) return -1;
-          if (a.birth_order == null && b.birth_order != null) return 1;
-          if (a.birth_year != null && b.birth_year != null) return a.birth_year - b.birth_year;
-          return a.full_name.localeCompare(b.full_name);
-        });
-
         const nextPerspective = primary.gender === 'female' ? 'maternal' : perspective;
-        childUnits = childrenList.map((c) => buildFamilyUnit(c, currentVisited, nextPerspective));
+
+        // Phân cụm con cái nếu primary là người cha và (có nhiều vợ HOẶC có con riêng khuyết mẹ bên cạnh vợ)
+        const isMultiSpouseOrSingleConRieng =
+          primary.gender === 'male' &&
+          (spouses.length > 1 ||
+            (spouses.length === 1 &&
+              childrenList.some((c) => c.mother_id !== spouses[0].id)));
+
+        if (isMultiSpouseOrSingleConRieng) {
+          childClusters = [];
+          const assignedIds = new Set<string>();
+
+          // 1. Cụm con riêng (không mẹ hoặc mẹ không trong spouses)
+          const singleChildren = childrenList.filter(
+            (c) => !c.mother_id || !spouses.some((sp) => sp.id === c.mother_id)
+          );
+          sortMemberList(singleChildren);
+          singleChildren.forEach((c) => assignedIds.add(c.id));
+
+          if (singleChildren.length > 0) {
+            const singleUnits = singleChildren.map((c) => {
+              const u = buildFamilyUnit(c, currentVisited, nextPerspective);
+              u.motherOrderTitle = 'Chưa rõ mẹ';
+              return u;
+            });
+            childClusters.push({
+              key: 'cluster-single',
+              sourceHandle: 'children-single',
+              motherId: null,
+              motherOrderTitle: 'Chưa rõ mẹ',
+              children: singleUnits,
+            });
+          }
+
+          // 2. Cụm con của từng người vợ theo thứ tự marriage_order
+          spouses.forEach((sp, idx) => {
+            const wifeChildren = childrenList.filter((c) => c.mother_id === sp.id);
+            sortMemberList(wifeChildren);
+            wifeChildren.forEach((c) => assignedIds.add(c.id));
+
+            if (wifeChildren.length > 0) {
+              const orderTitle =
+                idx === 0 ? 'Con bà cả' : idx === 1 ? 'Con bà hai' : `Con bà ${idx + 1}`;
+              const wifeUnits = wifeChildren.map((c) => {
+                const u = buildFamilyUnit(c, currentVisited, nextPerspective);
+                u.motherOrderTitle = orderTitle;
+                u.motherName = sp.full_name;
+                return u;
+              });
+              childClusters!.push({
+                key: `cluster-spouse-${idx}`,
+                sourceHandle: spouses.length > 1 ? `children-spouse-${idx}` : 'children-joint',
+                motherId: sp.id,
+                motherOrderTitle: orderTitle,
+                motherName: sp.full_name,
+                children: wifeUnits,
+              });
+            }
+          });
+
+          // Làm phẳng childUnits theo thứ tự các clusters (Cụm con riêng -> Cụm con Bà Cả -> Cụm con Bà Hai)
+          childUnits = childClusters.flatMap((cl) => cl.children);
+        } else {
+          // Trường hợp thông thường: 1 mẹ hoặc mẹ đơn thân
+          sortMemberList(childrenList);
+          childUnits = childrenList.map((c) => buildFamilyUnit(c, currentVisited, nextPerspective));
+        }
       }
     }
 
@@ -301,6 +390,7 @@ export function calculateTreeLayout(
       spouses,
       isSpouseGhost,
       children: childUnits,
+      childClusters,
       width: unitWidth,
       x: 0,
       y: (primary.generation_level - 1) * LEVEL_HEIGHT,
@@ -325,9 +415,10 @@ export function calculateTreeLayout(
       });
 
       const firstChildCenter = unit.children[0].x + NODE_WIDTH / 2;
+      const lastChild = unit.children[unit.children.length - 1];
       const lastChildCenter =
-        unit.children[unit.children.length - 1].x +
-        unit.children[unit.children.length - 1].spouses.length * (NODE_WIDTH + SPOUSE_GAP) +
+        lastChild.x +
+        lastChild.spouses.length * (NODE_WIDTH + SPOUSE_GAP) +
         NODE_WIDTH / 2;
       const childrenCenter = (firstChildCenter + lastChildCenter) / 2;
 
@@ -398,6 +489,13 @@ export function calculateTreeLayout(
           inlawRole: unit.inlawRole,
           childRole: unit.childRole,
           isSenior: seniorMemberIds.has(primary.id),
+          isAnonymous: primary.is_anonymous || false,
+          aliasName: primary.alias_name,
+          burialLocation: primary.burial_location,
+          notes: primary.notes,
+          deathLunarYearName: primary.death_lunar_year_name,
+          motherName: unit.motherName,
+          motherOrderTitle: unit.motherOrderTitle,
         },
       });
     }
@@ -428,6 +526,11 @@ export function calculateTreeLayout(
             partnerMemberId: primary.id,
             originalBranchName: sp.branch_name || undefined,
             inlawRole: sp.gender === 'female' ? 'daughter_in_law' : 'son_in_law',
+            isAnonymous: sp.is_anonymous || false,
+            aliasName: sp.alias_name,
+            burialLocation: sp.burial_location,
+            notes: sp.notes,
+            deathLunarYearName: sp.death_lunar_year_name,
           },
         });
 
@@ -476,6 +579,11 @@ export function calculateTreeLayout(
               isGhost: false,
               inlawRole: sp.gender === 'male' ? 'son_in_law' : 'daughter_in_law',
               isSenior: seniorMemberIds.has(sp.id),
+              isAnonymous: sp.is_anonymous || false,
+              aliasName: sp.alias_name,
+              burialLocation: sp.burial_location,
+              notes: sp.notes,
+              deathLunarYearName: sp.death_lunar_year_name,
             },
           });
         }
@@ -499,12 +607,23 @@ export function calculateTreeLayout(
       const child = childUnit.primaryMember;
       renderUnit(childUnit);
 
+      // Xác định sourceHandle phù hợp cho child
+      let sourceHandle = unit.spouses.length > 0 ? 'children-joint' : 'children-single';
+      if (unit.childClusters && unit.childClusters.length > 1) {
+        const matchingCluster = unit.childClusters.find((cl) =>
+          cl.children.some((c) => c.primaryMember.id === child.id)
+        );
+        if (matchingCluster) {
+          sourceHandle = matchingCluster.sourceHandle;
+        }
+      }
+
       // Edge nối từ cha mẹ xuống con cái: Dùng familyBusEdge hoặc step thước thợ
       edges.push({
         id: `parent-${primary.id}-${child.id}`,
         source: primary.id,
         target: child.id,
-        sourceHandle: unit.spouses.length > 0 ? 'children-joint' : 'children-single',
+        sourceHandle,
         targetHandle: 'parent-top',
         type: 'familyBusEdge',
         style: { stroke: '#059669', strokeWidth: 1.5 },

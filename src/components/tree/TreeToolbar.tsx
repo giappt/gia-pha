@@ -42,6 +42,8 @@ interface TreeToolbarProps {
   focusRootId?: string | null;
   onSelectFocusRoot?: (rootId: string | null) => void;
   availableRoots?: RootOption[];
+  currentDataset?: 'clan28' | 'polygamy' | 'clan1500';
+  onSwitchDataset?: (dataset: 'clan28' | 'polygamy' | 'clan1500') => void;
 }
 
 export const TreeToolbar: React.FC<TreeToolbarProps> = ({
@@ -58,6 +60,8 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
   focusRootId = null,
   onSelectFocusRoot,
   availableRoots = [],
+  currentDataset = 'clan28',
+  onSwitchDataset,
 }) => {
   const { fitView } = useReactFlow();
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
@@ -343,6 +347,53 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
                       {showInternalHusbands ? 'Bật' : 'Tắt'}
                     </span>
                   </button>
+                )}
+
+                {/* Chọn Nguồn Dữ Liệu */}
+                {onSwitchDataset && (
+                  <div className="pt-1 border-t border-slate-100 dark:border-slate-800 space-y-1">
+                    <div className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                      <Users className="w-3 h-3 text-emerald-600" /> Nguồn dữ liệu kiểm thử
+                    </div>
+                    <div className="space-y-1 px-1">
+                      <button
+                        type="button"
+                        onClick={() => onSwitchDataset('clan28')}
+                        className={`w-full px-2 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-colors flex items-center justify-between ${
+                          currentDataset === 'clan28'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>Clan 28 (Mẫu cơ bản)</span>
+                        {currentDataset === 'clan28' && <span className="text-[9px]">Đang xem</span>}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onSwitchDataset('polygamy')}
+                        className={`w-full px-2 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-colors flex items-center justify-between ${
+                          currentDataset === 'polygamy'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>Cụ Chiến (Đa thê & Con riêng)</span>
+                        {currentDataset === 'polygamy' && <span className="text-[9px]">Đang xem</span>}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onSwitchDataset('clan1500')}
+                        className={`w-full px-2 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-colors flex items-center justify-between ${
+                          currentDataset === 'clan1500'
+                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-700'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>Clan 1.500 (Tải nặng)</span>
+                        {currentDataset === 'clan1500' && <span className="text-[9px]">Đang xem</span>}
+                      </button>
+                    </div>
+                  </div>
                 )}
 
                 <div className="border-t border-slate-100 dark:border-slate-800 my-1" />

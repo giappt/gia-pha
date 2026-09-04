@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   ReactFlow,
   Background,
@@ -9,6 +9,7 @@ import {
   useNodesState,
   useEdgesState,
   ReactFlowProvider,
+  useReactFlow,
   type NodeTypes,
   type EdgeTypes,
   type Node,
@@ -19,7 +20,10 @@ import { MemberNode } from './MemberNode';
 import { GhostNode } from './GhostNode';
 import { FamilyBusEdge } from './FamilyBusEdge';
 import { TreeToolbar, type RootOption } from './TreeToolbar';
+import { MemberDetailDrawer } from './MemberDetailDrawer';
 import { calculateTreeLayout } from '@/lib/tree-layout/genealogy-layout';
+import { generateLargeClan } from '@/fixtures/generate-large-clan';
+import { SAMPLE_POLYGAMY_MEMBERS, SAMPLE_POLYGAMY_SPOUSES } from '@/lib/tree-layout/sample-data';
 import { MemberRecord, SpouseRelationRecord, LayoutNode, TreeNodeData } from '@/types/tree';
 import { Keyboard } from 'lucide-react';
 
@@ -43,13 +47,64 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   initialSpouseRelations,
   clanName,
 }) => {
+  const { getNode, setCenter } = useReactFlow();
+
+  const [currentDataset, setCurrentDataset] = useState<'clan28' | 'polygamy' | 'clan1500'>('clan28');
   const [showMaternalBranches, setShowMaternalBranches] = useState(true);
   const [showInternalHusbands, setShowInternalHusbands] = useState(true);
   const [focusRootId, setFocusRootId] = useState<string | null>(null);
 
-  // Danh sách các Gốc khả dụng để người dùng chọn xem (toàn bộ thành viên gia tộc)
+  // Drawer states
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Sinh dữ liệu giả lập 1.500 nodes (chỉ sinh 1 lần duy nhất khi được chọn)
+  const largeClanData = useMemo(() => {
+    if (currentDataset === 'clan1500') {
+      return generateLargeClan(1500);
+    }
+    return null;
+  }, [currentDataset]);
+
+  // Bộ dữ liệu thành viên đang hoạt động
+  const activeMembers = useMemo(() => {
+    if (currentDataset === 'clan1500' && largeClanData) {
+      return largeClanData.members;
+    }
+    if (currentDataset === 'polygamy') {
+      return SAMPLE_POLYGAMY_MEMBERS;
+    }
+    return initialMembers;
+  }, [currentDataset, largeClanData, initialMembers]);
+
+  const activeSpouseRelations = useMemo(() => {
+    if (currentDataset === 'clan1500' && largeClanData) {
+      return largeClanData.spouseRelations;
+    }
+    if (currentDataset === 'polygamy') {
+      return SAMPLE_POLYGAMY_SPOUSES;
+    }
+    return initialSpouseRelations;
+  }, [currentDataset, largeClanData, initialSpouseRelations]);
+
+  const activeClanName =
+    currentDataset === 'clan1500'
+      ? 'Đại Tộc Phạm Văn (Giả Lập 1.500 Người)'
+      : currentDataset === 'polygamy'
+      ? 'Gia Đình Cụ Phạm Văn Chiến (Đa Thê & Con Riêng)'
+      : clanName;
+
+  // Reset focusRootId khi đổi dataset
+  const handleSwitchDataset = (dataset: 'clan28' | 'polygamy' | 'clan1500') => {
+    setCurrentDataset(dataset);
+    setFocusRootId(null);
+    setSelectedMemberId(null);
+    setIsDrawerOpen(false);
+  };
+
+  // Danh sách các Gốc khả dụng để người dùng chọn xem
   const availableRoots = useMemo<RootOption[]>(() => {
-    return initialMembers
+    return activeMembers
       .slice()
       .sort((a, b) => {
         if (a.generation_level !== b.generation_level) return a.generation_level - b.generation_level;
@@ -62,16 +117,16 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         branchName: m.branch_name || undefined,
         generationLevel: m.generation_level,
       }));
-  }, [initialMembers]);
+  }, [activeMembers]);
 
-  // Tính toán layout phụ thuộc vào initialMembers, initialSpouseRelations, showMaternalBranches, showInternalHusbands và focusRootId
+  // Tính toán layout
   const currentLayout = useMemo(() => {
-    return calculateTreeLayout(initialMembers, initialSpouseRelations, {
+    return calculateTreeLayout(activeMembers, activeSpouseRelations, {
       showMaternalBranches,
       showInternalHusbands,
       focusRootId,
     });
-  }, [initialMembers, initialSpouseRelations, showMaternalBranches, showInternalHusbands, focusRootId]);
+  }, [activeMembers, activeSpouseRelations, showMaternalBranches, showInternalHusbands, focusRootId]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<TreeNodeData>>(
     currentLayout.nodes as unknown as Node<TreeNodeData>[]
@@ -85,6 +140,29 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
     setNodes(currentLayout.nodes as unknown as Node<TreeNodeData>[]);
     setEdges(currentLayout.edges);
   }, [currentLayout, setNodes, setEdges]);
+
+  // Click vào node trên canvas -> Mở Drawer
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    const memberId = (node.data as any)?.originalMemberId || node.id;
+    setSelectedMemberId(memberId);
+    setIsDrawerOpen(true);
+  }, []);
+
+  // Điều hướng nhanh khi click vào người thân trong Drawer
+  const handleSelectMemberInDrawer = useCallback((memberId: string) => {
+    setSelectedMemberId(memberId);
+    // Tìm vị trí node trên canvas và lia camera tới đó
+    const targetNode =
+      getNode(memberId) ||
+      nodes.find((n) => n.id === memberId || (n.data as any)?.originalMemberId === memberId);
+
+    if (targetNode) {
+      setCenter(targetNode.position.x + 100, targetNode.position.y + 48, {
+        zoom: 1.0,
+        duration: 600,
+      });
+    }
+  }, [getNode, nodes, setCenter]);
 
   // Lắng nghe sự kiện bàn phím Spacebar để đổi con trỏ chuột sang bàn tay kéo
   useEffect(() => {
@@ -116,8 +194,8 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
     >
       {/* Toolbar phía trên tinh gọn 3 cụm */}
       <TreeToolbar
-        clanName={clanName}
-        memberCount={initialMembers.length}
+        clanName={activeClanName}
+        memberCount={activeMembers.length}
         nodeCount={nodes.length}
         nodes={nodes as LayoutNode[]}
         isLocked={isLocked}
@@ -129,9 +207,11 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         focusRootId={focusRootId}
         onSelectFocusRoot={setFocusRootId}
         availableRoots={availableRoots}
+        currentDataset={currentDataset}
+        onSwitchDataset={handleSwitchDataset}
       />
 
-      {/* Canvas React Flow */}
+      {/* Canvas React Flow với cơ chế Culling hiệu năng cao onlyRenderVisibleElements */}
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -140,13 +220,15 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         nodesDraggable={!isLocked}
-        minZoom={0.1}
+        minZoom={0.05}
         maxZoom={2.0}
         fitView
         fitViewOptions={{ padding: 0.2, duration: 800 }}
         panOnDrag={true}
         panOnScroll={false}
         zoomOnScroll={true}
+        onNodeClick={onNodeClick}
+        onlyRenderVisibleElements={true}
         className="touch-none"
         style={{ width: '100%', height: '100%' }}
       >
@@ -164,11 +246,25 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         />
       </ReactFlow>
 
+      {/* Slide-over Member Detail Drawer */}
+      <MemberDetailDrawer
+        memberId={selectedMemberId}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        members={activeMembers}
+        spouseRelations={activeSpouseRelations}
+        onSelectMember={handleSelectMemberInDrawer}
+        onSetFocusRoot={(id) => {
+          setFocusRootId(id);
+          setIsDrawerOpen(false);
+        }}
+      />
+
       {/* Footer gợi ý phím tắt */}
       <div className="absolute bottom-4 left-4 z-30 pointer-events-none hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/60 backdrop-blur-sm text-[11px] text-slate-500 dark:text-slate-400 shadow-sm">
         <Keyboard className="w-3.5 h-3.5 text-emerald-600" />
         <span>
-          Giữ <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Space</kbd> + kéo chuột để lia phả đồ | Cuộn chuột để phóng to/thu nhỏ
+          Click thẻ để xem hồ sơ chi tiết & thân tộc | Giữ <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Space</kbd> + kéo chuột để lia phả đồ
         </span>
       </div>
     </div>
