@@ -11,15 +11,20 @@ export const FamilyBusEdge: React.FC<EdgeProps> = ({
   targetY,
   style,
   markerEnd,
+  data,
 }) => {
-  // Cao độ thanh ngang chung (Bus Line) tại trung điểm khoảng cách Y
-  const midY = sourceY + (targetY - sourceY) / 2;
+  // Cao độ thanh ngang chung (Bus Line): Ưu tiên data.busY từ layout engine,
+  // nếu không có thì fallback về trung điểm (sourceY + (targetY - sourceY) / 2)
+  const busY =
+    typeof (data as any)?.busY === 'number'
+      ? (data as any).busY
+      : sourceY + (targetY - sourceY) / 2;
 
   // Định tuyến đường đi thước thợ vuông góc 90 độ dứt khoát:
-  // 1. Đi thẳng đứng từ cha mẹ (sourceX, sourceY) xuống cao độ midY
-  // 2. Chạy ngang từ sourceX sang targetX tại đúng cao độ midY
-  // 3. Cắm thẳng đứng từ (targetX, midY) xuống đỉnh thẻ con (targetX, targetY)
-  const path = `M ${sourceX} ${sourceY} V ${midY} H ${targetX} V ${targetY}`;
+  // 1. Đi thẳng đứng từ cha mẹ (sourceX, sourceY) xuống cao độ busY
+  // 2. Chạy ngang từ sourceX sang targetX tại đúng cao độ busY
+  // 3. Cắm thẳng đứng từ (targetX, busY) xuống đỉnh thẻ con (targetX, targetY)
+  const path = `M ${sourceX} ${sourceY} V ${busY} H ${targetX} V ${targetY}`;
 
   return (
     <BaseEdge

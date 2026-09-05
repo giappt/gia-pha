@@ -89,12 +89,12 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
               (Trưởng)
             </span>
           )}
-          {nodeData.motherOrderTitle && (
+          {nodeData.spouseOrderTitle && (
             <span
-              className="text-[9px] font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1 py-0.2 rounded border border-purple-200/60 dark:border-purple-800/60"
-              title={nodeData.motherName ? `Mẹ: ${nodeData.motherName}` : undefined}
+              className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded-full border border-amber-200/80 dark:border-amber-800/60"
+              title={`Phối ngẫu: ${nodeData.spouseOrderTitle}`}
             >
-              {nodeData.motherOrderTitle}
+              🌸 {nodeData.spouseOrderTitle}
             </span>
           )}
         </div>
@@ -199,14 +199,21 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
         type="source"
         position={Position.Bottom}
         id="children-spouse-1"
-        style={{ top: '48px', left: '430px' }}
+        style={{ top: '96px', left: '540px' }}
         className="!opacity-0 !w-0 !h-0 !border-0 !p-0 !min-w-0 !min-h-0 pointer-events-none"
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="children-spouse-2"
-        style={{ top: '48px', left: '650px' }}
+        style={{ top: '96px', left: '760px' }}
+        className="!opacity-0 !w-0 !h-0 !border-0 !p-0 !min-w-0 !min-h-0 pointer-events-none"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="children-spouse-3"
+        style={{ top: '96px', left: '980px' }}
         className="!opacity-0 !w-0 !h-0 !border-0 !p-0 !min-w-0 !min-h-0 pointer-events-none"
       />
       <Handle

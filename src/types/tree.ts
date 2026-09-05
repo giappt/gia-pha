@@ -75,6 +75,7 @@ export interface TreeNodeData extends Record<string, any> {
   deathLunarYearName?: string | null;
   motherName?: string;
   motherOrderTitle?: string;
+  spouseOrderTitle?: string;
 }
 
 export interface ChildrenGroup {

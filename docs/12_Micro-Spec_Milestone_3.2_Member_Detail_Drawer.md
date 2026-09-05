@@ -169,19 +169,30 @@ sequenceDiagram
     - Cấy 1 Node Khuyết danh ở Đời 2 (`is_anonymous: true`, `full_name: '(Khuyết danh Đời 2)'`).
   - _Output:_ `{ members: MemberRecord[]; spouseRelations: SpouseRelationRecord[] }`.
 
-### 4.3. File: `src/lib/tree-layout/genealogy-layout.ts` (Nâng cấp Phân cụm Đa thê & Con riêng)
-- **Kiến trúc Mô hình 1 (Xếp Một Phía sang phải):**
-  - Thứ tự hàng ngang: `[Chồng] ═══════ [Vợ Cả] ═══════ [Vợ Hai] ═══════ ...`
+### 4.3. File: `src/lib/tree-layout/genealogy-layout.ts` (Nâng cấp Phân cụm Đa thê & Con riêng - Phương án B Cải Tiến)
+- **Kiến trúc Dàn Một Phía Sang Phải (Unilateral Spouse Spreading):**
+  - Thứ tự hàng ngang: `[Chồng] ═══════ [Vợ Cả] ═══════ [Vợ Hai] ═══════ [Vợ Ba]...`
+  - Sắp xếp các phối ngẫu theo thứ tự `marriage_order` tăng dần dạt sang bên phải người chồng.
   - Khoảng cách giữa các vợ chồng: `SPOUSE_GAP = 20px`.
-- **Cơ chế Phân chia Sub-bus & Trọng tâm Cụm con:**
-  1. Khi người cha có nhiều vợ hoặc có con riêng không mẹ, đàn con được phân thành $K$ cụm nhỏ (`ChildCluster`):
-     - **Cụm con riêng (`mother_id == null`):** Nối từ cổng `children-single` tại đáy thẻ của người cha.
-     - **Cụm con của Vợ thứ $i$:** Nối từ cổng `children-spouse-${i}` tại trung điểm giữa người cha và vợ thứ $i$ (hoặc tại vị trí vợ thứ $i$).
-  2. **Zero Crossing Edges (Tuyệt đối không cắt chéo dây):**
-     - Sắp xếp các cụm con theo chiều từ trái sang phải: `Cụm con riêng` $\rightarrow$ `Cụm con Bà Cả` $\rightarrow$ `Cụm con Bà Hai`.
-     - Mỗi cụm con duy trì khoảng cách đệm `SIBLING_GAP = 40px` với cụm kế tiếp.
-     - Trong từng cụm, các anh chị em cùng mẹ vẫn được sắp xếp theo thứ tự năm sinh / `birth_order`.
-  3. Cập nhật `FamilyUnit.width`: Tổng chiều rộng của cụm gia đình là $\max(\text{coupleWidth}, \sum \text{clusterWidths} + \text{gaps})$.
+- **Cơ Chế Phân Tầng Cao Độ Bus Độc Lập (Multi-level Altitude Corridor):**
+  1. Khi người cha có nhiều cụm con (con riêng khuyết mẹ, con với Vợ Cả, con với Vợ Hai, con với Vợ Ba...), mỗi cụm con được gán một cao độ Bus ngang $Y_{bus}$ riêng biệt:
+     $$Y_{bus}(\text{clusterIndex}) = Y_{\text{node}} + \text{NODE\_HEIGHT} + 20 + \text{clusterIndex} \times 20\text{px}$$
+     - Cụm con riêng khuyết mẹ: $Y_{bus} = 125\text{px}$
+     - Cụm con Vợ Cả (idx 0): $Y_{bus} = 145\text{px}$
+     - Cụm con Vợ Hai (idx 1): $Y_{bus} = 165\text{px}$
+     - Cụm con Vợ Ba (idx 2): $Y_{bus} = 185\text{px}$
+  2. `FamilyBusEdge` đọc giá trị `data.busY` từ edge thay vì hardcode $midY$ trung điểm. Tầng bus sau luôn đi dưới gầm tầng bus trước, triệt tiêu $100\%$ hiện tượng lồng đè chéo nhau (Bus Collision).
+- **Cơ Chế Neo Điểm Xuất Phát Nhánh Con Đa Thê & Con Riêng:**
+  1. **Con riêng khuyết mẹ của người cha:** Hạ thẳng từ đáy thẻ người cha (`children-single`, $X = \text{tâm thẻ Cha}$).
+  2. **Con chung với Vợ Cả:** Hạ từ khuyên hôn phối `[Chồng ══ Vợ Cả]` (`children-spouse-0`, $X = \text{trung điểm Chồng và Vợ Cả}$).
+  3. **Con chung với Vợ Hai (và Vợ Ba...):**
+     - Loại bỏ hoàn toàn handle neo tại khe giữa 2 bà vợ (`430px`).
+     - Neo tại điểm xuất phát gắn liền với người mẹ tương ứng kèm liên kết huyết thống cha, HOẶC từ khuyên hôn phối riêng của người vợ đó.
+  4. **Con riêng của người mẹ (Cha đẻ không phải Chồng):**
+     - Thành viên có `mother_id == wife.id` nhưng `father_id != husband.id` (hoặc `father_id == null`):
+     - Hạ thẳng từ đáy thẻ người mẹ (`children-single` của Mẹ), dùng nét đứt (dashed line) phân biệt, xếp thẳng dưới chân Mẹ, **hoàn toàn không chạm vào thanh Bus của người Chồng**.
+- **Căn Chỉnh Trọng Tâm Đàn Con Theo Mẹ (Parent-Anchored Subtree):**
+  - Tọa độ $X$ của từng cụm con được căn dạt tập trung ngay dưới khu vực thẻ của người mẹ đó, giúp đường bus ngang ngắn lại, đi thẳng đứng xuống, triệt tiêu nguy cơ cắt ngang đường dọc của cụm khác.
 
 ---
 
@@ -223,14 +234,16 @@ sequenceDiagram
      - Nút "Đặt làm Gốc phả đồ" (`onSetFocusRoot`).
      - Nút "Tra cứu xưng hô" (link tới `/kinship?from={memberId}`).
 
-### 5.2. File: `src/components/tree/MemberNode.tsx` (Cập nhật)
+### 5.2. File: `src/components/tree/MemberNode.tsx` (Cập nhật Tinh Giản & Danh Vị Phối Ngẫu)
 - Hỗ trợ cờ `is_anonymous`:
   - Nếu `is_anonymous === true`: Viền thẻ chuyển sang `border-dashed border-amber-400 dark:border-amber-600/70`, nền `bg-amber-50/70 dark:bg-amber-950/30`.
   - Icon phụ trợ: `HelpCircle` hoặc `Clock` màu hổ phách dịu.
   - Chữ chú thích: *"Chờ xác minh danh tự"*.
-- **Huy hiệu mẹ (Mother Role Badge):**
-  - Nếu thành viên nằm trong gia đình có nhiều mẹ (`motherOrderTitle` tồn tại, ví dụ: *"Con bà cả"*, *"Con bà hai"*, *"Chưa rõ mẹ"*): Hiển thị badge nhỏ tinh tế ở góc thẻ để người xem nhận diện tức thì.
-- **Hỗ trợ đa Handles con cái:** Bổ sung các source handles tương ứng khi người cha có nhiều cụm con.
+- **Tinh giản thẻ con cái (Loại bỏ badge con bà cả / con bà hai):**
+  - Tuyệt đối KHÔNG hiển thị badge `motherOrderTitle` (`[Con bà cả]`, `[Con bà hai]`, `[Chưa rõ mẹ]`) trên thẻ con cái, vì sơ đồ phân nhánh thước thợ đã thể hiện trực quan $100\%$. Thẻ con chỉ hiển thị huy hiệu `(Trưởng)` (nếu có) và trạng thái sinh tử (`Còn sống` / `† Đã mất`).
+- **Danh vị phối ngẫu trên thẻ người vợ (`spouseOrderTitle`):**
+  - Đối với các thẻ người vợ có `spouseOrderTitle` (dựa trên `marriage_order`: 1 $\to$ *"Bà cả"*, 2 $\to$ *"Bà hai"*, $k \to$ *"Bà thứ k"*): Hiển thị badge danh vị nhỏ trang nhã màu tím/hổ phách: `🌸 Bà cả`, `🌸 Bà hai` để người xem nhận diện tức thì danh phận của từng cụ bà.
+- **Hỗ trợ đa Handles con cái:** Bổ sung các source handles tương ứng khi người cha có nhiều cụm con (`children-spouse-1` tại $X = 540\text{px}$, `children-spouse-2` tại $X = 760\text{px}$...).
 
 ### 5.3. File: `src/components/tree/FamilyTreeCanvas.tsx` (Cập nhật)
 - Thêm state `selectedMemberId: string | null` và `isDrawerOpen: boolean`.
@@ -260,6 +273,12 @@ sequenceDiagram
   - Vẫn hiển thị người vợ đó trên hàng ngang vợ chồng, nhưng không sinh cụm con hay bus line rỗng bên dưới.
 - **Edge Case 6: Người con khuyết mẹ (`mother_id == null`) trong gia đình đa thê:**
   - Được gom riêng vào nhóm "Chưa rõ thông tin mẹ" và hạ bus độc lập từ chân người cha, không bị gán nhầm sang bà vợ nào.
+- **Edge Case 7: Con riêng của người vợ (Người mẹ mang con riêng vào gia đình):**
+  - Thành viên có `mother_id` là một trong các bà vợ nhưng `father_id` không phải người chồng (hoặc `father_id == null`):
+  - Nhánh con hạ thẳng từ đáy thẻ người mẹ (`children-single` của Mẹ), dùng đường nét đứt, xếp dưới chân mẹ, không liên kết vào thanh Bus của người cha.
+- **Edge Case 8: Trường hợp 3 vợ trở lên (N wives):**
+  - Dàn hàng ngang sang phải theo `marriage_order`: `[Chồng] ══ [Vợ Cả] ── [Vợ Hai] ── [Vợ Ba]...`
+  - Các cụm con dạt theo vị trí của người mẹ tương ứng, mỗi cụm nhận cao độ $Y_{bus}$ tăng dần $20\text{px}$ để đảm bảo không bao giờ lồng đè bus line.
 
 ---
 
@@ -275,6 +294,10 @@ sequenceDiagram
 - [x] **TC_UT_PERF_02** (Benchmark thuật toán dàn trang 1.500 nodes): `tests/large-tree-perf.test.ts` — PASS (14.86ms, chạy thực tế **9.78ms**), vượt xa cam kết SLA $< 100ms$.
 - [x] **TC_UT_DET_05** (Phân nhóm con cái theo mẹ trong ImmediateFamily): `tests/member-detail.test.ts` — PASS (1.00ms). Trích xuất chính xác 3 nhóm con: con Bà Cả (Mơ), con Bà Hai (Liễu), và con riêng khuyết mẹ.
 - [x] **TC_UT_LAYOUT_POLY** (Dàn trang 3 nhánh con đa thê không cắt chéo dây): `tests/tree-layout.test.ts` — PASS (0.76ms). Tọa độ $X$ của 3 cụm con thỏa mãn $X_{\text{con riêng}} < X_{\text{con bà cả}} < X_{\text{con bà hai}}$, liên kết các edge `lineage` tương ứng và $0$ crossing lines.
+- [x] **TC_UT_BUS_ALTITUDE_01** (Phân tầng cao độ Bus Y chống va chạm): `tests/tree-layout.test.ts` — PASS (0.37ms). Given gia đình Cụ Chiến đa thê có con riêng và con với 2 bà vợ, When gọi `calculateTreeLayout(...)`, Then các edge `lineage` thuộc 3 cụm con có `data.busY` riêng biệt với độ chênh lệch tối thiểu $15\text{px}$ giữa các cụm ($Y_{bus}(\text{single}) < Y_{bus}(\text{mơ}) < Y_{bus}(\text{liễu})$), triệt tiêu xung đột lồng đường.
+- [x] **TC_UT_STEPCHILD_01** (Xử lý con riêng của người vợ): `tests/tree-layout.test.ts` — PASS (0.46ms). Given người mẹ có con riêng trước hôn nhân (`father_id != primary` hoặc `father_id == null`), When gọi `calculateTreeLayout(...)`, Then edge nối con xuất phát từ chính thẻ người mẹ, không sinh edge nối từ người cha.
+- [x] **TC_UT_POLY_3_WIVES** (Hỗ trợ gia đình 3 vợ trở lên): `tests/tree-layout.test.ts` — PASS (7.75ms). Given người cha có 3 vợ và các con tương ứng, When gọi `calculateTreeLayout(...)`, Then thuật toán dàn trang thành công 4 cụm con theo thứ tự $X$ tăng dần và $Y_{bus}$ 4 tầng riêng biệt, không phát sinh lỗi chồng chéo.
+- [x] **TC_UT_SPOUSE_TITLE_01** (Danh vị Bà cả / Bà hai trên thẻ phối ngẫu): `tests/tree-layout.test.ts` — PASS (0.29ms). Given người cha có nhiều vợ với `marriage_order`, When gọi `calculateTreeLayout(...)`, Then các thẻ vợ nhận `data.spouseOrderTitle` tương ứng (`Bà cả`, `Bà hai`), và thẻ con cái không còn gắn nhãn `motherOrderTitle` gây rối mắt.
 
 ---
 
@@ -288,15 +311,22 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt `http
 - [ ] **UAT_05 (Console sạch):** Mở Developer Tools Console $\rightarrow$ $0$ lỗi đỏ, $0$ lỗi hydration.
 - [ ] **UAT_06 (3 Nhánh Con Đa Thê):** Trên Canvas, gia đình đa thê hiển thị ngay ngắn 3 nhánh con từ trái sang phải: Nhánh con riêng dưới chân cụ Chiến, Nhánh con bà cả dưới bà Mơ, Nhánh con bà hai dưới bà Liễu; các đường bus phẳng phiu, không cắt chéo dây.
 - [ ] **UAT_07 (Phân Nhóm Con Trong Drawer):** Mở Drawer của cụ Chiến, mục Con Cái phân chia rõ ràng các khối con của từng bà mẹ ("Con với bà Hoàng Thị Mơ", "Con với bà Đào Thị Liễu", "Chưa rõ thông tin mẹ").
+- [ ] **UAT_08 (Triệt tiêu Bus Collision):** Trên Canvas, đường bus ngang của con riêng Cụ Chiến và con Vợ Cả không còn hiện tượng đường ngang cắt xuyên qua đường dọc của nhau (chạy ở 2 tầng cao độ $Y$ khác nhau, tạo không gian phân tầng thông thoáng).
+- [ ] **UAT_09 (Điểm hạ nhánh con Vợ Hai):** Nhánh con Vợ Hai không còn xuất phát từ khe giữa Vợ Cả và Vợ Hai, thể hiện rõ ràng liên kết huyết thống với Cụ Chiến.
+- [ ] **UAT_10 (Con riêng của vợ):** Con riêng của người mẹ hạ thẳng từ đáy thẻ mẹ, không dính líu vào thanh Bus của người cha.
+- [ ] **UAT_11 (Xóa badge con bà cả/hai trên thẻ con):** Trên Canvas, thẻ con (Khuyết, Minh, Lan, Đức, Mai) không còn badge tím `[Con bà cả]`, `[Con bà hai]`, `[Chưa rõ mẹ]`, chỉ hiển thị `(Trưởng)` và `Còn sống`.
+- [ ] **UAT_12 (Badge danh vị Bà cả / Bà hai trên thẻ cụ bà):** Thẻ Cụ bà Hoàng Thị Mơ hiển thị nhãn `🌸 Bà cả`, Thẻ Cụ bà Đào Thị Liễu hiển thị nhãn `🌸 Bà hai`.
 
 ---
 
 ## 8. BẢO VỆ CHỐNG THOÁI LUI (REGRESSION GUARD CHECKLIST)
 
 - [x] **RG01 (Build & Typecheck Clean):** Chạy `npm.cmd run typecheck` và `npm.cmd run build` — 0 lỗi, build production thành công 12/12 routes.
-- [x] **RG02 (Automated Test Suite Regression):** Chạy `npm.cmd test` — Toàn bộ **38/38 tests PASS** (36 tests cũ + 2 tests mới đều xanh, 0 failure mới).
+- [x] **RG02 (Automated Test Suite Regression):** Chạy `npm.cmd test` — Toàn bộ **42/42 tests PASS** (38 tests cũ + 4 tests mới đều xanh, 0 failure mới).
 - [x] **RG03 (Blast Radius Guard):** Các tính năng cốt lõi Milestone 3.1 (FamilyBusEdge $90^\circ$, Ghost Node đối xứng 2 chiều, Focus Root, Flat Seamless Footer, phím Spacebar) hoạt động trơn tru khi Drawer đóng/mở.
-- [x] **RG04 (Multi-Spouse Layout Backward Compatibility):** Cây 1 vợ 1 chồng bình thường (Clan 28) và cây 1.500 nodes không bị ảnh hưởng tọa độ hoặc suy giảm hiệu năng (layout benchmark 1.787 nodes chạy chỉ mất **10.55ms**, SLA $< 100\text{ms}$).
+- [x] **RG04 (Multi-Spouse Layout Backward Compatibility):** Cây 1 vợ 1 chồng bình thường (Clan 28) và cây 1.500 nodes không bị ảnh hưởng tọa độ hoặc suy giảm hiệu năng (layout benchmark 1.787 nodes chạy chỉ mất **26.36ms**, SLA $< 100\text{ms}$).
+- [x] **RG05 (Single-Spouse Bus Line Altitude):** Các gia đình 1 vợ 1 chồng bình thường trên Clan 28 và Clan 1.500 giữ nguyên cao độ thanh bus chuẩn mực, không bị biến dạng khi áp dụng thuật toán phân tầng.
+- [x] **RG06 (Clean Child Card Layout):** Chiều cao và nội dung thẻ con cái không bị vỡ bố cục khi loại bỏ badge tím.
 
 ---
 

@@ -23,6 +23,9 @@ interface ChildCluster {
   motherOrderTitle?: string;
   motherName?: string;
   children: FamilyUnit[];
+  sourceMemberId?: string;
+  busY?: number;
+  isStepChild?: boolean;
 }
 
 interface FamilyUnit {
@@ -296,20 +299,28 @@ export function calculateTreeLayout(
 
         const nextPerspective = primary.gender === 'female' ? 'maternal' : perspective;
 
-        // Phân cụm con cái nếu primary là người cha và (có nhiều vợ HOẶC có con riêng khuyết mẹ bên cạnh vợ)
+        // Kiểm tra xem có con riêng của vợ hay không (con có mother_id là một trong các vợ nhưng father_id != primary.id)
+        const hasStepChildrenOfWives = spouses.some((sp) =>
+          childrenList.some((c) => c.mother_id === sp.id && c.father_id !== primary.id)
+        );
+
+        // Phân cụm con cái nếu primary là người cha và (có nhiều vợ HOẶC có con riêng khuyết mẹ bên cạnh vợ HOẶC có con riêng của vợ)
         const isMultiSpouseOrSingleConRieng =
           primary.gender === 'male' &&
           (spouses.length > 1 ||
             (spouses.length === 1 &&
-              childrenList.some((c) => c.mother_id !== spouses[0].id)));
+              childrenList.some((c) => c.mother_id !== spouses[0].id)) ||
+            hasStepChildrenOfWives);
 
         if (isMultiSpouseOrSingleConRieng) {
           childClusters = [];
           const assignedIds = new Set<string>();
 
-          // 1. Cụm con riêng (không mẹ hoặc mẹ không trong spouses)
+          // 1. Cụm con riêng của Cha (không mẹ hoặc mẹ không trong spouses, và cha là primary)
           const singleChildren = childrenList.filter(
-            (c) => !c.mother_id || !spouses.some((sp) => sp.id === c.mother_id)
+            (c) =>
+              c.father_id === primary.id &&
+              (!c.mother_id || !spouses.some((sp) => sp.id === c.mother_id))
           );
           sortMemberList(singleChildren);
           singleChildren.forEach((c) => assignedIds.add(c.id));
@@ -323,6 +334,7 @@ export function calculateTreeLayout(
             childClusters.push({
               key: 'cluster-single',
               sourceHandle: 'children-single',
+              sourceMemberId: primary.id,
               motherId: null,
               motherOrderTitle: 'Chưa rõ mẹ',
               children: singleUnits,
@@ -331,14 +343,17 @@ export function calculateTreeLayout(
 
           // 2. Cụm con của từng người vợ theo thứ tự marriage_order
           spouses.forEach((sp, idx) => {
-            const wifeChildren = childrenList.filter((c) => c.mother_id === sp.id);
-            sortMemberList(wifeChildren);
-            wifeChildren.forEach((c) => assignedIds.add(c.id));
+            // 2a. Con chung của Cha và Vợ sp
+            const jointChildren = childrenList.filter(
+              (c) => c.mother_id === sp.id && c.father_id === primary.id
+            );
+            sortMemberList(jointChildren);
+            jointChildren.forEach((c) => assignedIds.add(c.id));
 
-            if (wifeChildren.length > 0) {
+            if (jointChildren.length > 0) {
               const orderTitle =
                 idx === 0 ? 'Con bà cả' : idx === 1 ? 'Con bà hai' : `Con bà ${idx + 1}`;
-              const wifeUnits = wifeChildren.map((c) => {
+              const jointUnits = jointChildren.map((c) => {
                 const u = buildFamilyUnit(c, currentVisited, nextPerspective);
                 u.motherOrderTitle = orderTitle;
                 u.motherName = sp.full_name;
@@ -347,15 +362,42 @@ export function calculateTreeLayout(
               childClusters!.push({
                 key: `cluster-spouse-${idx}`,
                 sourceHandle: spouses.length > 1 ? `children-spouse-${idx}` : 'children-joint',
+                sourceMemberId: primary.id,
                 motherId: sp.id,
                 motherOrderTitle: orderTitle,
                 motherName: sp.full_name,
-                children: wifeUnits,
+                children: jointUnits,
+              });
+            }
+
+            // 2b. Con riêng của Vợ sp (nếu có - cha đẻ không phải primary)
+            const wifeStepChildren = childrenList.filter(
+              (c) => c.mother_id === sp.id && c.father_id !== primary.id
+            );
+            sortMemberList(wifeStepChildren);
+            wifeStepChildren.forEach((c) => assignedIds.add(c.id));
+
+            if (wifeStepChildren.length > 0) {
+              const stepUnits = wifeStepChildren.map((c) => {
+                const u = buildFamilyUnit(c, currentVisited, nextPerspective);
+                u.motherOrderTitle = `Con riêng của ${sp.full_name}`;
+                u.motherName = sp.full_name;
+                return u;
+              });
+              childClusters!.push({
+                key: `cluster-stepchild-${sp.id}`,
+                sourceHandle: 'children-single',
+                sourceMemberId: sp.id,
+                motherId: sp.id,
+                motherOrderTitle: `Con riêng của ${sp.full_name}`,
+                motherName: sp.full_name,
+                children: stepUnits,
+                isStepChild: true,
               });
             }
           });
 
-          // Làm phẳng childUnits theo thứ tự các clusters (Cụm con riêng -> Cụm con Bà Cả -> Cụm con Bà Hai)
+          // Làm phẳng childUnits theo thứ tự các clusters (Cụm con riêng -> Cụm con Bà Cả -> Cụm con Bà Hai -> Con riêng vợ...)
           childUnits = childClusters.flatMap((cl) => cl.children);
         } else {
           // Trường hợp thông thường: 1 mẹ hoặc mẹ đơn thân
@@ -561,6 +603,27 @@ export function calculateTreeLayout(
       } else {
         if (!renderedNodeIds.has(sp.id)) {
           renderedNodeIds.add(sp.id);
+
+          // Xác định danh vị phối ngẫu (Bà cả, Bà hai...) nếu gia đình đa thê hoặc có marriage_order > 1
+          const rel = spouseRelations.find(
+            (r) =>
+              (r.member_a_id === primary.id && r.member_b_id === sp.id) ||
+              (r.member_b_id === primary.id && r.member_a_id === sp.id)
+          );
+
+          let spouseOrderTitle: string | undefined;
+          if (
+            sp.gender === 'female' &&
+            (unit.spouses.length > 1 || (rel?.marriage_order && rel.marriage_order > 1))
+          ) {
+            const order = rel?.marriage_order ?? (idx + 1);
+            if (order === 1) spouseOrderTitle = 'Bà cả';
+            else if (order === 2) spouseOrderTitle = 'Bà hai';
+            else if (order === 3) spouseOrderTitle = 'Bà ba';
+            else if (order === 4) spouseOrderTitle = 'Bà tư';
+            else spouseOrderTitle = `Bà thứ ${order}`;
+          }
+
           nodes.push({
             id: sp.id,
             type: 'memberNode',
@@ -584,6 +647,7 @@ export function calculateTreeLayout(
               burialLocation: sp.burial_location,
               notes: sp.notes,
               deathLunarYearName: sp.death_lunar_year_name,
+              spouseOrderTitle,
             },
           });
         }
@@ -607,27 +671,44 @@ export function calculateTreeLayout(
       const child = childUnit.primaryMember;
       renderUnit(childUnit);
 
-      // Xác định sourceHandle phù hợp cho child
+      // Xác định sourceHandle, sourceId, busY, isStepChild phù hợp cho child
+      let sourceId = primary.id;
       let sourceHandle = unit.spouses.length > 0 ? 'children-joint' : 'children-single';
+      let isStepChild = false;
+      let busY: number | undefined;
+
       if (unit.childClusters && unit.childClusters.length > 1) {
-        const matchingCluster = unit.childClusters.find((cl) =>
+        const clusterIdx = unit.childClusters.findIndex((cl) =>
           cl.children.some((c) => c.primaryMember.id === child.id)
         );
-        if (matchingCluster) {
+        if (clusterIdx >= 0) {
+          const matchingCluster = unit.childClusters[clusterIdx];
           sourceHandle = matchingCluster.sourceHandle;
+          if (matchingCluster.sourceMemberId) {
+            sourceId = matchingCluster.sourceMemberId;
+          }
+          isStepChild = matchingCluster.isStepChild === true;
+          // Phân tầng cao độ Bus Y (Multi-level Altitude Corridor):
+          // Mỗi cụm con chênh lệch 20px, bắt đầu từ NODE_HEIGHT + 25
+          busY = primaryY + NODE_HEIGHT + 25 + clusterIdx * 20;
         }
       }
 
-      // Edge nối từ cha mẹ xuống con cái: Dùng familyBusEdge hoặc step thước thợ
+      // Edge nối từ cha mẹ xuống con cái: Dùng familyBusEdge
       edges.push({
-        id: `parent-${primary.id}-${child.id}`,
-        source: primary.id,
+        id: `parent-${sourceId}-${child.id}`,
+        source: sourceId,
         target: child.id,
         sourceHandle,
         targetHandle: 'parent-top',
         type: 'familyBusEdge',
-        style: { stroke: '#059669', strokeWidth: 1.5 },
-        data: { relationType: 'lineage' },
+        style: isStepChild
+          ? { stroke: '#a855f7', strokeWidth: 1.5, strokeDasharray: '4 4' }
+          : { stroke: '#059669', strokeWidth: 1.5 },
+        data: {
+          relationType: isStepChild ? 'stepchild' : 'lineage',
+          busY,
+        },
       });
     });
   }
