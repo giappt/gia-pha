@@ -613,4 +613,48 @@ describe('Genealogy Tree Layout Engine Test Suite', () => {
     assert.strictEqual(nodeMo.data.spouseOrderTitle, 'Bà cả', 'Bà Mơ có marriage_order = 1 phải là Bà cả');
     assert.strictEqual(nodeLieu.data.spouseOrderTitle, 'Bà hai', 'Bà Liễu có marriage_order = 2 phải là Bà hai');
   });
+
+  // TC_UT_NODE_DIM01: Khai báo kích thước Node tường minh chống lỗi viewport React Flow
+  it('TC_UT_NODE_DIM01: 100% object Node (memberNode & ghostNode) trả về từ calculateTreeLayout có width === 200 và height === 96', () => {
+    const { nodes } = calculateTreeLayout(SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS);
+
+    assert.ok(nodes.length > 0, 'Phải sinh ra danh sách nodes');
+
+    // Kiểm tra tất cả memberNode
+    const memberNodes = nodes.filter((n) => n.type === 'memberNode');
+    assert.ok(memberNodes.length > 0, 'Phải có memberNode trong kết quả layout');
+    memberNodes.forEach((n) => {
+      assert.strictEqual(n.width, NODE_WIDTH, `memberNode ${n.id} phải có width === ${NODE_WIDTH}`);
+      assert.strictEqual(n.height, NODE_HEIGHT, `memberNode ${n.id} phải có height === ${NODE_HEIGHT}`);
+    });
+
+    // Kiểm tra tất cả ghostNode
+    const ghostNodes = nodes.filter((n) => n.type === 'ghostNode');
+    assert.ok(ghostNodes.length > 0, 'Phải có ghostNode trong kết quả layout của Clan 28');
+    ghostNodes.forEach((n) => {
+      assert.strictEqual(n.width, NODE_WIDTH, `ghostNode ${n.id} phải có width === ${NODE_WIDTH}`);
+      assert.strictEqual(n.height, NODE_HEIGHT, `ghostNode ${n.id} phải có height === ${NODE_HEIGHT}`);
+    });
+  });
+
+  // TC_UT_VIEWPORT_01: Kiểm tra Camera Config & Default Viewport trong FamilyTreeCanvas
+  it('TC_UT_VIEWPORT_01: Tọa độ đồ thị Clan 28 phù hợp với defaultViewport và bao phủ cụm Cụ Khởi', () => {
+    const { nodes } = calculateTreeLayout(SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS);
+
+    // Tìm Cụ Tổ Khởi
+    const rootNode = nodes.find((n) => n.id === 'm-root-khoi');
+    assert.ok(rootNode, 'Phải tìm thấy Cụ Tổ Khởi');
+    assert.strictEqual(rootNode.position.x, 1845, 'Cụ Khởi phải có tọa độ X = 1845');
+    assert.strictEqual(rootNode.position.y, 0, 'Cụ Khởi phải ở tầng Y = 0');
+
+    // Kiểm tra độ bao phủ của defaultViewport: { x: -600, y: 40, zoom: 0.55 }
+    // Vị trí render trên màn hình chuẩn 1440px: screenX = x * zoom + viewportX
+    // Với Cụ Khởi X = 1845: screenX = 1845 * 0.55 - 600 = 1014.75 - 600 = 414.75px (nằm trong vùng nhìn thấy [0, 1440])
+    const defaultViewport = { x: -600, y: 40, zoom: 0.55 };
+    const screenX = rootNode.position.x * defaultViewport.zoom + defaultViewport.x;
+    assert.ok(
+      screenX > 0 && screenX < 1440,
+      `Cụ Khởi (screenX = ${screenX}) phải hiển thị rõ ràng trong khung nhìn màn hình 1440px ngay từ frame 0ms`
+    );
+  });
 });

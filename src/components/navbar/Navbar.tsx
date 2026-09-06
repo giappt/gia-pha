@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import AuthButton from '@/components/auth/AuthButton';
+import ThemeToggle from '@/components/theme/ThemeToggle';
 import { createClient } from '@/lib/supabase/server';
 import { GitBranch, Calendar, Compass } from 'lucide-react';
 import type { UserProfile } from '@/types/database';
@@ -89,8 +90,9 @@ export default async function Navbar() {
           </Link>
         </nav>
 
-        {/* Right: Auth Action */}
-        <div className="flex items-center gap-3">
+        {/* Right: Theme Toggle & Auth Action */}
+        <div className="flex items-center gap-2.5">
+          <ThemeToggle />
           <AuthButton initialUser={user} initialProfile={userProfile} />
         </div>
       </div>

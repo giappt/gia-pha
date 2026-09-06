@@ -510,6 +510,8 @@ export function calculateTreeLayout(
         id: primary.id,
         type: 'memberNode',
         position: { x: primaryX, y: primaryY },
+        width: NODE_WIDTH,
+        height: NODE_HEIGHT,
         data: {
           id: primary.id,
           fullName: primary.full_name,
@@ -555,6 +557,8 @@ export function calculateTreeLayout(
           id: ghostId,
           type: 'ghostNode',
           position: { x: spouseX, y: spouseY },
+          width: NODE_WIDTH,
+          height: NODE_HEIGHT,
           data: {
             id: ghostId,
             fullName: sp.full_name,
@@ -628,6 +632,8 @@ export function calculateTreeLayout(
             id: sp.id,
             type: 'memberNode',
             position: { x: spouseX, y: spouseY },
+            width: NODE_WIDTH,
+            height: NODE_HEIGHT,
             data: {
               id: sp.id,
               fullName: sp.full_name,

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx --test tests/*.test.ts"
+    "test": "npx tsx --test tests/*.test.ts",
+    "data:convert": "python3 scripts/extract_genealogy.py && node scripts/build-clan-excel.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.1",
@@ -20,6 +21,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.5.2",
+    "xlsx": "^0.18.5",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

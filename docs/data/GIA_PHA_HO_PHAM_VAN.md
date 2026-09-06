@@ -55,7 +55,12 @@
 <a id="doi-thu-2"></a>
 ## ĐỜI THỨ 2
 
-> *Ghi chú:* Tư liệu lịch sử Đời thứ 2 bị khuyết danh trong bản gia phả gốc (để trống nhằm bổ sung khi tìm được di văn/văn bia).
+### 1. [PV-D02-001] Phạm Văn Đồng
+- **Giới tính:** Nam
+- **Ngày giỗ / Tạ thế / Hưởng thọ:** 19 / 05
+- **Mối liên kết Phụ thân (Parent ID):** PV-D01-001
+- **Hôn phối (1):**
+  - **Vợ:** Vũ Thị Thìn (Giỗ/Thọ: 08 / 06)
 
 
 <a id="doi-thu-3"></a>
@@ -65,7 +70,7 @@
 
 - **Giới tính:** Nam
 - **Ngày giỗ / Tạ thế / Hưởng thọ:** 13 / 06
-- **Mối liên kết Phụ thân (Parent ID):** *(Cần xác nhận)*
+- **Mối liên kết Phụ thân (Parent ID):** PV-D02-001
 - **Hôn phối (1):**
   - **Vợ:** Hoàng Thị Dinh (Giỗ/Thọ: 20 / 03)
 
@@ -77,7 +82,7 @@
 
 - **Giới tính:** Nam
 - **Ngày giỗ / Tạ thế / Hưởng thọ:** 11 / 06
-- **Mối liên kết Phụ thân (Parent ID):** *(Cần xác nhận)*
+- **Mối liên kết Phụ thân (Parent ID):** PV-D03-001
 - **Hôn phối (1):**
   - **Vợ:** Nguyễn Thị Hiến (Giỗ/Thọ: 19 / 08)
 

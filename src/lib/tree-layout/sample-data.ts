@@ -93,6 +93,7 @@ export const SAMPLE_MEMBERS_28: MemberRecord[] = [
     birth_year: 1962,
     generation_level: 3,
     birth_order: 1,
+    is_senior: true,
     is_root: false,
     branch_name: 'Chi 1 - Trưởng',
   },

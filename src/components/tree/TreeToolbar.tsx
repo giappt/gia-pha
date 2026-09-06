@@ -17,7 +17,10 @@ import {
   Calendar,
   Search,
   Link2,
+  UserPlus,
+  FileSpreadsheet,
 } from 'lucide-react';
+import Link from 'next/link';
 import { SpotlightSearch } from './SpotlightSearch';
 import { LayoutNode } from '@/types/tree';
 
@@ -44,6 +47,9 @@ interface TreeToolbarProps {
   availableRoots?: RootOption[];
   currentDataset?: 'clan28' | 'polygamy' | 'clan1500';
   onSwitchDataset?: (dataset: 'clan28' | 'polygamy' | 'clan1500') => void;
+  unlinkedCount?: number;
+  onOpenUnlinkedDrawer?: () => void;
+  onOpenAddMemberModal?: () => void;
 }
 
 export const TreeToolbar: React.FC<TreeToolbarProps> = ({
@@ -62,6 +68,9 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
   availableRoots = [],
   currentDataset = 'clan28',
   onSwitchDataset,
+  unlinkedCount = 0,
+  onOpenUnlinkedDrawer,
+  onOpenAddMemberModal,
 }) => {
   const { fitView } = useReactFlow();
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
@@ -240,6 +249,32 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
 
       {/* CỤM PHẢI: Spotlight Search & Nút Tiện Ích Popover */}
       <div className="pointer-events-auto flex items-center gap-2">
+        {/* Nút Khay Chưa Nối (nếu có người chưa nối) */}
+        {unlinkedCount > 0 && onOpenUnlinkedDrawer && (
+          <button
+            type="button"
+            onClick={onOpenUnlinkedDrawer}
+            title="Mở khay thành viên chưa nối phả"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-sm transition-all animate-pulse"
+          >
+            <Link2 className="w-3.5 h-3.5" />
+            <span>Chưa nối: {unlinkedCount}</span>
+          </button>
+        )}
+
+        {/* Nút Thêm Thành Viên Mới */}
+        {onOpenAddMemberModal && (
+          <button
+            type="button"
+            onClick={onOpenAddMemberModal}
+            title="Thêm thành viên mới vào cây"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-colors"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Thêm người</span>
+          </button>
+        )}
+
         <SpotlightSearch nodes={nodes} />
 
         <div className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
@@ -395,6 +430,20 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
                     </div>
                   </div>
                 )}
+
+                <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+
+                {/* Lối tắt Nhập liệu Excel */}
+                <Link
+                  href="/admin/import"
+                  className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors text-emerald-800 dark:text-emerald-300 font-semibold"
+                >
+                  <span className="flex items-center gap-2">
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                    Nhập Excel hàng loạt
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900">S-08</span>
+                </Link>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
 

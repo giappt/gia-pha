@@ -8,6 +8,7 @@
 
 # Next.js build output
 /.next/
+/.next-build/
 /out/
 
 # Production

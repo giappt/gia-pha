@@ -2,16 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 15, 23, 42;
-  --surface-bg: #ffffff;
+html {
+  height: 100%;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 248, 250, 252;
-    --surface-bg: #090e1a;
-  }
+body {
+  min-height: 100%;
+}
+
+:root {
+  --foreground-rgb: 15, 23, 42;
+  --surface-bg: #f8fafc;
+}
+
+.dark {
+  --foreground-rgb: 248, 250, 252;
+  --surface-bg: #090e1a;
 }
 
 body {
@@ -26,10 +32,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-image: 
-      radial-gradient(ellipse 70% 45% at 50% -5%, rgba(16, 185, 129, 0.12), transparent 70%),
-      radial-gradient(ellipse 40% 30% at 85% 20%, rgba(245, 158, 11, 0.05), transparent 60%);
-  }
+.dark body,
+html.dark body {
+  background-image: 
+    radial-gradient(ellipse 70% 45% at 50% -5%, rgba(16, 185, 129, 0.12), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 85% 20%, rgba(245, 158, 11, 0.05), transparent 60%);
 }

@@ -53,7 +53,7 @@ export default async function TreePage() {
   }
 
   return (
-    <div className="w-full h-[calc(100vh-4rem)] flex-1 overflow-hidden flex flex-col">
+    <div className="relative w-full h-full flex-1 overflow-hidden flex flex-col">
       <FamilyTreeCanvas
         initialMembers={members}
         initialSpouseRelations={spouseRelations}

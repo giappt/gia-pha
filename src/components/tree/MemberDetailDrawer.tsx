@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import { getImmediateFamily, getNextSolarAnniversary } from '@/lib/tree-layout/immediate-family';
+import { KINSHIP_TERMS } from '@/constants/kinship-terms';
+import { calculateMemberAge } from '@/lib/tree-layout/age-utils';
 import {
   X,
   Calendar,
@@ -16,8 +18,14 @@ import {
   HelpCircle,
   Crown,
   ChevronRight,
+  Edit3,
+  UserPlus,
+  Info,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { canDeleteMember } from '@/lib/tree-layout/graph-validation';
 
 export interface MemberDetailDrawerProps {
   memberId: string | null;
@@ -27,6 +35,10 @@ export interface MemberDetailDrawerProps {
   spouseRelations: SpouseRelationRecord[];
   onSelectMember: (id: string) => void;
   onSetFocusRoot?: (id: string) => void;
+  onEditMember?: (member: MemberRecord) => void;
+  onAddChild?: (parent: MemberRecord, motherId?: string | null) => void;
+  onAddSpouse?: (member: MemberRecord) => void;
+  onDeleteMember?: (memberId: string) => Promise<void>;
 }
 
 export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
@@ -37,7 +49,14 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
   spouseRelations,
   onSelectMember,
   onSetFocusRoot,
+  onEditMember,
+  onAddChild,
+  onAddSpouse,
+  onDeleteMember,
 }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   // Lắng nghe phím Escape để đóng Drawer
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -62,6 +81,12 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
     if (!target || target.life_status !== 'deceased') return null;
     return getNextSolarAnniversary(target.death_lunar_day, target.death_lunar_month);
   }, [target]);
+
+  // Kiểm tra điều kiện xóa hồ sơ an toàn (Safe Delete RESTRICT)
+  const deleteCheck = useMemo(() => {
+    if (!target) return { canDelete: false, childrenCount: 0, reason: 'Không có dữ liệu thành viên' };
+    return canDeleteMember(target.id, members);
+  }, [target, members]);
 
   if (!isOpen || !target) return null;
 
@@ -128,6 +153,22 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                   Tự: <span className="italic font-medium">{target.alias_name}</span>
                 </p>
               )}
+
+              {target.birth_year && (() => {
+                const ageInfo = calculateMemberAge(target.birth_year, target.death_year, target.life_status);
+                if (!ageInfo) return null;
+                return (
+                  <div className="flex items-center gap-1 mt-1 text-xs text-slate-600 dark:text-slate-300">
+                    <span>{ageInfo.displayLabel}</span>
+                    <span
+                      title={ageInfo.tooltipText}
+                      className="cursor-help inline-flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                );
+              })()}
 
               {/* Badges container */}
               <div className="flex flex-wrap items-center gap-1.5 mt-2">
@@ -258,39 +299,52 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
               Thân Tộc Trực Hệ 1 Đời
             </h3>
 
-            {/* A. Phụ Mẫu */}
+            {/* A. Bố mẹ */}
             <div className="space-y-1.5">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Phụ mẫu:</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{KINSHIP_TERMS.PARENTS}:</span>
               <div className="grid grid-cols-2 gap-2">
                 <RelativeCard
-                  label="Cha"
+                  label={KINSHIP_TERMS.FATHER}
                   member={familyData?.parents.father}
                   onClick={() => familyData?.parents.father && onSelectMember(familyData.parents.father.id)}
                 />
                 <RelativeCard
-                  label="Mẹ"
+                  label={KINSHIP_TERMS.MOTHER}
                   member={familyData?.parents.mother}
                   onClick={() => familyData?.parents.mother && onSelectMember(familyData.parents.mother.id)}
                 />
               </div>
             </div>
 
-            {/* B. Phu Thê */}
-            {familyData && familyData.spouses.length > 0 && (
-              <div className="space-y-1.5">
+            {/* B. Hôn phối */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <Heart className="w-3 h-3 text-rose-500" /> Hôn phối ({familyData.spouses.length}):
+                  <Heart className="w-3 h-3 text-rose-500" /> {KINSHIP_TERMS.SPOUSE} ({familyData?.spouses.length || 0}):
                 </span>
+                {onAddSpouse && target && (
+                  <button
+                    type="button"
+                    onClick={() => onAddSpouse(target)}
+                    className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
+                  >
+                    <UserPlus className="w-3 h-3" /> + Thêm phối ngẫu
+                  </button>
+                )}
+              </div>
+              {familyData && familyData.spouses.length > 0 ? (
                 <div className="space-y-1.5">
                   {familyData.spouses.map(({ member, relation }, idx) => {
                     const roleLabel =
                       member.gender === 'male'
-                        ? 'Chồng'
+                        ? KINSHIP_TERMS.HUSBAND_DEFAULT
                         : relation.marriage_order === 1
-                        ? 'Vợ cả'
+                        ? KINSHIP_TERMS.WIFE_FIRST
                         : relation.marriage_order === 2
-                        ? 'Vợ hai'
-                        : 'Vợ';
+                        ? KINSHIP_TERMS.WIFE_SECOND
+                        : relation.marriage_order === 3
+                        ? KINSHIP_TERMS.WIFE_THIRD
+                        : KINSHIP_TERMS.WIFE_DEFAULT;
                     return (
                       <div
                         key={member.id}
@@ -308,14 +362,16 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                     );
                   })}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-xs text-slate-400 italic">{KINSHIP_TERMS.EMPTY_SPOUSE}</p>
+              )}
+            </div>
 
-            {/* C. Huynh Đệ */}
+            {/* C. Anh em ruột */}
             {familyData && familyData.siblings.length > 0 && (
               <div className="space-y-1.5">
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  Huynh đệ ruột ({familyData.siblings.length}):
+                  {KINSHIP_TERMS.SIBLINGS_FULL} ({familyData.siblings.length}):
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {familyData.siblings.map((sib) => (
@@ -331,20 +387,31 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
               </div>
             )}
 
-            {/* D. Hậu Duệ (Con cái) */}
+            {/* D. Con cái */}
             <div className="space-y-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Hậu duệ ({familyData?.children.length || 0}):
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  {KINSHIP_TERMS.CHILDREN} ({familyData?.children.length || 0}):
+                </span>
+                {onAddChild && target && (
+                  <button
+                    type="button"
+                    onClick={() => onAddChild(target)}
+                    className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
+                  >
+                    <UserPlus className="w-3 h-3" /> + Thêm con
+                  </button>
+                )}
+              </div>
               {familyData && familyData.children.length > 0 ? (
                 familyData.childrenGroups && familyData.childrenGroups.length > 1 ? (
                   <div className="space-y-3">
                     {familyData.childrenGroups.map((grp, gIdx) => {
                       const groupTitle =
                         grp.marriageOrder === 1
-                          ? `Con với bà ${grp.motherName} (Vợ cả - ${grp.children.length} người)`
+                          ? `Con với bà ${grp.motherName} (${KINSHIP_TERMS.WIFE_FIRST} - ${grp.children.length} người)`
                           : grp.marriageOrder === 2
-                          ? `Con với bà ${grp.motherName} (Vợ hai - ${grp.children.length} người)`
+                          ? `Con với bà ${grp.motherName} (${KINSHIP_TERMS.WIFE_SECOND} - ${grp.children.length} người)`
                           : grp.motherId
                           ? `Con với bà ${grp.motherName} (${grp.children.length} người)`
                           : `Chưa rõ thông tin mẹ (${grp.children.length} người)`;
@@ -354,30 +421,52 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                           key={grp.motherId || `group-unknown-${gIdx}`}
                           className="space-y-1.5 pl-2.5 border-l-2 border-purple-300 dark:border-purple-800"
                         >
-                          <p className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-1">
-                            <span>{grp.motherId ? '🌸' : '❓'}</span> {groupTitle}
-                          </p>
-                          <div className="space-y-1">
-                            {grp.children.map((child, cIdx) => (
-                              <div
-                                key={child.id}
-                                onClick={() => onSelectMember(child.id)}
-                                className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                              <span>{grp.motherId ? '🌸' : '❓'}</span> {groupTitle}
+                            </p>
+                            {onAddChild && target && (
+                              <button
+                                type="button"
+                                onClick={() => onAddChild(target, grp.motherId)}
+                                className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
                               >
-                                <div className="flex items-center gap-2">
-                                  <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
-                                    {child.birth_order || cIdx + 1}
-                                  </span>
-                                  <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
-                                    {child.full_name}
-                                  </span>
-                                  {child.is_senior && (
-                                    <span className="text-[10px] text-amber-600 font-semibold">(Trưởng)</span>
-                                  )}
+                                <UserPlus className="w-3 h-3" /> + Thêm con
+                              </button>
+                            )}
+                          </div>
+                          <div className="space-y-1">
+                            {grp.children.map((child, cIdx) => {
+                              const chAge = child.birth_year ? calculateMemberAge(child.birth_year, child.death_year, child.life_status) : null;
+                              return (
+                                <div
+                                  key={child.id}
+                                  onClick={() => onSelectMember(child.id)}
+                                  className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
+                                      {child.birth_order || cIdx + 1}
+                                    </span>
+                                    <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                                      {child.full_name}
+                                    </span>
+                                    {child.is_senior && (
+                                      <span className="text-[10px] text-amber-600 font-semibold">({KINSHIP_TERMS.SENIOR_CHILD})</span>
+                                    )}
+                                    {chAge && chAge.solarAge !== null && (
+                                      <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-0.5">
+                                        <span>· SN {child.birth_year} ({chAge.solarAge}t · {chAge.lunarAge} mụ)</span>
+                                        <span title={chAge.tooltipText} className="cursor-help inline-flex items-center text-slate-400 hover:text-slate-600">
+                                          <Info className="w-3 h-3" />
+                                        </span>
+                                      </span>
+                                    )}
+                                  </div>
+                                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                                 </div>
-                                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       );
@@ -385,41 +474,114 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    {familyData.children.map((child, cIdx) => (
-                      <div
-                        key={child.id}
-                        onClick={() => onSelectMember(child.id)}
-                        className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
-                            {child.birth_order || cIdx + 1}
-                          </span>
-                          <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
-                            {child.full_name}
-                          </span>
-                          {child.is_senior && (
-                            <span className="text-[10px] text-amber-600 font-semibold">(Trưởng)</span>
-                          )}
+                    {familyData.children.map((child, cIdx) => {
+                      const chAge = child.birth_year ? calculateMemberAge(child.birth_year, child.death_year, child.life_status) : null;
+                      return (
+                        <div
+                          key={child.id}
+                          onClick={() => onSelectMember(child.id)}
+                          className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
+                              {child.birth_order || cIdx + 1}
+                            </span>
+                            <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                              {child.full_name}
+                            </span>
+                            {child.is_senior && (
+                              <span className="text-[10px] text-amber-600 font-semibold">({KINSHIP_TERMS.SENIOR_CHILD})</span>
+                            )}
+                            {chAge && chAge.solarAge !== null && (
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-0.5">
+                                <span>· SN {child.birth_year} ({chAge.solarAge}t · {chAge.lunarAge} mụ)</span>
+                                <span title={chAge.tooltipText} className="cursor-help inline-flex items-center text-slate-400 hover:text-slate-600">
+                                  <Info className="w-3 h-3" />
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                         </div>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )
               ) : (
-                <p className="text-xs text-slate-400 italic">Chưa ghi nhận hậu duệ</p>
+                <p className="text-xs text-slate-400 italic">{KINSHIP_TERMS.EMPTY_CHILDREN}</p>
               )}
             </div>
           </div>
         </div>
 
+        {/* POPUP XÁC NHẬN XÓA THÀNH VIÊN AN TOÀN (Safe Delete RESTRICT) */}
+        {showDeleteConfirm && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-150">
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-5 max-w-sm w-full border border-rose-200 dark:border-rose-800 shadow-2xl space-y-3">
+              <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold text-sm">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <span>Xác nhận xóa hồ sơ</span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Bạn có chắc chắn muốn xóa hồ sơ thành viên <strong>{target.full_name}</strong> khỏi cây gia phả?
+                Hành động này không thể hoàn tác.
+              </p>
+              {deleteError && (
+                <div className="p-2 rounded bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-700 dark:text-rose-300">
+                  {deleteError}
+                </div>
+              )}
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={async () => {
+                    try {
+                      setIsDeleting(true);
+                      setDeleteError(null);
+                      if (onDeleteMember) {
+                        await onDeleteMember(target.id);
+                      }
+                      setShowDeleteConfirm(false);
+                      onClose();
+                    } catch (err: any) {
+                      setDeleteError(err.message || 'Lỗi khi xóa thành viên');
+                    } finally {
+                      setIsDeleting(false);
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm disabled:opacity-50"
+                >
+                  {isDeleting ? 'Đang xóa...' : 'Xác nhận xóa'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Footer Action Bar */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center gap-2">
+          {onEditMember && target && (
+            <button
+              onClick={() => onEditMember(target)}
+              className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-emerald-600" /> Sửa hồ sơ
+            </button>
+          )}
+
           {onSetFocusRoot && (
             <button
               onClick={() => onSetFocusRoot(target.id)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors"
+              className="flex-1 min-w-[100px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors"
             >
               <Compass className="w-3.5 h-3.5" /> Đặt làm Gốc
             </button>
@@ -427,10 +589,30 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
 
           <Link
             href={`/kinship?from=${target.id}`}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors"
+            className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors"
           >
             <Users className="w-3.5 h-3.5 text-blue-600" /> Tra cứu xưng hô
           </Link>
+
+          {onDeleteMember && target && (
+            <button
+              type="button"
+              disabled={!deleteCheck.canDelete || isDeleting}
+              onClick={() => {
+                setDeleteError(null);
+                setShowDeleteConfirm(true);
+              }}
+              title={deleteCheck.reason || 'Xóa hồ sơ thành viên (chỉ áp dụng cho thành viên không có con cái)'}
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
+                deleteCheck.canDelete
+                  ? 'bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800/60 shadow-sm'
+                  : 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Xóa hồ sơ</span>
+            </button>
+          )}
         </div>
       </div>
     </>
