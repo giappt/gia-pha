@@ -68,6 +68,7 @@ export function calculateTreeLayout(
 
   // Lập bản đồ hôn phối: memberId -> spouseMemberId[]
   const spouseMap = new Map<string, string[]>();
+  const spouseRelationLookup = new Map<string, SpouseRelationRecord>();
   spouseRelations.forEach((rel) => {
     const listA = spouseMap.get(rel.member_a_id) || [];
     if (!listA.includes(rel.member_b_id)) listA.push(rel.member_b_id);
@@ -76,6 +77,9 @@ export function calculateTreeLayout(
     const listB = spouseMap.get(rel.member_b_id) || [];
     if (!listB.includes(rel.member_a_id)) listB.push(rel.member_a_id);
     spouseMap.set(rel.member_b_id, listB);
+
+    spouseRelationLookup.set(`${rel.member_a_id}_${rel.member_b_id}`, rel);
+    spouseRelationLookup.set(`${rel.member_b_id}_${rel.member_a_id}`, rel);
   });
 
   // Lập bản đồ con cái: parentId -> children MemberRecord[]
@@ -206,16 +210,8 @@ export function calculateTreeLayout(
     const spouseIds = (spouseMap.get(primary.id) || []).slice();
     // Sắp xếp spouseIds theo thứ tự kết hôn (marriage_order) tăng dần
     spouseIds.sort((a, b) => {
-      const relA = spouseRelations.find(
-        (r) =>
-          (r.member_a_id === primary.id && r.member_b_id === a) ||
-          (r.member_a_id === a && r.member_b_id === primary.id)
-      );
-      const relB = spouseRelations.find(
-        (r) =>
-          (r.member_a_id === primary.id && r.member_b_id === b) ||
-          (r.member_a_id === b && r.member_b_id === primary.id)
-      );
+      const relA = spouseRelationLookup.get(`${primary.id}_${a}`);
+      const relB = spouseRelationLookup.get(`${primary.id}_${b}`);
       return (relA?.marriage_order || 1) - (relB?.marriage_order || 1);
     });
 
@@ -609,11 +605,7 @@ export function calculateTreeLayout(
           renderedNodeIds.add(sp.id);
 
           // Xác định danh vị phối ngẫu (Bà cả, Bà hai...) nếu gia đình đa thê hoặc có marriage_order > 1
-          const rel = spouseRelations.find(
-            (r) =>
-              (r.member_a_id === primary.id && r.member_b_id === sp.id) ||
-              (r.member_b_id === primary.id && r.member_a_id === sp.id)
-          );
+          const rel = spouseRelationLookup.get(`${primary.id}_${sp.id}`);
 
           let spouseOrderTitle: string | undefined;
           if (

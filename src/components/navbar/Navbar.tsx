@@ -2,7 +2,7 @@ import Link from 'next/link';
 import AuthButton from '@/components/auth/AuthButton';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 import { createClient } from '@/lib/supabase/server';
-import { GitBranch, Calendar, Compass } from 'lucide-react';
+import { GitBranch, Calendar, Compass, ShieldCheck } from 'lucide-react';
 import type { UserProfile } from '@/types/database';
 
 export default async function Navbar() {
@@ -38,6 +38,8 @@ export default async function Navbar() {
       }
     }
   }
+
+  const isSuperAdmin = userProfile?.user_role === 'super_admin';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md transition-colors">
@@ -90,8 +92,21 @@ export default async function Navbar() {
           </Link>
         </nav>
 
-        {/* Right: Theme Toggle & Auth Action */}
-        <div className="flex items-center gap-2.5">
+        {/* Right: Admin Button, Theme Toggle & Auth Action */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {isSuperAdmin && (
+            <Link
+              href="/admin/settings"
+              id="navbar-admin-portal-btn"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-amber-500/40 text-amber-800 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 shadow-xs transition-all"
+              title="Khu vực dành riêng cho Super Admin quản lý dòng họ"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span className="hidden sm:inline">Quản Trị Dòng Họ</span>
+              <span className="sm:hidden">Quản Trị</span>
+            </Link>
+          )}
+
           <ThemeToggle />
           <AuthButton initialUser={user} initialProfile={userProfile} />
         </div>

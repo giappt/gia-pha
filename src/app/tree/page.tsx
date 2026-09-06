@@ -1,8 +1,10 @@
 import { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS } from '@/lib/tree-layout/sample-data';
 import { FamilyTreeCanvas } from '@/components/tree/FamilyTreeCanvas';
 import { MemberRecord, SpouseRelationRecord } from '@/types/tree';
+import type { BranchNode } from '@/types/database';
 
 export const metadata: Metadata = {
   title: 'Cây Phả Hệ Tương Tác - FAT Family Tree',
@@ -13,19 +15,30 @@ export default async function TreePage() {
   let members: MemberRecord[] = [];
   let spouseRelations: SpouseRelationRecord[] = [];
   let clanName = 'DÒNG HỌ NGUYỄN VĂN';
+  let clanBranches: BranchNode[] = [];
 
   try {
     const supabase = createClient();
+    const cookieStore = cookies();
+    const devBranchesStr = cookieStore.get('fat_dev_branches')?.value;
+    if (devBranchesStr) {
+      try {
+        clanBranches = JSON.parse(devBranchesStr);
+      } catch {}
+    }
 
     // Lấy thông tin cài đặt dòng họ
     const { data: clanSettings } = await supabase
       .from('clan_settings')
-      .select('clan_name')
+      .select('clan_name, branches')
       .limit(1)
       .maybeSingle();
 
     if (clanSettings?.clan_name) {
       clanName = clanSettings.clan_name;
+    }
+    if (clanBranches.length === 0 && clanSettings?.branches && Array.isArray(clanSettings.branches)) {
+      clanBranches = clanSettings.branches as unknown as BranchNode[];
     }
 
     // Lấy danh sách thành viên
@@ -58,6 +71,7 @@ export default async function TreePage() {
         initialMembers={members}
         initialSpouseRelations={spouseRelations}
         clanName={clanName}
+        clanBranches={clanBranches}
       />
     </div>
   );

@@ -27,6 +27,7 @@ export interface MemberRecord {
   notes?: string | null;
   death_lunar_year_name?: string | null;
   claimed_by?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface SpouseRelationRecord {

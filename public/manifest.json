@@ -1,0 +1,24 @@
+{
+  "name": "FAT - Hệ Thống Quản Lý Gia Phả Đại Tộc",
+  "short_name": "Gia Phả",
+  "description": "Phả hệ trực quan, tính toán vai vế & thông báo ngày giỗ tổ tiên",
+  "start_url": "/tree",
+  "display": "standalone",
+  "background_color": "#090E1A",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

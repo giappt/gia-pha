@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { validateBranchTree } from '@/lib/tree-layout/branch-engine';
 
 export async function GET() {
   const cookieStore = cookies();
@@ -30,9 +31,20 @@ export async function GET() {
       }
     }
 
+    const devBranchesStr = cookieStore.get('fat_dev_branches')?.value;
+    let devBranches = null;
+    if (devBranchesStr) {
+      try {
+        devBranches = JSON.parse(devBranchesStr);
+      } catch (e) {
+        console.warn('Failed to parse dev branches cookie:', e);
+      }
+    }
+
     const clan_name = devClanName || clanData?.clan_name || 'DÒNG HỌ NGUYỄN VĂN';
     const default_kinship_region = clanData?.regional_preset || clanData?.default_kinship_region || 'north';
     const custom_kinship_dictionary = devCustomDict || clanData?.custom_kinship_dictionary || {};
+    const branches = devBranches || (Array.isArray(clanData?.branches) ? clanData.branches : []);
 
     return NextResponse.json({
       success: true,
@@ -40,6 +52,7 @@ export async function GET() {
         clan_name,
         default_kinship_region,
         custom_kinship_dictionary,
+        branches,
       },
     });
   } catch (err) {
@@ -50,6 +63,7 @@ export async function GET() {
         clan_name: devClanName || 'DÒNG HỌ NGUYỄN VĂN',
         default_kinship_region: 'north',
         custom_kinship_dictionary: {},
+        branches: [],
       },
     });
   }
@@ -103,41 +117,69 @@ export async function PATCH(request: Request) {
     const custom_kinship_dictionary =
       typeof body.custom_kinship_dictionary === 'object' && body.custom_kinship_dictionary !== null
         ? body.custom_kinship_dictionary
-        : {};
+        : undefined;
 
-    if (typeof rawClanName !== 'string') {
-      return NextResponse.json({ error: 'Tên dòng họ không hợp lệ' }, { status: 400 });
+    let clan_name: string | undefined;
+    if (rawClanName !== undefined) {
+      if (typeof rawClanName !== 'string') {
+        return NextResponse.json({ error: 'Tên dòng họ không hợp lệ' }, { status: 400 });
+      }
+
+      clan_name = rawClanName.trim().replace(/\s+/g, ' ');
+
+      if (clan_name.length < 2) {
+        return NextResponse.json(
+          { error: 'Tên dòng họ phải có ít nhất 2 ký tự' },
+          { status: 400 }
+        );
+      }
+
+      if (clan_name.length > 40) {
+        return NextResponse.json(
+          { error: 'Tên dòng họ không được vượt quá 40 ký tự để tránh phá vỡ giao diện' },
+          { status: 400 }
+        );
+      }
     }
 
-    const clan_name = rawClanName.trim().replace(/\s+/g, ' ');
-
-    if (clan_name.length < 2) {
-      return NextResponse.json(
-        { error: 'Tên dòng họ phải có ít nhất 2 ký tự' },
-        { status: 400 }
-      );
+    let branches = body.branches;
+    if (branches !== undefined) {
+      if (!Array.isArray(branches)) {
+        return NextResponse.json(
+          { error: 'Cấu trúc Ngành/Chi phải là một danh sách hợp lệ' },
+          { status: 400 }
+        );
+      }
+      const validation = validateBranchTree(branches);
+      if (!validation.isValid) {
+        return NextResponse.json(
+          { error: validation.errors.join('. ') },
+          { status: 400 }
+        );
+      }
     }
 
-    if (clan_name.length > 40) {
-      return NextResponse.json(
-        { error: 'Tên dòng họ không được vượt quá 40 ký tự để tránh phá vỡ giao diện' },
-        { status: 400 }
-      );
-    }
+    const updatePayload: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
 
-    const validRegions = ['north', 'central', 'south'];
-    const default_kinship_region = validRegions.includes(region) ? region : 'north';
+    if (clan_name !== undefined) updatePayload.clan_name = clan_name;
+    if (region !== undefined) {
+      const validRegions = ['north', 'central', 'south'];
+      updatePayload.regional_preset = validRegions.includes(region) ? region : 'north';
+    }
+    if (custom_kinship_dictionary !== undefined) {
+      updatePayload.custom_kinship_dictionary = custom_kinship_dictionary;
+    }
+    if (branches !== undefined) {
+      updatePayload.branches = branches;
+    }
 
     // 3. Update Database with safety timeout
     try {
       const updatePromise = supabase
         .from('clan_settings')
-        .update({
-          clan_name,
-          regional_preset: default_kinship_region,
-          custom_kinship_dictionary,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .neq('id', '00000000-0000-0000-0000-000000000000');
 
       const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 1500));
@@ -146,27 +188,42 @@ export async function PATCH(request: Request) {
       console.warn('DB update timeout/offline fallback:', dbErr);
     }
 
-    // Also persist dev clan name and custom dictionary cookies so it works seamlessly offline/local
-    cookieStore.set('fat_dev_clan_name', clan_name, {
-      path: '/',
-      sameSite: 'lax',
-      httpOnly: false,
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
-    cookieStore.set('fat_dev_kinship_dict', JSON.stringify(custom_kinship_dictionary), {
-      path: '/',
-      sameSite: 'lax',
-      httpOnly: false,
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
+    // Persist cookies for dev/offline mode
+    if (clan_name !== undefined) {
+      cookieStore.set('fat_dev_clan_name', clan_name, {
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: false,
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+    }
+
+    if (custom_kinship_dictionary !== undefined) {
+      cookieStore.set('fat_dev_kinship_dict', JSON.stringify(custom_kinship_dictionary), {
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: false,
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+    }
+
+    if (branches !== undefined) {
+      cookieStore.set('fat_dev_branches', JSON.stringify(branches), {
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: false,
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Cập nhật thông tin dòng họ thành công',
       data: {
-        clan_name,
-        default_kinship_region,
-        custom_kinship_dictionary,
+        clan_name: clan_name || 'DÒNG HỌ NGUYỄN VĂN',
+        default_kinship_region: updatePayload.regional_preset || 'north',
+        custom_kinship_dictionary: custom_kinship_dictionary || {},
+        branches: branches || [],
       },
     });
   } catch (err) {

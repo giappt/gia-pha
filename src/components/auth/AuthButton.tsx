@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { UserProfile } from '@/types/database';
 import { LogIn, LogOut, ShieldCheck, User as UserIcon, Loader2, Sparkles, Settings } from 'lucide-react';
+import PersonalSettingsModal from './PersonalSettingsModal';
 
 function getDevCookie() {
   if (typeof document === 'undefined') return null;
@@ -29,6 +30,7 @@ export default function AuthButton({
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isPersonalSettingsOpen, setIsPersonalSettingsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
@@ -337,16 +339,32 @@ export default function AuthButton({
             </div>
           </div>
 
+          {/* Cài đặt cá nhân */}
+          <div className="py-1 border-b border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                setIsPersonalSettingsOpen(true);
+              }}
+              id="personal-settings-btn"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium text-left cursor-pointer"
+            >
+              <Settings className="w-4 h-4 text-emerald-600" />
+              <span>Cài đặt của tôi</span>
+            </button>
+          </div>
+
           {isSuperAdmin && (
             <div className="py-1 border-b border-slate-100 dark:border-slate-800">
               <Link
                 href="/admin/settings"
                 onClick={() => setIsOpen(false)}
                 id="admin-settings-link"
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg transition-colors font-medium text-left"
               >
-                <Settings className="w-4 h-4 text-emerald-600" />
-                <span>Cài đặt dòng họ</span>
+                <ShieldCheck className="w-4 h-4 text-amber-600" />
+                <span>Quản trị dòng họ</span>
               </Link>
             </div>
           )}
@@ -363,6 +381,13 @@ export default function AuthButton({
           </div>
         </div>
       )}
+
+      {/* Modal Cài Đặt Cá Nhân */}
+      <PersonalSettingsModal
+        isOpen={isPersonalSettingsOpen}
+        onClose={() => setIsPersonalSettingsOpen(false)}
+        userEmail={user.email}
+      />
     </div>
   );
 }

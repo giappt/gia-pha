@@ -12,13 +12,20 @@ export type LifeStatus = 'living' | 'deceased';
 export type RegionalPreset = 'north' | 'central' | 'south' | 'custom';
 export type ClaimStatus = 'pending' | 'approved' | 'rejected';
 
-export interface ClanBranchItem {
-  branchCode: string;
-  branchName: string;
-  rootMemberId?: string;
+export interface BranchNode {
+  id: string;
+  tierName: string;         // "Ngành", "Chi", "Nhánh", "Phái"
+  name: string;             // "Ngành 1", "Chi Trưởng", "Phái Đông"
+  rootMemberId?: string | null; // ID Cụ Tiền nhân khởi nguồn
+  children?: BranchNode[];  // Các phân chi trực thuộc
+  // Tương thích ngược với schema cũ nếu có
+  branchCode?: string;
+  branchName?: string;
   description?: string;
   displayOrder?: number;
 }
+
+export type ClanBranchItem = BranchNode;
 
 export interface ClanSettings {
   id: string;
@@ -75,6 +82,17 @@ export interface UserProfile {
   updated_at: string;
 }
 
+export interface PushSubscriptionRecord {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh_key: string;
+  auth_key: string;
+  user_agent: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -96,8 +114,20 @@ export type Database = {
         Update: Partial<UserProfile>;
         Relationships: [];
       };
+      push_subscriptions: {
+        Row: PushSubscriptionRecord;
+        Insert: Partial<PushSubscriptionRecord> & {
+          user_id: string;
+          endpoint: string;
+          p256dh_key: string;
+          auth_key: string;
+        };
+        Update: Partial<PushSubscriptionRecord>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
   };
 };
+

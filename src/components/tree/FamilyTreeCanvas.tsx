@@ -31,6 +31,8 @@ import { MemberRecord, SpouseRelationRecord, LayoutNode, TreeNodeData } from '@/
 import { getUnlinkedMembers } from '@/lib/tree-layout/graph-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { Keyboard } from 'lucide-react';
+import type { BranchNode } from '@/types/database';
+import { resolveMemberBranchHierarchy } from '@/lib/tree-layout/branch-engine';
 
 const nodeTypes: NodeTypes = {
   memberNode: MemberNode,
@@ -45,12 +47,14 @@ interface FamilyTreeCanvasProps {
   initialMembers: MemberRecord[];
   initialSpouseRelations: SpouseRelationRecord[];
   clanName: string;
+  clanBranches?: BranchNode[];
 }
 
 const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   initialMembers,
   initialSpouseRelations,
   clanName,
+  clanBranches,
 }) => {
   const { getNode, setCenter, fitView } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
@@ -89,14 +93,30 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
 
   // Bộ dữ liệu thành viên đang hoạt động
   const activeMembers = useMemo(() => {
+    let raw: MemberRecord[];
     if (currentDataset === 'clan1500' && largeClanData) {
-      return largeClanData.members;
+      raw = largeClanData.members;
+    } else if (currentDataset === 'polygamy') {
+      raw = SAMPLE_POLYGAMY_MEMBERS;
+    } else {
+      raw = liveMembers;
     }
-    if (currentDataset === 'polygamy') {
-      return SAMPLE_POLYGAMY_MEMBERS;
+
+    if (clanBranches && clanBranches.length > 0 && currentDataset === 'clan28') {
+      return raw.map((m) => {
+        const res = resolveMemberBranchHierarchy(m.id, raw, clanBranches);
+        if (res.branchPath) {
+          return {
+            ...m,
+            branch_name: res.branchPath,
+          };
+        }
+        return m;
+      });
     }
-    return liveMembers;
-  }, [currentDataset, largeClanData, liveMembers]);
+
+    return raw;
+  }, [currentDataset, largeClanData, liveMembers, clanBranches]);
 
   const activeSpouseRelations = useMemo(() => {
     if (currentDataset === 'clan1500' && largeClanData) {

@@ -9,16 +9,19 @@ import {
   AlertCircle,
   Eye,
   RefreshCw,
-  ExternalLink,
   BookOpen,
   RotateCcw,
   Sparkles,
   Search,
   X,
   Filter,
+  GitBranch,
 } from 'lucide-react';
 import { getRegionalPresetDictionary } from '@/lib/kinship-engine/regional-dictionaries';
 import type { KinshipTermRule, CustomKinshipDictionary, KinshipRegion } from '@/types/kinship';
+import type { BranchNode } from '@/types/database';
+import type { MemberRecord } from '@/types/tree';
+import BranchTaxonomyManager from '@/components/admin/BranchTaxonomyManager';
 
 const CATEGORY_GROUPS: {
   key: KinshipTermRule['category'];
@@ -75,9 +78,12 @@ const FILTER_CHIPS = [
 ];
 
 export default function ClanSettingsPage() {
+  const [activeTab, setActiveTab] = useState<'branches' | 'info_kinship'>('branches');
   const [clanName, setClanName] = useState('');
   const [region, setRegion] = useState<KinshipRegion>('north');
   const [rules, setRules] = useState<KinshipTermRule[]>(() => getRegionalPresetDictionary('north'));
+  const [branches, setBranches] = useState<BranchNode[]>([]);
+  const [allMembers, setAllMembers] = useState<MemberRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -98,6 +104,10 @@ export default function ClanSettingsPage() {
           const loadedRegion: KinshipRegion = json.data?.default_kinship_region || 'north';
           setRegion(loadedRegion);
 
+          if (json.data?.branches && Array.isArray(json.data.branches)) {
+            setBranches(json.data.branches);
+          }
+
           const basePreset = getRegionalPresetDictionary(loadedRegion);
           const customDict = json.data?.custom_kinship_dictionary as CustomKinshipDictionary | undefined;
 
@@ -115,6 +125,18 @@ export default function ClanSettingsPage() {
         }
       } catch (err) {
         console.error('Failed to load clan settings:', err);
+      }
+
+      try {
+        const memRes = await fetch('/api/members');
+        if (memRes.ok) {
+          const memJson = await memRes.json();
+          if (Array.isArray(memJson.members)) {
+            setAllMembers(memJson.members);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load members for root member selection:', err);
       } finally {
         setIsLoading(false);
       }
@@ -260,41 +282,59 @@ export default function ClanSettingsPage() {
         </div>
       </div>
 
-      {/* Notification Banner */}
-      {statusMessage && (
-        <div
-          className={`p-4 rounded-xl border flex items-start gap-3 text-sm animate-in fade-in duration-150 ${
-            statusMessage.type === 'success'
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
-              : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200'
+      {/* Flat Segmented Tab Bar (Anti Box-in-Box) */}
+      <div className="flex items-center gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2 overflow-x-auto">
+        <button
+          type="button"
+          id="tab-btn-branches"
+          onClick={() => setActiveTab('branches')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'branches'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          {statusMessage.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-          ) : (
-            <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
-          )}
-          <div className="flex-1 flex items-center justify-between">
-            <span>{statusMessage.text}</span>
-            {statusMessage.type === 'success' && (
-              <Link
-                href="/kinship"
-                className="inline-flex items-center gap-1 ml-4 text-xs font-bold text-emerald-700 dark:text-emerald-300 underline hover:no-underline"
-              >
-                <span>Xem Trang Tra Cứu</span>
-                <ExternalLink className="w-3 h-3" />
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+          <GitBranch className="w-4 h-4" />
+          <span>Cấu Trúc Ngành/Chi</span>
+          <span
+            className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+              activeTab === 'branches'
+                ? 'bg-emerald-700 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+            }`}
+          >
+            {branches.length}
+          </span>
+        </button>
 
-      {/* Settings Form */}
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* Card 1: Clan Name Setting */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-5">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+        <button
+          type="button"
+          id="tab-btn-info"
+          onClick={() => setActiveTab('info_kinship')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'info_kinship'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Settings className="w-4 h-4" />
+          <span>Thông Tin & Xưng Hô</span>
+        </button>
+      </div>
+
+      {activeTab === 'branches' ? (
+        <BranchTaxonomyManager
+          initialBranches={branches}
+          allMembers={allMembers}
+          onBranchesSaved={(updated) => setBranches(updated)}
+        />
+      ) : (
+        /* Settings Form: Clan Name & Custom Kinship Dictionary */
+        <form onSubmit={handleSave} className="space-y-6">
+          {/* Card 1: Clan Name Setting */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-5">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <span>Tên Dòng Họ (Tiêu Đề Trang Chủ)</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -713,6 +753,7 @@ export default function ClanSettingsPage() {
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }

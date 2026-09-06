@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   title: 'Gia Phả Dòng Họ - Hệ Thống Quản Lý Phả Hệ Trực Tuyến',
   description:
     'Nền tảng số hóa gia phả dòng họ, phân định vai vế xưng hô, tra cứu ngày giỗ âm lịch và kết nối con cháu.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({

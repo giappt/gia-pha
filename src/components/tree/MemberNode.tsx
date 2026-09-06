@@ -4,6 +4,7 @@ import React, { memo } from 'react';
 import { Handle, Position, type Node, type NodeProps, useReactFlow } from '@xyflow/react';
 import { User, Sparkles, ArrowUpRight, Link2 } from 'lucide-react';
 import { TreeNodeData } from '@/types/tree';
+import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 
 export type MemberNodeType = Node<TreeNodeData, 'memberNode'>;
 
@@ -44,13 +45,8 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
     ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
     : 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300';
 
-  // Lấy 2 chữ cái đầu
-  const words = fullName.trim().split(' ').filter(Boolean);
-  const initials = isAnonymous
-    ? 'KD'
-    : words.length > 1
-    ? (words[words.length - 2][0] + words[words.length - 1][0]).toUpperCase()
-    : words[0]?.[0]?.toUpperCase() || 'TV';
+  // Lấy 2 chữ cái đầu chuẩn hóa
+  const initials = getMemberInitials(fullName, isAnonymous);
 
   return (
     <div

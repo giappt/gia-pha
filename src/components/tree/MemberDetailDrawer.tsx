@@ -5,6 +5,7 @@ import { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import { getImmediateFamily, getNextSolarAnniversary } from '@/lib/tree-layout/immediate-family';
 import { KINSHIP_TERMS } from '@/constants/kinship-terms';
 import { calculateMemberAge } from '@/lib/tree-layout/age-utils';
+import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 import {
   X,
   Calendar,
@@ -124,7 +125,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
           <div className="flex items-start gap-4">
             {/* Avatar Circle */}
             <div
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border ${
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border overflow-hidden ${
                 isAnonymous
                   ? 'bg-amber-50 dark:bg-amber-950/50 border-dashed border-amber-400 dark:border-amber-600 text-amber-600'
                   : isMale
@@ -132,10 +133,19 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                   : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400'
               }`}
             >
-              {isAnonymous ? (
+              {target.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={target.avatar_url}
+                  alt={target.full_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : isAnonymous ? (
                 <HelpCircle className="w-7 h-7" />
               ) : (
-                <User className="w-7 h-7" />
+                <span className="text-lg font-bold tracking-wider">
+                  {getMemberInitials(target.full_name, isAnonymous)}
+                </span>
               )}
             </div>
 

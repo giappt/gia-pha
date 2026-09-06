@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/anniversary",
+      "path": "/api/cron/anniversary-reminder",
       "schedule": "0 0 * * *"
     }
   ]
