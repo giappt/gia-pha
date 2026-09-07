@@ -19,6 +19,70 @@ export interface MemberBranchResolution {
 export const USER_PREFERENCES_STORAGE_KEY = 'fat_user_preferences';
 export const USER_PREFERENCES_EVENT = 'fat_user_preferences_changed';
 
+export const DEFAULT_BRANCH_TIERS: string[] = ['Ngành', 'Chi', 'Nhánh', 'Phái'];
+
+/**
+ * Tự động xác định cấp bậc con kế tiếp dựa vào thứ bậc phân tầng đã định nghĩa của dòng họ.
+ * Ví dụ: availableTiers = ['Ngành', 'Chi', 'Nhánh', 'Phái']
+ * - currentTier = 'Ngành' -> 'Chi'
+ * - currentTier = 'Chi' -> 'Nhánh'
+ * - currentTier = 'Phái' -> 'Phái' (cấp cuối giữ nguyên)
+ */
+export function getNextTierName(
+  currentTier?: string | null,
+  availableTiers: string[] = DEFAULT_BRANCH_TIERS
+): string {
+  const tiers = Array.isArray(availableTiers) && availableTiers.length > 0
+    ? availableTiers
+    : [];
+
+  if (tiers.length === 0) {
+    return currentTier || 'Nhánh';
+  }
+
+  if (!currentTier) return tiers[0] || 'Chi';
+
+  const normalizedCurrent = currentTier.trim().toLowerCase();
+  const foundIndex = tiers.findIndex((t) => t.trim().toLowerCase() === normalizedCurrent);
+
+  if (foundIndex >= 0) {
+    if (foundIndex < tiers.length - 1) {
+      return tiers[foundIndex + 1];
+    }
+    return tiers[foundIndex]; // Cấp cuối cùng giữ nguyên
+  }
+
+  // Nếu cấp hiện tại không nằm trong danh sách, trả về cấp thứ 2 (ví dụ Chi) hoặc cấp cuối
+  return tiers[1] || tiers[0] || 'Chi';
+}
+
+/**
+ * Duyệt đệ quy toàn bộ cây phân chi để tìm các nhánh đang sử dụng một cấp bậc cụ thể.
+ * Dùng làm Integrity Guard để chặn xóa các cấp bậc đang được gán cho dữ liệu thực tế.
+ */
+export function findBranchesUsingTier(
+  branches: BranchNode[],
+  tierName: string
+): BranchNode[] {
+  const target = (tierName || '').trim().toLowerCase();
+  if (!target || !Array.isArray(branches)) return [];
+  const result: BranchNode[] = [];
+
+  function traverse(nodes: BranchNode[]) {
+    for (const node of nodes) {
+      if ((node.tierName || '').trim().toLowerCase() === target) {
+        result.push(node);
+      }
+      if (node.children && node.children.length > 0) {
+        traverse(node.children);
+      }
+    }
+  }
+
+  traverse(branches);
+  return result;
+}
+
 export interface UserPreferences {
   focusedBranchId: string | null;
   enablePushNotifications: boolean;

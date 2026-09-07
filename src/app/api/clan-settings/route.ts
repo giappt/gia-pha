@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { validateBranchTree } from '@/lib/tree-layout/branch-engine';
+import { validateBranchTree, DEFAULT_BRANCH_TIERS } from '@/lib/tree-layout/branch-engine';
+import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 
 export async function GET() {
   const cookieStore = cookies();
@@ -41,10 +42,36 @@ export async function GET() {
       }
     }
 
+    const devTiersStr = cookieStore.get('fat_dev_branch_tiers')?.value;
+    let devBranchTiers: string[] | null = null;
+    if (devTiersStr) {
+      try {
+        devBranchTiers = JSON.parse(devTiersStr);
+      } catch (e) {
+        console.warn('Failed to parse dev branch tiers cookie:', e);
+      }
+    }
+
+    const devFeatureFlagsStr = cookieStore.get('fat_dev_feature_flags')?.value;
+    let devFeatureFlags = null;
+    if (devFeatureFlagsStr) {
+      try {
+        devFeatureFlags = JSON.parse(devFeatureFlagsStr);
+      } catch (e) {
+        console.warn('Failed to parse dev feature flags cookie:', e);
+      }
+    }
+
     const clan_name = devClanName || clanData?.clan_name || 'DÒNG HỌ NGUYỄN VĂN';
     const default_kinship_region = clanData?.regional_preset || clanData?.default_kinship_region || 'north';
     const custom_kinship_dictionary = devCustomDict || clanData?.custom_kinship_dictionary || {};
     const branches = devBranches || (Array.isArray(clanData?.branches) ? clanData.branches : []);
+    const branch_tiers = (Array.isArray(devBranchTiers) && devBranchTiers.length > 0)
+      ? devBranchTiers
+      : (Array.isArray(clanData?.branch_tiers) && clanData.branch_tiers.length > 0)
+        ? clanData.branch_tiers
+        : DEFAULT_BRANCH_TIERS;
+    const feature_flags = resolveFeatureFlags(devFeatureFlags || clanData?.feature_flags);
 
     return NextResponse.json({
       success: true,
@@ -52,7 +79,9 @@ export async function GET() {
         clan_name,
         default_kinship_region,
         custom_kinship_dictionary,
+        branch_tiers,
         branches,
+        feature_flags,
       },
     });
   } catch (err) {
@@ -63,7 +92,9 @@ export async function GET() {
         clan_name: devClanName || 'DÒNG HỌ NGUYỄN VĂN',
         default_kinship_region: 'north',
         custom_kinship_dictionary: {},
+        branch_tiers: DEFAULT_BRANCH_TIERS,
         branches: [],
+        feature_flags: resolveFeatureFlags(undefined),
       },
     });
   }
@@ -159,6 +190,28 @@ export async function PATCH(request: Request) {
       }
     }
 
+    let branch_tiers = body.branch_tiers;
+    if (branch_tiers !== undefined) {
+      if (!Array.isArray(branch_tiers)) {
+        return NextResponse.json(
+          { error: 'Danh sách Cấp bậc dòng họ phải là một mảng hợp lệ' },
+          { status: 400 }
+        );
+      }
+      const cleanedTiers: string[] = [];
+      for (const t of branch_tiers) {
+        if (typeof t === 'string') {
+          const trimmed = t.trim();
+          if (trimmed && !cleanedTiers.includes(trimmed)) {
+            cleanedTiers.push(trimmed);
+          }
+        }
+      }
+      branch_tiers = cleanedTiers.length > 0 ? cleanedTiers : DEFAULT_BRANCH_TIERS;
+    }
+
+    let feature_flags = body.feature_flags !== undefined ? resolveFeatureFlags(body.feature_flags) : undefined;
+
     const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
@@ -173,6 +226,12 @@ export async function PATCH(request: Request) {
     }
     if (branches !== undefined) {
       updatePayload.branches = branches;
+    }
+    if (branch_tiers !== undefined) {
+      updatePayload.branch_tiers = branch_tiers;
+    }
+    if (feature_flags !== undefined) {
+      updatePayload.feature_flags = feature_flags;
     }
 
     // 3. Update Database with safety timeout
@@ -216,6 +275,24 @@ export async function PATCH(request: Request) {
       });
     }
 
+    if (branch_tiers !== undefined) {
+      cookieStore.set('fat_dev_branch_tiers', JSON.stringify(branch_tiers), {
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: false,
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+    }
+
+    if (feature_flags !== undefined) {
+      cookieStore.set('fat_dev_feature_flags', JSON.stringify(feature_flags), {
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: false,
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Cập nhật thông tin dòng họ thành công',
@@ -223,7 +300,9 @@ export async function PATCH(request: Request) {
         clan_name: clan_name || 'DÒNG HỌ NGUYỄN VĂN',
         default_kinship_region: updatePayload.regional_preset || 'north',
         custom_kinship_dictionary: custom_kinship_dictionary || {},
+        branch_tiers: branch_tiers || DEFAULT_BRANCH_TIERS,
         branches: branches || [],
+        feature_flags: feature_flags || resolveFeatureFlags(undefined),
       },
     });
   } catch (err) {

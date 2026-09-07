@@ -8,6 +8,9 @@ import {
   validateBranchTree,
   resolveMemberBranchHierarchy,
   filterMembersByBranch,
+  getNextTierName,
+  DEFAULT_BRANCH_TIERS,
+  findBranchesUsingTier,
   BranchNode,
 } from '../src/lib/tree-layout/branch-engine';
 import type { MemberRecord } from '../src/types/tree';
@@ -327,5 +330,156 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
 
     // 5. Phải khóa cuộn body khi modal mở
     assert.ok(content.includes("overflow = 'hidden'"), 'Phải khóa cuộn body khi mở modal');
+  });
+
+  it('TC_UT_CUSTOM_TIERS_LOGIC: Hàm getNextTierName và xử lý mảng branch_tiers tùy biến chuẩn xác', () => {
+    // 1. Kiểm tra hằng số mặc định
+    assert.deepStrictEqual(DEFAULT_BRANCH_TIERS, ['Ngành', 'Chi', 'Nhánh', 'Phái']);
+
+    // 2. Gợi ý theo chuỗi mặc định
+    assert.strictEqual(getNextTierName('Ngành'), 'Chi', 'Con của Ngành phải là Chi');
+    assert.strictEqual(getNextTierName('Chi'), 'Nhánh', 'Con của Chi phải là Nhánh');
+    assert.strictEqual(getNextTierName('Nhánh'), 'Phái', 'Con của Nhánh phải là Phái');
+    assert.strictEqual(getNextTierName('Phái'), 'Phái', 'Cấp cuối cùng phải giữ nguyên');
+
+    // 3. Gợi ý theo chuỗi tùy biến của dòng họ: ['Phái', 'Chi', 'Phân chi']
+    const customTiers = ['Phái', 'Chi', 'Phân chi'];
+    assert.strictEqual(getNextTierName('Phái', customTiers), 'Chi');
+    assert.strictEqual(getNextTierName('Chi', customTiers), 'Phân chi');
+    assert.strictEqual(getNextTierName('Phân chi', customTiers), 'Phân chi');
+
+    // 4. Khi cấp cha không nằm trong danh mục, fallback an toàn
+    assert.strictEqual(getNextTierName('Không rõ', ['Giáp', 'Ngành', 'Chi']), 'Ngành');
+    assert.strictEqual(getNextTierName(undefined, ['Giáp', 'Ngành']), 'Giáp');
+  });
+
+  it('TC_UT_FLAT_TREE_NO_BOX_IN_BOX: Rà soát cấu trúc BranchTaxonomyManager triệt tiêu Box-in-Box và dùng Flat Tree Outline', () => {
+    const filePath = path.resolve(process.cwd(), 'src/components/admin/BranchTaxonomyManager.tsx');
+    assert.ok(fs.existsSync(filePath), 'File BranchTaxonomyManager.tsx phải tồn tại');
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // 1. Tuyệt đối không còn class card con lồng nhau rounded-xl border bg-slate-50/60
+    assert.ok(
+      !content.includes('rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60'),
+      'Không được dùng card xám lồng card xám trong các hàng nhánh con'
+    );
+
+    // 2. Phải có component FlatBranchRow hoặc cấu trúc Flat Row
+    assert.ok(content.includes('FlatBranchRow'), 'Phải sử dụng cấu trúc FlatBranchRow');
+
+    // 3. Phải có đường hairline phân cách giữa các dòng
+    assert.ok(content.includes('divide-y') || content.includes('border-b'), 'Phải có đường kẻ hairline phân cách các dòng');
+
+    // 4. Phải có đường gióng cây phả hệ (tree guide line)
+    assert.ok(
+      content.includes('border-l-2 border-emerald-') || content.includes('border-l-2'),
+      'Phải có đường gióng cây phả hệ cho các cấp con'
+    );
+
+    // 5. Phải có Thanh Thứ Bậc Tông Tộc (Tier Hierarchy Bar)
+    assert.ok(content.includes('Thứ Bậc Tông Tộc'), 'Phải có tiêu đề Thanh Thứ Bậc Tông Tộc');
+    assert.ok(content.includes('Thêm Cấp Mới') || content.includes('Thêm Cấp'), 'Phải có nút thêm cấp bậc mới');
+  });
+
+  it('TC_UT_BRANCH_TIERS_API_CONTRACT: API /api/clan-settings hỗ trợ trả về và cập nhật branch_tiers an toàn', () => {
+    const filePath = path.resolve(process.cwd(), 'src/app/api/clan-settings/route.ts');
+    assert.ok(fs.existsSync(filePath), 'File /api/clan-settings/route.ts phải tồn tại');
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // 1. Trong GET: phải nạp branch_tiers và fallback DEFAULT_BRANCH_TIERS
+    assert.ok(content.includes('branch_tiers'), 'GET route phải xử lý trường branch_tiers');
+    assert.ok(content.includes('DEFAULT_BRANCH_TIERS'), 'Phải import và fallback DEFAULT_BRANCH_TIERS');
+
+    // 2. Trong PATCH: phải nhận, làm sạch và lưu branch_tiers
+    assert.ok(content.includes('body.branch_tiers'), 'PATCH route phải đọc body.branch_tiers');
+    assert.ok(content.includes('fat_dev_branch_tiers'), 'Phải lưu cookie dev fallback fat_dev_branch_tiers');
+  });
+
+  it('TC_UT_TIER_INTEGRITY_GUARD_01: findBranchesUsingTier phát hiện đúng các nhánh đang sử dụng cấp bậc kể cả ở tầng sâu đệ quy', () => {
+    // mockBranches có:
+    // - Ngành 1 (tierName: 'Ngành')
+    //   - Chi 1 (tierName: 'Chi')
+    //   - Chi 2 (tierName: 'Chi')
+    // - Ngành 2 (tierName: 'Ngành')
+    const nganhBranches = findBranchesUsingTier(mockBranches, 'Ngành');
+    assert.strictEqual(nganhBranches.length, 2);
+    assert.ok(nganhBranches.some((b) => b.id === 'branch_nganh1'));
+    assert.ok(nganhBranches.some((b) => b.id === 'branch_nganh2'));
+
+    // Kiểm tra cấp con đệ quy sâu
+    const chiBranches = findBranchesUsingTier(mockBranches, 'Chi');
+    assert.strictEqual(chiBranches.length, 2);
+    assert.ok(chiBranches.some((b) => b.id === 'branch_chi1'));
+    assert.ok(chiBranches.some((b) => b.id === 'branch_chi2'));
+
+    // Kiểm tra không phân biệt hoa thường và tự động trim
+    const chiTrimBranches = findBranchesUsingTier(mockBranches, '  cHi  ');
+    assert.strictEqual(chiTrimBranches.length, 2);
+  });
+
+  it('TC_UT_TIER_INTEGRITY_GUARD_02: findBranchesUsingTier trả về rỗng khi cấp bậc không dùng -> Cho phép xóa cấp cuối an toàn', () => {
+    // Cấp 'Phái' hoặc 'Giáp' không hề có nhánh nào sử dụng trong mockBranches
+    const phaiBranches = findBranchesUsingTier(mockBranches, 'Phái');
+    assert.strictEqual(phaiBranches.length, 0);
+
+    const giapBranches = findBranchesUsingTier(mockBranches, 'Giáp');
+    assert.strictEqual(giapBranches.length, 0);
+
+    // Xử lý đầu vào biên an toàn
+    assert.strictEqual(findBranchesUsingTier(mockBranches, '').length, 0);
+    assert.strictEqual(findBranchesUsingTier([], 'Ngành').length, 0);
+  });
+
+  it('TC_UT_FLAT_STEPPER_NO_BOX_IN_BOX: Rà soát loại bỏ triệt để card xám bao bọc Thứ Bậc Tông Tộc', () => {
+    const filePath = path.resolve(process.cwd(), 'src/components/admin/BranchTaxonomyManager.tsx');
+    assert.ok(fs.existsSync(filePath), 'File BranchTaxonomyManager.tsx phải tồn tại');
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // 1. Không còn card xám bao quanh thanh thứ bậc
+    assert.ok(
+      !content.includes('bg-slate-50/80 dark:bg-slate-850/60 border border-slate-200/70'),
+      'Không được dùng card xám lồng nhau bao bọc thanh thứ bậc tông tộc'
+    );
+
+    // 2. Phải có đường phân cách phẳng hairline giữa Cụm 1 và Cụm 2
+    assert.ok(
+      content.includes('border-b border-slate-100 dark:border-slate-800'),
+      'Phải có đường hairline phân cách giữa Cụm 1 và Cụm 2'
+    );
+
+    // 3. Phải hiển thị tiêu đề Thứ Bậc Tông Tộc
+    assert.ok(
+      content.includes('Thứ Bậc Tông Tộc (Thứ tự phân tầng từ cao xuống thấp)'),
+      'Phải có tiêu đề mô tả phân tầng của Thứ Bậc Tông Tộc'
+    );
+  });
+
+  it('TC_UT_ADD_BRANCH_BTN_POSITION: Nút Thêm Nhánh Mới được bố trí tại Cụm Cây phân cấp thay vì Header chính', () => {
+    const filePath = path.resolve(process.cwd(), 'src/components/admin/BranchTaxonomyManager.tsx');
+    assert.ok(fs.existsSync(filePath), 'File BranchTaxonomyManager.tsx phải tồn tại');
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // 1. Phải có tiêu đề phân khu Cụm 2: Cây Phân Cấp Các Nhánh & Cụ Khởi Nguồn
+    assert.ok(
+      content.includes('Cây Phân Cấp Các Nhánh & Cụ Khởi Nguồn'),
+      'Phải có tiêu đề rõ ràng cho Cụm 2 Cây Phân Cấp'
+    );
+
+    // 2. Nút add-root-branch-btn phải nằm trong Cụm 2
+    assert.ok(content.includes('id="add-root-branch-btn"'), 'Phải có nút add-root-branch-btn');
+
+    // 3. Header chính không còn chứa nút add-root-branch-btn
+    const headerBlock = content.split('{/* Header (Title & Description only')[1]?.split('{/* Cụm 1:')[0];
+    assert.ok(headerBlock, 'Phải có khối header chính');
+    assert.ok(
+      !headerBlock.includes('id="add-root-branch-btn"'),
+      'Nút thêm nhánh không được nằm lẫn lộn ở Header chính của trang'
+    );
+
+    // 4. Có nút thêm ở đáy cây
+    assert.ok(
+      content.includes('ở Đáy Cây') || content.includes('Thêm {rootTierName} Mới ở Đáy Cây'),
+      'Phải có nút hỗ trợ thêm nhánh ở đáy danh sách cây'
+    );
   });
 });

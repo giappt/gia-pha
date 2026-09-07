@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import ClanDashboard from '@/components/admin/ClanDashboard';
 
 export default function AdminIndexPage() {
-  redirect('/admin/settings');
+  return <ClanDashboard />;
 }

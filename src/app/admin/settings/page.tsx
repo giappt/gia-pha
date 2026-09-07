@@ -83,12 +83,12 @@ export default function ClanSettingsPage() {
   const [region, setRegion] = useState<KinshipRegion>('north');
   const [rules, setRules] = useState<KinshipTermRule[]>(() => getRegionalPresetDictionary('north'));
   const [branches, setBranches] = useState<BranchNode[]>([]);
+  const [branchTiers, setBranchTiers] = useState<string[]>(['Ngành', 'Chi', 'Nhánh', 'Phái']);
   const [allMembers, setAllMembers] = useState<MemberRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Bộ lọc & Tìm kiếm quan hệ
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -106,6 +106,9 @@ export default function ClanSettingsPage() {
 
           if (json.data?.branches && Array.isArray(json.data.branches)) {
             setBranches(json.data.branches);
+          }
+          if (json.data?.branch_tiers && Array.isArray(json.data.branch_tiers) && json.data.branch_tiers.length > 0) {
+            setBranchTiers(json.data.branch_tiers);
           }
 
           const basePreset = getRegionalPresetDictionary(loadedRegion);
@@ -145,21 +148,18 @@ export default function ClanSettingsPage() {
     loadSettings();
   }, []);
 
-  // Thay đổi vùng miền chuẩn cơ sở
   const handleRegionSelect = (newRegion: KinshipRegion) => {
     setRegion(newRegion);
     const newPreset = getRegionalPresetDictionary(newRegion);
     setRules(newPreset);
   };
 
-  // Cập nhật từng ô danh xưng
   const handleRuleChange = (ruleId: string, field: 'termSenior' | 'termJunior', value: string) => {
     setRules((prev) =>
       prev.map((r) => (r.id === ruleId ? { ...r, [field]: value } : r))
     );
   };
 
-  // Khôi phục chuẩn theo vùng miền đang chọn
   const handleResetToPreset = () => {
     const basePreset = getRegionalPresetDictionary(region);
     setRules(basePreset);
@@ -171,7 +171,6 @@ export default function ClanSettingsPage() {
     });
   };
 
-  // Lọc danh sách quy tắc theo phân nhóm và từ khóa tìm kiếm
   const filteredRules = useMemo(() => {
     return rules.filter((r) => {
       const matchesCategory = activeCategoryFilter === 'all' || r.category === activeCategoryFilter;
@@ -205,7 +204,6 @@ export default function ClanSettingsPage() {
 
     setIsSaving(true);
     try {
-      // Đóng gói từ điển tùy biến
       const custom_kinship_dictionary: CustomKinshipDictionary = {};
       rules.forEach((r) => {
         custom_kinship_dictionary[r.id] = {
@@ -229,7 +227,7 @@ export default function ClanSettingsPage() {
         setClanName(json.data.clan_name);
         setStatusMessage({
           type: 'success',
-          text: 'Đã lưu cài đặt dòng họ và từ điển xưng hô thành công! Dữ liệu đã đồng bộ sang trang Tra Cứu Vai Vế.',
+          text: 'Đã lưu cài đặt dòng họ và từ điển xưng hô thành công!',
         });
       } else {
         setStatusMessage({
@@ -282,7 +280,7 @@ export default function ClanSettingsPage() {
         </div>
       </div>
 
-      {/* Flat Segmented Tab Bar (Anti Box-in-Box) */}
+      {/* Flat Segmented Tab Bar */}
       <div className="flex items-center gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2 overflow-x-auto">
         <button
           type="button"
@@ -325,434 +323,224 @@ export default function ClanSettingsPage() {
       {activeTab === 'branches' ? (
         <BranchTaxonomyManager
           initialBranches={branches}
+          initialTiers={branchTiers}
           allMembers={allMembers}
-          onBranchesSaved={(updated) => setBranches(updated)}
+          onBranchesSaved={(updated, updatedTiers) => {
+            setBranches(updated);
+            if (updatedTiers) setBranchTiers(updatedTiers);
+          }}
         />
       ) : (
-        /* Settings Form: Clan Name & Custom Kinship Dictionary */
         <form onSubmit={handleSave} className="space-y-6">
           {/* Card 1: Clan Name Setting */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs">
             <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-5">
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <span>Tên Dòng Họ (Tiêu Đề Trang Chủ)</span>
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Hiển thị trang trọng tại vị trí nổi bật nhất ở trang chủ và trên thanh điều hướng.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <label htmlFor="clan-name-input" className="font-semibold text-slate-700 dark:text-slate-300">
-                Nhập tên dòng họ:
-              </label>
-              <span
-                id="char-counter"
-                className={`font-semibold text-xs transition-colors ${
-                  isTooLong
-                    ? 'text-rose-600'
-                    : isNearLimit
-                    ? 'text-amber-600'
-                    : 'text-slate-400 dark:text-slate-500'
-                }`}
-              >
-                {charCount} / 40 ký tự
-              </span>
-            </div>
-
-            <input
-              id="clan-name-input"
-              type="text"
-              value={clanName}
-              onChange={(e) => setClanName(e.target.value)}
-              maxLength={40}
-              placeholder="Ví dụ: DÒNG HỌ NGUYỄN VĂN"
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 text-base font-bold tracking-tight focus:outline-hidden focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400"
-            />
-
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
-              <p className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Giới hạn tối đa <strong>40 ký tự</strong> để tránh tràn khung và giữ nguyên tỷ lệ thẩm mỹ trên điện thoại di động.</span>
-              </p>
-              <p className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                <span>Hỗ trợ chữ hoa, chữ thường tiếng Việt có dấu, số và dấu phân cách (Ví dụ: <em>Gia tộc Trần Lê (Chi 2)</em>).</span>
+                <span>Tên Dòng Họ (Tiêu Đề Trang Chủ)</span>
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Hiển thị trang trọng tại vị trí nổi bật nhất ở trang chủ và trên thanh điều hướng.
               </p>
             </div>
-          </div>
 
-          {/* Live Preview Box */}
-          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 mb-3">
-              <Eye className="w-3.5 h-3.5 text-emerald-600" />
-              <span>MÔ PHỎNG HIỂN THỊ THỰC TẾ TRÊN TRANG CHỦ:</span>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <label htmlFor="clan-name-input" className="font-semibold text-slate-700 dark:text-slate-300">
+                  Nhập tên dòng họ:
+                </label>
+                <span
+                  id="char-counter"
+                  className={`font-semibold text-xs transition-colors ${
+                    isTooLong
+                      ? 'text-rose-600'
+                      : isNearLimit
+                      ? 'text-amber-600'
+                      : 'text-slate-400 dark:text-slate-500'
+                  }`}
+                >
+                  {charCount} / 40 ký tự
+                </span>
+              </div>
+
+              <input
+                id="clan-name-input"
+                type="text"
+                value={clanName}
+                onChange={(e) => setClanName(e.target.value)}
+                maxLength={40}
+                placeholder="Ví dụ: DÒNG HỌ NGUYỄN VĂN"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 text-base font-bold tracking-tight focus:outline-hidden focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400"
+              />
             </div>
 
-            <div className="rounded-xl p-6 bg-radial-gradient from-emerald-500/10 via-slate-50 to-white dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-950 border border-slate-200/60 dark:border-slate-800 text-center">
-              <span className="text-[10px] font-bold tracking-widest text-emerald-700 dark:text-emerald-400 uppercase">
-                HỆ THỐNG PHẢ HỆ TRỰC TUYẾN
-              </span>
-              <h3
-                id="preview-clan-name"
-                className={`font-black tracking-tight text-emerald-950 dark:text-emerald-50 mt-1 uppercase text-balance break-words ${
-                  clanName.length > 25 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
-                }`}
-              >
-                {clanName.trim() || 'DÒNG HỌ NGUYỄN VĂN'}
-              </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto line-clamp-1">
-                Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu...
-              </p>
-            </div>
-          </div>
-        </div>
+            {/* Live Preview Box */}
+            <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 mb-3">
+                <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                <span>MÔ PHỎNG HIỂN THỊ THỰC TẾ TRÊN TRANG CHỦ:</span>
+              </div>
 
-        {/* Card 2: Kinship Region Setting & Structured Dictionary */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm space-y-6">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-emerald-600" />
-                  <span>Từ Điển Xưng Hô Dòng Họ Toàn Diện & Quy Ước Vùng Miền</span>
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Chọn mẫu vùng miền và tùy biến trực tiếp từng mối quan hệ bên Nội, bên Ngoại, Dâu, Rể theo tập quán riêng của gia tộc.
-                </p>
+              <div className="rounded-xl p-6 bg-radial-gradient from-emerald-500/10 via-slate-50 to-white dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-950 border border-slate-200/60 dark:border-slate-800 text-center">
+                <span className="text-[10px] font-bold tracking-widest text-emerald-700 dark:text-emerald-400 uppercase">
+                  HỆ THỐNG PHẢ HỆ TRỰC TUYẾN
+                </span>
+                <h3
+                  id="preview-clan-name"
+                  className={`font-black tracking-tight text-emerald-950 dark:text-emerald-50 mt-1 uppercase text-balance break-words ${
+                    clanName.length > 25 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
+                  }`}
+                >
+                  {clanName.trim() || 'DÒNG HỌ NGUYỄN VĂN'}
+                </h3>
               </div>
             </div>
           </div>
 
-          {/* Section 2.1: Region Presets Selector */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">
-              1. Chọn Vùng Miền Làm Chuẩn Cơ Sở:
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* North */}
-              <label
-                className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                  region === 'north'
-                    ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/20'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm">Miền Bắc</span>
-                    <input
-                      type="radio"
-                      name="region"
-                      value="north"
-                      checked={region === 'north'}
-                      onChange={() => handleRegionSelect('north')}
-                      className="accent-emerald-600"
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                    Tôn trọng thứ bậc chi trưởng/thứ (*&quot;Bé bằng củ khoai, cứ vai Bác là gọi Bác&quot;*). Xưng hô Bố, Mẹ, Bác, Chú, Cô, Thím.
-                  </p>
-                </div>
-                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 mt-3 block">
-                  Khuyên dùng cho họ gốc Bắc
-                </span>
-              </label>
-
-              {/* Central */}
-              <label
-                className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                  region === 'central'
-                    ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/20'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm">Miền Trung</span>
-                    <input
-                      type="radio"
-                      name="region"
-                      value="central"
-                      checked={region === 'central'}
-                      onChange={() => handleRegionSelect('central')}
-                      className="accent-emerald-600"
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                    Cách gọi Ba, Mạ, Bác, Chú, O, Thím, Dượng theo truyền thống khu vực Bắc & Nam Trung Bộ.
-                  </p>
-                </div>
-                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-3 block">
-                  Phong tục Miền Trung
-                </span>
-              </label>
-
-              {/* South */}
-              <label
-                className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                  region === 'south'
-                    ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/20'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm">Miền Nam</span>
-                    <input
-                      type="radio"
-                      name="region"
-                      value="south"
-                      checked={region === 'south'}
-                      onChange={() => handleRegionSelect('south')}
-                      className="accent-emerald-600"
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                    Xưng hô linh hoạt theo tuổi đời kết hợp nhánh họ (Anh Hai, Chị Ba, Ba/Má, Chú Út, Thím, Dượng...).
-                  </p>
-                </div>
-                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-3 block">
-                  Phong tục Nam Bộ
-                </span>
-              </label>
+          {/* Card 2: Kinship Region Setting & Structured Dictionary */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs space-y-6">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-emerald-600" />
+                <span>Từ Điển Xưng Hô Dòng Họ Toàn Diện & Quy Ước Vùng Miền</span>
+              </h2>
             </div>
-          </div>
 
-          {/* Section 2.2: Detailed Structured Kinship Dictionary Table with Filter Chips & Search */}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-            {/* Header & Quick Action */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
+            {/* Region Select */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">
+                1. Chọn Vùng Miền Làm Chuẩn Cơ Sở:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {(['north', 'central', 'south'] as KinshipRegion[]).map((r) => (
+                  <label
+                    key={r}
+                    className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                      region === r
+                        ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/20'
+                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm">
+                        {r === 'north' ? 'Miền Bắc' : r === 'central' ? 'Miền Trung' : 'Miền Nam'}
+                      </span>
+                      <input
+                        type="radio"
+                        name="region"
+                        value={r}
+                        checked={region === r}
+                        onChange={() => handleRegionSelect(r)}
+                        className="accent-emerald-600"
+                      />
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Kinship Table */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+              <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>2. Danh Mục Chi Tiết 32+ Mối Quan Hệ (Có Thể Chỉnh Sửa Trực Tiếp):</span>
+                  <span>2. Danh Mục 32+ Mối Quan Hệ:</span>
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Bao gồm đầy đủ bên Nội, bên Ngoại, Bác dâu, Bác rể, Thím, Cậu, Mợ, Dì, Dượng và Dâu/Rể các đời.
-                </p>
+
+                <button
+                  type="button"
+                  id="reset-preset-btn"
+                  onClick={handleResetToPreset}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3 text-slate-500" />
+                  <span>Khôi phục chuẩn {regionNameLabel}</span>
+                </button>
               </div>
 
-              <button
-                type="button"
-                id="reset-preset-btn"
-                onClick={handleResetToPreset}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors self-start sm:self-auto cursor-pointer"
-                title={`Đặt lại danh xưng về mẫu mặc định của ${regionNameLabel}`}
-              >
-                <RotateCcw className="w-3 h-3 text-slate-500" />
-                <span>Khôi phục chuẩn {regionNameLabel}</span>
-              </button>
-            </div>
-
-            {/* Quick Search & Category Filter Chips Toolbar */}
-            <div className="bg-slate-50 dark:bg-slate-950/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-2.5">
-              {/* Search Box */}
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    id="search-relation-input"
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Tìm nhanh theo tên quan hệ hoặc danh xưng (VD: Thím, Mợ, Dượng, Dâu, Rể, Cậu...)"
-                    className="w-full pl-9 pr-8 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex-shrink-0 px-1">
-                  {filteredRules.length} / {rules.length} quan hệ
-                </div>
-              </div>
-
-              {/* Group Filter Chips */}
+              {/* Filter Chips */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1 mr-1 flex-shrink-0">
-                  <Filter className="w-3 h-3" />
-                  Nhóm:
-                </span>
-                {FILTER_CHIPS.map((chip) => {
-                  const isActive = activeCategoryFilter === chip.id;
-                  const count =
-                    chip.id === 'all'
-                      ? rules.length
-                      : rules.filter((r) => r.category === chip.id).length;
-
-                  return (
-                    <button
-                      key={chip.id}
-                      type="button"
-                      id={`filter-chip-${chip.id}`}
-                      onClick={() => setActiveCategoryFilter(chip.id)}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
-                      }`}
-                    >
-                      <span>{chip.icon}</span>
-                      <span>{chip.label}</span>
-                      <span
-                        className={`text-[10px] px-1 rounded-full ${
-                          isActive
-                            ? 'bg-emerald-700 text-emerald-100'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                        }`}
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Render Category Groups */}
-            <div className="space-y-6">
-              {filteredRules.length === 0 ? (
-                <div className="py-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Không tìm thấy mối quan hệ nào khớp với từ khóa &quot;{searchQuery}&quot;.
-                  </p>
+                {FILTER_CHIPS.map((chip) => (
                   <button
+                    key={chip.id}
                     type="button"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setActiveCategoryFilter('all');
-                    }}
-                    className="mt-2 text-xs font-bold text-emerald-600 hover:underline"
+                    onClick={() => setActiveCategoryFilter(chip.id)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      activeCategoryFilter === chip.id
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                    }`}
                   >
-                    Xóa bộ lọc & hiển thị tất cả
+                    <span>{chip.icon}</span>
+                    <span>{chip.label}</span>
                   </button>
-                </div>
-              ) : (
-                CATEGORY_GROUPS.map((group) => {
+                ))}
+              </div>
+
+              {/* Rules List */}
+              <div className="space-y-4">
+                {CATEGORY_GROUPS.map((group) => {
                   const groupRules = filteredRules.filter((r) => r.category === group.key);
                   if (groupRules.length === 0) return null;
 
                   return (
                     <div
                       key={group.key}
-                      className="rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-900/40 shadow-xs"
+                      className="rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-900/40"
                     >
-                      {/* Group Header */}
-                      <div className="px-4 py-2.5 bg-slate-100/80 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">{group.icon}</span>
-                          <span className="text-xs font-black tracking-wide text-slate-800 dark:text-slate-200 uppercase">
-                            {group.title}
-                          </span>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                            {groupRules.length}
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">
-                          {group.desc}
+                      <div className="px-4 py-2 bg-slate-100/80 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-2">
+                        <span>{group.icon}</span>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase">
+                          {group.title}
                         </span>
                       </div>
-
-                      {/* Table of Relationships in Group */}
                       <div className="divide-y divide-slate-100 dark:divide-slate-800">
                         {groupRules.map((rule) => (
                           <div
                             key={rule.id}
-                            className="p-3 sm:p-4 hover:bg-white dark:hover:bg-slate-850/60 transition-colors grid grid-cols-1 sm:grid-cols-12 gap-3 items-center"
+                            className="p-3 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center text-xs"
                           >
-                            {/* Col 1: Relationship Name & Context (4 cols) */}
-                            <div className="sm:col-span-4">
-                              <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
-                                {rule.name}
-                              </span>
-                              <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                                {rule.context}
-                              </span>
+                            <div className="sm:col-span-4 font-bold text-slate-900 dark:text-slate-100">
+                              {rule.name}
                             </div>
-
-                            {/* Col 2: Senior calls Junior (A -> B) (3 cols) */}
-                            <div className="sm:col-span-3">
-                              <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-                                Bề trên gọi Bề dưới:
-                              </label>
+                            <div className="sm:col-span-4">
                               <input
                                 type="text"
-                                id={`rule-${rule.id}-junior`}
                                 value={rule.termJunior}
                                 onChange={(e) => handleRuleChange(rule.id, 'termJunior', e.target.value)}
-                                placeholder="VD: Con, Cháu, Em"
-                                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                                className="w-full px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
                               />
                             </div>
-
-                            {/* Col 3: Junior calls Senior (B -> A) (3 cols) */}
-                            <div className="sm:col-span-3">
-                              <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-                                Bề dưới gọi Bề trên:
-                              </label>
+                            <div className="sm:col-span-4">
                               <input
                                 type="text"
-                                id={`rule-${rule.id}-senior`}
                                 value={rule.termSenior}
                                 onChange={(e) => handleRuleChange(rule.id, 'termSenior', e.target.value)}
-                                placeholder="VD: Bố, Mẹ, Bác, Chú, Thím, Cậu, Mợ"
-                                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                                className="w-full px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-emerald-700 dark:text-emerald-300"
                               />
-                            </div>
-
-                            {/* Col 4: Note / Explanation (2 cols) */}
-                            <div className="sm:col-span-2 text-[11px] text-slate-400 dark:text-slate-500 italic">
-                              {rule.note || 'Theo tập quán truyền thống'}
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   );
-                })
-              )}
+                })}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <Link
-            href="/"
-            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            Hủy Bỏ
-          </Link>
-
-          <button
-            id="save-settings-btn"
-            type="submit"
-            disabled={isSaving || isTooLong}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-sm font-bold shadow-sm shadow-emerald-700/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-          >
-            {isSaving ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Đang lưu...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                <span>Lưu Thay Đổi</span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              id="save-settings-btn"
+              type="submit"
+              disabled={isSaving || isTooLong}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs disabled:opacity-50 cursor-pointer"
+            >
+              {isSaving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              <span>Lưu Thay Đổi</span>
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );

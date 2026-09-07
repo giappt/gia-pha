@@ -27,15 +27,26 @@ export interface BranchNode {
 
 export type ClanBranchItem = BranchNode;
 
+export interface ClanFeatureFlags {
+  enable_public_tree: boolean;
+  enable_kinship_lookup: boolean;
+  enable_anniversaries: boolean;
+  allow_member_claims: boolean;
+  mask_living_member_privacy: boolean;
+  maintenance_mode: boolean;
+}
+
 export interface ClanSettings {
   id: string;
   clan_name: string;
   root_ancestor_id: string | null;
+  branch_tiers?: string[];
   branches: Json;
   regional_preset: RegionalPreset;
   custom_kinship_dictionary: Json;
   anniversary_notify_days_before: number;
   allow_public_tree_view: boolean;
+  feature_flags?: ClanFeatureFlags;
   created_at: string;
   updated_at: string;
 }
