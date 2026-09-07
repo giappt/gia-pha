@@ -4,29 +4,47 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Landmark, Save, RefreshCw, Eye, CheckCircle2, AlertCircle } from 'lucide-react';
 
+import { MemberRecord } from '@/types/tree';
+
 export default function ClanProfilePage() {
   const [clanName, setClanName] = useState('');
+  const [rootAncestorId, setRootAncestorId] = useState<string>('');
+  const [members, setMembers] = useState<MemberRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    async function loadClanName() {
+    async function loadData() {
       try {
-        const res = await fetch('/api/clan-settings');
-        if (res.ok) {
-          const json = await res.json();
+        const [settingsRes, memRes] = await Promise.all([
+          fetch('/api/clan-settings'),
+          fetch('/api/members'),
+        ]);
+
+        if (settingsRes.ok) {
+          const json = await settingsRes.json();
           if (json.data?.clan_name) {
             setClanName(json.data.clan_name);
           }
+          if (json.data?.root_ancestor_id) {
+            setRootAncestorId(json.data.root_ancestor_id);
+          }
+        }
+
+        if (memRes.ok) {
+          const memJson = await memRes.json();
+          if (Array.isArray(memJson.members)) {
+            setMembers(memJson.members);
+          }
         }
       } catch (err) {
-        console.error('Failed to load clan name:', err);
+        console.error('Failed to load clan profile data:', err);
       } finally {
         setIsLoading(false);
       }
     }
-    loadClanName();
+    loadData();
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -48,14 +66,20 @@ export default function ClanProfilePage() {
       const res = await fetch('/api/clan-settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clan_name: trimmed }),
+        body: JSON.stringify({
+          clan_name: trimmed,
+          root_ancestor_id: rootAncestorId || null,
+        }),
       });
       const json = await res.json();
       if (res.ok && json.success) {
         setClanName(json.data.clan_name);
+        if (json.data.root_ancestor_id !== undefined) {
+          setRootAncestorId(json.data.root_ancestor_id || '');
+        }
         setStatusMessage({
           type: 'success',
-          text: 'Đã lưu Căn Cước Dòng Họ thành công! Tên mới đã cập nhật trên toàn hệ thống.',
+          text: 'Đã lưu Căn Cước Dòng Họ và Cụ Thủy Tổ thành công! Dữ liệu đã cập nhật trên toàn hệ thống.',
         });
       } else {
         setStatusMessage({
@@ -187,6 +211,56 @@ export default function ClanProfilePage() {
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto line-clamp-1">
                 Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Root Ancestor Setting */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs space-y-4">
+          <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-500 text-base">✨</span>
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                Cụ Thủy Tổ Của Dòng Họ (Gốc Phả Hệ Toàn Cục)
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Chỉ định vị Cụ Thủy Tổ duy nhất của toàn bộ dòng họ. Người được chọn sẽ mang huy hiệu <strong>✨ Cụ Tổ</strong> trên cây phả hệ, và toàn bộ thế hệ con cháu cũng như dâu/rể sẽ tự động suy diễn bậc đời dựa theo Cụ.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <label htmlFor="root-ancestor-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              Chọn Cụ Thủy Tổ (Gốc Cây):
+            </label>
+
+            <select
+              id="root-ancestor-select"
+              value={rootAncestorId}
+              onChange={(e) => setRootAncestorId(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 text-sm font-semibold focus:outline-hidden focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+            >
+              <option value="">-- Tự động xác định Cụ cao nhất theo đồ thị --</option>
+              {members
+                .filter((m) => !m.is_anonymous)
+                .sort((a, b) => (a.generation_level || 99) - (b.generation_level || 99))
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.full_name} {m.generation_level ? `(Đời ${m.generation_level})` : ''} {m.birth_year ? `• Sinh năm ${m.birth_year}` : ''} {m.gender === 'female' ? '• Nữ' : '• Nam'}
+                  </option>
+                ))}
+            </select>
+
+            <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-amber-800 dark:text-amber-200 text-xs space-y-1">
+              <p className="font-semibold flex items-center gap-1.5">
+                <span>💡</span>
+                <span>Quy tắc suy diễn thế hệ tự động:</span>
+              </p>
+              <p className="text-[11px] text-amber-700/90 dark:text-amber-300/80 pl-5">
+                • Cụ Thủy Tổ được thiết lập là <strong>Đời 1</strong>.<br />
+                • Con cái tự động nhận đời bằng <strong>Đời của Cha/Mẹ + 1</strong>.<br />
+                • Dâu / Rể (phối ngẫu) tự động nhận <strong>cùng đời</strong> với bạn đời huyết thống, và hiển thị danh xưng phù hợp (Bà cả / Bà hai / Phu thê) thay vì bị gán nhầm là Cụ Tổ.
               </p>
             </div>
           </div>

@@ -3,6 +3,10 @@ import xml.etree.ElementTree as ET
 import re
 import json
 import os
+import sys
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 with zipfile.ZipFile('GIA PHẢ HỌ PHẠM VĂN.docx') as z:
     xml_content = z.read('word/document.xml')

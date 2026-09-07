@@ -114,6 +114,7 @@ export interface TreeLayoutOptions {
   showMaternalBranches?: boolean;
   showInternalHusbands?: boolean;
   focusRootId?: string | null;
+  rootAncestorId?: string | null;
 }
 
 export interface GhostNodeData extends Record<string, any> {

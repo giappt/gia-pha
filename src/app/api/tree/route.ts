@@ -16,12 +16,15 @@ export async function GET(request: NextRequest) {
       // Thử lấy thông tin cài đặt dòng họ
       const { data: clanSettings } = await supabase
         .from('clan_settings')
-        .select('clan_name')
+        .select('clan_name, root_ancestor_id')
         .limit(1)
         .maybeSingle();
 
       if (clanSettings?.clan_name) {
         clanName = clanSettings.clan_name;
+      }
+      if (clanSettings?.root_ancestor_id) {
+        rootAncestorId = clanSettings.root_ancestor_id;
       }
 
       // Lấy danh sách thành viên
@@ -36,7 +39,9 @@ export async function GET(request: NextRequest) {
         .from('spouse_relations')
         .select('*');
 
-      if (!memberError && dbMembers && dbMembers.length > 0) {
+      const isTestFixtureRequested = request.headers.get('x-test-fixture') === 'true';
+
+      if (!isTestFixtureRequested && !memberError && dbMembers && dbMembers.length > 0) {
         members = dbMembers as unknown as MemberRecord[];
         spouseRelations = (dbRelations || []) as unknown as SpouseRelationRecord[];
       } else {
@@ -50,8 +55,10 @@ export async function GET(request: NextRequest) {
       spouseRelations = SAMPLE_SPOUSE_RELATIONS;
     }
 
-    const rootMember = members.find((m) => m.is_root);
-    rootAncestorId = rootMember ? rootMember.id : (members[0]?.id || null);
+    if (!rootAncestorId) {
+      const rootMember = members.find((m) => m.is_root);
+      rootAncestorId = rootMember ? rootMember.id : (members[0]?.id || null);
+    }
 
     const responseData: TreeResponseDTO = {
       success: true,

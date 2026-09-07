@@ -26,6 +26,8 @@ Bảng đơn bản ghi (Singleton) quản lý tên dòng họ, từ điển xưn
 | `custom_kinship_dictionary` | `JSONB` | Required, Default: `'{}'::jsonb` | Từ điển ghi đè xưng hô tùy biến của dòng họ |
 | `anniversary_notify_days_before` | `INTEGER` | Required, Default: `1` | Thông báo trước ngày giỗ mấy ngày (1 = trước 1 ngày) |
 | `allow_public_tree_view` | `BOOLEAN` | Required, Default: `true` | Cho phép khách xem cây công khai hay bắt buộc đăng nhập |
+| `branch_tiers` | `JSONB` | Required, Default: `'["Ngành", "Chi", "Nhánh", "Phái"]'::jsonb` | Danh sách danh xưng cấp bậc phân cấp dòng họ |
+| `feature_flags` | `JSONB` | Required, Default: `'{}'::jsonb` | Cấu hình 6 cờ tính năng toàn cục của dòng họ |
 | `created_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm tạo |
 | `updated_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm cập nhật cuối |
 
@@ -83,7 +85,10 @@ Thực thể trung tâm của cây phả hệ. Mỗi người thực tế chỉ 
 | `generation_level` | `INTEGER` | Nullable, Default: `1` | Đời thứ mấy trong dòng họ (Cụ tổ = 1) |
 | `birth_order` | `INTEGER` | Nullable, Default: `1` | Thứ tự sinh trong nhà (1: con cả, 2: con thứ...) |
 | `is_root` | `BOOLEAN` | Required, Default: `false` | Đánh dấu là Cụ tổ / Gốc của dòng họ |
+| `is_senior` | `BOOLEAN` | Required, Default: `false` | Đánh dấu Con Trưởng Nam/Nữ (gánh vác hương hỏa/trưởng nhánh) |
 | `is_adopted` | `BOOLEAN` | Required, Default: `false` | Đánh dấu con nuôi (phân biệt con đẻ / con nuôi) |
+| `is_anonymous` | `BOOLEAN` | Required, Default: `false` | Đánh dấu Thành viên Khuyết Danh (không rõ tên trong phả cũ) |
+| `branch_name` | `VARCHAR(100)` | Nullable | Tên nhánh hiển thị (hỗ trợ nhập Excel / cache giao diện) |
 | `created_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm tạo |
 | `updated_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm cập nhật cuối |
 
@@ -233,3 +238,17 @@ Quản lý trạng thái bằng **Zustand** trên Next.js Client Components:
 ### State Cục bộ (Component Local State):
 - Form thêm mới thành viên: Trạng thái đóng/mở Modal Form, tab nhập Âm lịch / Dương lịch, dữ liệu đang nhập dở.
 - Thanh tìm kiếm: Từ khóa đang gõ, danh sách gợi ý tìm kiếm tức thì.
+
+---
+
+## 5. MIGRATION & COUPLED SCRIPTS LOG
+
+Tuân thủ nguyên tắc Tài liệu Cặp `[R-IMPACT]`, mọi thay đổi trong schema này bắt buộc phải được ánh xạ 1-1 với các script thực thi tương ứng:
+
+| Ngày tạo | File Migration SQL | Cột / Ràng buộc / Trigger Bổ sung | Trạng thái Đồng bộ |
+|---|---|---|---|
+| `2026-09-03` | `supabase/migrations/20260903000000_init_schema.sql` | Khởi tạo cấu trúc 4 bảng: `clan_settings`, `members`, `spouse_relations`, `users`. | Khởi tạo ban đầu (chưa có `is_adopted`, `is_senior`). |
+| `2026-09-07` | `supabase/migrations/20260907000000_db_sync_and_auth_trigger.sql` | Bổ sung `members.is_senior`, `members.is_anonymous`, `members.branch_name`; `clan_settings.branch_tiers`, `clan_settings.feature_flags`; Google OAuth trigger `handle_new_user()`. | Đã apply trên CSDL Supabase. |
+| `2026-09-07` | `supabase/migrations/20260907000001_add_is_adopted_column.sql` | Bổ sung `members.is_adopted` (`BOOLEAN NOT NULL DEFAULT FALSE`). | **Khớp 100% với Schema** (Triệt tiêu lỗi Schema Cache `PGRST204` khi import Excel). |
+
+

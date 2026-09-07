@@ -261,6 +261,36 @@ sequenceDiagram
 - [x] **TC_UT_DASHBOARD_UNLINKED_DRAWER_BINDING (Kiểm tra nút Kiểm tra gắn kết với Drawer rà soát tại chỗ):**
   - **Mô tả:** Đã kiểm chứng nút kiểm tra gắn `onClick` mở `UnlinkedMembersDrawer` tại chỗ, không còn redirect tĩnh sang `/admin/branches`, cung cấp đầy đủ handlers `handleRelinkMember` và `handleDeleteMember`.
   - **Trạng thái:** PASS (duration: 0.43ms).
+- [x] **TC_UT_MIGRATION_SQL_INTEGRITY (Kiểm chứng cú pháp và tính toàn vẹn của Migration SQL):**
+  - **Mô tả:** File `supabase/migrations/20260907000000_db_sync_and_auth_trigger.sql` chứa đầy đủ các câu lệnh DDL `ALTER TABLE` cho `members.is_senior`, `members.is_anonymous`, `members.branch_name`, `clan_settings.branch_tiers`, `clan_settings.feature_flags`, và hàm trigger `handle_new_user()` trên `auth.users`.
+  - **Trạng thái:** PASS (verified via tests/db-sync.test.ts).
+- [x] **TC_UT_MIGRATION_DEDICATED_FILE_INTEGRITY (Kiểm chứng File Migration riêng biệt 20260907000001):**
+  - **Mô tả:** File `supabase/migrations/20260907000001_add_is_adopted_column.sql` tồn tại độc lập trong thư mục migrations và chứa câu lệnh DDL chuẩn mực `ALTER TABLE public.members ADD COLUMN IF NOT EXISTS is_adopted BOOLEAN NOT NULL DEFAULT FALSE` để đồng bộ cột con nuôi theo đúng chuẩn Version Control CSDL.
+  - **Trạng thái:** PASS (verified via tests/db-sync.test.ts).
+- [x] **TC_UT_IMPORT_PAYLOAD_SCHEMA_MATCH (Kiểm chứng payload Import tương thích 100% với PostgreSQL Schema):**
+  - **Mô tả:** Hàm `POST /api/admin/import` và `topologicalSortExcelRows` chuẩn bị dữ liệu chèn vào bảng `members` có đầy đủ các cột chuẩn hóa (`is_senior`, `is_adopted`, `birth_order`) và không chứa cột thừa gây lỗi schema cache.
+  - **Trạng thái:** PASS (verified via tests/db-sync.test.ts).
+- [x] **TC_UT_SEED_SCRIPT_INTEGRITY (Kiểm chứng Engine Seed Data CSDL):**
+  - **Mô tả:** Script `scripts/seed-database.mjs` có khả năng nạp dữ liệu chuẩn xác (hỗ trợ cả bộ Clan 28 và bộ Họ Phạm Văn từ `extracted_members.json`), xử lý liên kết ID cha mẹ đệ quy không bị lỗi khóa ngoại.
+  - **Trạng thái:** PASS (verified via tests/db-sync.test.ts).
+- [x] **TC_INT_TREE_DATA_SOURCE_DISCRIMINATION (Phân định nguồn dữ liệu CSDL thật vs Mock Fallback):**
+  - **Mô tả:** API `GET /api/tree` kiểm tra `dbMembers.length > 0` và trả về 100% dữ liệu từ Supabase khi có bản ghi, chỉ fallback sang `SAMPLE_MEMBERS_28` khi DB rỗng hoặc môi trường test qua `x-test-fixture`.
+  - **Trạng thái:** PASS (verified via tests/db-sync.test.ts).
+- [x] **TC_UT_ROOT_SETTING_API (Kiểm chứng API đọc/ghi root_ancestor_id trong clan_settings):**
+  - **Mô tả:** API `PATCH /api/clan-settings` nhận `{ root_ancestor_id: 'uuid' }`, cập nhật chuẩn xác vào cột `root_ancestor_id` của bảng `clan_settings`. API `GET /api/clan-settings` trả về đúng trường này.
+  - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
+- [x] **TC_UT_GRAPH_DERIVED_GENERATION (Kiểm chứng thuật toán tự động tính thế hệ theo đồ thị từ Root):**
+  - **Mô tả:** Thuật toán duyệt cây phân tầng từ `root_ancestor_id` (Đời 1), duyệt BFS cha-con: con = cha + 1, duyệt phối ngẫu: vợ/chồng kế thừa cùng thế hệ với người bạn đời (Vợ Đời 1 = Đời 1, Vợ Đời 2 = Đời 2).
+  - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
+- [x] **TC_UT_MEMBER_NODE_ROOT_BADGE_EXCLUSIVE (Kiểm chứng Huy hiệu Cụ Tổ CHỈ hiển thị duy nhất trên Root Node):**
+  - **Mô tả:** Kiểm tra điều kiện render trong `MemberNode.tsx`: Chỉ node có `nodeData.isRoot === true` (khớp với `root_ancestor_id`) mới nhận huy hiệu `✨ Cụ Tổ`. Các node khác (kể cả vợ Đời 1, dâu các đời) tuyệt đối không có badge `✨ Cụ Tổ`, mà hiển thị danh xưng phối ngẫu và trạng thái sinh tử.
+  - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
+- [x] **TC_UT_IMPORT_AUTO_SYNC_ROOT (Kiểm chứng Import Clean Mode tự động cập nhật root_ancestor_id cho Cụ Thủy Tổ):**
+  - **Mô tả:** Khi gọi `POST /api/admin/import` với `mode: 'clean'`, dòng nào có `isRoot: true` sẽ tự động kích hoạt cập nhật `clan_settings.root_ancestor_id = memberId` của Cụ Thủy Tổ.
+  - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
+- [x] **TC_UT_EXCEL_LITE_TOPOLOGY_INTEGRITY (Kiểm chứng file gia_pha_ho_pham_van_lite.xlsx liên kết liền mạch từ Đời 1 đến Đời 13):**
+  - **Mô tả:** File Excel sau khi bổ sung STT cha mẹ (STT 4 con STT 1&2, STT 6 con STT 4&5, STT 69 con STT 38&39, STT 122 con STT 69&70...) không có chu trình (cycle) và kết nối trọn vẹn 100% các nhánh về Cụ Tổ.
+  - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
@@ -274,6 +304,15 @@ sequenceDiagram
 - [ ] **UAT_08 (Console Sạch):** Toàn bộ các trang trong `/admin/*` mở lên không có lỗi đỏ (0 Error, 0 Hydration Warning) trong Developer Console.
 - [ ] **UAT_09 (Crisp Architectural Geometry):** Sidebar menu mang phong cách ngọc bích phẳng vuông vắn `rounded-md`, không còn viền cong viên thuốc méo; 4 thẻ thống kê và các khối card trên Dashboard vuông vắn, trang trọng `rounded-lg`.
 - [ ] **UAT_10 (Drawer Rà Soát Nối Phả Tại Chỗ):** Bấm nút `[Kiểm tra →]` tại khối việc khẩn mở Slide-over Drawer từ cạnh phải màn hình `/admin`, hiển thị danh sách 10 người thiếu cha mẹ, hỗ trợ tìm kiếm, nối vào cha mẹ và tự động làm tươi số liệu thống kê ngay lập tức.
+- [ ] **UAT_11 (SQL Migration Chạy Thành Công Từ File Riêng 20260907000001):** Mở Supabase Dashboard SQL Editor, dán nội dung file migration độc lập `supabase/migrations/20260907000001_add_is_adopted_column.sql` và bấm Run: 0 lỗi, bảng `members` nhận cột `is_adopted`.
+- [ ] **UAT_12 (Nhập File Excel Thành Công Không Lỗi Schema):** Mở `/admin/import`, tải file `gia_pha_ho_pham_van_lite.xlsx` lên và bấm "Nhập Dữ Liệu": hệ thống báo nạp thành công 60 thành viên và 29 quan hệ hôn phối, không còn lỗi `Could not find the 'is_adopted' column of 'members' in the schema cache`.
+- [ ] **UAT_13 (Cây Phả Hệ Hiển Thị Dữ Liệu Thật):** Mở `/tree`, hiển thị đúng tên dòng họ thật và danh sách con cháu thật từ Supabase DB, 28 người mẫu cũ biến mất hoàn toàn khỏi màn hình.
+- [ ] **UAT_14 (Chỉ Định Cụ Thủy Tổ Trong Admin Settings):** Mở `/admin/settings` hoặc `/admin/profile`: Dropdown "Cụ Thủy Tổ Của Dòng Họ" chỉ hiển thị các thành viên nội tộc, chọn Cụ Phạm Văn Chiến và bấm Lưu $\rightarrow$ Hệ thống lưu `root_ancestor_id` vào `clan_settings`.
+- [ ] **UAT_15 (Kiểm Chứng Huy Hiệu Cụ Tổ Duy Nhất & Đời của Phối Ngẫu):** Mở `/tree`:
+  - Thẻ của Cụ Thủy Tổ Phạm Văn Chiến hiển thị đúng huy hiệu `✨ Cụ Tổ`.
+  - Thẻ của Bà cả Hoàng Thị Mơ và Bà hai Đào Thị Liễu chỉ hiển thị `🌸 Bà cả` / `🌸 Bà hai` và `† Đã mất`, **hoàn toàn không có huy hiệu Cụ Tổ**.
+  - Thẻ của Bà Vũ Thị Thìn mang đúng `Đời 2`, Bà Hoàng Thị Dĩnh mang đúng `Đời 3`, Bà Nguyễn Thị Hiến mang đúng `Đời 4`, Bà Lê Thị Nhân mang đúng `Đời 5`...
+- [ ] **UAT_16 (Re-import Ghi Đè Thành Công Với 60 Thành Viên Liền Mạch):** Nạp lại file `gia_pha_ho_pham_van_lite.xlsx` với tùy chọn "Xóa sạch dữ liệu cũ và nhập mới (Clean Mode)": Cây phả hệ dựng lên mượt mà, đầy đủ các tầng từ Đời 1 đến Đời 13 không đứt gãy.
 
 ---
 
@@ -285,9 +324,92 @@ sequenceDiagram
 - [x] **RG04 (Excel Import Compatibility):** Trang `/admin/import` hoạt động nạp file Excel bình thường trong khung Sidebar Fluid mới.
 - [x] **RG05 (Legacy Route Compatibility):** Trang `/admin/settings` duy trì cấu trúc tab kế thừa tương thích ngược cho các kiểm thử Milestone 6.
 - [x] **RG06 (Comprehensive Test Suite Clean):** Bộ kiểm thử toàn hệ thống đạt 121/121 tests PASS 100% (20 test suites), 0 failure mới so với `Known_Failing_Baseline: "none"`.
+- [x] **RG07 (Zero Regression On Test Suite):** Toàn bộ 125/125 tests pass 100% (21 test suites) khi bổ sung test suite db-sync mới.
+- [x] **RG08 (Typecheck Zero Errors):** Lệnh `npm.cmd run typecheck` hoàn tất sạch sẽ 0 lỗi sau khi đồng bộ schema và types.
+- [x] **RG09 (Adopted Member Kinship Integrity):** Thành viên mang cờ `is_adopted = true` (như Cụ Phạm Văn Uyên STT 245) hiển thị đúng nhãn `· Con Nuôi` trong tính toán quan hệ họ hàng `/kinship` và không làm gãy thuật toán đồ thị.
+- [x] **RG10 (Migration Chain & File Immutability):** File migration `20260907000000_db_sync_and_auth_trigger.sql` duy trì tính bất biến, file `20260907000001_add_is_adopted_column.sql` hoạt động độc lập, đảm bảo chuỗi version migration toàn vẹn.
+- [x] **RG11 (Clan Settings Root Id Serialization):** Trường `root_ancestor_id` được bảo toàn khi GET và PATCH `/api/clan-settings`, không làm mất các trường cấu hình khác (`branches`, `branch_tiers`, `feature_flags`).
+- [x] **RG12 (Tree Layout Stability & Handle Coordinates):** Việc tự động tính thế hệ theo đồ thị không làm thay đổi hay xô lệch tọa độ các cổng nối hôn phối (`spouse-right`, `spouse-left`) và con cái (`children-joint`).
 
 ---
 
-## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
+## 10. MỞ RỘNG 7.2: ĐỒNG BỘ CSDL SUPABASE, MIGRATION SCHEMA & NẠP DỮ LIỆU THẬT
 
-> "AI ơi, hãy đọc kỹ đặc tả `docs/16_Micro-Spec_Milestone_7_Admin_Portal_Reorganization.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/admin-portal.test.ts`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build → Automated Test Suite → Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+### 10.1. Chuỗi File Migration DDL: `supabase/migrations/`
+- **File 1 (Đã apply):** `20260907000000_db_sync_and_auth_trigger.sql`
+  1. `ALTER TABLE public.members ADD COLUMN IF NOT EXISTS is_senior BOOLEAN NOT NULL DEFAULT FALSE;`
+  2. `ALTER TABLE public.members ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN NOT NULL DEFAULT FALSE;`
+  3. `ALTER TABLE public.members ADD COLUMN IF NOT EXISTS branch_name VARCHAR(100);`
+  4. `ALTER TABLE public.clan_settings ADD COLUMN IF NOT EXISTS branch_tiers JSONB NOT NULL DEFAULT '["Ngành", "Chi", "Nhánh", "Phái"]'::jsonb;`
+  5. `ALTER TABLE public.clan_settings ADD COLUMN IF NOT EXISTS feature_flags JSONB NOT NULL DEFAULT '{}'::jsonb;`
+  6. Trigger `handle_new_user()` trên `auth.users` tự động đồng bộ tài khoản Google vào `public.users` và gán quyền `super_admin` cho email quản trị viên `giap.pt.90@gmail.com`.
+- **File 2 (Dedicated Migration):** `20260907000001_add_is_adopted_column.sql`
+  1. `ALTER TABLE public.members ADD COLUMN IF NOT EXISTS is_adopted BOOLEAN NOT NULL DEFAULT FALSE;`
+
+### 10.2. Script Nạp Dữ Liệu Seed: `scripts/seed-database.mjs`
+- **Cơ chế hoạt động:**
+  - Kết nối Supabase qua `SUPABASE_SERVICE_ROLE_KEY`.
+  - Hỗ trợ tham số `--dataset=clan28` (bộ chuẩn 28 người 4 thế hệ có hôn nhân nội tộc) hoặc `--dataset=pham-van` (bộ trích xuất từ file docx Họ Phạm Văn).
+  - Tự động nạp `clan_settings`, sắp xếp topological và batch insert vào `members` và `spouse_relations`.
+
+---
+
+## 12. MỞ RỘNG 7.3: THIẾT LẬP CỤ THỦY TỔ (ROOT SETTING), TỰ ĐỘNG SUY DIỄN THẾ HỆ THEO CÂY ĐỒ THỊ & CHUẨN HÓA DỮ LIỆU GIA PHẢ HỌ PHẠM VĂN
+
+### 12.1. Kiến Trúc Cụ Thủy Tổ Duy Nhất Trong Cài Đặt Dòng Họ (`clan_settings.root_ancestor_id`)
+- **Single Source of Truth:**
+  - Bảng `clan_settings` sở hữu cột `root_ancestor_id UUID REFERENCES public.members(id) ON DELETE SET NULL`.
+  - Toàn bộ họ tộc chỉ có **DUY NHẤT 1 Cụ Thủy Tổ** được lưu tại đây.
+  - Loại bỏ hoàn toàn sự phụ thuộc vào cờ tĩnh `is_root` trên từng dòng bảng `members`.
+- **API `/api/clan-settings`:**
+  - `GET`: Trả về `root_ancestor_id` cùng các thông tin dòng họ.
+  - `PATCH`: Nhận `{ root_ancestor_id: string | null }`, kiểm tra ràng buộc thành viên tồn tại và cập nhật vào `clan_settings`.
+- **Giao Diện Admin (`src/app/admin/settings/page.tsx`):**
+  - Thêm phần **"Cụ Thủy Tổ Của Dòng Họ"** với dropdown chọn thành viên.
+  - Bộ lọc Dropdown: Chỉ lọc các thành viên nội tộc (không phải dâu/rể ngoại tộc).
+  - Hiển thị badge nhận diện Cụ Tổ hiện tại kèm thế hệ và năm sinh.
+
+### 12.2. Thuật Toán Duyệt Phân Tầng Đồ Thị (Graph-Derived Generation Traversal)
+- **File:** `src/lib/tree-layout/genealogy-layout.ts`
+- **Quy tắc tính thế hệ tự động:**
+  1. Lấy `root_ancestor_id` từ `clan_settings`:
+     - Node có `id === root_ancestor_id` $\rightarrow$ `generationLevel = 1`, `isRoot = true`.
+     - Nếu chưa cấu hình `root_ancestor_id`: Tự động tìm thành viên cao nhất không có cha mẹ và không phải phối ngẫu làm Root tạm thời.
+  2. Duyệt BFS xuôi theo liên kết cha-con:
+     - `generationLevel(con) = generationLevel(cha/mẹ) + 1`.
+  3. Duyệt liên kết phối ngẫu:
+     - `generationLevel(phối ngẫu) = generationLevel(bạn đời huyết thống)`.
+- **Lợi ích:** Khi đổi Cụ Tổ sang Cụ Thân Phụ đời cao hơn, toàn bộ cây tự động tịnh tiến thế hệ (+1) trong tích tắc mà không cần sửa bất kỳ bản ghi con cháu nào trong CSDL!
+
+### 12.3. Sửa Hiển Thị Thẻ Node (`src/components/tree/MemberNode.tsx`)
+- **Điều kiện hiển thị `✨ Cụ Tổ`:**
+  ```tsx
+  nodeData.isRoot ? (
+    <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
+      <Sparkles className="w-2.5 h-2.5" /> Cụ Tổ
+    </span>
+  ) : ...
+  ```
+  - Xóa bỏ vĩnh viễn điều kiện `|| nodeData.generationLevel === 1`.
+  - Phối ngẫu của Cụ Tổ (Bà cả Hoàng Thị Mơ, Bà hai Đào Thị Liễu): Hiển thị danh xưng `🌸 Bà cả / Bà hai` và trạng thái `† Đã mất`.
+  - Vợ của các đời sau: Mang đúng thế hệ của chồng (`Đời 2`, `Đời 3`, `Đời 4`, `Đời 5`...).
+
+### 12.4. Chuẩn Hóa File Dữ Liệu `docs/data/gia_pha_ho_pham_van_lite.xlsx` (60 Thành Viên)
+- Bổ sung đầy đủ STT Bố và STT Mẹ cho các nhánh chính:
+  - STT 4 (Phạm Văn Đồng): Bố = 1, Mẹ = 2.
+  - STT 6 (Phạm Kim Chức): Bố = 4, Mẹ = 5.
+  - STT 32 (Phạm Thị Loan): Bố = 15, Mẹ = 16.
+  - STT 34 (Phạm Thị Lan): Bố = 15, Mẹ = 16.
+  - STT 36 (Phạm Thị Phượng): Bố = 15, Mẹ = 16.
+  - STT 69 (Phạm Kim Xây): Bố = 38, Mẹ = 39.
+  - STT 122 (Phạm Văn Tiễu): Bố = 69, Mẹ = 70.
+  - STT 795 (Phạm Hải Nam): Bố = 436, Mẹ = 437.
+  - STT 797 (Phạm Hà Phương): Bố = 436, Mẹ = 437.
+- Cập nhật API `POST /api/admin/import`: Khi import ở chế độ `clean`, tự động gán `clan_settings.root_ancestor_id` cho thành viên có `isRoot: true`.
+
+---
+
+## 13. LỆNH THI CÔNG (Dành cho AI /feature-code)
+
+> "AI ơi, hãy đọc kỹ đặc tả `docs/16_Micro-Spec_Milestone_7_Admin_Portal_Reorganization.md` này (đặc biệt là Mục 12 Mở Rộng 7.3). Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/root-setting-and-generation.test.ts`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build → Automated Test Suite → Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+

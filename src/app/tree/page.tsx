@@ -16,6 +16,7 @@ export default async function TreePage() {
   let spouseRelations: SpouseRelationRecord[] = [];
   let clanName = 'DÒNG HỌ NGUYỄN VĂN';
   let clanBranches: BranchNode[] = [];
+  let rootAncestorId: string | null = null;
 
   try {
     const supabase = createClient();
@@ -30,7 +31,7 @@ export default async function TreePage() {
     // Lấy thông tin cài đặt dòng họ
     const { data: clanSettings } = await supabase
       .from('clan_settings')
-      .select('clan_name, branches')
+      .select('clan_name, branches, root_ancestor_id')
       .limit(1)
       .maybeSingle();
 
@@ -39,6 +40,9 @@ export default async function TreePage() {
     }
     if (clanBranches.length === 0 && clanSettings?.branches && Array.isArray(clanSettings.branches)) {
       clanBranches = clanSettings.branches as unknown as BranchNode[];
+    }
+    if (clanSettings?.root_ancestor_id) {
+      rootAncestorId = clanSettings.root_ancestor_id;
     }
 
     // Lấy danh sách thành viên
@@ -72,6 +76,7 @@ export default async function TreePage() {
         initialSpouseRelations={spouseRelations}
         clanName={clanName}
         clanBranches={clanBranches}
+        rootAncestorId={rootAncestorId}
       />
     </div>
   );

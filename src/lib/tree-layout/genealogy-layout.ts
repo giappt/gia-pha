@@ -137,10 +137,14 @@ export function calculateTreeLayout(
   // Xác định Roots
   let primaryRoots: MemberRecord[] = [];
   const focusMember = options.focusRootId ? memberMap.get(options.focusRootId) : undefined;
+  const designatedRoot = options.rootAncestorId ? memberMap.get(options.rootAncestorId) : undefined;
 
   if (focusMember) {
     // Nếu có focusRootId: Gốc chính là người được chọn
     primaryRoots = [focusMember];
+  } else if (designatedRoot) {
+    // Nếu có Cụ Thủy Tổ cấu hình trong clan_settings
+    primaryRoots = [designatedRoot];
   } else {
     // Mặc định: Lấy root ancestor(s)
     let roots = members.filter((m) => m.is_root);
@@ -170,6 +174,65 @@ export function calculateTreeLayout(
       }
     });
   }
+
+  const finalRootAncestorId = designatedRoot?.id || (members.find((m) => m.is_root)?.id ?? primaryRoots[0]?.id ?? null);
+
+  // Thuật toán duyệt phân tầng đồ thị tự động (Graph-Derived Generation Traversal)
+  const derivedGenMap = new Map<string, number>();
+  const childrenLookup = new Map<string, string[]>();
+  members.forEach((m) => {
+    if (m.father_id) {
+      const list = childrenLookup.get(m.father_id) || [];
+      list.push(m.id);
+      childrenLookup.set(m.father_id, list);
+    }
+    if (m.mother_id) {
+      const list = childrenLookup.get(m.mother_id) || [];
+      list.push(m.id);
+      childrenLookup.set(m.mother_id, list);
+    }
+  });
+
+  const bfsQueue: Array<{ id: string; gen: number }> = [];
+  const bfsVisited = new Set<string>();
+
+  primaryRoots.forEach((root) => {
+    derivedGenMap.set(root.id, 1);
+    bfsVisited.add(root.id);
+    bfsQueue.push({ id: root.id, gen: 1 });
+  });
+
+  while (bfsQueue.length > 0) {
+    const { id, gen } = bfsQueue.shift()!;
+
+    // Gán thế hệ cho spouses của id
+    const spousesOfId = spouseMap.get(id) || [];
+    for (const spId of spousesOfId) {
+      if (!derivedGenMap.has(spId)) {
+        derivedGenMap.set(spId, gen);
+      }
+    }
+
+    // Lấy con cái của id hoặc của các spouses của id
+    const childIds = new Set<string>();
+    (childrenLookup.get(id) || []).forEach((cId) => childIds.add(cId));
+    spousesOfId.forEach((spId) => {
+      (childrenLookup.get(spId) || []).forEach((cId) => childIds.add(cId));
+    });
+
+    childIds.forEach((cId) => {
+      if (!bfsVisited.has(cId)) {
+        bfsVisited.add(cId);
+        const nextGen = gen + 1;
+        derivedGenMap.set(cId, nextGen);
+        bfsQueue.push({ id: cId, gen: nextGen });
+      }
+    });
+  }
+
+  const getComputedGen = (mId: string): number => {
+    return derivedGenMap.get(mId) || memberMap.get(mId)?.generation_level || 1;
+  };
 
   // Thuật toán kiểm tra huyết thống so với Gốc đang xem (nếu có focusMember)
   // Trả về: 'paternal' (theo đường nam) hoặc 'maternal' (theo đường nữ)
@@ -431,7 +494,7 @@ export function calculateTreeLayout(
       childClusters,
       width: unitWidth,
       x: 0,
-      y: (primary.generation_level - 1) * LEVEL_HEIGHT,
+      y: (getComputedGen(primary.id) - 1) * LEVEL_HEIGHT,
       inlawRole: perspective === 'maternal' && primary.gender === 'male' ? 'son_in_law' : undefined,
       childRole: perspective === 'maternal' ? 'maternal_grandchild' : 'paternal_grandchild',
       hasLeftHusbandGhost,
@@ -518,8 +581,8 @@ export function calculateTreeLayout(
           deathYear: primary.death_year,
           deathLunarDay: primary.death_lunar_day,
           deathLunarMonth: primary.death_lunar_month,
-          generationLevel: primary.generation_level,
-          isRoot: primary.is_root,
+          generationLevel: getComputedGen(primary.id),
+          isRoot: primary.id === finalRootAncestorId,
           branchName: primary.branch_name || undefined,
           spouseIds: unit.spouses.map((s) => s.id),
           childCount: unit.children.length,
@@ -560,7 +623,7 @@ export function calculateTreeLayout(
             fullName: sp.full_name,
             gender: sp.gender,
             lifeStatus: sp.life_status,
-            generationLevel: sp.generation_level,
+            generationLevel: getComputedGen(primary.id),
             birthOrder: sp.birth_order,
             isRoot: false,
             isGhost: true,
@@ -634,8 +697,8 @@ export function calculateTreeLayout(
               birthYear: sp.birth_year,
               birthOrder: sp.birth_order,
               deathYear: sp.death_year,
-              generationLevel: sp.generation_level,
-              isRoot: sp.is_root,
+              generationLevel: getComputedGen(primary.id),
+              isRoot: false,
               branchName: sp.branch_name || undefined,
               isGhost: false,
               inlawRole: sp.gender === 'male' ? 'son_in_law' : 'daughter_in_law',

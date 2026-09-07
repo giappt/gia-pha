@@ -99,7 +99,7 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
           <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
             Khuyết danh
           </span>
-        ) : nodeData.isRoot || nodeData.generationLevel === 1 ? (
+        ) : nodeData.isRoot ? (
           <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
             <Sparkles className="w-2.5 h-2.5" /> Cụ Tổ
           </span>

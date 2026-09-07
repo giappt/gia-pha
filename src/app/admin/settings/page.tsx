@@ -80,6 +80,7 @@ const FILTER_CHIPS = [
 export default function ClanSettingsPage() {
   const [activeTab, setActiveTab] = useState<'branches' | 'info_kinship'>('branches');
   const [clanName, setClanName] = useState('');
+  const [rootAncestorId, setRootAncestorId] = useState<string>('');
   const [region, setRegion] = useState<KinshipRegion>('north');
   const [rules, setRules] = useState<KinshipTermRule[]>(() => getRegionalPresetDictionary('north'));
   const [branches, setBranches] = useState<BranchNode[]>([]);
@@ -100,6 +101,9 @@ export default function ClanSettingsPage() {
           const json = await res.json();
           if (json.data?.clan_name) {
             setClanName(json.data.clan_name);
+          }
+          if (json.data?.root_ancestor_id) {
+            setRootAncestorId(json.data.root_ancestor_id);
           }
           const loadedRegion: KinshipRegion = json.data?.default_kinship_region || 'north';
           setRegion(loadedRegion);
@@ -217,6 +221,7 @@ export default function ClanSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clan_name: trimmed,
+          root_ancestor_id: rootAncestorId || null,
           default_kinship_region: region,
           custom_kinship_dictionary,
         }),
@@ -225,6 +230,9 @@ export default function ClanSettingsPage() {
       const json = await res.json();
       if (res.ok && json.success) {
         setClanName(json.data.clan_name);
+        if (json.data.root_ancestor_id !== undefined) {
+          setRootAncestorId(json.data.root_ancestor_id || '');
+        }
         setStatusMessage({
           type: 'success',
           text: 'Đã lưu cài đặt dòng họ và từ điển xưng hô thành công!',
@@ -392,6 +400,56 @@ export default function ClanSettingsPage() {
                 >
                   {clanName.trim() || 'DÒNG HỌ NGUYỄN VĂN'}
                 </h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Card: Root Ancestor Setting */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs space-y-4">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-amber-500 text-base">✨</span>
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  Cụ Thủy Tổ Của Dòng Họ (Gốc Phả Hệ Toàn Cục)
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Chỉ định vị Cụ Thủy Tổ duy nhất của toàn bộ dòng họ. Người được chọn sẽ mang huy hiệu <strong>✨ Cụ Tổ</strong> trên cây phả hệ, và toàn bộ thế hệ con cháu cũng như dâu/rể sẽ tự động suy diễn bậc đời dựa theo Cụ.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <label htmlFor="root-ancestor-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Chọn Cụ Thủy Tổ (Gốc Cây):
+              </label>
+
+              <select
+                id="root-ancestor-select"
+                value={rootAncestorId}
+                onChange={(e) => setRootAncestorId(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 text-sm font-semibold focus:outline-hidden focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+              >
+                <option value="">-- Tự động xác định Cụ cao nhất theo đồ thị --</option>
+                {allMembers
+                  .filter((m) => !m.is_anonymous)
+                  .sort((a, b) => (a.generation_level || 99) - (b.generation_level || 99))
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.full_name} {m.generation_level ? `(Đời ${m.generation_level})` : ''} {m.birth_year ? `• Sinh năm ${m.birth_year}` : ''} {m.gender === 'female' ? '• Nữ' : '• Nam'}
+                    </option>
+                  ))}
+              </select>
+
+              <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-amber-800 dark:text-amber-200 text-xs space-y-1">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <span>💡</span>
+                  <span>Quy tắc suy diễn thế hệ tự động:</span>
+                </p>
+                <p className="text-[11px] text-amber-700/90 dark:text-amber-300/80 pl-5">
+                  • Cụ Thủy Tổ được thiết lập là <strong>Đời 1</strong>.<br />
+                  • Con cái tự động nhận đời bằng <strong>Đời của Cha/Mẹ + 1</strong>.<br />
+                  • Dâu / Rể (phối ngẫu) tự động nhận <strong>cùng đời</strong> với bạn đời huyết thống, và hiển thị danh xưng phù hợp (Bà cả / Bà hai / Phu thê) thay vì bị gán nhầm là Cụ Tổ.
+                </p>
               </div>
             </div>
           </div>

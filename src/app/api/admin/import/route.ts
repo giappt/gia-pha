@@ -101,6 +101,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Pass 2: Đồng bộ thế hệ cho các phối ngẫu ngoại tộc (không có cha mẹ trong file)
+    for (const r of sortedRows) {
+      const memberId = sttToUuid.get(String(r.stt))!;
+      if (r.spouseStt != null) {
+        const spouseId = sttToUuid.get(String(r.spouseStt));
+        if (spouseId && genMap.has(spouseId)) {
+          if (!r.fatherStt && !r.motherStt && !r.isRoot) {
+            const partnerGen = genMap.get(spouseId)!;
+            genMap.set(memberId, partnerGen);
+            const target = membersToInsert.find((m) => m.id === memberId);
+            if (target) {
+              target.generation_level = partnerGen;
+            }
+          }
+        }
+      }
+    }
+
     const admin = createAdminClient();
     if (admin) {
       if (mode === 'clean') {
@@ -114,12 +132,27 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Tự động đồng bộ Cụ Thủy Tổ (root_ancestor_id) vào clan_settings nếu phát hiện hàng có isRoot
+      const rootRow = sortedRows.find((r) => r.isRoot);
+      if (rootRow) {
+        const rootMemberId = sttToUuid.get(String(rootRow.stt));
+        if (rootMemberId) {
+          await admin
+            .from('clan_settings')
+            .update({ root_ancestor_id: rootMemberId })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+        }
+      }
+
       // Batch insert theo từng nhóm 100 bản ghi để tối ưu hiệu năng
       const chunkSize = 100;
       for (let i = 0; i < membersToInsert.length; i += chunkSize) {
         const chunk = membersToInsert.slice(i, i + chunkSize);
         const { error: insertMemErr } = await admin.from('members').insert(chunk as any);
         if (insertMemErr) {
+          if (insertMemErr.message?.includes('schema cache') || insertMemErr.code === 'PGRST204') {
+            throw new Error(`Lỗi CSDL (${insertMemErr.message}): Bảng members bị thiếu cột hoặc chưa đồng bộ schema. Vui lòng vào Supabase SQL Editor và chạy file: supabase/migrations/20260907000000_db_sync_and_auth_trigger.sql`);
+          }
           throw new Error(`Lỗi lưu thành viên vào CSDL: ${insertMemErr.message}`);
         }
       }

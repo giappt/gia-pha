@@ -48,6 +48,7 @@ interface FamilyTreeCanvasProps {
   initialSpouseRelations: SpouseRelationRecord[];
   clanName: string;
   clanBranches?: BranchNode[];
+  rootAncestorId?: string | null;
 }
 
 const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
@@ -55,6 +56,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   initialSpouseRelations,
   clanName,
   clanBranches,
+  rootAncestorId,
 }) => {
   const { getNode, setCenter, fitView } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
@@ -171,8 +173,9 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
       showMaternalBranches,
       showInternalHusbands,
       focusRootId,
+      rootAncestorId,
     });
-  }, [activeMembers, activeSpouseRelations, showMaternalBranches, showInternalHusbands, focusRootId]);
+  }, [activeMembers, activeSpouseRelations, showMaternalBranches, showInternalHusbands, focusRootId, rootAncestorId]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<TreeNodeData>>(
     currentLayout.nodes as unknown as Node<TreeNodeData>[]

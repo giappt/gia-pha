@@ -63,6 +63,7 @@ export async function GET() {
     }
 
     const clan_name = devClanName || clanData?.clan_name || 'DÒNG HỌ NGUYỄN VĂN';
+    const root_ancestor_id = clanData?.root_ancestor_id || null;
     const default_kinship_region = clanData?.regional_preset || clanData?.default_kinship_region || 'north';
     const custom_kinship_dictionary = devCustomDict || clanData?.custom_kinship_dictionary || {};
     const branches = devBranches || (Array.isArray(clanData?.branches) ? clanData.branches : []);
@@ -77,6 +78,7 @@ export async function GET() {
       success: true,
       data: {
         clan_name,
+        root_ancestor_id,
         default_kinship_region,
         custom_kinship_dictionary,
         branch_tiers,
@@ -90,6 +92,7 @@ export async function GET() {
       success: true,
       data: {
         clan_name: devClanName || 'DÒNG HỌ NGUYỄN VĂN',
+        root_ancestor_id: null,
         default_kinship_region: 'north',
         custom_kinship_dictionary: {},
         branch_tiers: DEFAULT_BRANCH_TIERS,
@@ -233,6 +236,9 @@ export async function PATCH(request: Request) {
     if (feature_flags !== undefined) {
       updatePayload.feature_flags = feature_flags;
     }
+    if (body.root_ancestor_id !== undefined) {
+      updatePayload.root_ancestor_id = body.root_ancestor_id || null;
+    }
 
     // 3. Update Database with safety timeout
     try {
@@ -298,6 +304,7 @@ export async function PATCH(request: Request) {
       message: 'Cập nhật thông tin dòng họ thành công',
       data: {
         clan_name: clan_name || 'DÒNG HỌ NGUYỄN VĂN',
+        root_ancestor_id: updatePayload.root_ancestor_id !== undefined ? updatePayload.root_ancestor_id : (body.root_ancestor_id || null),
         default_kinship_region: updatePayload.regional_preset || 'north',
         custom_kinship_dictionary: custom_kinship_dictionary || {},
         branch_tiers: branch_tiers || DEFAULT_BRANCH_TIERS,
