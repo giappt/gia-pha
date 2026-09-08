@@ -127,9 +127,14 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
         <div className="min-w-0 flex-1">
           <p
             className="truncate text-[13px] font-bold text-slate-900 dark:text-slate-100"
-            title={fullName}
+            title={nodeData.aliasName ? `${fullName} (tên gọi khác: ${nodeData.aliasName})` : fullName}
           >
             {fullName}
+            {nodeData.aliasName && !fullName.includes(nodeData.aliasName) && (
+              <span className="font-normal text-slate-500 dark:text-slate-400 text-[11px] ml-1">
+                ({nodeData.aliasName})
+              </span>
+            )}
           </p>
           <p className="truncate text-[10px] text-slate-500 dark:text-slate-400">
             {nodeData.birthYear ? `SN: ${nodeData.birthYear}` : ''}

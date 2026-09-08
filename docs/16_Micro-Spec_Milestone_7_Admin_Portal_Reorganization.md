@@ -291,6 +291,21 @@ sequenceDiagram
 - [x] **TC_UT_EXCEL_LITE_TOPOLOGY_INTEGRITY (Kiểm chứng file gia_pha_ho_pham_van_lite.xlsx liên kết liền mạch từ Đời 1 đến Đời 13):**
   - **Mô tả:** File Excel sau khi bổ sung STT cha mẹ (STT 4 con STT 1&2, STT 6 con STT 4&5, STT 69 con STT 38&39, STT 122 con STT 69&70...) không có chu trình (cycle) và kết nối trọn vẹn 100% các nhánh về Cụ Tổ.
   - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
+- [x] **TC_UT_ALIAS_NAME_EXTRACTION (Kiểm chứng bóc tách Tên cúng cơm & Không ai là Con nuôi):**
+  - **Mô tả:** Kiểm tra 30 trường hợp có mở ngoặc đơn `(...)` được bóc tách vào `alias_name`, toàn bộ cờ `is_adopted = false` ('S') cho 100% thành viên (đặc biệt Cụ Phạm Văn Uyên mang tên cúng cơm là Nuôi, là con đẻ họ Phạm).
+  - **Trạng thái:** PASS (verified qua tests/root-setting-and-generation.test.ts).
+- [x] **TC_UT_NO_PLACEHOLDER_SPOUSES (Kiểm chứng loại bỏ 263 dòng phối ngẫu giữ chỗ trống):**
+  - **Mô tả:** File dữ liệu bóc tách loại bỏ sạch các dòng `Vợ: ` / `Chồng: ` rỗng, giảm từ 1,299 xuống đúng 1,036 thành viên thực thụ; các bạn trẻ (như Phạm Hải Nam, Phạm Hà Phương) giữ trạng thái độc thân, không bị gán vợ/chồng khuyết danh.
+  - **Trạng thái:** PASS (verified qua tests/root-setting-and-generation.test.ts).
+- [x] **TC_UT_MARITAL_NOTES_LIVING_STATUS (Kiểm chứng ghi chú hôn nhân không làm thay đổi trạng thái sinh tử):**
+  - **Mô tả:** Người có ghi chú `Lấy vợ` (Tạ Duy Hưng) và `Tái giá năm 2024` (Nguyễn Thị Kim) giữ trạng thái `Còn sống`, không bị bóc tách năm mất hay khai tử nhầm.
+  - **Trạng thái:** PASS (verified qua tests/root-setting-and-generation.test.ts).
+- [x] **TC_UT_PHU_THO_LIVING_STATUS (Kiểm chứng sửa lỗi bắt nhầm Phú Thọ thành Đã mất):**
+  - **Mô tả:** Thành viên có quê quán hoặc nơi ở là `ở Phú Thọ` hay `Phú Thọ – Hà Nội` thuộc thế hệ 11+ không bị nhận nhầm chữ "thọ" thành từ khóa qua đời, giữ nguyên trạng thái `Còn sống`.
+  - **Trạng thái:** PASS (verified qua tests/root-setting-and-generation.test.ts).
+- [x] **TC_UT_MULTI_SPOUSE_ORDER_TITLES (Kiểm chứng phân định Bà cả và Bà hai cho gia đình đa thê):**
+  - **Mô tả:** Cụ Thủy Tổ Phạm Văn Chiến có 2 vợ: Bà Hoàng Thị Mơ nhận danh xưng `🌸 Bà cả` (order 1) và Bà Đào Thị Liễu nhận danh xưng `🌸 Bà hai` (order 2), triệt tiêu lỗi cả 2 cùng mang danh xưng Bà cả.
+  - **Trạng thái:** PASS (verified qua tests/root-setting-and-generation.test.ts).
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
@@ -407,9 +422,27 @@ sequenceDiagram
   - STT 797 (Phạm Hà Phương): Bố = 436, Mẹ = 437.
 - Cập nhật API `POST /api/admin/import`: Khi import ở chế độ `clean`, tự động gán `clan_settings.root_ancestor_id` cho thành viên có `isRoot: true`.
 
+### 12.5. Mở Rộng Milestone 7.4: Chuẩn Hóa Bóc Tách Word, Tên Cúng Cơm & Trạng Thái Sinh Tử
+
+1. **Xử Lý Tên Cúng Cơm & Biệt Danh (`alias_name`):**
+   - Quét 30 trường hợp có mở ngoặc đơn `(...)` trong Họ và Tên (như `Phạm Văn Uyên (Nuôi)`).
+   - Tên trong ngoặc được trích xuất vào `alias_name` (ví dụ: `Nuôi`).
+   - Cột `is_adopted` mang giá trị `false` ('S') cho 100% thành viên họ Phạm. Tuyệt đối không nhầm lẫn tên cúng cơm với con nuôi.
+2. **Loại Bỏ Hàng Phối Ngẫu Giữ Chỗ (Placeholder Spouse Removal):**
+   - 263 dòng trong file Word chỉ có `Vợ:` hoặc `Chồng:` rỗng được bỏ qua hoàn toàn.
+   - Các con trai/con gái chưa kết hôn (như Phạm Hải Nam, Phạm Hà Phương, Phạm Tiến Giáp) giữ trạng thái độc thân, không sinh thêm node ma.
+   - Dữ liệu gia phả được tinh giản về đúng 1,036 thành viên thực thụ.
+3. **Chuẩn Hóa Trạng Thái Sinh Tử (Lấy Vợ, Tái Giá, Phú Thọ):**
+   - Các trường hợp Cột 4 ghi `Lấy vợ` (Tạ Duy Hưng) và `Tái giá năm 2024` (Nguyễn Thị Kim) được đưa vào ghi chú hôn nhân, không trích xuất ngày mất, mang trạng thái `Còn sống`.
+   - Các trường hợp địa danh có chữ "thọ" (như `ở Phú Thọ`, `Phú Thọ – Hà Nội`) không bị match nhầm từ khóa qua đời, mang trạng thái `Còn sống`.
+4. **Phân Định Danh Xưng Đa Thê (`🌸 Bà cả` / `🌸 Bà hai`):**
+   - API Import tự động phát hiện từ khóa `"Vợ cả"` $\rightarrow marriage\_order = 1$ và `"Vợ hai"` $\rightarrow marriage\_order = 2$.
+   - `genealogy-layout.ts` phân định rõ ràng `🌸 Bà cả` cho vợ 1 và `🌸 Bà hai` cho vợ 2.
+
 ---
 
 ## 13. LỆNH THI CÔNG (Dành cho AI /feature-code)
 
-> "AI ơi, hãy đọc kỹ đặc tả `docs/16_Micro-Spec_Milestone_7_Admin_Portal_Reorganization.md` này (đặc biệt là Mục 12 Mở Rộng 7.3). Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/root-setting-and-generation.test.ts`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build → Automated Test Suite → Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+> "AI ơi, hãy đọc kỹ đặc tả `docs/16_Micro-Spec_Milestone_7_Admin_Portal_Reorganization.md` này (đặc biệt là Mục 12 Mở Rộng 7.3 và 7.4). Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/root-setting-and-generation.test.ts`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build → Automated Test Suite → Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+
 

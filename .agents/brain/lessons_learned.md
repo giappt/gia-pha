@@ -144,3 +144,13 @@
      - Khi sau này tìm thấy cụ thân phụ đời cao hơn, người quản trị chỉ cần đổi Cụ Thủy Tổ trong Cài đặt → Toàn bộ cây đồ thị tự động tịnh tiến thế hệ (+1) trong tích tắc mà không phải chạy script sửa hàng ngàn dòng trong CSDL!
   4. *Khắc phục giới hạn trích xuất tài liệu Word/PDF:* Các tài liệu phả hệ Word (như `GIA PHẢ HỌ PHẠM VĂN.docx`) thường liệt kê dạng danh sách văn bản phẳng phân theo từng đời, hoàn toàn không có cột cha mẹ để suy diễn quan hệ huyết thống cho hơn 1.300 thành viên. AI tuyệt đối không được tự ý bịa đặt (hallucinate) cha mẹ cho toàn bộ dữ liệu. Thay vào đó, xây dựng bộ dữ liệu Lite được chuẩn hóa kỹ lưỡng (60 thành viên) với các STT cha mẹ kết nối liền mạch từ Đời 1 đến Đời 13 để làm dữ liệu chuẩn mực (Ground Truth).
 
+- **Trích Xuất Phả Hệ Văn Bản Word & Tinh Lọc Thực Thể Sạch (Word Docx Extraction & Ground Truth Cleansing):**
+  1. *Triệt tiêu 263 phối ngẫu ma giữ chỗ:* Trong văn bản phả đồ truyền thống, con trai/con gái trẻ tuổi chưa lập gia đình thường có dòng giữ chỗ trống `Vợ: ` hoặc `Chồng: `. Khi bóc tách, tuyệt đối KHÔNG sinh bản ghi `Bà (Vợ Cụ...)` hay `Ông (Chồng Bà...)` khuyết danh, mà phải bỏ qua để giữ trạng thái độc thân (`spouseStt = null`), giảm từ 1,299 dòng xuống đúng 1,036 thành viên thực thụ.
+  2. *Bóc tách Tên cúng cơm & Bảo toàn huyết thống:* Tên trong ngoặc đơn như `Phạm Văn Uyên (Nuôi)` là Tên cúng cơm / Biệt danh (`alias_name`), tuyệt đối KHÔNG đánh cờ `is_adopted = true` (con nuôi). 100% thành viên họ Phạm là con đẻ (`is_adopted = false`).
+  3. *Chống khai tử nhầm do Ghi chú Hôn nhân & Địa danh "Phú Thọ":*
+     - Cột ghi chú chứa `Lấy vợ`, `Tái giá năm 2024`, `Đi bước nữa` là sự kiện hôn nhân của người còn sống. Parser nhận diện các từ khóa hôn phối để chuyển vào `notes` thay vì trích xuất số năm thành `death_solar_year` và gán nhầm `Đã mất`.
+     - Bắt buộc dùng ranh giới từ `\b(thọ|hưởng thọ|hd)\s*\d+` khi kiểm tra tuổi thọ để tránh so khớp chuỗi con nhầm chữ "thọ" trong địa danh `"ở Phú Thọ"` hoặc `"Phú Thọ – Hà Nội"`, triệt tiêu lỗi gán nhầm người sống thành `Đã mất †`.
+  4. *Đa Thê & Phân Định Bà Cả - Bà Hai Tự Động:*
+     - Cột `STT Vợ/Chồng` hỗ trợ chuỗi nhiều STT phân cách bởi dấu phẩy (`2, 3`) cho người có nhiều vợ.
+     - Cổng Import và Engine Layout tự động suy luận thứ tự hôn phối: Vợ 1 là `🌸 Bà cả` (`marriage_order = 1`), Vợ 2 là `🌸 Bà hai` (`marriage_order = 2`), loại bỏ triệt để lỗi hai bà cùng mang danh xưng Bà cả.
+

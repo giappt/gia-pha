@@ -56,9 +56,16 @@ export async function POST(request: NextRequest) {
       }
       genMap.set(memberId, gen);
 
+      let aliasName: string | null = null;
+      const aliasMatch = r.fullName.match(/\((.*?)\)/);
+      if (aliasMatch) {
+        aliasName = aliasMatch[1].trim();
+      }
+
       membersToInsert.push({
         id: memberId,
         full_name: r.fullName,
+        alias_name: aliasName,
         gender: r.gender === 'Nam' ? 'male' : r.gender === 'Nữ' ? 'female' : 'other',
         life_status: r.lifeStatus === 'Đã mất' ? 'deceased' : 'living',
         father_id: fatherId,
@@ -78,24 +85,55 @@ export async function POST(request: NextRequest) {
         notes: r.notes || null,
       });
 
-      // Tạo quan hệ hôn phối nếu có
+      // Tạo quan hệ hôn phối nếu có (hỗ trợ cả dạng STT đơn và danh sách phân cách dấu phẩy như "2, 3")
       if (r.spouseStt != null) {
-        const spouseId = sttToUuid.get(String(r.spouseStt));
-        if (spouseId) {
-          // Tránh tạo 2 lần cùng một cặp
-          const alreadyAdded = spousesToInsert.some(
-            (s) =>
-              (s.member_a_id === memberId && s.member_b_id === spouseId) ||
-              (s.member_a_id === spouseId && s.member_b_id === memberId)
-          );
-          if (!alreadyAdded) {
-            spousesToInsert.push({
-              id: crypto.randomUUID(),
-              member_a_id: memberId,
-              member_b_id: spouseId,
-              marriage_order: 1,
-              marriage_status: 'married',
-            });
+        const spouseSttList = String(r.spouseStt)
+          .split(/[,;]/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+        for (const spStt of spouseSttList) {
+          const spouseId = sttToUuid.get(spStt);
+          if (spouseId) {
+            // Tránh tạo 2 lần cùng một cặp
+            const alreadyAdded = spousesToInsert.some(
+              (s) =>
+                (s.member_a_id === memberId && s.member_b_id === spouseId) ||
+                (s.member_a_id === spouseId && s.member_b_id === memberId)
+            );
+            if (!alreadyAdded) {
+              const spouseRow = sortedRows.find((sr) => String(sr.stt) === spStt);
+              const combinedNotes = `${r.notes || ''} ${spouseRow?.notes || ''}`;
+
+              let order = 1;
+              if (/vợ cả|bà cả/i.test(combinedNotes)) {
+                order = 1;
+              } else if (/vợ hai|bà hai|vợ 2/i.test(combinedNotes)) {
+                order = 2;
+              } else if (/vợ ba|bà ba|vợ 3/i.test(combinedNotes)) {
+                order = 3;
+              } else if (/vợ tư|bà tư|vợ 4/i.test(combinedNotes)) {
+                order = 4;
+              } else {
+                const husbandId = r.gender === 'Nam' ? memberId : spouseId;
+                const existingForHusband = spousesToInsert.filter(
+                  (s) => s.member_a_id === husbandId || s.member_b_id === husbandId
+                );
+                order = existingForHusband.length + 1;
+              }
+
+              const isMemberMale = r.gender === 'Nam';
+              const aId = isMemberMale ? memberId : spouseId;
+              const bId = isMemberMale ? spouseId : memberId;
+
+              spousesToInsert.push({
+                id: crypto.randomUUID(),
+                member_a_id: aId,
+                member_b_id: bId,
+                marriage_order: order,
+                marriage_status: 'married',
+              });
+            }
           }
         }
       }
@@ -105,14 +143,21 @@ export async function POST(request: NextRequest) {
     for (const r of sortedRows) {
       const memberId = sttToUuid.get(String(r.stt))!;
       if (r.spouseStt != null) {
-        const spouseId = sttToUuid.get(String(r.spouseStt));
-        if (spouseId && genMap.has(spouseId)) {
-          if (!r.fatherStt && !r.motherStt && !r.isRoot) {
-            const partnerGen = genMap.get(spouseId)!;
-            genMap.set(memberId, partnerGen);
-            const target = membersToInsert.find((m) => m.id === memberId);
-            if (target) {
-              target.generation_level = partnerGen;
+        const spouseSttList = String(r.spouseStt)
+          .split(/[,;]/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+        for (const spStt of spouseSttList) {
+          const spouseId = sttToUuid.get(spStt);
+          if (spouseId && genMap.has(spouseId)) {
+            if (!r.fatherStt && !r.motherStt && !r.isRoot) {
+              const partnerGen = genMap.get(spouseId)!;
+              genMap.set(memberId, partnerGen);
+              const target = membersToInsert.find((m) => m.id === memberId);
+              if (target) {
+                target.generation_level = partnerGen;
+              }
             }
           }
         }

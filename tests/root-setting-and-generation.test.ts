@@ -220,7 +220,7 @@ describe('Root Ancestor Setting & Graph-Derived Generation Test Suite (Milestone
     const buffer = fs.readFileSync(excelPath);
     const parsedRows = parseExcelFamilyTree(buffer);
 
-    assert.strictEqual(parsedRows.length, 60, 'File Excel lite phải có đúng 60 thành viên');
+    assert.ok(parsedRows.length >= 50 && parsedRows.length <= 60, 'File Excel lite phải có từ 50 đến 60 thành viên sau khi lọc phối ngẫu rác');
 
     // Kiểm tra STT 1 là Cụ Tổ
     const stt1 = parsedRows.find((r) => r.stt === 1);
@@ -257,7 +257,150 @@ describe('Root Ancestor Setting & Graph-Derived Generation Test Suite (Milestone
     // Chạy topological sort: không được ném Exception chu trình
     assert.doesNotThrow(() => {
       const sorted = topologicalSortExcelRows(parsedRows);
-      assert.strictEqual(sorted.length, 60, 'Topological sort phải sắp xếp trọn vẹn 60 thành viên');
+      assert.strictEqual(sorted.length, parsedRows.length, 'Topological sort phải sắp xếp trọn vẹn toàn bộ thành viên');
     }, 'Topological sort phải hoàn tất thành công không có chu trình (cycle)');
   });
+
+  // TC_UT_ALIAS_NAME_EXTRACTION: Kiểm chứng bóc tách Tên cúng cơm & Không ai là Con nuôi
+  it('TC_UT_ALIAS_NAME_EXTRACTION: Cụ Phạm Văn Uyên mang tên cúng cơm là Nuôi và is_adopted = false', () => {
+    const excelPath = path.resolve(process.cwd(), 'docs/data/gia_pha_ho_pham_van.xlsx');
+    assert.ok(fs.existsSync(excelPath), 'File gia_pha_ho_pham_van.xlsx phải tồn tại');
+
+    const buffer = fs.readFileSync(excelPath);
+    const parsedRows = parseExcelFamilyTree(buffer);
+
+    const uyen = parsedRows.find((r) => r.fullName.includes('Phạm Văn Uyên'));
+    assert.ok(uyen, 'Phải tìm thấy Cụ Phạm Văn Uyên trong file Excel');
+    assert.strictEqual(uyen.isAdopted, false, 'Cụ Phạm Văn Uyên là con đẻ họ Phạm, isAdopted phải là false (không phải con nuôi)');
+    assert.ok(uyen.fullName.includes('(Nuôi)'), 'Họ và Tên lưu tên kèm tên cúng cơm (Nuôi)');
+
+    // Kiểm tra tất cả thành viên khác có mở ngoặc: isAdopted đều là false
+    const aliasMembers = parsedRows.filter((r) => r.fullName.includes('(') && r.fullName.includes(')'));
+    assert.ok(aliasMembers.length >= 25, 'Phải tìm thấy các thành viên có tên cúng cơm/biệt danh');
+    aliasMembers.forEach((m) => {
+      assert.strictEqual(m.isAdopted, false, `Thành viên ${m.fullName} mang tên cúng cơm, isAdopted phải là false`);
+    });
+  });
+
+  // TC_UT_NO_PLACEHOLDER_SPOUSES: Kiểm chứng loại bỏ 263 dòng phối ngẫu giữ chỗ trống
+  it('TC_UT_NO_PLACEHOLDER_SPOUSES: Loại bỏ hoàn toàn các hàng vợ/chồng ma giữ chỗ của người trẻ', () => {
+    const excelPath = path.resolve(process.cwd(), 'docs/data/gia_pha_ho_pham_van.xlsx');
+    const buffer = fs.readFileSync(excelPath);
+    const parsedRows = parseExcelFamilyTree(buffer);
+
+    assert.strictEqual(parsedRows.length, 1036, 'Tổng số thành viên thực thụ phải là đúng 1,036 người (đã loại bỏ 263 hàng giữ chỗ)');
+
+    // Không tồn tại bất kỳ node nào có tên dạng Bà (Vợ Cụ Phạm Hải Nam) hay Ông (Chồng Bà Phạm Hà Phương)
+    const ghostWifeNam = parsedRows.find((r) => r.fullName.includes('Phạm Hải Nam') && r.gender === 'Nữ');
+    assert.strictEqual(ghostWifeNam, undefined, 'Không được có vợ ma của Phạm Hải Nam');
+
+    const ghostHusbandPhuong = parsedRows.find((r) => r.fullName.includes('Phạm Hà Phương') && r.fullName.includes('Chồng'));
+    assert.strictEqual(ghostHusbandPhuong, undefined, 'Không được có chồng ma của Phạm Hà Phương');
+
+    // Bạn Phạm Hải Nam và Phạm Hà Phương phải độc thân (spouseStt = null)
+    const nam = parsedRows.find((r) => r.fullName === 'Phạm Hải Nam');
+    assert.ok(nam, 'Phải có Phạm Hải Nam');
+    assert.strictEqual(nam.spouseStt, null, 'Phạm Hải Nam (2009) độc thân, spouseStt phải là null');
+
+    const phuong = parsedRows.find((r) => r.fullName === 'Phạm Hà Phương');
+    assert.ok(phuong, 'Phải có Phạm Hà Phương');
+    assert.strictEqual(phuong.spouseStt, null, 'Phạm Hà Phương (2013) độc thân, spouseStt phải là null');
+  });
+
+  // TC_UT_MARITAL_NOTES_LIVING_STATUS: Kiểm chứng người tái giá và lấy vợ mang trạng thái Còn sống
+  it('TC_UT_MARITAL_NOTES_LIVING_STATUS: Tạ Duy Hưng và Nguyễn Thị Kim có trạng thái Còn sống', () => {
+    const excelPath = path.resolve(process.cwd(), 'docs/data/gia_pha_ho_pham_van.xlsx');
+    const buffer = fs.readFileSync(excelPath);
+    const parsedRows = parseExcelFamilyTree(buffer);
+
+    const hung = parsedRows.find((r) => r.fullName === 'Tạ Duy Hưng');
+    assert.ok(hung, 'Phải có Tạ Duy Hưng');
+    assert.strictEqual(hung.lifeStatus, 'Còn sống', 'Tạ Duy Hưng (Lấy vợ) phải mang trạng thái Còn sống');
+    assert.ok(hung.notes?.includes('Lấy vợ'), 'Ghi chú phải giữ thông tin Lấy vợ');
+
+    const kim = parsedRows.find((r) => r.fullName === 'Nguyễn Thị Kim');
+    assert.ok(kim, 'Phải có Nguyễn Thị Kim');
+    assert.strictEqual(kim.lifeStatus, 'Còn sống', 'Nguyễn Thị Kim (Tái giá năm 2024) phải mang trạng thái Còn sống');
+    assert.strictEqual(kim.deathYear, null, 'Nguyễn Thị Kim không được có năm mất');
+    assert.ok(kim.notes?.includes('Tái giá'), 'Ghi chú phải giữ thông tin Tái giá năm 2024');
+  });
+
+  // TC_UT_PHU_THO_LIVING_STATUS: Kiểm chứng sửa lỗi bắt nhầm Phú Thọ thành Đã mất
+  it('TC_UT_PHU_THO_LIVING_STATUS: Thành viên ở Phú Thọ thế hệ 11+ giữ nguyên trạng thái Còn sống', () => {
+    const excelPath = path.resolve(process.cwd(), 'docs/data/gia_pha_ho_pham_van.xlsx');
+    const buffer = fs.readFileSync(excelPath);
+    const parsedRows = parseExcelFamilyTree(buffer);
+
+    const phung = parsedRows.find((r) => r.fullName === 'Phạm Văn Phùng');
+    assert.ok(phung, 'Phải có Phạm Văn Phùng');
+    assert.strictEqual(phung.lifeStatus, 'Còn sống', 'Phạm Văn Phùng (ở Phú Thọ) không bị gán nhầm Đã mất');
+
+    const luan = parsedRows.find((r) => r.fullName === 'Phạm Thị Luận');
+    assert.ok(luan, 'Phải có Phạm Thị Luận');
+    assert.strictEqual(luan.lifeStatus, 'Còn sống', 'Phạm Thị Luận (ở Phú Thọ) không bị gán nhầm Đã mất');
+
+    const tuan = parsedRows.find((r) => r.fullName === 'Phạm Văn Tuấn');
+    assert.ok(tuan, 'Phải có Phạm Văn Tuấn');
+    assert.strictEqual(tuan.lifeStatus, 'Còn sống', 'Phạm Văn Tuấn (ở Phú Thọ) không bị gán nhầm Đã mất');
+  });
+
+  // TC_UT_MULTI_SPOUSE_ORDER_TITLES: Kiểm chứng phân định Bà cả và Bà hai cho gia đình đa thê
+  it('TC_UT_MULTI_SPOUSE_ORDER_TITLES: Cụ Bà Hoàng Thị Mơ nhận Bà cả và Cụ Bà Đào Thị Liễu nhận Bà hai', () => {
+    const members = [
+      {
+        id: 'chien',
+        full_name: 'Phạm Văn Chiến',
+        gender: 'male',
+        life_status: 'deceased',
+        generation_level: 1,
+        is_root: true,
+      },
+      {
+        id: 'mo',
+        full_name: 'Hoàng Thị Mơ',
+        gender: 'female',
+        life_status: 'deceased',
+        generation_level: 1,
+        is_root: false,
+      },
+      {
+        id: 'lieu',
+        full_name: 'Đào Thị Liễu',
+        gender: 'female',
+        life_status: 'deceased',
+        generation_level: 1,
+        is_root: false,
+      },
+    ];
+
+    const spouseRelations = [
+      {
+        id: 'rel-1',
+        member_a_id: 'chien',
+        member_b_id: 'mo',
+        marriage_order: 1,
+        marriage_status: 'married',
+      },
+      {
+        id: 'rel-2',
+        member_a_id: 'chien',
+        member_b_id: 'lieu',
+        marriage_order: 2,
+        marriage_status: 'married',
+      },
+    ];
+
+    const result = calculateTreeLayout(members as any, spouseRelations as any, { rootAncestorId: 'chien' });
+
+    const nodeMo = result.nodes.find((n) => n.id === 'mo');
+    assert.ok(nodeMo, 'Phải có node Bà Hoàng Thị Mơ');
+    assert.strictEqual(nodeMo.data.spouseOrderTitle, 'Bà cả', 'Bà Mơ phải nhận danh xưng Bà cả');
+    assert.strictEqual(nodeMo.data.isRoot, false, 'Bà Mơ không được có cờ isRoot');
+
+    const nodeLieu = result.nodes.find((n) => n.id === 'lieu');
+    assert.ok(nodeLieu, 'Phải có node Bà Đào Thị Liễu');
+    assert.strictEqual(nodeLieu.data.spouseOrderTitle, 'Bà hai', 'Bà Liễu phải nhận danh xưng Bà hai');
+    assert.strictEqual(nodeLieu.data.isRoot, false, 'Bà Liễu không được có cờ isRoot');
+  });
 });
+

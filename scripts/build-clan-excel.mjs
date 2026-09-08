@@ -26,7 +26,24 @@ const EXCEL_COLUMNS = [
   'Ghi chú / Tiểu sử',
 ];
 
+// Lập bản đồ liên kết hôn phối hai chiều để hỗ trợ đa thê (ví dụ Cụ Chiến có vợ cả 2 và vợ hai 3)
+const spouseMap = new Map();
+rawData.forEach((m) => {
+  if (m.spouseStt) {
+    const listA = spouseMap.get(m.stt) || [];
+    if (!listA.includes(m.spouseStt)) listA.push(m.spouseStt);
+    spouseMap.set(m.stt, listA);
+
+    const listB = spouseMap.get(m.spouseStt) || [];
+    if (!listB.includes(m.stt)) listB.push(m.stt);
+    spouseMap.set(m.spouseStt, listB);
+  }
+});
+
 const excelRows = rawData.map((m) => {
+  const allSpouseStts = spouseMap.get(m.stt) || (m.spouseStt ? [m.spouseStt] : []);
+  const spouseSttStr = allSpouseStts.length > 0 ? allSpouseStts.join(', ') : '';
+
   return {
     'STT': m.stt,
     'Họ và Tên': m.fullName,
@@ -34,7 +51,7 @@ const excelRows = rawData.map((m) => {
     'Trạng thái': m.lifeStatus,
     'STT Bố': m.fatherStt ?? '',
     'STT Mẹ': m.motherStt ?? '',
-    'STT Vợ/Chồng': m.spouseStt ?? '',
+    'STT Vợ/Chồng': spouseSttStr,
     'Năm sinh': m.birthYear ?? '',
     'Ngày mất (Âm)': m.deathLunarDay ?? '',
     'Tháng mất (Âm)': m.deathLunarMonth ?? '',

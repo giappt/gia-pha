@@ -675,7 +675,7 @@ export function calculateTreeLayout(
             sp.gender === 'female' &&
             (unit.spouses.length > 1 || (rel?.marriage_order && rel.marriage_order > 1))
           ) {
-            const order = rel?.marriage_order ?? (idx + 1);
+            const order = (rel?.marriage_order && rel.marriage_order > 1) ? rel.marriage_order : (idx + 1);
             if (order === 1) spouseOrderTitle = 'Bà cả';
             else if (order === 2) spouseOrderTitle = 'Bà hai';
             else if (order === 3) spouseOrderTitle = 'Bà ba';
