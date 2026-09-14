@@ -94,6 +94,8 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
   const isMale = target.gender === 'male';
   const isDeceased = target.life_status === 'deceased';
   const isAnonymous = !!target.is_anonymous;
+  const cleanFullName = target.full_name?.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim() || target.full_name;
+  const effectiveAlias = target.alias_name || (target.full_name?.match(/[\(\[](.*?)[\)\]]/)?.[1]?.trim());
 
   return (
     <>
@@ -155,12 +157,12 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                 id="member-drawer-title"
                 className="text-lg font-bold text-slate-900 dark:text-slate-50 truncate"
               >
-                {target.full_name}
+                {cleanFullName}
               </h2>
 
-              {target.alias_name && (
+              {effectiveAlias && (
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                  Tự: <span className="italic font-medium">{target.alias_name}</span>
+                  Tức: <span className="italic font-medium">{effectiveAlias}</span>
                 </p>
               )}
 
@@ -209,6 +211,20 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                 {target.branch_name && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                     {target.branch_name}
+                  </span>
+                )}
+
+                {target.marital_status === 'remarried' && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">
+                    {target.gender === 'female' ? 'Tái giá' : 'Đã lấy vợ'}
+                    {target.marital_event_year ? ` (${target.marital_event_year})` : ''}
+                  </span>
+                )}
+
+                {target.marital_status === 'divorced' && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                    Ly hôn
+                    {target.marital_event_year ? ` (${target.marital_event_year})` : ''}
                   </span>
                 )}
               </div>
@@ -366,6 +382,16 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                           <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                             {member.full_name}
                           </span>
+                          {member.marital_status === 'remarried' && (
+                            <span className="text-[11px] font-normal text-rose-600 dark:text-rose-400 ml-1.5">
+                              ({member.gender === 'female' ? 'Tái giá' : 'Đã lấy vợ'}{member.marital_event_year ? ` ${member.marital_event_year}` : ''})
+                            </span>
+                          )}
+                          {member.marital_status === 'divorced' && (
+                            <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400 ml-1.5">
+                              (Ly hôn{member.marital_event_year ? ` ${member.marital_event_year}` : ''})
+                            </span>
+                          )}
                         </div>
                         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                       </div>

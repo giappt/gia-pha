@@ -599,6 +599,8 @@ export function calculateTreeLayout(
           deathLunarYearName: primary.death_lunar_year_name,
           motherName: unit.motherName,
           motherOrderTitle: unit.motherOrderTitle,
+          maritalStatus: primary.marital_status || undefined,
+          maritalEventYear: primary.marital_event_year || undefined,
         },
       });
     }
@@ -636,6 +638,8 @@ export function calculateTreeLayout(
             burialLocation: sp.burial_location,
             notes: sp.notes,
             deathLunarYearName: sp.death_lunar_year_name,
+            maritalStatus: sp.marital_status || undefined,
+            maritalEventYear: sp.marital_event_year || undefined,
           },
         });
 
@@ -709,6 +713,8 @@ export function calculateTreeLayout(
               notes: sp.notes,
               deathLunarYearName: sp.death_lunar_year_name,
               spouseOrderTitle,
+              maritalStatus: sp.marital_status || undefined,
+              maritalEventYear: sp.marital_event_year || undefined,
             },
           });
         }

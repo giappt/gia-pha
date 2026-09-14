@@ -31,8 +31,6 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
 
   const borderColor = isAnonymous
     ? 'border-dashed border-amber-400 dark:border-amber-600/70'
-    : isDeceased
-    ? 'border-slate-400/60 dark:border-slate-600/60'
     : isMale
     ? 'border-blue-500/50 hover:border-blue-500'
     : 'border-pink-500/50 hover:border-pink-500';
@@ -47,6 +45,16 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
 
   // Lấy 2 chữ cái đầu chuẩn hóa
   const initials = getMemberInitials(fullName, isAnonymous);
+
+  // Làm sạch tên nếu chứa ngoặc đơn/vuông (ví dụ "Phạm Văn Uyên (Nuôi)" -> "Phạm Văn Uyên")
+  const cleanFullName = fullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim() || fullName;
+  const aliasDisplay = nodeData.aliasName || (fullName.match(/[\(\[](.*?)[\)\]]/)?.[1]?.trim());
+
+  const birthDeathText = nodeData.birthYear || nodeData.deathYear
+    ? `${nodeData.birthYear ? `SN: ${nodeData.birthYear}` : ''}${
+        nodeData.deathYear ? ` - Mất: ${nodeData.deathYear}` : ''
+      }`.trim()
+    : nodeData.branchName || '';
 
   return (
     <div
@@ -111,7 +119,7 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
                 : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
             }`}
           >
-            {isDeceased ? '† Đã mất' : 'Còn sống'}
+            {isDeceased ? 'Đã mất' : 'Còn sống'}
           </span>
         )}
       </div>
@@ -124,22 +132,15 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
           {initials || <User className="w-4 h-4" />}
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 flex flex-col justify-center h-8">
           <p
-            className="truncate text-[13px] font-bold text-slate-900 dark:text-slate-100"
-            title={nodeData.aliasName ? `${fullName} (tên gọi khác: ${nodeData.aliasName})` : fullName}
+            className="truncate text-[13px] leading-tight font-bold text-slate-900 dark:text-slate-100"
+            title={aliasDisplay ? `${cleanFullName} (Tức: ${aliasDisplay})` : cleanFullName}
           >
-            {fullName}
-            {nodeData.aliasName && !fullName.includes(nodeData.aliasName) && (
-              <span className="font-normal text-slate-500 dark:text-slate-400 text-[11px] ml-1">
-                ({nodeData.aliasName})
-              </span>
-            )}
+            {cleanFullName}
           </p>
-          <p className="truncate text-[10px] text-slate-500 dark:text-slate-400">
-            {nodeData.birthYear ? `SN: ${nodeData.birthYear}` : ''}
-            {nodeData.deathYear ? ` - Mất: ${nodeData.deathYear}` : ''}
-            {!nodeData.birthYear && !nodeData.deathYear && (nodeData.branchName || 'Thành viên')}
+          <p className="truncate text-[10px] leading-[14px] h-[14px] text-slate-500 dark:text-slate-400">
+            {birthDeathText || '\u00A0'}
           </p>
         </div>
       </div>
@@ -173,9 +174,13 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
       ) : (
         <div className="flex items-center justify-between text-[9px] pt-1 mt-0.5 border-t border-slate-100/80 dark:border-slate-800/60 text-slate-400">
           <span className="truncate max-w-[120px]">
-            {nodeData.branchName || 'Huyết tộc'}
+            {nodeData.maritalStatus === 'remarried'
+              ? (nodeData.gender === 'female' ? 'Tái giá' : 'Đã lấy vợ')
+              : nodeData.maritalStatus === 'divorced'
+              ? 'Ly hôn'
+              : (nodeData.branchName || '')}
           </span>
-          {nodeData.childCount != null && nodeData.childCount > 0 && (
+          {!nodeData.inlawRole && nodeData.childCount != null && nodeData.childCount > 0 && (
             <span>{nodeData.childCount} người con</span>
           )}
         </div>

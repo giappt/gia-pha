@@ -61,7 +61,10 @@ export interface MemberFormData {
   // Trường liên kết phối ngẫu nhanh khi tạo mới
   spouse_id?: string | null;
   marriage_order?: number;
-  marriage_status?: 'married' | 'divorced' | 'widowed';
+  marriage_status?: 'married' | 'divorced' | 'widowed' | 'remarried';
+  // 🌟 BỔ SUNG (Brainstorm Tái giá / Lấy vợ): Tình trạng hôn nhân đặc biệt
+  marital_status?: 'remarried' | 'divorced' | null;
+  marital_event_year?: number | null;
   // 🌟 BỔ SUNG (UAT Brainstorm): Tạo phối ngẫu mới ngoài tộc tại chỗ (Inline Spouse Creation)
   new_spouse_name?: string | null;
   new_spouse_birth_year?: number | null;
@@ -581,6 +584,22 @@ sequenceDiagram
   - _Xử lý:_ Trong `MemberDetailDrawer.tsx`, tích hợp kiểm tra `canDeleteMember(member.id, allMembers)`: Nếu `childrenCount > 0`, vô hiệu hóa nút xóa (disabled) và hiển thị giải thích vi phạm chính sách Safe Delete RESTRICT. Chỉ cho phép xóa khi là Node Lá (0 con), đồng thời hiển thị hộp thoại xác nhận trước khi gọi `DELETE /api/members/[id]`.
 - **Edge Case 20: Import Excel nuốt lỗi Database trả về thành công ảo:**
   - _Xử lý:_ Trong `src/app/api/admin/import/route.ts`, loại bỏ triệt để cơ chế nuốt lỗi fallback giả lập khi `createAdminClient()` đã được khởi tạo. Mọi lỗi thao tác insert từ Supabase đều phải ném lỗi ngay (fail-fast) và trả về HTTP 500 kèm thông điệp lỗi cụ thể, bảo toàn tính liêm chính của CSDL.
+- **Edge Case 21: Thành viên Tái giá (Nữ) hoặc Đã lấy vợ khác (Nam):**
+  - _Xử lý:_ CSDL lưu `marital_status: 'remarried'` và `marital_event_year`. Form `MemberFormModal` tự động hiển thị nhãn `Tái giá` (với Nữ) hoặc `Đã lấy vợ` (với Nam) trên hàng phẳng (Flat & Inline, không lồng box). Thẻ Node `MemberNode` đặt nhãn tại chân thẻ bên trái thay thế chữ fallback "Huyết tộc", giữ nguyên 100% dòng năm sinh - mất ở Body và cố định sinh tử ở Header.
+- **Edge Case 22: Thành viên Ly hôn:**
+  - _Xử lý:_ CSDL lưu `marital_status: 'divorced'`. Chân thẻ `MemberNode` hiển thị nhãn `Ly hôn`.
+- **Edge Case 23: Triệt tiêu chữ fallback "Huyết tộc" và từ ngữ thừa thãi ("Thành viên", "Dâu họ"):**
+  - _Xử lý:_ Khi thành viên chưa được phân Chi nhánh trong CSDL, chân thẻ để trống hoàn toàn (rỗng `""`), không fallback thành chữ `"Huyết tộc"`. Xóa bỏ hoàn toàn chữ `"Dâu họ"`, `"Thành viên"` vô nghĩa. Thẻ người phối ngẫu để trống chân thẻ bên phải, không nhân đôi số lượng con cái.
+- **Edge Case 24: Cố định vị trí Y của Tên trên thẻ Node bất kể có hay không có năm sinh/mất:**
+  - _Xử lý:_ Trong `MemberNode.tsx`, container text được cố định chiều cao `h-8` (32px), khớp tuyệt đối với kích thước avatar 32x32px. Dòng 2 chứa năm sinh - năm mất được gán chiều cao cố định `h-[14px] leading-[14px]`. Khi thẻ không có năm sinh, năm mất và chi nhánh (như `Nguyễn Thị Kim`), dòng 2 render ký tự rỗng không vỡ `\u00A0`. Nhờ đó dòng 1 (Tên) luôn luôn neo ở cùng tọa độ Y trên 100% thẻ phả đồ, triệt tiêu hiện tượng so le lệch hàng.
+- **Edge Case 25: Viền thẻ người đã mất phân định theo giới tính & Xóa sạch ký tự thập `†`:**
+  - _Xử lý:_ Trong `MemberNode.tsx`, `borderColor` ưu tiên ánh xạ theo giới tính (`isMale ? blue : pink`) cho 100% thành viên bất kể sinh hay tử, giúp cây phả hệ phân biệt rõ Nam/Nữ trực quan. Khối avatar bên trong giữ nền xám trang trọng cho người đã khuất. Toàn bộ các nơi hiển thị nhãn sinh tử (`MemberNode`, `MemberFormModal`, `age-utils`) xóa bỏ hoàn toàn ký tự dấu thập `†`, thay thế bằng chữ `Đã mất` chuẩn thuần phong mỹ tục dòng họ.
+- **Edge Case 26: Avatar Initials trích xuất từ Tên chính sạch không dính ngoặc:**
+  - _Xử lý:_ Trong `src/lib/tree-layout/avatar-utils.ts`, hàm `getMemberInitials` thực hiện tiền xử lý lọc sạch toàn bộ nội dung nằm trong ngoặc tròn `(...)` hoặc ngoặc vuông `[...]` trước khi split từ. Với `Phạm Văn Uyên (Nuôi)`, chuỗi sạch là `Phạm Văn Uyên`, hệ thống lấy chữ cái đầu của Tên đệm (`Văn` $\rightarrow$ V) và Tên chính (`Uyên` $\rightarrow$ U) $\rightarrow$ sinh ra Initials chuẩn xác là **VU** (thay vì `U(`).
+- **Edge Case 27: Tách bạch triệt để Tên chính và Tên húy / Bí danh:**
+  - _Xử lý:_ Trong Form nhập liệu `MemberFormModal.tsx`, khi mở chế độ sửa hoặc khi người dùng nhập chuỗi có chứa ngoặc đơn `(...)`, hệ thống tự động bóc tách phần trong ngoặc vào ô `Tên húy / Tên tự / Bí danh` và làm sạch ô `Họ và Tên (*)` chỉ chứa tên chính. Khi submit form và khi import Excel, `full_name` lưu tên chính sạch, `alias_name` lưu tên húy. Trong `MemberDetailDrawer.tsx` và `MemberNode.tsx`, tiêu đề hiển thị tên chính sạch, triệt tiêu hiện tượng hiển thị lặp `(Nuôi)` ở 2 nơi.
+- **Edge Case 28: Đổi nhãn tiền tố `Tự:` thành `Tức:`:**
+  - _Xử lý:_ Trong `MemberDetailDrawer.tsx` và các tooltip liên quan, đổi tiền tố hiển thị tên húy/tên gọi ở nhà từ `Tự:` thành `Tức: <span ...>{alias_name}</span>`.
 
 ---
 
@@ -625,6 +644,17 @@ sequenceDiagram
 - [x] **TC_UT_DRAWER_SAFE_DELETE_STATUS** (Xác định khả năng xóa an toàn của node trên MemberDetailDrawer): `tests/graph-validation.test.ts` — PASS (0.35ms). Hàm `canDeleteMember` xác định đúng node có con không thể xóa (`canDelete: false`) và node lá có thể xóa (`canDelete: true`).
 - [x] **TC_UT_IMPORT_PAGE_GEOMETRY** (Trang /admin/import tuân thủ Crisp Architectural Geometry): `tests/theme-and-layout.test.ts` — PASS (1.95ms). Xác nhận trang import không còn class `rounded-2xl` hay `rounded-3xl`, toàn bộ thẻ card, dropzone, table preview dùng `rounded-lg` / `rounded-md`.
 - [x] **TC_INT_IMPORT_DB_ERROR_PROPAGATION** (API /api/admin/import ném lỗi HTTP 500 khi Supabase insert thất bại): `tests/member-api.test.ts` — PASS (0.78ms). Khi thao tác DB bị lỗi, API không nuốt lỗi mà trả về HTTP 500 kèm chi tiết lỗi.
+- [x] **TC_UT_MARITAL_01** (Kiểm chứng chỉ hỗ trợ 3 giá trị `remarried`, `divorced`, `null` & nhãn Tái giá): `tests/marital-status.test.ts` — PASS (3.72ms). Thẻ Node con dâu tái giá nạp đúng `maritalStatus="remarried"`, nhãn hiển thị "Tái giá" và loại bỏ fallback "Huyết tộc".
+- [x] **TC_UT_MARITAL_02** (Kiểm chứng tự động ánh xạ nhãn theo giới tính): `tests/marital-status.test.ts` — PASS (0.59ms). Nữ `remarried` $\rightarrow$ "Tái giá", Nam `remarried` $\rightarrow$ "Đã lấy vợ", `divorced` $\rightarrow$ "Ly hôn".
+- [x] **TC_UT_MARITAL_03** (Kiểm chứng thẻ Node dọn sạch chữ Huyết tộc & Dâu họ): `tests/marital-status.test.ts` — PASS (1.29ms). Thẻ thành viên chưa có chi để trống chân thẻ, không hiện "Huyết tộc"; chân thẻ hiển thị đúng "Tái giá" / "Đã lấy vợ"; chân thẻ bên phải người phối ngẫu để trống số con.
+- [x] **TC_UT_MARITAL_04** (Kiểm chứng bóc tách tự động Nguyễn Thị Kim và Tạ Duy Hưng mang trạng thái `remarried`): `tests/marital-status.test.ts` — PASS (38.28ms). Parser tự động nhận diện từ khóa `tái giá`, `lấy vợ`, `ly hôn` để gán `maritalStatus` và năm biến cố.
+- [x] **TC_UT_MARITAL_05** (Bảo toàn kích thước chuẩn 200x96px cho 100% node): `tests/marital-status.test.ts` — PASS (1.14ms). 100% các node mang tình trạng hôn nhân đặc biệt bảo toàn kích thước chuẩn 200 x 96 px.
+- [x] **TC_UT_AVATAR_NAME_WITH_PARENTHESES** (Avatar Initials lọc sạch ngoặc đơn/kép và tên húy): `tests/avatar-utils.test.ts` & `tests/ui-normalization-and-identity.test.ts` — PASS (1.10ms). Kiểm tra `getMemberInitials('Phạm Văn Uyên (Nuôi)') === 'VU'`, `getMemberInitials('Phạm Văn Cường (Cường Nhỏ)') === 'VC'`, `getMemberInitials('(Nuôi)') === 'NU'`.
+- [x] **TC_UT_NODE_NAME_Y_ANCHOR_RESERVE** (Thẻ Node bảo đảm chiều cao cố định 32px và slot 14px cho dòng 2): `tests/ui-normalization-and-identity.test.ts` — PASS (0.46ms). Container text trong `MemberNode.tsx` có chiều cao 32px và dòng 2 có slot 14px với fallback `\u00A0`.
+- [x] **TC_UT_DECEASED_GENDER_BORDER_COLOR** (Thẻ người đã mất giữ viền theo giới tính và không còn ký tự thập †): `tests/ui-normalization-and-identity.test.ts` — PASS (0.31ms). Thẻ người đã mất nam giới mang viền xanh (`border-blue-...`), nữ giới mang viền hồng (`border-pink-...`), badge hiển thị `Đã mất` không chứa `†`.
+- [x] **TC_UT_ALIAS_NAME_SEPARATION_CLEANSE** (Tự động làm sạch tên chính và bóc tách Tên húy/Bí danh): `tests/ui-normalization-and-identity.test.ts` — PASS (0.76ms). Chuỗi `Phạm Văn Uyên (Nuôi)` được tách thành `full_name = 'Phạm Văn Uyên'` và `alias_name = 'Nuôi'`.
+- [x] **TC_UT_DRAWER_TUC_LABEL** (MemberDetailDrawer hiển thị nhãn Tức: thay vì Tự:): `tests/ui-normalization-and-identity.test.ts` — PASS (0.33ms). Drawer render nhãn `Tức:` kèm `alias_name` và tiêu đề không bị lặp tên húy.
+- [x] **TC_UT_AGE_UTILS_NO_DAGGER** (Hàm calculateMemberAge không còn trả về ký tự †): `tests/ui-normalization-and-identity.test.ts` & `tests/age-utils.test.ts` — PASS (0.23ms). `calculateMemberAge(1920, null, 'deceased')` trả về nhãn `SN 1920 (Đã mất)` không chứa `†`.
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
@@ -665,6 +695,14 @@ sequenceDiagram
 - [ ] **UAT_32 (Thêm Dâu Nội Tộc Không Nhân Bản):** Mở Drawer của Tuấn $\rightarrow$ Bấm "+ Thêm phối ngẫu" $\rightarrow$ Chọn tab "🔗 Ghép nội tộc" $\rightarrow$ Chọn Mai $\rightarrow$ Bấm Lưu $\rightarrow$ Hệ thống gọi `POST /api/spouse-relations` thành công, CSDL không sinh thêm Mai thứ 2, Canvas hiển thị Ghost Node 🔗 cạnh Tuấn trỏ về Mai gốc.
 - [ ] **UAT_33 (Nút Xóa Node Lá Trên Drawer & Safe Delete Guard):** Mở Drawer của một con út (chưa có con) $\rightarrow$ Nút `[🗑️ Xóa hồ sơ]` màu đỏ bật sáng $\rightarrow$ Bấm nút $\rightarrow$ Popup Confirm mở ra $\rightarrow$ Xác nhận $\rightarrow$ Node biến mất khỏi cây và CSDL. Mở Drawer của người đã có con $\rightarrow$ Nút Xóa bị mờ (disabled) với tooltip giải thích chính sách Safe Delete.
 - [ ] **UAT_34 (Thẩm Mỹ Hình Học Trang Import):** Truy cập `/admin/import` $\rightarrow$ Toàn bộ thẻ card thống kê, vùng Dropzone kéo thả, bảng preview dữ liệu và alert hướng dẫn đều có bo góc thanh lịch `rounded-lg` (8px), triệt tiêu hoàn toàn góc bo tròn bong bóng `rounded-2xl`.
+- [ ] **UAT_35 (Form Thiết Lập Phẳng & Tự Đổi Nhãn Theo Giới Tính):** Mở `MemberFormModal`, chọn Nam $\rightarrow$ hiện nút `Đã lấy vợ`, chọn Nữ $\rightarrow$ hiện nút `Tái giá`; bấm vào hiện ô `Năm: [    ]` ngay trên hàng phẳng, không lồng box.
+- [ ] **UAT_36 (Thẻ Node Trên Cây Sạch Sẽ & Không Có Huyết Tộc/Dâu Họ):** Xem thẻ cây của người tái giá/lấy vợ $\rightarrow$ Footer bên trái hiện `Tái giá` / `Đã lấy vợ`; người bình thường chưa phân chi để trống hoàn toàn; thẻ dâu/rể không có chữ "Huyết tộc" hay "Thành viên"; số con chỉ hiện bên người chồng.
+- [ ] **UAT_37 (Drawer Chi Tiết Phẳng & Đúng Ngữ Cảnh Hôn Phối):** Mở Drawer của người có vợ tái giá $\rightarrow$ Danh sách Hôn phối hiển thị `• 🌸 Bà cả: Nguyễn Thị Kim — Tái giá (2024)` phẳng, thoáng mắt, không lồng box; mở Drawer của người tái giá hiển thị dòng thông tin gia đạo.
+- [ ] **UAT_38 (Cố Định Tọa Độ Y Tên Trên Thẻ Node):** So sánh trực quan thẻ `Nguyễn Thị Kim` (không có năm sinh/mất) và `Phạm Văn Cường` $\rightarrow$ Vị trí dòng Tên thẳng hàng tắp theo phương ngang, không bị lệch hay thụt dòng.
+- [ ] **UAT_39 (Màu Viền Giới Tính Người Đã Mất & Không Có Ký Tự †):** Kiểm tra thẻ Cụ Phạm Văn Cường (Đã mất, Nam) mang viền xanh nam tính, thẻ nữ đã mất mang viền hồng. Avatar icon bên trong mang màu xám trang trọng. Badge hiển thị chữ `Đã mất` sạch sẽ, không có dấu thập `†`.
+- [ ] **UAT_40 (Avatar Cụ Uyên Hiển Thị Đúng VU):** Trên cây phả hệ và trên Drawer, thẻ của Cụ Phạm Văn Uyên hiển thị avatar chữ cái đại diện là **VU** (thay vì `U(` trước đây).
+- [ ] **UAT_41 (Không Lặp Tên Húy Trên Drawer & Đổi Nhãn Tức):** Mở Drawer Cụ Phạm Văn Uyên $\rightarrow$ Tiêu đề hiển thị `Phạm Văn Uyên`, bên dưới hiển thị `Tức: Nuôi` (không bị lặp lại chữ Nuôi trên tiêu đề).
+- [ ] **UAT_42 (Form Tự Động Bóc Tách Họ Tên và Tên Húy):** Bấm sửa Cụ Phạm Văn Uyên $\rightarrow$ Ô `Họ và Tên (*)` hiển thị `Phạm Văn Uyên`, ô `Tên húy / Tên tự / Bí danh` hiển thị `Nuôi`. Nhãn trạng thái sinh tử hiển thị `Đã mất` (không có dấu thập `†`).
 
 ---
 
@@ -686,6 +724,10 @@ sequenceDiagram
 - [ ] **RG14 (Canvas Viewport Resilience):** Canvas `/tree` vẫn render 100% chiều cao màn hình, fitView hoạt động chuẩn xác, không bị sụp đổ chiều cao về 0px.
 - [ ] **RG15 (Bảo Toàn 78 Tests Cũ):** Toàn bộ 78 automated test cases trước đó tiếp tục PASS 100% khi chạy `npm test`.
 - [ ] **RG16 (Khay Chưa Nối Không Bị Ảnh Hưởng Bởi Safe Delete Trên Drawer):** Chức năng xóa trong `UnlinkedMembersDrawer` vẫn hoạt động độc lập và chính xác, không bị xung đột với nút xóa trên `MemberDetailDrawer`.
+- [x] **RG17 (Bảo Toàn 136 Tests Hiện Tại & Mở Rộng 141 Tests):** Chạy `npm test` đạt 141/141 tests PASS 100%, 0 regression so với Known_Failing_Baseline (none).
+- [x] **RG18 (Kích Thước Thẻ Node 200x96px Bất Biến):** Thẻ Node cây giữ nguyên kích thước chuẩn `w-[200px] h-[96px]`, không tràn viền sau khi thêm nhãn Tái giá / Đã lấy vợ tại chân thẻ (`TC_UT_MARITAL_05` pass).
+- [x] **RG19 (Bảo Toàn 141 Tests Hiện Tại & Mở Rộng 148 Tests):** Toàn bộ 148/148 automated test cases PASS 100% khi chạy `npm test`.
+- [x] **RG20 (Kích Thước Thẻ Node 200x96px Bất Biến):** Thẻ Node cây giữ nguyên kích thước chuẩn `w-[200px] h-[96px]`, không tràn viền sau khi cố định dòng tên và dòng 2 slot.
 
 ---
 

@@ -239,20 +239,36 @@ describe('Root Ancestor Setting & Graph-Derived Generation Test Suite (Milestone
     assert.strictEqual(stt6.fatherStt, 4, 'STT 6 (Phạm Kim Chức) có Bố = 4');
     assert.strictEqual(stt6.motherStt, 5, 'STT 6 (Phạm Kim Chức) có Mẹ = 5');
 
-    const stt69 = parsedRows.find((r) => r.stt === 69);
-    assert.ok(stt69, 'Phải có STT 69');
-    assert.strictEqual(stt69.fatherStt, 38, 'STT 69 (Phạm Kim Xây) có Bố = 38');
-    assert.strictEqual(stt69.motherStt, 39, 'STT 69 (Phạm Kim Xây) có Mẹ = 39');
+    const stt53 = parsedRows.find((r) => r.stt === 53);
+    assert.ok(stt53, 'Phải có STT 53');
+    assert.strictEqual(stt53.fullName, 'Phạm Kim Xây', 'STT 53 là Cụ Phạm Kim Xây');
+    assert.strictEqual(stt53.fatherStt, 32, 'STT 53 (Phạm Kim Xây) có Bố = 32 (Phạm Kim Lim)');
+    assert.strictEqual(stt53.motherStt, 33, 'STT 53 (Phạm Kim Xây) có Mẹ = 33 (Phạm Thị Ngọ)');
 
-    const stt122 = parsedRows.find((r) => r.stt === 122);
-    assert.ok(stt122, 'Phải có STT 122');
-    assert.strictEqual(stt122.fatherStt, 69, 'STT 122 (Phạm Văn Tiễu) có Bố = 69');
-    assert.strictEqual(stt122.motherStt, 70, 'STT 122 (Phạm Văn Tiễu) có Mẹ = 70');
+    const stt91 = parsedRows.find((r) => r.stt === 91);
+    assert.ok(stt91, 'Phải có STT 91');
+    assert.strictEqual(stt91.fullName, 'Phạm Văn Tiễu', 'STT 91 là Cụ Phạm Văn Tiễu');
+    assert.strictEqual(stt91.fatherStt, 53, 'STT 91 (Phạm Văn Tiễu) có Bố = 53');
+    assert.strictEqual(stt91.motherStt, 54, 'STT 91 (Phạm Văn Tiễu) có Mẹ = 54');
 
-    const stt795 = parsedRows.find((r) => r.stt === 795);
-    assert.ok(stt795, 'Phải có STT 795');
-    assert.strictEqual(stt795.fatherStt, 436, 'STT 795 (Phạm Hải Nam) có Bố = 436');
-    assert.strictEqual(stt795.motherStt, 437, 'STT 795 (Phạm Hải Nam) có Mẹ = 437');
+    const stt192 = parsedRows.find((r) => r.stt === 192);
+    assert.ok(stt192, 'Phải có STT 192');
+    assert.ok(stt192.fullName.includes('Phạm Văn Uyên'), 'STT 192 là Cụ Phạm Văn Uyên (Nuôi)');
+    assert.strictEqual(stt192.fatherStt, 91, 'STT 192 (Phạm Văn Uyên) có Bố = 91');
+    assert.strictEqual(stt192.motherStt, 92, 'STT 192 (Phạm Văn Uyên) có Mẹ = 92');
+
+    const stt673 = parsedRows.find((r) => r.stt === 673);
+    assert.ok(stt673, 'Phải có STT 673');
+    assert.strictEqual(stt673.fullName, 'Phạm Hải Nam', 'STT 673 là Phạm Hải Nam');
+    assert.strictEqual(stt673.fatherStt, 362, 'STT 673 (Phạm Hải Nam) có Bố = 362 (Phạm Văn Tráng)');
+    assert.strictEqual(stt673.motherStt, 363, 'STT 673 (Phạm Hải Nam) có Mẹ = 363 (Phạm Thị Thuý)');
+
+    // Kiểm tra đa thê của Cụ Phạm Kim Lim (STT 32) có 2 phối ngẫu 33, 34 trong file lite
+    const stt32 = parsedRows.find((r) => r.stt === 32);
+    assert.ok(stt32, 'Phải có STT 32 (Phạm Kim Lim)');
+    assert.strictEqual(stt32.spouseStt, '33, 34', 'Cụ Lim có 2 phối ngẫu 33 (Bà cả) và 34 (Bà hai)');
+    const stt34 = parsedRows.find((r) => r.stt === 34);
+    assert.ok(stt34, 'Phải có STT 34 (Phạm Thị Tý - Vợ hai)');
 
     // Chạy topological sort: không được ném Exception chu trình
     assert.doesNotThrow(() => {

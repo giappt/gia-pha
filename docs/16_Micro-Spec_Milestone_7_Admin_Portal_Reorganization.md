@@ -409,17 +409,20 @@ sequenceDiagram
   - Phối ngẫu của Cụ Tổ (Bà cả Hoàng Thị Mơ, Bà hai Đào Thị Liễu): Hiển thị danh xưng `🌸 Bà cả / Bà hai` và trạng thái `† Đã mất`.
   - Vợ của các đời sau: Mang đúng thế hệ của chồng (`Đời 2`, `Đời 3`, `Đời 4`, `Đời 5`...).
 
-### 12.4. Chuẩn Hóa File Dữ Liệu `docs/data/gia_pha_ho_pham_van_lite.xlsx` (60 Thành Viên)
-- Bổ sung đầy đủ STT Bố và STT Mẹ cho các nhánh chính:
+### 12.4. Chuẩn Hóa File Dữ Liệu `docs/data/gia_pha_ho_pham_van_lite.xlsx` (52 Thành Viên Tinh Gọn 13 Đời)
+- Đồng bộ toàn diện 100% dữ liệu chuẩn hóa mới nhất từ `docs/data/gia_pha_ho_pham_van.xlsx` (bản tổng 1,036 người) và tịnh tiến dãy STT:
   - STT 4 (Phạm Văn Đồng): Bố = 1, Mẹ = 2.
   - STT 6 (Phạm Kim Chức): Bố = 4, Mẹ = 5.
-  - STT 32 (Phạm Thị Loan): Bố = 15, Mẹ = 16.
-  - STT 34 (Phạm Thị Lan): Bố = 15, Mẹ = 16.
-  - STT 36 (Phạm Thị Phượng): Bố = 15, Mẹ = 16.
-  - STT 69 (Phạm Kim Xây): Bố = 38, Mẹ = 39.
-  - STT 122 (Phạm Văn Tiễu): Bố = 69, Mẹ = 70.
-  - STT 795 (Phạm Hải Nam): Bố = 436, Mẹ = 437.
-  - STT 797 (Phạm Hà Phương): Bố = 436, Mẹ = 437.
+  - STT 29 (Phạm Thị Loan): Bố = 15, Mẹ = 16. *(Trước đây là STT 32)*
+  - STT 30 (Phạm Thị Lan): Bố = 15, Mẹ = 16. *(Trước đây là STT 34)*
+  - STT 31 (Phạm Thị Phượng): Bố = 15, Mẹ = 16. *(Trước đây là STT 36)*
+  - STT 32 (Phạm Kim Lim): Bố = 19, Mẹ = 20, Vợ/Chồng = `33, 34`. *(Trước đây là STT 38)*
+  - STT 34 (Phạm Thị Tý - Vợ hai Cụ Lim): Bổ sung thành viên thứ 52 để khớp hoàn hảo đa thê.
+  - STT 53 (Phạm Kim Xây): Bố = 32, Mẹ = 33. *(Trước đây là STT 69)*
+  - STT 91 (Phạm Văn Tiễu): Bố = 53, Mẹ = 54. *(Trước đây là STT 122)*
+  - STT 192 (Phạm Văn Uyên - Nuôi): Bố = 91, Mẹ = 92. *(Trước đây là STT 245)*
+  - STT 673 (Phạm Hải Nam): Bố = 362, Mẹ = 363. *(Trước đây là STT 795)*
+  - STT 674 (Phạm Hà Phương): Bố = 362, Mẹ = 363. *(Trước đây là STT 797)*
 - Cập nhật API `POST /api/admin/import`: Khi import ở chế độ `clean`, tự động gán `clan_settings.root_ancestor_id` cho thành viên có `isRoot: true`.
 
 ### 12.5. Mở Rộng Milestone 7.4: Chuẩn Hóa Bóc Tách Word, Tên Cúng Cơm & Trạng Thái Sinh Tử

@@ -12,7 +12,12 @@ export function getMemberInitials(fullName?: string | null, isAnonymous?: boolea
   if (isAnonymous) return 'KD';
   if (!fullName || !fullName.trim()) return 'TV';
 
-  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  // Lọc sạch nội dung trong ngoặc đơn (...) hoặc ngoặc vuông [...] (tên húy, biệt danh, ghi chú)
+  const cleanName = fullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim();
+  const effectiveName = cleanName || fullName.replace(/[\(\[\]\)]/g, '').trim();
+  if (!effectiveName) return 'TV';
+
+  const words = effectiveName.split(/\s+/).filter(Boolean);
   if (words.length >= 2) {
     const secondLast = words[words.length - 2];
     const last = words[words.length - 1];

@@ -1,5 +1,6 @@
 export type Gender = 'male' | 'female' | 'other';
 export type LifeStatus = 'living' | 'deceased';
+export type MaritalStatus = 'remarried' | 'divorced';
 
 export interface MemberRecord {
   id: string;
@@ -28,6 +29,8 @@ export interface MemberRecord {
   death_lunar_year_name?: string | null;
   claimed_by?: string | null;
   avatar_url?: string | null;
+  marital_status?: MaritalStatus | null;
+  marital_event_year?: number | null;
 }
 
 export interface SpouseRelationRecord {
@@ -81,6 +84,8 @@ export interface TreeNodeData extends Record<string, any> {
   motherName?: string;
   motherOrderTitle?: string;
   spouseOrderTitle?: string;
+  maritalStatus?: MaritalStatus | null;
+  maritalEventYear?: number | null;
 }
 
 export interface ChildrenGroup {
@@ -184,7 +189,9 @@ export interface MemberFormData {
   notes?: string | null;
   spouse_id?: string | null;
   marriage_order?: number;
-  marriage_status?: 'married' | 'divorced' | 'widowed';
+  marriage_status?: 'married' | 'divorced' | 'widowed' | 'remarried';
+  marital_status?: MaritalStatus | null;
+  marital_event_year?: number | null;
   // Inline Spouse Creation (Dâu / Rể ngoài họ)
   new_spouse_name?: string | null;
   new_spouse_birth_year?: number | null;
@@ -215,6 +222,8 @@ export interface ExcelMemberRow {
   isRoot?: boolean;
   burialLocation?: string | null;
   notes?: string | null;
+  maritalStatus?: MaritalStatus | null;
+  maritalEventYear?: number | null;
   validationErrors: string[];
   validationWarnings: string[];
   isValid: boolean;

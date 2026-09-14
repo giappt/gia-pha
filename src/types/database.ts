@@ -11,6 +11,7 @@ export type Gender = 'male' | 'female' | 'other';
 export type LifeStatus = 'living' | 'deceased';
 export type RegionalPreset = 'north' | 'central' | 'south' | 'custom';
 export type ClaimStatus = 'pending' | 'approved' | 'rejected';
+export type MaritalStatus = 'remarried' | 'divorced';
 
 export interface BranchNode {
   id: string;
@@ -76,6 +77,8 @@ export interface Member {
   birth_order: number;
   is_senior_branch?: boolean | null;
   is_adopted?: boolean | null;
+  marital_status?: MaritalStatus | null;
+  marital_event_year?: number | null;
   spouse_ids?: string[];
   created_at: string;
   updated_at: string;

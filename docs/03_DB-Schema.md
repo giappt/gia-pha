@@ -89,6 +89,8 @@ Thực thể trung tâm của cây phả hệ. Mỗi người thực tế chỉ 
 | `is_adopted` | `BOOLEAN` | Required, Default: `false` | Đánh dấu con nuôi (phân biệt con đẻ / con nuôi) |
 | `is_anonymous` | `BOOLEAN` | Required, Default: `false` | Đánh dấu Thành viên Khuyết Danh (không rõ tên trong phả cũ) |
 | `branch_name` | `VARCHAR(100)` | Nullable | Tên nhánh hiển thị (hỗ trợ nhập Excel / cache giao diện) |
+| `marital_status` | `VARCHAR(30)` | Nullable, Check (`remarried`, `divorced`) | Tình trạng hôn nhân đặc biệt (remarried: Tái giá / Đã lấy vợ; divorced: Ly hôn) |
+| `marital_event_year` | `INTEGER` | Nullable | Năm diễn ra biến cố hôn nhân (năm tái giá / lấy vợ / ly hôn) |
 | `created_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm tạo |
 | `updated_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm cập nhật cuối |
 
@@ -103,7 +105,7 @@ Lưu trữ các cặp vợ chồng trong dòng họ. Hỗ trợ trường hợp 
 | `member_a_id` | `UUID` | Required, Index | Khóa ngoại $\rightarrow$ `members(id)` |
 | `member_b_id` | `UUID` | Required, Index | Khóa ngoại $\rightarrow$ `members(id)` |
 | `marriage_order` | `SMALLINT` | Required, Default: `1` | Thứ tự vợ/chồng (1: Vợ cả, 2: Vợ hai...) |
-| `marriage_status` | `VARCHAR(20)` | Required, Default: `married`, Check (`married`, `divorced`, `widowed`) | Tình trạng hôn nhân |
+| `marriage_status` | `VARCHAR(20)` | Required, Default: `married`, Check (`married`, `divorced`, `widowed`, `remarried`) | Tình trạng hôn nhân |
 | `notes` | `TEXT` | Nullable | Ghi chú về cuộc hôn phối |
 | `created_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm tạo |
 | `updated_at` | `TIMESTAMPTZ` | Required, Default: `now()` | Thời điểm cập nhật cuối |
@@ -250,5 +252,6 @@ Tuân thủ nguyên tắc Tài liệu Cặp `[R-IMPACT]`, mọi thay đổi tron
 | `2026-09-03` | `supabase/migrations/20260903000000_init_schema.sql` | Khởi tạo cấu trúc 4 bảng: `clan_settings`, `members`, `spouse_relations`, `users`. | Khởi tạo ban đầu (chưa có `is_adopted`, `is_senior`). |
 | `2026-09-07` | `supabase/migrations/20260907000000_db_sync_and_auth_trigger.sql` | Bổ sung `members.is_senior`, `members.is_anonymous`, `members.branch_name`; `clan_settings.branch_tiers`, `clan_settings.feature_flags`; Google OAuth trigger `handle_new_user()`. | Đã apply trên CSDL Supabase. |
 | `2026-09-07` | `supabase/migrations/20260907000001_add_is_adopted_column.sql` | Bổ sung `members.is_adopted` (`BOOLEAN NOT NULL DEFAULT FALSE`). | **Khớp 100% với Schema** (Triệt tiêu lỗi Schema Cache `PGRST204` khi import Excel). |
+| `2026-09-11` | `supabase/migrations/20260911000000_add_marital_status_and_year.sql` | Bổ sung `members.marital_status`, `members.marital_event_year`; mở rộng `spouse_relations.marriage_status` thêm `'remarried'`. | Chờ thi công tại `/feature-code`. |
 
 

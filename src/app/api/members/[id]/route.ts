@@ -202,6 +202,8 @@ export async function PUT(
       is_root: body.is_root !== undefined ? body.is_root : currentMember.is_root,
       burial_location: body.burial_location !== undefined ? body.burial_location : currentMember.burial_location,
       notes: body.notes !== undefined ? body.notes : currentMember.notes,
+      marital_status: body.marital_status !== undefined ? (body.marital_status || null) : currentMember.marital_status,
+      marital_event_year: body.marital_event_year !== undefined ? (body.marital_event_year != null ? Number(body.marital_event_year) : null) : currentMember.marital_event_year,
     };
 
     let newSpouse: MemberRecord | undefined;

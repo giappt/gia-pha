@@ -56,15 +56,17 @@ export async function POST(request: NextRequest) {
       }
       genMap.set(memberId, gen);
 
+      let cleanFullName = r.fullName;
       let aliasName: string | null = null;
-      const aliasMatch = r.fullName.match(/\((.*?)\)/);
+      const aliasMatch = r.fullName.match(/[\(\[](.*?)[\)\]]/);
       if (aliasMatch) {
         aliasName = aliasMatch[1].trim();
+        cleanFullName = r.fullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim();
       }
 
       membersToInsert.push({
         id: memberId,
-        full_name: r.fullName,
+        full_name: cleanFullName || r.fullName,
         alias_name: aliasName,
         gender: r.gender === 'Nam' ? 'male' : r.gender === 'Nữ' ? 'female' : 'other',
         life_status: r.lifeStatus === 'Đã mất' ? 'deceased' : 'living',
@@ -83,6 +85,8 @@ export async function POST(request: NextRequest) {
         is_adopted: !!r.isAdopted,
         burial_location: r.burialLocation || null,
         notes: r.notes || null,
+        marital_status: r.maritalStatus || null,
+        marital_event_year: r.maritalEventYear || null,
       });
 
       // Tạo quan hệ hôn phối nếu có (hỗ trợ cả dạng STT đơn và danh sách phân cách dấu phẩy như "2, 3")

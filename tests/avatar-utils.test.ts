@@ -30,4 +30,15 @@ describe('Avatar Initials Unit Test Suite (Milestone 5 Enhancement)', () => {
     assert.strictEqual(getMemberInitials(null), 'TV');
     assert.strictEqual(getMemberInitials(undefined), 'TV');
   });
+
+  // TC_UT_AVATAR_NAME_WITH_PARENTHESES: Lọc sạch nội dung trong ngoặc đơn/kép và tên húy trước khi tính initials
+  it('TC_UT_AVATAR_NAME_WITH_PARENTHESES: Avatar Initials lọc sạch ngoặc đơn/kép và tên húy', () => {
+    // Cụ Phạm Văn Uyên (Nuôi) -> Tên sạch: Phạm Văn Uyên -> Đệm Văn + Tên Uyên -> VU
+    assert.strictEqual(getMemberInitials('Phạm Văn Uyên (Nuôi)'), 'VU');
+    assert.strictEqual(getMemberInitials('Phạm Văn Cường (Cường Nhỏ)'), 'VC');
+    assert.strictEqual(getMemberInitials('Nguyễn Thị Kim [Kim Oanh]'), 'TK');
+    // Trường hợp tên chỉ có ngoặc đơn: (Nuôi) -> bóc tách ra Nuôi -> NU
+    assert.strictEqual(getMemberInitials('(Nuôi)'), 'NU');
+    assert.strictEqual(getMemberInitials('[Bé Bự]'), 'BB');
+  });
 });

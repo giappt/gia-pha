@@ -20,7 +20,7 @@ import {
   Lock,
   Info,
 } from 'lucide-react';
-import { MemberRecord, SpouseRelationRecord, MemberFormData, Gender, LifeStatus } from '@/types/tree';
+import { MemberRecord, SpouseRelationRecord, MemberFormData, Gender, LifeStatus, MaritalStatus } from '@/types/tree';
 import { validateNoCycle, detectConsanguinity, validateParentChildAge } from '@/lib/tree-layout/graph-validation';
 import { KINSHIP_TERMS } from '@/constants/kinship-terms';
 
@@ -102,6 +102,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
   const [newSpouseBirthYear, setNewSpouseBirthYear] = useState('');
   const [newSpouseMarriageOrder, setNewSpouseMarriageOrder] = useState<number>(1);
   const [spouseId, setSpouseId] = useState<string>('');
+  const [maritalStatus, setMaritalStatus] = useState<MaritalStatus | null>(null);
+  const [maritalEventYear, setMaritalEventYear] = useState<string>('');
 
   // 4. Hậu duệ (Con cái)
   const [selectedChildIdsToLink, setSelectedChildIdsToLink] = useState<string[]>([]);
@@ -134,8 +136,18 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
     setSelectedChildIdsToLink([]);
 
     if (mode === 'edit' && initialData) {
-      setFullName(initialData.full_name || '');
-      setAliasName(initialData.alias_name || '');
+      let rawFullName = initialData.full_name || '';
+      let rawAlias = initialData.alias_name || '';
+      // Tự động bóc tách tên húy/biệt danh nếu tên chính có chứa ngoặc đơn hoặc ngoặc vuông
+      const match = rawFullName.match(/[\(\[](.*?)[\)\]]/);
+      if (match) {
+        if (!rawAlias) {
+          rawAlias = match[1].trim();
+        }
+        rawFullName = rawFullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim();
+      }
+      setFullName(rawFullName);
+      setAliasName(rawAlias);
       setGender(initialData.gender || 'male');
       setLifeStatus(initialData.life_status || 'living');
       setBirthYear(initialData.birth_year ? String(initialData.birth_year) : '');
@@ -168,6 +180,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
       }
       setNewSpouseName('');
       setNewSpouseBirthYear('');
+      setMaritalStatus(initialData.marital_status || null);
+      setMaritalEventYear(initialData.marital_event_year ? String(initialData.marital_event_year) : '');
     } else {
       // Chế độ Create mới
       setFullName('');
@@ -184,6 +198,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
       setIsAdopted(false);
       setIsRoot(defaultRole === 'root');
       setNotes('');
+      setMaritalStatus(null);
+      setMaritalEventYear('');
       setShowSeniorConfirmModal(false);
       setExistingSeniorName('');
 
@@ -504,10 +520,20 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
         ? (marriageOrder || 1)
         : (newSpouseMarriageOrder || 1);
 
+    let cleanedFullName = fullName.trim();
+    let finalAliasName = aliasName.trim() || null;
+    const autoAlias = cleanedFullName.match(/[\(\[](.*?)[\)\]]/);
+    if (autoAlias) {
+      if (!finalAliasName) {
+        finalAliasName = autoAlias[1].trim();
+      }
+      cleanedFullName = cleanedFullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim();
+    }
+
     const formData: MemberFormData = {
       id: mode === 'edit' && initialData?.id ? initialData.id : undefined,
-      full_name: fullName.trim(),
-      alias_name: aliasName.trim() || null,
+      full_name: cleanedFullName,
+      alias_name: finalAliasName,
       gender,
       life_status: lifeStatus,
       birth_year: birthYear ? Number(birthYear) : null,
@@ -525,6 +551,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
       is_root: isRoot,
       burial_location: lifeStatus === 'deceased' && burialLocation.trim() ? burialLocation.trim() : null,
       notes: notes.trim() || null,
+      marital_status: maritalStatus,
+      marital_event_year: maritalEventYear ? Number(maritalEventYear) : null,
       spouse_id: effectiveSpouseId,
       new_spouse_name: defaultRole !== 'child' && spouseMode === 'new' && newSpouseName.trim() ? newSpouseName.trim() : null,
       new_spouse_birth_year: defaultRole !== 'child' && spouseMode === 'new' && newSpouseBirthYear ? Number(newSpouseBirthYear) : null,
@@ -733,6 +761,63 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                 </button>
               </div>
 
+              {/* Tình trạng hôn nhân phẳng */}
+              <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-800/60 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Tình trạng hôn nhân:
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMaritalStatus(null);
+                      setMaritalEventYear('');
+                    }}
+                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
+                      maritalStatus === null
+                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold'
+                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    Bình thường
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMaritalStatus('divorced')}
+                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
+                      maritalStatus === 'divorced'
+                        ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
+                        : 'text-slate-500 hover:text-amber-700 dark:text-slate-400'
+                    }`}
+                  >
+                    Ly hôn
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMaritalStatus('remarried')}
+                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
+                      maritalStatus === 'remarried'
+                        ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-bold border border-rose-300 dark:border-rose-700'
+                        : 'text-slate-500 hover:text-rose-700 dark:text-slate-400'
+                    }`}
+                  >
+                    {gender === 'female' ? 'Tái giá' : 'Đã lấy vợ'}
+                  </button>
+                  {maritalStatus && (
+                    <div className="flex items-center gap-1 ml-2">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Năm:</span>
+                      <input
+                        type="number"
+                        value={maritalEventYear}
+                        onChange={(e) => setMaritalEventYear(e.target.value)}
+                        placeholder="VD: 2024"
+                        className="w-20 px-2 py-0.5 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-900/10"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {spouseOrigin === 'internal' && (
                 <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-800/60">
                   <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1 text-xs">
@@ -868,6 +953,15 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  onBlur={() => {
+                    const match = fullName.match(/[\(\[](.*?)[\)\]]/);
+                    if (match) {
+                      if (!aliasName) {
+                        setAliasName(match[1].trim());
+                      }
+                      setFullName(fullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim());
+                    }
+                  }}
                   placeholder="VD: Nguyễn Văn Nam"
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
                 />
@@ -1078,8 +1172,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
             </div>
           )}
 
-          {/* KHỐI 3: PHỐI NGẪU (VỢ / CHỒNG) - Chỉ hiển thị trong chế độ chung hoặc edit */}
-          {defaultRole !== 'child' && defaultRole !== 'spouse' && (
+          {/* KHỐI 3: PHỐI NGẪU (VỢ / CHỒNG) - Hiển thị trong chế độ chung hoặc edit */}
+          {(mode === 'edit' || (defaultRole !== 'child' && defaultRole !== 'spouse')) && (
             <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
               <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 3. {KINSHIP_TERMS.SPOUSE.toUpperCase()} (VỢ / CHỒNG)
@@ -1193,6 +1287,63 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                   </select>
                 </div>
               )}
+
+              {/* Tình trạng hôn nhân phẳng */}
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Tình trạng hôn nhân:
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMaritalStatus(null);
+                      setMaritalEventYear('');
+                    }}
+                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
+                      maritalStatus === null
+                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold'
+                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    Bình thường
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMaritalStatus('divorced')}
+                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
+                      maritalStatus === 'divorced'
+                        ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
+                        : 'text-slate-500 hover:text-amber-700 dark:text-slate-400'
+                    }`}
+                  >
+                    Ly hôn
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMaritalStatus('remarried')}
+                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
+                      maritalStatus === 'remarried'
+                        ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-bold border border-rose-300 dark:border-rose-700'
+                        : 'text-slate-500 hover:text-rose-700 dark:text-slate-400'
+                    }`}
+                  >
+                    {gender === 'female' ? 'Tái giá' : 'Đã lấy vợ'}
+                  </button>
+                  {maritalStatus && (
+                    <div className="flex items-center gap-1 ml-2">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Năm:</span>
+                      <input
+                        type="number"
+                        value={maritalEventYear}
+                        onChange={(e) => setMaritalEventYear(e.target.value)}
+                        placeholder="VD: 2024"
+                        className="w-20 px-2 py-0.5 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-900/10"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -1421,7 +1572,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
-                  <span>†</span> Đã mất
+                  Đã mất
                 </button>
               </div>
             </div>

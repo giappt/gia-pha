@@ -22,6 +22,8 @@ export const EXCEL_COLUMNS = [
   'Cụ Tổ (Đ/S)',
   'Nơi an táng',
   'Ghi chú / Tiểu sử',
+  'Tình trạng hôn nhân',
+  'Năm hôn nhân',
 ];
 
 /**
@@ -98,10 +100,36 @@ export function parseExcelFamilyTree(data: ArrayBuffer | Buffer | Uint8Array): E
       isRoot,
       burialLocation: row['Nơi an táng'] ? String(row['Nơi an táng']).trim() : null,
       notes: row['Ghi chú / Tiểu sử'] ? String(row['Ghi chú / Tiểu sử']).trim() : null,
+      maritalStatus: null,
+      maritalEventYear: parseNum(row['Năm hôn nhân']),
       validationErrors: [],
       validationWarnings: [],
       isValid: true,
     };
+
+    // Tự động nhận diện tình trạng hôn nhân từ cột riêng hoặc ghi chú
+    const rawMarital = String(row['Tình trạng hôn nhân'] || row['Hôn nhân'] || '').trim();
+    const rawNotes = memberRow.notes || '';
+
+    const detectMarital = (text: string) => {
+      const lower = text.toLowerCase();
+      if (lower.includes('tái giá') || lower.includes('lấy vợ')) {
+        memberRow.maritalStatus = 'remarried';
+        const m = text.match(/(?:tái giá|lấy vợ)[^\d]*(\d{4})/i) || text.match(/(\d{4})/);
+        if (m && !memberRow.maritalEventYear) {
+          memberRow.maritalEventYear = Number(m[1]);
+        }
+      } else if (lower.includes('ly hôn') || lower.includes('li hôn')) {
+        memberRow.maritalStatus = 'divorced';
+        const m = text.match(/(?:ly hôn|li hôn)[^\d]*(\d{4})/i) || text.match(/(\d{4})/);
+        if (m && !memberRow.maritalEventYear) {
+          memberRow.maritalEventYear = Number(m[1]);
+        }
+      }
+    };
+
+    if (rawMarital) detectMarital(rawMarital);
+    if (rawNotes) detectMarital(rawNotes);
 
     parsedRows.push(memberRow);
   });

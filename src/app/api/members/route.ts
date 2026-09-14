@@ -156,6 +156,8 @@ export async function POST(request: NextRequest) {
       is_adopted: !!body.is_adopted,
       burial_location: body.burial_location || null,
       notes: body.notes || null,
+      marital_status: body.marital_status || null,
+      marital_event_year: body.marital_event_year != null ? Number(body.marital_event_year) : null,
     };
 
     let newSpouse: MemberRecord | undefined;

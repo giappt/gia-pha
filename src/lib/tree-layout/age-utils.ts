@@ -40,7 +40,7 @@ export function calculateMemberAge(
     return {
       solarAge: null,
       lunarAge: null,
-      displayLabel: `SN ${birthYear} (†)`,
+      displayLabel: `SN ${birthYear} (Đã mất)`,
       tooltipText: `Sinh năm ${birthYear} (Đã mất, chưa rõ năm mất)`,
       isDeceased: true,
     };

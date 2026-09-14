@@ -32,7 +32,7 @@ describe('Age Calculation Suite (Tuổi Dương & Tuổi Mụ)', () => {
     assert.ok(res !== null);
     assert.strictEqual(res.solarAge, null);
     assert.strictEqual(res.lunarAge, null);
-    assert.strictEqual(res.displayLabel, 'SN 1920 (†)');
+    assert.strictEqual(res.displayLabel, 'SN 1920 (Đã mất)');
   });
 
   // TC_UT_AGE_CALC_04: Người không có năm sinh

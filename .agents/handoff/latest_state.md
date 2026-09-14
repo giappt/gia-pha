@@ -1,43 +1,44 @@
 # STATE MANIFEST
 
 ### 1. Key Context
-- **Mục tiêu phiên làm việc vừa hoàn tất:** Tinh lọc toàn diện dữ liệu trích xuất từ tài liệu Word phả hệ (`GIA PHẢ HỌ PHẠM VĂN.docx`) sang Excel và CSDL, hoàn thiện Milestone 7 & Extension 7.4.
-- **Git State:** User vừa commit `fix milestone 7` (hash: `b113dfb`) và push thành công lên `origin/main` (GitHub: `giappt/gia-pha.git`). Workspace hoàn toàn sạch sẽ (Clean working tree).
-- **Các quyết định kỹ thuật cốt lõi vừa triển khai:**
-  1. **Đa thê & Phân định Bà cả - Bà hai:** Phối ngẫu đa thê của Cụ Thủy Tổ Phạm Văn Chiến đã được phân cấp tuần tự: Cụ Bà Hoàng Thị Mơ (`🌸 Bà cả`, `marriage_order = 1`), Cụ Bà Đào Thị Liễu (`🌸 Bà hai`, `marriage_order = 2`). API `/api/admin/import` tự động phân tách chuỗi `spouseStt: "2, 3"`, tự động gán `marriage_order` tăng dần; lõi `genealogy-layout.ts` có cơ chế phòng vệ chống trùng lặp danh xưng.
-  2. **Triệt tiêu 263 phối ngẫu ma giữ chỗ:** Script `extract_genealogy.py` loại bỏ 100% dòng rác chỉ chứa `Vợ: ` hoặc `Chồng: `, giảm dữ liệu từ 1,299 xuống đúng 1,036 thành viên thực thụ (`docs/data/gia_pha_ho_pham_van.xlsx`). File lite (`docs/data/gia_pha_ho_pham_van_lite.xlsx`) tinh gọn còn 52 dòng sạch sẽ kết nối 13 đời. Các thanh thiếu niên độc thân (Phạm Hải Nam, Phạm Hà Phương) không còn bị sinh ra vợ/chồng ma.
-  3. **Tên cúng cơm (`alias_name`) & Khẳng định con đẻ:** 30 trường hợp có mở ngoặc `(...)` như `Phạm Văn Uyên (Nuôi)` được bóc tách vào `alias_name`. Toàn bộ 1,036 thành viên có `is_adopted = false` ('S'), triệt tiêu hoàn toàn lỗi hiểu nhầm Cụ Uyên thành con nuôi. `MemberNode.tsx` hiển thị trang trọng `(Tên cúng cơm: Nuôi)` kèm tooltip.
-  4. **Bảo vệ người sống trước ghi chú hôn nhân & địa danh Phú Thọ:** Cột ghi chú chứa `Lấy vợ`, `Tái giá năm 2024` được đưa vào `notes` của người `Còn sống`, không bóc tách nhầm năm mất. Regex nhận diện tử tuất áp dụng ranh giới từ `\b(thọ|hưởng thọ|hd)\s*\d+` triệt tiêu lỗi bắt nhầm từ "thọ" trong `"ở Phú Thọ"`, giữ nguyên trạng thái `Còn sống` cho người trẻ tuổi.
-- **Các file đang mở & liên quan mật thiết:**
-  - `d:\pj\other\fat\.agents\handoff\latest_state.md`
-  - `d:\pj\other\fat\src\app\tree\page.tsx`
-  - `d:\pj\other\fat\src\components\tree\FamilyTreeCanvas.tsx`
-  - `d:\pj\other\fat\src\components\admin\AdminSidebar.tsx`
-  - `d:\pj\other\fat\scripts\extract_genealogy.py`
-  - `d:\pj\other\fat\docs\16_Micro-Spec_Milestone_7_Admin_Portal_Reorganization.md`
-- **Kết quả kiểm chứng 3 tầng (Code-First Verification):**
-  - `Typecheck`: 0 lỗi (`npm.cmd run typecheck`).
-  - `Build`: 27/27 static & dynamic routes compile sạch 0 lỗi (`npm.cmd run build`).
-  - `Automated Test Suite`: **136/136 PASS 100% (22 test suites)**. Không phát sinh failure mới so với `Known_Failing_Baseline: "none"`.
-  - `Dev Server`: Đang chạy ngầm ổn định tại cổng 3000 (`http://localhost:3000`).
+- **Môi trường & Nền tảng:** Windows (PowerShell), Next.js 14 App Router, TypeScript, `@xyflow/react` v12, Supabase PostgreSQL, Node.js Test Runner (`node:test`).
+- **Lệnh kiểm chứng (`[VERIFY_COMMANDS]`):**
+  - Typecheck: `npm.cmd run typecheck` (0 errors)
+  - Build: `$env:NEXT_DIST_DIR=".next-build"; npm.cmd run build` (27/27 pages generated, isolated build)
+  - Test: `npm.cmd test` (148/148 tests PASS, 24 test suites, 0 fail)
+  - Dev Server: Đang chạy nền tại `http://localhost:3001` (Task ID `task-452`)
+- **Các quyết định kỹ thuật & thiết kế cốt lõi vừa chốt và hoàn thành:**
+  1. *Cố định Y dòng tên thẻ Node (`MemberNode.tsx`):* Text container cố định `h-8` ($32\text{px}$) khớp avatar; dòng 2 giữ slot `h-[14px]` với fallback `\u00A0` khi rỗng $\rightarrow$ Dòng tên của người không có năm sinh/mất (`Nguyễn Thị Kim`) và người có năm sinh/mất (`Phạm Văn Cường`) luôn nằm trên cùng một hàng ngang phẳng phiu ($y$ không đổi).
+  2. *Màu viền giới tính & Bỏ ký tự `†`:* Viền thẻ (`borderColor`) luôn theo giới tính (`isMale ? blue : pink`) bất kể sinh hay tử; avatar bên trong giữ nền xám trang trọng cho người đã mất; xóa sạch ký tự `†` ở tất cả các nơi (`MemberNode`, `MemberFormModal`, `age-utils`), chỉ hiển thị trang nhã chữ `Đã mất`.
+  3. *Avatar Initials cho tên có mở ngoặc:* Hàm `getMemberInitials` lọc sạch nội dung trong ngoặc đơn/vuông trước khi split từ $\rightarrow$ `Phạm Văn Uyên (Nuôi)` sinh đúng initials **VU** (Tên đệm `Văn` + Tên chính `Uyên`).
+  4. *Tách bạch triệt để Tên chính và Tên húy / Bí danh:*
+     - Ô `Họ và Tên (*)` chỉ lưu tên chính `Phạm Văn Uyên`. Ô `Tên húy / Bí danh` lưu `Nuôi`.
+     - Tự động bóc tách ngoặc khi nạp vào form (edit), khi người dùng gõ/blur, và khi submit form.
+     - Khi import Excel vào DB (`import/route.ts`): Làm sạch `full_name` và lưu tên húy vào `alias_name`.
+     - Drawer và thẻ Node chỉ hiển thị tên chính sạch, không bị tràn viền `Phạm Văn Uyên (N...` và không lặp lại chữ `(Nuôi)` 2 lần.
+  5. *Đổi nhãn tiền tố `Tự:` thành `Tức:`:* Trên `MemberDetailDrawer.tsx` và tooltip, đổi `Tự: [alias_name]` thành `Tức: [alias_name]`.
+- **Tệp nguồn đã chỉnh sửa:**
+  - `src/lib/tree-layout/avatar-utils.ts` (lọc ngoặc đơn/vuông)
+  - `src/lib/tree-layout/age-utils.ts` (bỏ ký tự `†`)
+  - `src/components/tree/MemberNode.tsx` (cố định Y dòng tên, viền giới tính, bỏ `†`, hiển thị tên sạch)
+  - `src/components/tree/MemberDetailDrawer.tsx` (đổi `Tự:` $\rightarrow$ `Tức:`, tiêu đề hiển thị tên sạch)
+  - `src/components/modals/MemberFormModal.tsx` (tự động bóc tách tên chính và tên húy, bỏ `<span>†</span>`)
+  - `src/app/api/admin/import/route.ts` (lưu tên chính sạch vào `full_name` và tên húy vào `alias_name`)
+  - `tests/avatar-utils.test.ts` (bổ sung test case lọc ngoặc)
+  - `tests/age-utils.test.ts` (cập nhật assertion bỏ `†`)
+  - `tests/ui-normalization-and-identity.test.ts` (tạo mới bộ 6 automated test cases kiểm tra UI contract)
+  - `docs/13_Micro-Spec_Milestone_4_Member_Management_Import.md` (đồng bộ Edge Cases 24–28, tick `[x]` Mục 7.1 và RG19, RG20)
+  - `.agents/brain/lessons_learned.md` (ghi chép bài học kỹ thuật chuẩn hóa UI & định danh)
 
 ### 2. Task Checklist
-- [x] Phân tích Root Cause và cập nhật Spec Section 12 (Extension 7.4) trong `docs/16_Micro-Spec_Milestone_7_Admin_Portal_Reorganization.md`
-- [x] Nâng cấp script bóc tách `scripts/extract_genealogy.py` (loại bỏ 263 dòng trống, bóc tách tên cúng cơm, sửa regex Phú Thọ, bảo vệ trạng thái sống)
-- [x] Nâng cấp script Excel `scripts/build-clan-excel.mjs` hỗ trợ danh sách phối ngẫu `STT Vợ/Chồng: 2, 3`
-- [x] Tái sinh dataset đầy đủ `docs/data/gia_pha_ho_pham_van.xlsx` (1,036 thành viên sạch)
-- [x] Tinh gọn dataset mẫu `docs/data/gia_pha_ho_pham_van_lite.xlsx` (52 thành viên kết nối liền mạch 13 đời)
-- [x] Cập nhật API `src/app/api/admin/import/route.ts` bóc tách `alias_name` và tự động suy luận `marriage_order`
-- [x] Cập nhật lõi layout `src/lib/tree-layout/genealogy-layout.ts` phòng vệ chống trùng lặp danh xưng Bà cả
-- [x] Cập nhật `src/components/tree/MemberNode.tsx` hiển thị tên cúng cơm kèm tooltip
-- [x] Bổ sung 5 Unit Tests tự động tại `tests/root-setting-and-generation.test.ts`
-- [x] Chạy kiểm chứng 3 tầng: Typecheck 0 lỗi, Build 27/27 routes, Test Suite 136/136 PASS
-- [x] Reverse Sync tick `[x]` 5 tiêu chí AC trong Micro-Spec
-- [x] Ghi chép bài học kinh nghiệm tại `.agents/brain/lessons_learned.md`
-- [x] Khởi động lại Next.js dev server tại `http://localhost:3000`
-- [x] Commit và Push mã nguồn lên GitHub (`git push` origin main thành công)
-- [ ] User thực hiện nghiệm thu thị giác (Human Visual UAT) trên trình duyệt
-- [ ] Lựa chọn hướng phát triển tiếp theo (Milestone 8 Claim Profile hoặc Lịch Giỗ Thông Minh / In Ấn Phả Đồ)
+- [x] Phân tích căn nguyên gốc rễ 5 vấn đề UI/UX qua `/feature-brainstorm`.
+- [x] Lập bản quy hoạch chi tiết trong `implementation_plan.md`.
+- [x] Soạn thảo đặc tả vi mô bổ sung Edge Cases 24-28 và Ma trận Test trong `Micro-Spec 13` qua `/feature-spec`.
+- [x] Thi công mã nguồn và tự động kiểm chứng 3 tầng qua `/feature-code`.
+- [x] Tầng 1: Typecheck sạch (0 errors), Build thành công 27/27 pages.
+- [x] Tầng 2: Automated Test Suite đạt 148/148 tests PASS 100% (24 suites, 0 fail).
+- [x] Cập nhật ngược lại Micro-Spec 13 và ghi chú bài học vào `lessons_learned.md`.
+- [ ] Tầng 3 (Human UAT): Người dùng mở trình duyệt kiểm tra thị giác độ thẳng hàng dòng tên, màu viền giới tính người đã mất, avatar VU và tiêu đề Drawer.
 
 ### 3. Immediate Next Step
-- Mở trình duyệt tại **`http://localhost:3000/admin/import`**, nạp file `docs/data/gia_pha_ho_pham_van_lite.xlsx` (chế độ Clean Mode) và truy cập **`http://localhost:3000/tree`** để nghiệm thu trực quan cây phả hệ 13 đời Họ Phạm Văn trên CSDL thật.
+- Người dùng mở trình duyệt tại `http://localhost:3000` (hoặc `http://localhost:3001`) để nghiệm thu thị giác theo 5 điểm checklist trong [walkthrough.md](file:///C:/Users/giap.pham/.gemini/antigravity-ide/brain/341a4b1e-e547-446a-8843-a572a74367b2/walkthrough.md), hoặc nêu tiếp các tính năng/tinh chỉnh tiếp theo.
