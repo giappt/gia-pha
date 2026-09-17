@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Calendar, Compass } from 'lucide-react';
+import { Home, Calendar, Users } from 'lucide-react';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 import type { ClanFeatureFlags } from '@/types/database';
 import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
@@ -33,7 +33,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     label: 'Xưng hô',
     href: '/kinship',
-    icon: Compass,
+    icon: Users,
   },
 ];
 

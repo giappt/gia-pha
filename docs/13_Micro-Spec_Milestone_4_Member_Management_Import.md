@@ -661,6 +661,24 @@ sequenceDiagram
 - **Thẻ Thành Viên Trên Cây (`src/components/tree/MemberNode.tsx`):**
   - Badge `{childCount} người con`: Khi click, chỉ kích hoạt sự kiện mở modal sắp xếp thứ tự nếu người dùng có quyền quản trị cây; đối với Viewer, nhấp chuột không mở modal chỉnh sửa.
 
+### 5.11. Gỡ Bỏ Khối "Nguồn Dữ Liệu Kiểm Thử" Khỏi TreeToolbar & Cố Định Dữ Liệu CSDL Sống:
+- **Thanh Công Cụ Cây (`src/components/tree/TreeToolbar.tsx`):**
+  - Gỡ bỏ hoàn toàn khối `Nguồn dữ liệu kiểm thử` (chứa các nút chuyển đổi dữ liệu giả lập Clan 28, Đa thê Cụ Chiến, Clan 1.500) khỏi menu popover `[ ⚙ Tùy chọn ▾ ]`.
+  - Dọn dẹp import biểu tượng `Users` khỏi `TreeToolbar` (nếu không còn sử dụng trong toolbar).
+  - Giữ lại các chức năng nghiệp vụ thiết thực: `Khóa vị trí thẻ`, `Hiển thị Rể nội tộc` và `Lối tắt Nhập liệu Excel`.
+- **Bàn Vẽ Cây Phả Hệ (`src/components/tree/FamilyTreeCanvas.tsx`):**
+  - Mặc định và cố định hiển thị nguồn dữ liệu sống thực tế (`liveMembers`) lấy từ Supabase DB. Không còn cung cấp nút bấm UI để người dùng chuyển đổi sang các dataset giả lập ngoài màn hình cây.
+
+### 5.12. Đồng Bộ Nhận Diện Biểu Tượng "Xưng Hô" (Kinship Icon Transition: Compass → Users):
+- **Triết lý Thiết Kế & Nhận Diện Thị Giác:**
+  - Tính năng "Xưng hô" bản chất là phân định quan hệ vai vế danh xưng giữa 2 người/con cháu trong gia tộc họ hàng. Biểu tượng hai người (`<Users />` từ `lucide-react`) mang tính nhân văn và gần gũi hơn rất nhiều so với biểu tượng la bàn (`<Compass />`).
+  - Nút "Tra cứu xưng hô" trong Drawer chi tiết (`MemberDetailDrawer`) đã sử dụng icon `Users` từ trước. Việc chuyển đổi icon tính năng "Xưng hô" trên toàn hệ thống sang `Users` tạo ra sự đồng bộ và nhất quán thị giác 100%.
+- **Các Vị Trí Cập Nhật Biểu Tượng `Users` Thay Thế Cho `Compass`:**
+  - **Desktop Header Navbar (`src/components/navbar/Navbar.tsx`):** Mục liên kết `Xưng hô` (`/kinship`) hiển thị `<Users className="w-4 h-4 text-emerald-600" />`.
+  - **Mobile Bottom Navigation (`src/components/navigation/MobileBottomNav.tsx`):** Tab `Xưng hô` (`/kinship`) trong danh sách `NAV_ITEMS` sử dụng `icon: Users`.
+  - **Trang Tra Cứu Quan Hệ (`src/app/kinship/page.tsx`):** Badge hero đầu trang `KINSHIP ENGINE · ĐỒ THỊ PHẢ HỆ VIỆT NAM` hiển thị `<Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />`.
+  - **Trang Cấu Hình Tính Năng Admin (`src/app/admin/features/page.tsx`):** Mục `enable_kinship_lookup` ("Công Cụ Tra Cứu Vai Vế Xưng Hô") đồng bộ icon `Users`.
+
 ---
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
@@ -884,6 +902,10 @@ sequenceDiagram
 - [x] **TC_UT_TREE_PAGE_PASSES_USER_ROLE** (Trang /tree trích xuất role và truyền canManageTree xuống Canvas): `tests/rbac-permissions.test.ts` — PASS (0.48ms). Quét file `src/app/tree/page.tsx`, đảm bảo Server Component đọc session/cookie người dùng và truyền prop `canManageTree` xuống `FamilyTreeCanvas`.
 - [x] **TC_UT_TOOLBAR_HIDES_ADD_AND_UNLINKED_FOR_VIEWER** (TreeToolbar ẩn nút Thêm người và Khay chưa nối khi canManageTree = false): `tests/rbac-permissions.test.ts` — PASS (0.42ms). Quét file `src/components/tree/TreeToolbar.tsx`, đảm bảo nút `UserPlus` ("Thêm người") và nút `Link2` ("Chưa nối: X") được bảo vệ bởi điều kiện `canManageTree` và tự động ẩn hoàn toàn đối với Viewer.
 - [x] **TC_UT_DRAWER_HIDES_EDIT_DELETE_FOR_VIEWER** (MemberDetailDrawer ẩn nút Sửa và Xóa hồ sơ khi canManageTree = false): `tests/rbac-permissions.test.ts` — PASS (0.40ms). Quét file `src/components/tree/MemberDetailDrawer.tsx`, đảm bảo nút `Edit3` ("Sửa hồ sơ") và nút `Trash2` ("Xóa hồ sơ") nhận prop `canManageTree` và tự động ẩn khi người dùng là Viewer.
+- [x] **TC_UT_TOOLBAR_NO_MOCK_DATASET** (TreeToolbar loại bỏ hoàn toàn khối Nguồn dữ liệu kiểm thử): `tests/theme-and-layout.test.ts` — PASS (0.33ms). Quét mã nguồn `TreeToolbar.tsx`, đảm bảo không còn chuỗi "Nguồn dữ liệu kiểm thử" và không còn render các nút chuyển đổi dataset mock (`clan28`, `polygamy`, `clan1500`).
+- [x] **TC_UT_NAVBAR_KINSHIP_ICON_USERS** (Desktop Navbar sử dụng icon Users cho mục Xưng hô): `tests/theme-and-layout.test.ts` — PASS (0.17ms). Quét mã nguồn `Navbar.tsx`, đảm bảo liên kết `/kinship` ("Xưng hô") import và render icon `Users`, không còn dùng `Compass`.
+- [x] **TC_UT_MOBILE_NAV_KINSHIP_ICON_USERS** (Mobile Bottom Nav sử dụng icon Users cho tab Xưng hô): `tests/theme-and-layout.test.ts` — PASS (0.16ms). Quét mã nguồn `MobileBottomNav.tsx`, đảm bảo item `/kinship` trong `NAV_ITEMS` có thuộc tính `icon: Users`, không còn dùng `Compass`.
+- [x] **TC_UT_KINSHIP_HERO_ICON_USERS** (Trang /kinship sử dụng icon Users trên hero badge): `tests/theme-and-layout.test.ts` — PASS (1.16ms). Quét mã nguồn `src/app/kinship/page.tsx`, đảm bảo badge hero đầu trang render icon `Users`, không còn dùng `Compass`.
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
@@ -956,6 +978,10 @@ sequenceDiagram
 - [ ] **UAT_64 (Super Admin Full Control Tree):** Đăng nhập tài khoản Super Admin $\rightarrow$ Truy cập `/tree` $\rightarrow$ Xuất hiện đầy đủ nút `+ Thêm người` màu xanh, nút `Chưa nối: X` (nếu có người chưa nối). Mở Drawer chi tiết: có đầy đủ nút `Sửa hồ sơ` và `Xóa hồ sơ`.
 - [ ] **UAT_65 (Khóa Vị Trí Thẻ Khóa Chặt Cho Viewer):** Với tài khoản Viewer $\rightarrow$ Menu Popover `⚙ Tùy chọn` trên thanh công cụ Cây hiển thị trạng thái `Khóa vị trí thẻ: Đang khóa` và không cho phép bật mở kéo xê dịch node tự do (hoặc ẩn nút mở khóa), tránh xáo trộn hiển thị phả đồ.
 - [ ] **UAT_66 (Rào Chắn Server Trả Về HTTP 403 Cho Thao Tác Trái Quyền):** Dùng tài khoản Viewer gửi request tạo thành viên lên `POST /api/members` hoặc xóa thành viên lên `DELETE /api/members/[id]` $\rightarrow$ Nhận phản hồi `HTTP 403 Forbidden` kèm thông báo *"Bạn không có quyền thực hiện thao tác này"*.
+- [ ] **UAT_67 (Menu Tùy Chọn Cây Phả Hệ Gọn Gàng - Không Còn Dữ Liệu Kiểm Thử):** Mở menu `[ ⚙ Tùy chọn ▾ ]` trên thanh công cụ Cây Phả Hệ (`/tree`) $\rightarrow$ Khối "Nguồn dữ liệu kiểm thử" đã biến mất hoàn toàn. Menu chỉ còn các mục thiết thực: Khóa vị trí thẻ, Hiển thị Rể nội tộc và Lối tắt Nhập liệu Excel.
+- [ ] **UAT_68 (Navbar Desktop Hiển Thị Icon Users Cho Xưng Hô):** Quan sát thanh điều hướng trên cùng (Desktop Header) $\rightarrow$ Mục "Xưng hô" hiển thị icon 2 người (`Users`) màu xanh ngọc thanh lịch, hover và click chuyển hướng `/kinship` mượt mà.
+- [ ] **UAT_69 (Mobile Bottom Nav Hiển Thị Icon Users Cho Xưng Hô):** Thu nhỏ màn hình xuống kích thước điện thoại (mobile viewport) $\rightarrow$ Tab "Xưng hô" trên thanh điều hướng đáy hiển thị icon 2 người (`Users`), highlight đúng khi truy cập `/kinship`.
+- [ ] **UAT_70 (Trang Tra Cứu Xưng Hô & Admin Features Đồng Bộ Icon Users):** Truy cập `http://localhost:3000/kinship` và `http://localhost:3000/admin/features` $\rightarrow$ Toàn bộ các biểu tượng đại diện cho công cụ xưng hô đều sử dụng icon `Users` đồng nhất.
 
 ---
 
@@ -992,6 +1018,9 @@ sequenceDiagram
 - [x] **RG29 (Bảo Toàn 169 Tests Hiện Tại & Mở Rộng 172 Tests):** Toàn bộ 169 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 172 tests PASS 100%.
 - [x] **RG30 (Bảo Toàn 172 Tests Hiện Tại & Mở Rộng 174 Tests):** Toàn bộ 172 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 174 tests PASS 100% khi chạy `npm test`.
 - [x] **RG31 (Bảo Toàn 246 Tests Hiện Tại & Mở Rộng 254 Tests):** Toàn bộ 246 automated test cases hiện có tiếp tục PASS 100%, bộ test suite mở rộng lên 254/254 tests PASS 100%, 0 regression (`npm test`).
+- [x] **RG32 (Bảo Toàn Các Tùy Chọn Còn Lại Trên TreeToolbar):** Các tính năng Khóa vị trí thẻ, Hiển thị Rể nội tộc và liên kết Nhập Excel vẫn hoạt động trơn tru 100%.
+- [x] **RG33 (Bảo Toàn Điều Hướng & Tra Cứu Quan Hệ Xưng Hô):** Route `/kinship` và thuật toán tra cứu xưng hô 2 chiều không bị ảnh hưởng, hoạt động chính xác 100%.
+- [x] **RG34 (Bảo Toàn 254 Tests Hiện Tại & Mở Rộng 258 Tests):** Toàn bộ 254 automated test cases hiện có tiếp tục PASS 100%, bộ test suite mở rộng lên 258/258 tests PASS 100%, 0 regression (`npm test`).
 
 ---
 

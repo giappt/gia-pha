@@ -10,7 +10,7 @@ import {
   AlertCircle,
   Shield,
   Eye,
-  BookOpen,
+  Users,
   Calendar,
   Bell,
   UserPlus,
@@ -44,7 +44,7 @@ const FEATURE_CONFIGS: FeatureFlagConfig[] = [
   {
     key: 'enable_kinship_lookup',
     title: 'Công Cụ Tra Cứu Vai Vế Xưng Hô',
-    icon: BookOpen,
+    icon: Users,
     description: 'Hiển thị tính năng Tra Cứu Vai Vế trên thanh điều hướng trang chủ.',
     onDesc: 'Con cháu có thể chọn 2 người bất kỳ để hệ thống tự động tính xưng hô 2 chiều.',
     offDesc: 'Ẩn menu Tra cứu ngoài trang chủ (dùng khi dòng họ đang hiệu chỉnh từ điển).',

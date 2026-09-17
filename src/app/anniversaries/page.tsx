@@ -179,10 +179,10 @@ export default function AnniversariesPage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Lịch Giỗ Gia Tộc
+                Lịch Giỗ
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
-                Theo dõi ngày giỗ trong gia phả theo chuẩn Lịch Âm Việt Nam, tự động thông báo để con cháu hướng về cội nguồn.
+                Theo dõi ngày giỗ trong gia phả theo chuẩn Lịch Âm Việt Nam, tự động thông báo.
               </p>
             </div>
 

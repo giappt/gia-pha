@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Compass,
   ArrowRightLeft,
   Search,
   Users,
@@ -249,7 +248,7 @@ export default function KinshipPage() {
         {/* Header Hero Section */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold tracking-wide">
-            <Compass className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>KINSHIP ENGINE · ĐỒ THỊ PHẢ HỆ VIỆT NAM</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight">

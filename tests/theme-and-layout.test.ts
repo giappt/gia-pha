@@ -1059,6 +1059,87 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
       'src/app/anniversaries/page.tsx không được chứa badge "Hiếu Nghĩa Truyền Gia"'
     );
   });
+
+  // TC_UT_TOOLBAR_NO_MOCK_DATASET: TreeToolbar loại bỏ hoàn toàn khối Nguồn dữ liệu kiểm thử
+  it('TC_UT_TOOLBAR_NO_MOCK_DATASET: TreeToolbar.tsx loại bỏ hoàn toàn khối "Nguồn dữ liệu kiểm thử" và các dataset mock', () => {
+    const toolbarPath = path.resolve(process.cwd(), 'src/components/tree/TreeToolbar.tsx');
+    assert.ok(fs.existsSync(toolbarPath), 'TreeToolbar.tsx phải tồn tại');
+
+    const content = fs.readFileSync(toolbarPath, 'utf8');
+    assert.strictEqual(
+      content.includes('Nguồn dữ liệu kiểm thử'),
+      false,
+      'TreeToolbar.tsx không được còn chuỗi "Nguồn dữ liệu kiểm thử"'
+    );
+    assert.strictEqual(
+      content.includes("onSwitchDataset('clan28')"),
+      false,
+      'TreeToolbar.tsx không được còn nút chuyển đổi dataset clan28'
+    );
+    assert.strictEqual(
+      content.includes("onSwitchDataset('polygamy')"),
+      false,
+      'TreeToolbar.tsx không được còn nút chuyển đổi dataset polygamy'
+    );
+    assert.strictEqual(
+      content.includes("onSwitchDataset('clan1500')"),
+      false,
+      'TreeToolbar.tsx không được còn nút chuyển đổi dataset clan1500'
+    );
+  });
+
+  // TC_UT_NAVBAR_KINSHIP_ICON_USERS: Desktop Navbar sử dụng icon Users cho mục Xưng hô
+  it('TC_UT_NAVBAR_KINSHIP_ICON_USERS: Navbar.tsx sử dụng icon Users cho liên kết /kinship (Xưng hô)', () => {
+    const navbarPath = path.resolve(process.cwd(), 'src/components/navbar/Navbar.tsx');
+    assert.ok(fs.existsSync(navbarPath), 'Navbar.tsx phải tồn tại');
+
+    const content = fs.readFileSync(navbarPath, 'utf8');
+    assert.ok(
+      content.includes('<Users className="w-4 h-4 text-emerald-600" />'),
+      'Navbar.tsx phải render icon Users cho liên kết Xưng hô'
+    );
+    assert.strictEqual(
+      content.includes('<Compass className="w-4 h-4 text-emerald-600" />'),
+      false,
+      'Navbar.tsx không được dùng icon Compass cho liên kết Xưng hô'
+    );
+  });
+
+  // TC_UT_MOBILE_NAV_KINSHIP_ICON_USERS: Mobile Bottom Nav sử dụng icon Users cho tab Xưng hô
+  it('TC_UT_MOBILE_NAV_KINSHIP_ICON_USERS: MobileBottomNav.tsx gán icon: Users cho tab /kinship', () => {
+    const navPath = path.resolve(process.cwd(), 'src/components/navigation/MobileBottomNav.tsx');
+    assert.ok(fs.existsSync(navPath), 'MobileBottomNav.tsx phải tồn tại');
+
+    const content = fs.readFileSync(navPath, 'utf8');
+    assert.ok(
+      content.includes("href: '/kinship',\n    icon: Users,") ||
+      content.includes("href: '/kinship', icon: Users") ||
+      content.includes("icon: Users,\n  },"),
+      'MobileBottomNav.tsx phải sử dụng Users icon cho /kinship'
+    );
+    assert.strictEqual(
+      content.includes("href: '/kinship',\n    icon: Compass,"),
+      false,
+      'MobileBottomNav.tsx không được dùng Compass cho /kinship'
+    );
+  });
+
+  // TC_UT_KINSHIP_HERO_ICON_USERS: Trang /kinship sử dụng icon Users trên hero badge
+  it('TC_UT_KINSHIP_HERO_ICON_USERS: src/app/kinship/page.tsx hiển thị icon Users trên hero badge', () => {
+    const kinshipPath = path.resolve(process.cwd(), 'src/app/kinship/page.tsx');
+    assert.ok(fs.existsSync(kinshipPath), 'src/app/kinship/page.tsx phải tồn tại');
+
+    const content = fs.readFileSync(kinshipPath, 'utf8');
+    assert.ok(
+      content.includes('<Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />'),
+      'kinship/page.tsx phải render Users icon trên hero badge'
+    );
+    assert.strictEqual(
+      content.includes('<Compass className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />'),
+      false,
+      'kinship/page.tsx không được render Compass icon'
+    );
+  });
 });
 
 
