@@ -293,7 +293,7 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
               <div className="py-12 text-center text-slate-400">
                 <Check className="w-10 h-10 mx-auto text-emerald-500/60 mb-2" />
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                  Tuyệt vời! Toàn bộ gia tộc đã được kết nối liền mạch.
+                  Toàn bộ gia tộc đã được kết nối liền mạch.
                 </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Không còn thành viên nào bị cô lập ngoài cây phả hệ.
@@ -306,19 +306,17 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                 return (
                   <div
                     key={member.id}
-                    className={`p-3.5 rounded-xl border transition-all ${
-                      isRelinkingThis
+                    className={`p-3.5 rounded-xl border transition-all ${isRelinkingThis
                         ? 'border-amber-400 dark:border-amber-600 bg-amber-50/40 dark:bg-amber-950/20 shadow-sm'
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`w-2 h-2 rounded-full ${
-                              member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'
-                            }`}
+                            className={`w-2 h-2 rounded-full ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'
+                              }`}
                           />
                           <h4 className="text-xs font-bold text-slate-900 dark:text-white">
                             {member.full_name}
@@ -393,11 +391,10 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                               <div
                                 key={p.id}
                                 onClick={() => handleSelectParent(p.id)}
-                                className={`p-2 text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                                  selectedParentId === p.id
+                                className={`p-2 text-xs flex items-center justify-between cursor-pointer transition-colors ${selectedParentId === p.id
                                     ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 font-bold'
                                     : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300'
-                                }`}
+                                  }`}
                               >
                                 <span>
                                   {getParentDisplayNameWithSpouse(p, members, spouses)}
@@ -428,21 +425,20 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                                           ? 'Mẹ'
                                           : 'Bố'
                                         : selectedParent.gender === 'male'
-                                        ? sIdx === 0
-                                          ? 'Mẹ (Bà cả)'
-                                          : `Mẹ (Bà ${sIdx + 1})`
-                                        : sIdx === 0
-                                        ? 'Bố (Chồng cả)'
-                                        : `Bố (Chồng ${sIdx + 1})`;
+                                          ? sIdx === 0
+                                            ? 'Mẹ (Bà cả)'
+                                            : `Mẹ (Bà ${sIdx + 1})`
+                                          : sIdx === 0
+                                            ? 'Bố (Chồng cả)'
+                                            : `Bố (Chồng ${sIdx + 1})`;
 
                                     return (
                                       <label
                                         key={spouse.id}
-                                        className={`flex items-start gap-2.5 p-1.5 rounded-lg cursor-pointer transition-colors ${
-                                          isSelected
+                                        className={`flex items-start gap-2.5 p-1.5 rounded-lg cursor-pointer transition-colors ${isSelected
                                             ? 'bg-amber-100/60 dark:bg-amber-950/40 text-slate-900 dark:text-white font-medium'
                                             : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
-                                        }`}
+                                          }`}
                                       >
                                         <input
                                           type="radio"
@@ -473,11 +469,10 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
 
                                   {/* Tùy chọn Lưu làm con riêng */}
                                   <label
-                                    className={`flex items-start gap-2.5 p-1.5 rounded-lg cursor-pointer transition-colors ${
-                                      isSpouseOptedOut || !selectedSpouseId
+                                    className={`flex items-start gap-2.5 p-1.5 rounded-lg cursor-pointer transition-colors ${isSpouseOptedOut || !selectedSpouseId
                                         ? 'bg-amber-100/60 dark:bg-amber-950/40 text-slate-900 dark:text-white font-medium'
                                         : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400'
-                                    }`}
+                                      }`}
                                   >
                                     <input
                                       type="radio"

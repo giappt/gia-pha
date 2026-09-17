@@ -75,8 +75,8 @@ export default async function HomePage({
               {searchParams.auth_error === 'cancelled'
                 ? 'Thao tác đăng nhập Google đã được hủy bỏ.'
                 : searchParams.auth_error === 'unauthorized_admin'
-                ? 'Bạn không có quyền Super Admin để truy cập vào khu vực Cài đặt Quản trị.'
-                : 'Không thể hoàn tất xác thực tài khoản. Vui lòng thử lại.'}
+                  ? 'Bạn không có quyền Super Admin để truy cập vào khu vực Cài đặt Quản trị.'
+                  : 'Không thể hoàn tất xác thực tài khoản. Vui lòng thử lại.'}
             </p>
           </div>
         </div>
@@ -84,10 +84,10 @@ export default async function HomePage({
 
       {/* Hero Header */}
       <div className="text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold mb-6">
+        {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>Nền Tảng Phả Hệ Số Hiện Đại</span>
-        </div>
+        </div> */}
 
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-400 mb-3">
           Hệ Thống Phả Hệ Trực Tuyến
@@ -95,9 +95,8 @@ export default async function HomePage({
 
         <h1
           id="hero-clan-name"
-          className={`${
-            clanName.length > 25 ? 'text-3xl sm:text-5xl' : 'text-4xl sm:text-6xl'
-          } font-black text-slate-900 dark:text-white tracking-tight leading-[1.12] mb-6 uppercase text-balance break-words max-w-4xl mx-auto`}
+          className={`${clanName.length > 25 ? 'text-3xl sm:text-5xl' : 'text-4xl sm:text-6xl'
+            } font-black text-slate-900 dark:text-white tracking-tight leading-[1.12] mb-6 uppercase text-balance break-words max-w-4xl mx-auto`}
         >
           <span className="bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-200 bg-clip-text text-transparent">
             {clanName}
@@ -105,7 +104,7 @@ export default async function HomePage({
         </h1>
 
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8 font-normal">
-          Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu, tự động xác định vai vế xưng hô chuẩn mực và nhắc nhở ngày giỗ theo Âm lịch truyền thống.
+          Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu, nhắc nhở ngày giỗ theo Âm lịch truyền thống.
         </p>
 
         {/* User Greeting if logged in */}
@@ -124,10 +123,10 @@ export default async function HomePage({
                   {isSuperAdmin
                     ? 'Super Admin (Toàn quyền)'
                     : userProfile?.user_role === 'branch_editor'
-                    ? 'Trưởng Chi Nhánh'
-                    : userProfile?.user_role === 'claimed_member'
-                    ? 'Thành Viên Dòng Họ'
-                    : 'Khách Xem (Viewer)'}
+                      ? 'Trưởng Chi Nhánh'
+                      : userProfile?.user_role === 'claimed_member'
+                        ? 'Thành Viên Dòng Họ'
+                        : 'Khách Xem (Viewer)'}
                 </span>
               </p>
             </div>
