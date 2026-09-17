@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import ClanHanLogo from '@/components/icons/ClanHanLogo';
 import LoginGateAuthButton from '@/components/auth/LoginGateAuthButton';
+import InstallPwaButton from '@/components/pwa/InstallPwaButton';
 import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 import { ShieldCheck, ArrowLeft, Sparkles, Lock } from 'lucide-react';
 
@@ -103,6 +104,14 @@ export default async function LoginGatePage({
               <span>⚡ Đăng nhập nhanh Dev (Bypass Super Admin)</span>
             </a>
           )}
+
+          {/* Phân cách nhẹ chân Card cho Tiện ích Cài đặt PWA */}
+          <div className="w-full pt-3 mt-1 border-t border-slate-100 dark:border-slate-800/80 flex flex-col items-center gap-2">
+            <InstallPwaButton
+              variant="outline"
+              className="w-full"
+            />
+          </div>
 
           {/* Link quay về trang chủ khi cây công khai */}
           {enablePublicTree && (

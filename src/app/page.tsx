@@ -7,6 +7,7 @@ import { getUpcomingAnniversaries, formatSolarDateWithDayOfWeek } from '@/lib/an
 import { SAMPLE_MEMBERS_28 } from '@/lib/tree-layout/sample-data';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
+import InstallPwaButton, { PwaInstallBanner } from '@/components/pwa/InstallPwaButton';
 import type { MemberRecord } from '@/types/tree';
 
 export default async function HomePage({
@@ -120,7 +121,7 @@ export default async function HomePage({
     <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
       {/* Auth Error Notification */}
       {searchParams.auth_error && (
-        <div className="max-w-xl w-full mb-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-200">
+        <div className="max-w-3xl w-full mb-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-200">
           <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600 mt-0.5" />
           <div className="text-sm">
             <p className="font-semibold">Thông báo Bảo mật & Phân quyền</p>
@@ -309,30 +310,8 @@ export default async function HomePage({
         </div>
       )}
 
-      {/* Admin Panel Quick Access if Super Admin */}
-      {isSuperAdmin && (
-        <div className="mt-4 p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/60 max-w-xl w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Khu vực Quản Trị Viên (Super Admin)
-              </p>
-              <p className="text-xs text-slate-500">
-                Bạn có toàn quyền cấu hình dòng họ, duyệt thành viên và phân quyền.
-              </p>
-            </div>
-          </div>
-          <Link
-            id="admin-settings-btn"
-            href="/admin/settings"
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all shadow-xs flex-shrink-0"
-          >
-            <span>Cài Đặt Dòng Họ</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      )}
+      {/* Banner Tiện Ích Cài Đặt Ứng Dụng PWA (Chuẩn max-w-3xl, gióng thẳng hàng với Thẻ Ngày Giỗ) */}
+      <PwaInstallBanner className="mb-8" />
     </div>
   );
 }

@@ -498,6 +498,21 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
       - Nếu là quan hệ gần (cách 1-2 đời: Cha/Mẹ, Ông/Bà, Bác/Chú/Cô/Dì): Ghép trực tiếp danh xưng thân tộc vào tên: `Bà nội [Họ Tên]`, `Ông nội [Họ Tên]`.
       - Nếu là bậc Cụ/Kỵ trở lên ($\ge 3$ đời): Ghép tiền tố trang trọng gia tộc `Cụ [Họ Tên]`, đi kèm huy hiệu quan hệ thân mật chi tiết (`Cụ cố của bạn`, `Cụ tổ của bạn`).
 
+### 5.10. Milestone 5.2 — Mặc Định Theme Light, Nút Cài Đặt PWA (Install PWA) & Bộ Nhận Diện Favicon / App Icons Dòng Họ
+- **1. Mặc Định Theme Sáng (Light First Architecture - `src/app/layout.tsx`, `src/hooks/use-theme.ts`):**
+  - Loại bỏ hoàn toàn điều kiện tự động bật Dark mode theo `prefers-color-scheme: dark`.
+  - Mặc định 100% người dùng mới truy cập sẽ hiển thị Light Theme. Chỉ khi người dùng chủ động chọn và lưu `localStorage.getItem('theme') === 'dark'` thì mới kích hoạt Dark mode.
+- **2. Nút Cài Đặt PWA Native (`src/components/pwa/InstallPwaButton.tsx`):**
+  - Lắng nghe sự kiện `beforeinstallprompt` trên các trình duyệt hỗ trợ (Chrome/Edge/Android/Windows/macOS).
+  - Cung cấp nút `[📲 Cài đặt ứng dụng lên màn hình chính]` trên màn Login Gate (`/login-gate`) và Trang Chủ (`/`).
+  - Hỗ trợ modal hướng dẫn trực quan riêng cho người dùng iOS Safari (Share $\rightarrow$ Add to Home Screen).
+  - Tự động ẩn nút khi ứng dụng đang chạy ở chế độ Standalone (`display-mode: standalone`).
+- **3. Bộ Nhận Diện Favicon & App Icons Thư Pháp Chữ Hán "Phạm" (`public/`):**
+  - `public/favicon.ico` & `public/favicon.svg`: Icon hiển thị trên tab trình duyệt với chữ Hán "Phạm" (`范`) trắng sắc nét trên nền xanh ngọc bích `#059669`.
+  - `public/apple-touch-icon.png`: Kích thước 180x180 dành riêng cho thiết bị iOS/iPadOS.
+  - `public/icons/icon-192x192.png` & `public/icons/icon-512x512.png`: Đạt chuẩn PWA Web App Manifest, phục vụ cài đặt lên màn hình chính điện thoại và máy tính.
+  - Cấu hình đầy đủ trong `metadata.icons` tại `src/app/layout.tsx`.
+
 ---
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
@@ -522,9 +537,25 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - _Xử lý:_ `<main>` luôn có `pb-16 md:pb-0`, các modal/drawer sử dụng `z-50` cao hơn `z-40` của Bottom Nav để overlay trọn vẹn màn hình khi mở ra.
 - **Edge Case 9: Lỗ rỗng (hole) của chữ Hán thư pháp bị tô kín màu khi render vector.**
   - _Xử lý:_ Sử dụng thuộc tính `fillRule="evenodd"` trên thẻ `<path>` SVG để tự động đục rỗng chính xác khoảng không bên trong chữ 卩.
-- **Edge Case 10: Gia phả có ít đời ($G_{max} \le 3$) hoặc thành viên khuyết thông tin thế hệ.**
-  - _Tình huống:_ Dữ liệu mới nhập chỉ có 2-3 thế hệ hoặc một số thành viên chưa có `generation_level`.
-  - _Xử lý:_ `computeDeceasedHonorificPrefix` tự động fallback an toàn: nếu không có thông tin thế hệ, mặc định không sinh tiền tố hoặc giữ nguyên họ tên; $G_{max}$ luôn đạt tối thiểu $\ge 1$. Mọi tính toán tuyệt đối không làm crash app.
+### 5.11. Đồng Bộ Trục Bố Cục Trang Chủ (`max-w-3xl`), Vị Trí Banner Tiện Ích PWA Dưới Thẻ Ngày Giỗ & Tách Biệt Chân Card Login Gate
+- **1. Xóa Bỏ Hoàn Toàn Khối Quản Trị Viên Cuối Trang Chủ (`src/app/page.tsx`):**
+  - Khối thẻ xanh `Khu vực Quản Trị Viên (Super Admin)` ở cuối trang chủ là vết tích dư thừa, làm hẹp và lệch lề (`max-w-xl` 576px so với `max-w-3xl` 768px của Khối Ngày Giỗ).
+  - Super Admin đã có toàn quyền truy cập Cài Đặt Quản Trị qua Menu Avatar trên Header Navbar (`AuthButton.tsx > [🛡️ Quản Trị Dòng Họ]` hoặc `/admin`). Việc xóa bỏ khối này giúp Trang Chủ tôn nghiêm, tinh gọn, tập trung 100% vào giá trị cội nguồn dòng tộc.
+- **2. Định Vị Banner Tiện Ích Cài Đặt PWA Ngay Dưới Thẻ Ngày Giỗ Gần Nhất:**
+  - Thay vì đặt nút Cài đặt lơ lửng lẻ loi giữa Hero và Lời chào mừng, Banner Tiện Ích PWA được đặt **ngay bên dưới Thẻ Ngày Giỗ Gần Nhất**.
+  - **Đồng bộ chuẩn hình học `max-w-3xl w-full` (768px):** Cả Thẻ Ngày Giỗ và Banner Tiện Ích đều có chiều rộng 768px, gióng lề trái và phải thẳng tắp 100%.
+  - **Nội dung ngữ cảnh trang nhã:**
+    - Cánh trái: Icon điện thoại/tải app + thông điệp: *"Cài đặt ứng dụng lên điện thoại để nhận thông báo ngày giỗ và tra cứu gia phả nhanh chóng."*
+    - Cánh phải: Nút bấm hành động với nhãn responsive:
+      - Mobile ($< 640\text{px}$): **"Cài đặt ứng dụng điện thoại"**
+      - Desktop ($\ge 640\text{px}$): **"Cài đặt ứng dụng"**
+    - Loại bỏ triệt để các chuỗi kỹ thuật `FAT` hay `(PWA)`.
+  - **Cơ chế Tự Hủy Không Để Lại Khoảng Trống (Zero Residual Space):**
+    - Khi ứng dụng đã được cài đặt và chạy ở chế độ Standalone (`display-mode: standalone`): Banner này **tự động ẩn đi 100%**, Trang Chủ kết thúc ngay tại Thẻ Ngày Giỗ Gần Nhất, hoàn toàn tự nhiên và sạch sẽ!
+- **3. Tách Biệt Nút Cài Đặt Xuống Chân Card Tại Cổng Đăng Nhập (`/login-gate`):**
+  - Loại bỏ việc xếp chồng nút Cài đặt PWA như một nút thứ 3 trong form xác thực.
+  - Phía dưới cụm đăng nhập là đường hairline mờ nhẹ `border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-2`.
+  - Nút Cài đặt đặt tại chân Card với phong cách thanh thoát, đồng bộ màu ngọc bích nhạt, tự ẩn khi đã cài đặt.
 
 ---
 
@@ -550,23 +581,11 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_AVATAR_EDGE_CASES** | Xử lý tên 1 từ, Khuyết danh và fallback chuỗi rỗng | `tests/avatar-utils.test.ts` | Tên "Trưởng", Khuyết danh `is_anonymous: true`, chuỗi null/rỗng | Gọi `getMemberInitials(...)` | "Trưởng" $\rightarrow$ "TR", Khuyết danh $\rightarrow$ "KD", null/rỗng $\rightarrow$ "TV" | Edge Case | `[x] PASS` |
 | **TC_UT_ANNIV_DEDUP_INFO** | Dòng thành viên không lặp lại chuỗi ngày âm, tính đúng tuổi thọ | `tests/anniversary.test.ts` | Thành viên có `birth_year: 1935, death_year: 2005` | Tính toán thông tin hiển thị dòng người giỗ | Tuổi thọ đạt 71 tuổi (`2005 - 1935 + 1`), không chứa chuỗi ngày âm lặp lại | Happy Path | `[x] PASS` |
 | **TC_UT_HOMEPAGE_CLEAN_NO_REDUNDANT_CARDS** | Loại bỏ hoàn toàn khối 3 thẻ tính năng thừa trên trang chủ, tiêu đề Ngày Giỗ Gần Nhất tinh gọn | `tests/theme-and-layout.test.ts` | Đọc mã nguồn `src/app/page.tsx` | Kiểm tra các chuỗi và thẻ điều hướng | Không chứa 3 thẻ thừa; chứa đúng tiêu đề "Ngày Giỗ Gần Nhất" | Architecture / UX | `[x] PASS` |
-| **TC_UT_SOLAR_DAY_OF_WEEK** | Tính đúng Thứ trong tuần (Thứ Hai $\rightarrow$ Chủ Nhật) và format Dương lịch đầy đủ | `tests/anniversary.test.ts` | Ngày 18/10/2026 (Chủ Nhật), Ngày 19/10/2026 (Thứ Hai) | Gọi `formatSolarDateWithDayOfWeek(year, month, day)` | Trả về chuỗi có chứa tên Thứ và ngày tháng năm chuẩn xác | Logic Engine | `[x] PASS` |
-| **TC_UT_MOBILE_ANNIV_DATE_STACK** | Cấu trúc hiển thị ngày trên Mobile: Dương lịch ở trên, Âm lịch ở dưới | `tests/theme-and-layout.test.ts` | Đọc mã nguồn `src/app/page.tsx` và `src/app/anniversaries/page.tsx` | Kiểm tra thứ tự các block hiển thị ngày | Khối Dương lịch có Thứ xuất hiện trước khối Âm lịch trong DOM | Mobile UX | `[x] PASS` |
-| **TC_UT_MOBILE_BOTTOM_NAV_STRUCTURE** | Cấu trúc và liên kết của thanh MobileBottomNav | `tests/theme-and-layout.test.ts` | File `src/components/navigation/MobileBottomNav.tsx` | Đọc mã nguồn và kiểm tra markup | Chứa `md:hidden`, liên kết đủ 4 đường dẫn (`/`, `/tree`, `/anniversaries`, `/kinship`), dùng `usePathname` | Navigation Contract | `[x] PASS` |
-| **TC_UT_LAYOUT_BOTTOM_NAV_INJECTION** | layout.tsx nhúng MobileBottomNav và có padding-bottom an toàn | `tests/theme-and-layout.test.ts` | File `src/app/layout.tsx` | Đọc mã nguồn layout | Có render `<MobileBottomNav />`, `<main>` có class `pb-16 md:pb-0` chống che lấp | Layout Integrity | `[x] PASS` |
-| **TC_UT_CANVAS_CONTROLS_MOBILE_LIFT** | Controls của React Flow trên mobile nâng cao độ chống che lấp | `tests/theme-and-layout.test.ts` | File `src/components/tree/FamilyTreeCanvas.tsx` | Đọc mã nguồn Controls | Thẻ `<Controls>` có class `!mb-16 md:!mb-0` | Canvas Resilience | `[x] PASS` |
-| **TC_UT_NAVBAR_NO_ADMIN_BUTTON** | Loại bỏ hoàn toàn nút Quản trị trên Header Navbar | `tests/theme-and-layout.test.ts` | File `src/components/navbar/Navbar.tsx` | Đọc mã nguồn kiểm tra JSX/links | Không chứa đường dẫn `/admin` hay nút "Quản Trị" / "Quản Trị Dòng Họ" trên Header | Clean Navbar | `[x] PASS` |
-| **TC_UT_NAVBAR_HAN_LOGO** | Logo chữ Hán "Phạm" (`范`) trên nền xanh ngọc bích | `tests/theme-and-layout.test.ts` | File `src/components/navbar/Navbar.tsx` | Đọc mã nguồn phần Logo thương hiệu | Chứa ký tự chữ Hán `范`, class `bg-emerald-600` và `text-white font-serif` | Brand Identity | `[x] PASS` |
-| **TC_UT_FAMILY_TREE_ICON_STRUCTURE** | Cấu trúc SVG biểu tượng Cây Phả Hệ chuẩn 3 ô vuông | `tests/theme-and-layout.test.ts` | File `src/components/icons/FamilyTreeIcon.tsx` | Đọc mã nguồn SVG icon | Chứa 3 thẻ `<rect>` (1 trên, 2 dưới) và thẻ `<path>` rẽ nhánh mô phỏng cây phả hệ | Icon Specification | `[x] PASS` |
-| **TC_UT_AUTH_AVATAR_NO_OVAL_DISTORTION** | Avatar AuthButton tròn hoàn hảo không méo bầu dục trên mobile | `tests/theme-and-layout.test.ts` | File `src/components/auth/AuthButton.tsx` | Đọc mã nguồn markup Avatar | Nút bọc và ảnh `<img>` có class `rounded-full` và `aspect-square`, triệt tiêu padding lệch khi text ẩn | Visual Geometry | `[x] PASS` |
-| **TC_UT_WELCOME_CARD_AVATAR_CONSISTENCY** | Khối Chào Mừng Trang Chủ đồng bộ Avatar tròn và fallback 2 chữ cái | `tests/theme-and-layout.test.ts` | File `src/app/page.tsx` | Đọc mã nguồn khối Welcome Card | Render thẻ `<img>` tròn `rounded-full aspect-square` với `avatar_url` hoặc fallback initials `getMemberInitials`, không dùng ô vuông xanh 1 ký tự | Design Consistency | `[x] PASS` |
-| **TC_UT_CLAN_HAN_LOGO_AUTHENTIC_VECTOR** | Kiểm tra component ClanHanLogo render chuẩn xác nét thư pháp đích thực | `tests/theme-and-layout.test.ts` | File `src/components/icons/ClanHanLogo.tsx` | Đọc mã nguồn component | Chứa đường path vector từ ảnh thư pháp, có `fillRule="evenodd"` và nền `bg-emerald-600` | Calligraphy Engine | `[x] PASS` |
-| **TC_UT_ADMIN_PROFILE_CLAN_LOGO_PREVIEW** | Căn Cước Dòng Họ (/admin/profile) hiển thị huy hiệu Logo Thư Pháp | `tests/theme-and-layout.test.ts` | File `src/app/admin/profile/page.tsx` | Đọc mã nguồn trang admin profile | Render ClanHanLogo bên cạnh tên dòng họ trong hộp mô phỏng biểu ngữ chính thức | Clan Identity UI | `[x] PASS` |
-| **TC_UT_PERSONAL_SETTINGS_NO_LOGO_OPTION** | Modal Cài Đặt Cá Nhân không còn chứa tùy chọn đổi logo dòng họ | `tests/theme-and-layout.test.ts` | File `src/components/auth/PersonalSettingsModal.tsx` | Đọc mã nguồn modal | Không còn chứa các thẻ chọn phong cách thư pháp logo (trả lại đúng thẩm quyền cá nhân) | Settings Cleanliness | `[x] PASS` |
-| **TC_UT_CLAN_HAN_LOGO_SCALE_UP** | Khắc phục chữ bé: Tăng kích thước SVG lên size 28 và mở rộng tọa độ vector chiếm 88% viewBox | `tests/theme-and-layout.test.ts` | Files `src/components/navbar/ClanHanLogoNavbar.tsx`, `src/components/icons/ClanHanLogo.tsx`, `src/app/admin/profile/page.tsx` | Đọc mã nguồn và kiểm tra kích thước `size={28}`, `size={38}` và bounding box vector | Navbar dùng `size={28}`, Admin profile dùng `size={38}`, path vector có độ phủ Y đạt 88% (Y min <= 6.0, Y max >= 94.0) | Calligraphy Scale-Up | `[x] PASS` |
-| **TC_UT_NO_SOLAR_SUFFIX** | Loại bỏ triệt để chuỗi "(Dương lịch)" trên Trang Chủ và Lịch Giỗ | `tests/theme-and-layout.test.ts` | Files `src/app/page.tsx` và `src/app/anniversaries/page.tsx` | Đọc mã nguồn và kiểm tra nội dung text hiển thị ngày | Hoàn toàn không còn chứa chuỗi "(Dương lịch)" hoặc "(Dương Lịch)" trong cả 2 file | Visual Cleanliness | `[x] PASS` |
-| **TC_UT_DECEASED_HONORIFIC_UNLINKED** | Động cơ tiền tố danh xưng tiền nhân khi chưa liên kết node (Đời 4 từ đáy -> Cụ; Đời 2,3 -> Ông/Bà; Đời 1 -> không tiền tố) | `tests/anniversary.test.ts` | Gia phả mock có $G_{max}=5$, các thành viên đời 1..5 đã mất | Gọi `getUpcomingAnniversaries` không truyền `viewerMemberId` | Đời 1, 2 ($k \ge 4$) có tiền tố "Cụ"; Đời 3, 4 ($k \in \{2, 3\}$) có tiền tố "Ông"/"Bà"; Đời 5 ($k=1$) không tiền tố | Honorific Engine | `[x] PASS` |
-| **TC_UT_DECEASED_HONORIFIC_LINKED** | Động cơ danh xưng cá nhân hóa khi đã liên kết node theo quan hệ thân tộc với người mất | `tests/anniversary.test.ts` | Viewer là Cháu, người mất là Bà nội hoặc Cụ tổ | Gọi `getUpcomingAnniversaries` truyền `viewerMemberId` | Thành viên có `honorific_prefix` / `relative_kinship` phản ánh đúng quan hệ thân tộc ("Bà nội", "Cụ") | Kinship Integration | `[x] PASS` |
+| **TC_UT_SOLAR_DAY_OF_WEEK** | Tính đúng Thứ trong tuần (Thứ Hai $\rightarrow$ Chủ Nhật) và format Dương lịch đầy đủ | `tests/anniversary.test.ts` | Ngày 18/10/2026 (Chủ Nhật), Ngày 19/10/2026 (Thứ Hai) | Gọi `formatSolarDateWithDayOfWeek(year, month, day)` | Trả về chuỗi có chứa tên| **TC_UT_FAVICON_AND_ICONS_EXIST** | Bộ nhận diện Favicon, Apple Touch Icon và PWA Icons tồn tại và được khai báo chuẩn | `tests/theme-and-layout.test.ts` | Thư mục `public/` và file `src/app/layout.tsx` | Kiểm tra sự tồn tại của files và metadata.icons | Tồn tại `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192x192.png`, `icon-512x512.png` và metadata có trường icons | Brand Assets | `[x] PASS` |
+| **TC_UT_LOGIN_GATE_INSTALL_PWA** | Component InstallPwaButton tồn tại và được tích hợp trên Login Gate và Trang Chủ | `tests/theme-and-layout.test.ts` | Files `src/components/pwa/InstallPwaButton.tsx`, `src/app/login-gate/page.tsx`, `src/app/page.tsx` | Đọc mã nguồn kiểm tra sự tồn tại và nhúng component | Component tồn tại, có xử lý beforeinstallprompt và iOS guide, được nhúng trong cả 2 màn hình | PWA Installation | `[x] PASS` |
+| **TC_UT_HOMEPAGE_UNIFIED_WIDTH_ALIGNMENT** | Thẻ Ngày Giỗ và Banner Tiện Ích PWA đồng bộ độ rộng chuẩn max-w-3xl | `tests/theme-and-layout.test.ts` | File `src/app/page.tsx` | Đọc mã nguồn và kiểm tra container classes | Thẻ Ngày Giỗ và Banner Tiện Ích PWA đều có class `max-w-3xl w-full` | Geometry Alignment | `[x] PASS` |
+| **TC_UT_HOMEPAGE_NO_ADMIN_CARD** | Trang Chủ loại bỏ hoàn toàn Khối Thẻ Quản Trị Viên (Super Admin) ở cuối trang | `tests/theme-and-layout.test.ts` | File `src/app/page.tsx` | Đọc mã nguồn kiểm tra JSX/text | Không còn chứa chuỗi "Khu vực Quản Trị Viên (Super Admin)" hay ID `admin-settings-btn` trên trang chủ | Clean Homepage | `[x] PASS` |
+| **TC_UT_PWA_RESPONSIVE_LABEL** | Nút / Banner Cài Đặt PWA hiển thị nhãn thông minh theo kích cỡ thiết bị | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` hoặc `page.tsx` | Đọc mã nguồn nhãn hiển thị | Chứa nhãn Desktop "Cài đặt ứng dụng" và Mobile "Cài đặt ứng dụng điện thoại", không chứa FAT/PWA | Responsive Labels | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -593,6 +612,12 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_20 (Giao Diện Ngày Sạch Không Chữ Dương Lịch):** Mở Trang Chủ và Trang Lịch Giỗ $\rightarrow$ Dòng Dương lịch chỉ còn Thứ và Ngày tháng (VD: `Thứ Ba, ngày 22/09/2026`), hoàn toàn không còn xuất hiện hậu tố `(Dương lịch)` hay `(Dương Lịch)`.
 - [ ] **UAT_21 (Hiển Thị Tiền Tố Danh Xưng Trang Trọng Cụ/Ông/Bà):** Với tài khoản khách hoặc chưa liên kết node: Tên người mất hiển thị tiền tố trang trọng theo phân cấp từ dưới lên (Đời thứ 4 từ đáy lên $\rightarrow$ `Cụ [Họ Tên]`; Đời thứ 2, 3 từ đáy lên $\rightarrow$ `Ông [Họ Tên]` hoặc `Bà [Họ Tên]`).
 - [ ] **UAT_22 (Xưng Hô Cá Nhân Hóa Khi Đã Liên Kết Node):** Đăng nhập tài khoản đã liên kết node $\rightarrow$ Thẻ người mất hiển thị danh xưng theo ngôi xưng hô của người xem với người mất (VD: `Bà nội Lê Thị Nhân`, `Ông nội Phạm Kim Châu`, `Cụ Phạm Kim Đức` kèm badge quan hệ).
+- [ ] **UAT_23 (Theme Mặc Định Sáng):** Mở trình duyệt ẩn danh (Incognito) hoặc thiết bị mới $\rightarrow$ Giao diện luôn là Light Theme màu sáng tinh khôi, ngọc bích tươi tắn; chỉ chuyển Dark khi người dùng chủ động bấm đổi theme.
+- [ ] **UAT_24 (Favicon Chữ Hán Thư Pháp):** Tab trình duyệt trên máy tính và điện thoại hiển thị Favicon chữ Hán "Phạm" (`范`) trên nền ngọc bích sắc nét.
+- [ ] **UAT_25 (Nút Cài Đặt PWA Trên Login Gate & Trang Chủ):** Mở `/login-gate` và Trang Chủ $\rightarrow$ Xuất hiện nút "Cài đặt ứng dụng lên màn hình chính". Bấm nút kích hoạt hộp thoại cài đặt PWA (hoặc hiển thị hướng dẫn trực quan trên iOS Safari).
+- [ ] **UAT_26 (Trục Thẳng Hàng Trang Chủ max-w-3xl):** Mở Trang Chủ $\rightarrow$ Khối Ngày Giỗ Gần Nhất và Banner Tiện Ích Cài Đặt PWA gióng thẳng tắp 2 lề trái phải (`max-w-3xl`), không còn hiện tượng lệch lề thụt thò.
+- [ ] **UAT_27 (Loại Bỏ Hoàn Toàn Khối Quản Trị Viên Trang Chủ):** Mở Trang Chủ bằng tài khoản Super Admin $\rightarrow$ Cuối trang không còn xuất hiện thẻ xanh Quản Trị Viên, giao diện kết thúc trang nhã và tôn nghiêm tại Khối Ngày Giỗ / Banner.
+- [ ] **UAT_28 (Chân Card Login Gate Thanh Thoát):** Mở `/login-gate` $\rightarrow$ Nút Cài đặt ứng dụng đặt dưới đường kẻ hairline ở chân Card, không cạnh tranh với nút Đăng nhập Google.
 
 ---
 
@@ -616,6 +641,17 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG16 (Clean Solar Date Integrity):** Đảm bảo format ngày và vị trí Thứ trong tuần không bị ảnh hưởng khi xóa `(Dương lịch)`.
 - [x] **RG17 (Kinship Engine Zero Lag):** Đảm bảo việc tính danh xưng không phát sinh overhead hay ảnh hưởng đến tính năng tra cứu vai vế `/kinship`.
 - [x] **RG18 (Spotlight & Anniversaries Sync):** Thẻ Spotlight Ngày Giỗ Gần Nhất trên Trang Chủ và Trang Lịch Giỗ hiển thị đồng bộ tiền tố danh xưng và tên người mất.
+- [x] **RG19 (Dark Mode Toggle Integrity):** Nút chuyển Theme vẫn hoạt động bình thường, người dùng đã chọn Dark thì vẫn lưu và giữ Dark.
+- [x] **RG20 (Standalone PWA Safety):** Ứng dụng khi chạy ở chế độ Standalone không hiển thị nút cài đặt thừa thãi.
+- [x] **RG21 (Admin Route Accessibility):** Super Admin vẫn truy cập `/admin` và `/admin/settings` dễ dàng qua Menu Avatar trên Navbar sau khi bỏ khối Admin ở Trang Chủ.
+- [x] **RG22 (PWA Standalone Vanishing):** Khi ứng dụng chạy trong chế độ Standalone, Banner Tiện Ích tự động biến mất 100%, không để lại khoảng trống thừa.
+
+---
+
+## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
+
+> "AI ơi, hãy đọc kỹ đặc tả `docs/14_Micro-Spec_Milestone_5_Anniversaries_WebPush_Cron.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build $\rightarrow$ Automated Test Suite $\rightarrow$ Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+
 
 ---
 

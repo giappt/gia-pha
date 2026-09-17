@@ -20,6 +20,15 @@ export const metadata: Metadata = {
   description:
     'Nền tảng số hóa gia phả dòng họ, phân định vai vế xưng hô, tra cứu ngày giỗ âm lịch và kết nối con cháu.',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export default async function RootLayout({
@@ -97,15 +106,14 @@ export default async function RootLayout({
   return (
     <html lang="vi" className={`h-full ${beVietnamPro.variable}`} suppressHydrationWarning>
       <head>
-        {/* Script khởi tạo Theme an toàn chống FOUC */}
+        {/* Script khởi tạo Theme an toàn chống FOUC: Mặc định Light, chỉ Dark khi đã lưu */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
                   var saved = localStorage.getItem('theme');
-                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  if (saved === 'dark' || (!saved && prefersDark)) {
+                  if (saved === 'dark') {
                     document.documentElement.classList.add('dark');
                   } else {
                     document.documentElement.classList.remove('dark');

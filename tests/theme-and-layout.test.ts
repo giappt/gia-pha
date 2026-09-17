@@ -643,6 +643,187 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
     assert.ok(Math.abs(centerY - 50.0) < 1.0, `Tâm Y phải căn giữa (thực tế: ${centerY})`);
     assert.ok(Math.abs(centerX - 50.0) < 1.0, `Tâm X phải căn giữa (thực tế: ${centerX})`);
   });
+
+  // TC_UT_THEME_DEFAULT_LIGHT: Theme mặc định luôn là Light, chỉ bật Dark khi localStorage có 'dark'
+  it('TC_UT_THEME_DEFAULT_LIGHT: layout.tsx không tự ép Dark theo prefers-color-scheme, mặc định 100% là Light', () => {
+    const layoutPath = path.resolve(process.cwd(), 'src/app/layout.tsx');
+    assert.ok(fs.existsSync(layoutPath), 'src/app/layout.tsx phải tồn tại');
+
+    const layoutContent = fs.readFileSync(layoutPath, 'utf8');
+
+    // 1. Inline script chỉ kích hoạt Dark khi người dùng chủ động chọn saved === 'dark'
+    assert.ok(
+      layoutContent.includes("saved === 'dark'") || layoutContent.includes('saved === "dark"'),
+      'Script trong layout.tsx phải kiểm tra saved === "dark" để bật chế độ tối'
+    );
+
+    // 2. Tuyệt đối KHÔNG chứa prefers-color-scheme: dark trong script khởi tạo làm đổi theme của khách mới
+    assert.ok(
+      !layoutContent.includes("prefers-color-scheme: dark"),
+      'layout.tsx không được dùng prefers-color-scheme để tự ý ép dark mode cho người dùng mới'
+    );
+  });
+
+  // TC_UT_FAVICON_AND_ICONS_EXIST: Kiểm tra toàn bộ file asset icon & favicon tồn tại và khai báo metadata
+  it('TC_UT_FAVICON_AND_ICONS_EXIST: public/ chứa đầy đủ favicon.ico, favicon.svg, apple-touch-icon.png và icons PWA', () => {
+    const faviconIcoPath = path.resolve(process.cwd(), 'public/favicon.ico');
+    const faviconSvgPath = path.resolve(process.cwd(), 'public/favicon.svg');
+    const appleTouchIconPath = path.resolve(process.cwd(), 'public/apple-touch-icon.png');
+    const icon192Path = path.resolve(process.cwd(), 'public/icons/icon-192x192.png');
+    const icon512Path = path.resolve(process.cwd(), 'public/icons/icon-512x512.png');
+    const manifestPath = path.resolve(process.cwd(), 'public/manifest.json');
+    const layoutPath = path.resolve(process.cwd(), 'src/app/layout.tsx');
+
+    // 1. Toàn bộ file ảnh biểu tượng phải tồn tại trên ổ đĩa và có dung lượng hợp lệ
+    assert.ok(fs.existsSync(faviconIcoPath), 'public/favicon.ico phải tồn tại');
+    assert.ok(fs.existsSync(faviconSvgPath), 'public/favicon.svg phải tồn tại');
+    assert.ok(fs.existsSync(appleTouchIconPath), 'public/apple-touch-icon.png phải tồn tại');
+    assert.ok(fs.existsSync(icon192Path), 'public/icons/icon-192x192.png phải tồn tại');
+    assert.ok(fs.existsSync(icon512Path), 'public/icons/icon-512x512.png phải tồn tại');
+
+    assert.ok(fs.statSync(faviconIcoPath).size > 1000, 'favicon.ico phải là file đa kích thước > 1KB');
+    assert.ok(fs.statSync(appleTouchIconPath).size > 1000, 'apple-touch-icon.png phải có kích thước hợp lệ');
+    assert.ok(fs.statSync(icon192Path).size > 1000, 'icon-192x192.png phải có kích thước hợp lệ');
+    assert.ok(fs.statSync(icon512Path).size > 1000, 'icon-512x512.png phải có kích thước hợp lệ');
+
+    // 2. manifest.json khai báo icons
+    const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+    assert.ok(manifestContent.includes('/icons/icon-192x192.png'), 'manifest.json phải khai báo icon-192x192.png');
+    assert.ok(manifestContent.includes('/icons/icon-512x512.png'), 'manifest.json phải khai báo icon-512x512.png');
+
+    // 3. layout.tsx metadata icons
+    const layoutContent = fs.readFileSync(layoutPath, 'utf8');
+    assert.ok(layoutContent.includes('/favicon.ico'), 'layout.tsx metadata icons phải chứa /favicon.ico');
+    assert.ok(layoutContent.includes('/favicon.svg'), 'layout.tsx metadata icons phải chứa /favicon.svg');
+    assert.ok(layoutContent.includes('/apple-touch-icon.png'), 'layout.tsx metadata icons phải chứa /apple-touch-icon.png');
+  });
+
+  // TC_UT_LOGIN_GATE_INSTALL_PWA: Nút Cài Đặt PWA trên Login Gate và Trang Chủ
+  it('TC_UT_LOGIN_GATE_INSTALL_PWA: InstallPwaButton hỗ trợ beforeinstallprompt, modal iOS và nhúng vào login-gate & homepage', () => {
+    const pwaBtnPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+    const loginGatePath = path.resolve(process.cwd(), 'src/app/login-gate/page.tsx');
+    const homePath = path.resolve(process.cwd(), 'src/app/page.tsx');
+
+    assert.ok(fs.existsSync(pwaBtnPath), 'src/components/pwa/InstallPwaButton.tsx phải tồn tại');
+    assert.ok(fs.existsSync(loginGatePath), 'src/app/login-gate/page.tsx phải tồn tại');
+    assert.ok(fs.existsSync(homePath), 'src/app/page.tsx phải tồn tại');
+
+    const pwaBtnContent = fs.readFileSync(pwaBtnPath, 'utf8');
+    const loginGateContent = fs.readFileSync(loginGatePath, 'utf8');
+    const homeContent = fs.readFileSync(homePath, 'utf8');
+
+    // 1. Component InstallPwaButton xử lý beforeinstallprompt và standalone
+    assert.ok(
+      pwaBtnContent.includes('beforeinstallprompt'),
+      'InstallPwaButton phải lắng nghe sự kiện beforeinstallprompt'
+    );
+    assert.ok(
+      pwaBtnContent.includes('display-mode: standalone'),
+      'InstallPwaButton phải phát hiện chế độ standalone để tự động ẩn nút'
+    );
+    assert.ok(
+      pwaBtnContent.includes('iPad|iPhone|iPod'),
+      'InstallPwaButton phải nhận diện thiết bị iOS để hiển thị modal hướng dẫn'
+    );
+
+    // 2. Nhúng vào Login Gate (/login-gate)
+    assert.ok(
+      loginGateContent.includes('InstallPwaButton'),
+      'src/app/login-gate/page.tsx phải nhúng InstallPwaButton'
+    );
+
+    // 3. Nhúng vào Trang Chủ (/)
+    assert.ok(
+      homeContent.includes('InstallPwaButton'),
+      'src/app/page.tsx phải nhúng InstallPwaButton'
+    );
+  });
+
+  // TC_UT_HOMEPAGE_UNIFIED_WIDTH_ALIGNMENT: Thẻ Ngày Giỗ và Banner Tiện Ích PWA đồng bộ chuẩn max-w-3xl
+  it('TC_UT_HOMEPAGE_UNIFIED_WIDTH_ALIGNMENT: Thẻ Ngày Giỗ và Banner Tiện Ích PWA trên page.tsx đều có max-w-3xl w-full', () => {
+    const homePath = path.resolve(process.cwd(), 'src/app/page.tsx');
+    assert.ok(fs.existsSync(homePath), 'src/app/page.tsx phải tồn tại');
+
+    const homeContent = fs.readFileSync(homePath, 'utf8');
+
+    // 1. Thẻ Ngày Giỗ có max-w-3xl w-full
+    assert.ok(
+      homeContent.includes('max-w-3xl w-full'),
+      'src/app/page.tsx phải có container max-w-3xl w-full cho nội dung trung tâm'
+    );
+
+    // 2. Banner Tiện Ích PwaInstallBanner được nhúng trên page.tsx
+    assert.ok(
+      homeContent.includes('<PwaInstallBanner') || homeContent.includes('PwaInstallBanner'),
+      'src/app/page.tsx phải nhúng PwaInstallBanner'
+    );
+
+    // 3. Banner PWA xuất hiện sau (ở dưới) khối Ngày Giỗ
+    const annivIndex = homeContent.indexOf('Ngày Giỗ Gần Nhất');
+    const bannerIndex = homeContent.indexOf('<PwaInstallBanner');
+    assert.ok(annivIndex > 0, 'Phải tìm thấy khối Ngày Giỗ Gần Nhất');
+    assert.ok(bannerIndex > 0, 'Phải tìm thấy <PwaInstallBanner');
+    assert.ok(
+      bannerIndex > annivIndex,
+      'PwaInstallBanner bắt buộc phải nằm bên dưới khối Ngày Giỗ Gần Nhất'
+    );
+  });
+
+  // TC_UT_HOMEPAGE_NO_ADMIN_CARD: Trang Chủ loại bỏ hoàn toàn khối thẻ Quản Trị Viên thừa thãi
+  it('TC_UT_HOMEPAGE_NO_ADMIN_CARD: page.tsx không còn chứa khối thẻ xanh Quản Trị Viên (Super Admin) ở cuối trang', () => {
+    const homePath = path.resolve(process.cwd(), 'src/app/page.tsx');
+    assert.ok(fs.existsSync(homePath), 'src/app/page.tsx phải tồn tại');
+
+    const homeContent = fs.readFileSync(homePath, 'utf8');
+
+    // 1. Không còn ID admin-settings-btn trên trang chủ
+    assert.strictEqual(
+      homeContent.includes('id="admin-settings-btn"'),
+      false,
+      'src/app/page.tsx không được chứa button id admin-settings-btn'
+    );
+
+    // 2. Không còn chuỗi "Khu vực Quản Trị Viên (Super Admin)"
+    assert.strictEqual(
+      homeContent.includes('Khu vực Quản Trị Viên (Super Admin)'),
+      false,
+      'src/app/page.tsx không được chứa khối Khu vực Quản Trị Viên (Super Admin)'
+    );
+
+    // 3. Không còn class max-w-xl gây lệch lề
+    assert.strictEqual(
+      homeContent.includes('max-w-xl w-full'),
+      false,
+      'src/app/page.tsx không được chứa class max-w-xl w-full gây lệch lề'
+    );
+  });
+
+  // TC_UT_PWA_RESPONSIVE_LABEL: Nút / Banner PWA hiển thị nhãn responsive thông minh theo thiết bị
+  it('TC_UT_PWA_RESPONSIVE_LABEL: InstallPwaButton chứa nhãn Desktop "Cài đặt ứng dụng" và Mobile "Cài đặt ứng dụng điện thoại"', () => {
+    const pwaBtnPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+    assert.ok(fs.existsSync(pwaBtnPath), 'src/components/pwa/InstallPwaButton.tsx phải tồn tại');
+
+    const pwaContent = fs.readFileSync(pwaBtnPath, 'utf8');
+
+    // 1. Chứa nhãn Desktop "Cài đặt ứng dụng"
+    assert.ok(
+      pwaContent.includes('Cài đặt ứng dụng'),
+      'InstallPwaButton phải chứa nhãn "Cài đặt ứng dụng"'
+    );
+
+    // 2. Chứa nhãn Mobile "Cài đặt ứng dụng điện thoại"
+    assert.ok(
+      pwaContent.includes('Cài đặt ứng dụng điện thoại'),
+      'InstallPwaButton phải chứa nhãn mobile "Cài đặt ứng dụng điện thoại"'
+    );
+
+    // 3. Tuyệt đối không còn chứa chữ kỹ thuật "FAT" hay "(PWA)"
+    assert.strictEqual(
+      pwaContent.includes('FAT (PWA)'),
+      false,
+      'InstallPwaButton không được chứa chuỗi kỹ thuật "FAT (PWA)"'
+    );
+  });
 });
 
 

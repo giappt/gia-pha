@@ -4,7 +4,7 @@
   "description": "Phả hệ trực quan, tính toán vai vế & thông báo ngày giỗ tổ tiên",
   "start_url": "/tree",
   "display": "standalone",
-  "background_color": "#090E1A",
+  "background_color": "#ffffff",
   "theme_color": "#059669",
   "orientation": "portrait-primary",
   "icons": [

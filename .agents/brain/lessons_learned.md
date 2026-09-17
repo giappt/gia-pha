@@ -317,3 +317,15 @@
 
 
 
+
+- **Theme Mặc Định Sáng & Trải Nghiệm Cài Đặt PWA Đa Nền Tảng (Default Light Theme & Cross-Platform PWA Installation):**
+  1. *Triệt tiêu cơ chế tự động ép Dark Mode theo prefers-color-scheme:*
+     - Trước đây: Script inline trong layout.tsx kiểm tra nếu chưa có localStorage.getItem('theme') mà thiết bị OS bật Dark mode (window.matchMedia('(prefers-color-scheme: dark)').matches) thì tự ý add class .dark. Điều này khiến người dùng mới truy cập bằng điện thoại/máy tính có OS Dark mode bị rơi vào giao diện tối mặc dù dòng họ mong muốn màu sáng ngọc bích tươi tắn.
+     - Khắc phục: Đơn giản hóa logic script inline: Chỉ khi saved === 'dark' thì mới classList.add('dark'), ngược lại mặc định 100% người dùng mới được thưởng thức giao diện Sáng tươi tắn, thanh thoát. Nút chuyển đổi Theme vẫn lưu localStorage.setItem('theme', 'dark' | 'light') cho người dùng chủ động lựa chọn.
+  2. *Cài đặt PWA không rào cản & Trải nghiệm iOS Safari trực quan:*
+     - Trên Android/Chrome/Edge: Trình duyệt phát sự kiện beforeinstallprompt. Component InstallPwaButton bắt sự kiện, gọi e.preventDefault() và lưu lại để kích hoạt khi người dùng bấm nút [📲 Cài đặt ứng dụng lên màn hình chính].
+     - Trên iOS Safari: Safari không hỗ trợ beforeinstallprompt. Thay vì để nút bị vô hiệu hóa hoặc biến mất gây khó hiểu cho người dùng iPhone/iPad, component phát hiện thiết bị iOS (/iPad|iPhone|iPod/.test(navigator.userAgent)) và mở một Modal hướng dẫn trực quan 3 bước từng thao tác: (1) Bấm biểu tượng Chia sẻ → (2) Chọn Thêm vào Màn hình chính → (3) Bấm Thêm.
+     - Tự động ẩn khi Standalone: Dùng window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true để ẩn hoàn toàn nút khi ứng dụng đã được cài đặt và đang chạy dưới dạng App độc lập, giữ giao diện gọn gàng.
+  3. *Hệ thống Nhận Diện Thương Hiệu Favicon & App Icons từ Vector Thư Pháp:*
+     - Vector chữ Hán Phạm (范) thư pháp từ tác phẩm gia tộc được render chính xác trên nền ngọc bích #059669 bo góc bo tròn, sinh đầy đủ các biến thể: favicon.svg (vector nét căng trên mọi độ phân giải), favicon.ico (đa kích thước 16/32/48 cho tab trình duyệt), apple-touch-icon.png (180x180 cho iOS), icon-192x192.png và icon-512x512.png (chuẩn PWA Android & Web Manifest).
+     - Khai báo đồng bộ trong layout.tsx (metadata icons) và public/manifest.json, giúp ứng dụng hiển thị biểu tượng tông tộc trang trọng trên thanh tab trình duyệt, bookmark và màn hình chính điện thoại.
