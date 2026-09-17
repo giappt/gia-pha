@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation';
 export const AppFooter: React.FC = () => {
   const pathname = usePathname();
 
-  // Trang Cây phả hệ là canvas đồ họa tương tác toàn màn hình, không hiển thị footer chung
-  if (pathname === '/tree') {
+  // Trang Cây phả hệ và Cổng đăng nhập không hiển thị footer chung
+  if (pathname === '/tree' || pathname === '/login-gate') {
     return null;
   }
 

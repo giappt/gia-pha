@@ -6,6 +6,7 @@ import { Calendar, Compass, Shield, AlertCircle, Sparkles, Clock, ArrowRight } f
 import { getUpcomingAnniversaries, formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
 import { SAMPLE_MEMBERS_28 } from '@/lib/tree-layout/sample-data';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
+import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 import type { MemberRecord } from '@/types/tree';
 
 export default async function HomePage({
@@ -20,11 +21,24 @@ export default async function HomePage({
   // Fetch clan settings if existing
   let clanName = devClanName || 'DÒNG HỌ NGUYỄN VĂN';
   let isDbConnected = false;
+  let featureFlags = resolveFeatureFlags(undefined);
+
+  // Đọc feature flags: Ưu tiên cookie cache để đồng bộ tức thì
+  const cacheCookie = cookieStore.get('fat_feature_flags_cache')?.value;
+  const devFlagsCookie = cookieStore.get('fat_dev_feature_flags')?.value;
+  const targetFlagsCookie = devFlagsCookie || cacheCookie;
+  if (targetFlagsCookie) {
+    try {
+      featureFlags = resolveFeatureFlags(JSON.parse(decodeURIComponent(targetFlagsCookie)));
+    } catch {
+      // ignore
+    }
+  }
 
   try {
     const { data: clanData, error } = await supabase
       .from('clan_settings')
-      .select('clan_name')
+      .select('clan_name, feature_flags')
       .limit(1)
       .single();
 
@@ -34,6 +48,10 @@ export default async function HomePage({
     } else if (!error) {
       isDbConnected = true;
     }
+
+    if (!targetFlagsCookie && clanData?.feature_flags) {
+      featureFlags = resolveFeatureFlags(clanData.feature_flags);
+    }
   } catch (err) {
     console.error('Failed to read clan settings:', err);
   }
@@ -42,6 +60,9 @@ export default async function HomePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const devUserCookie = cookieStore.get('fat_dev_user')?.value;
+  const isGuest = !user && !(process.env.NODE_ENV === 'development' && devUserCookie);
 
   let userProfile = null;
   if (user) {
@@ -159,10 +180,10 @@ export default async function HomePage({
                   {isSuperAdmin
                     ? 'Super Admin (Toàn quyền)'
                     : userProfile?.user_role === 'branch_editor'
-                      ? 'Trưởng Chi Nhánh'
+                      ? 'Trưởng Chi'
                       : userProfile?.user_role === 'claimed_member'
                         ? 'Thành Viên Dòng Họ'
-                        : 'Khách Xem (Viewer)'}
+                        : 'Khách Xem'}
                 </span>
               </p>
             </div>
@@ -170,8 +191,17 @@ export default async function HomePage({
         ) : null}
       </div>
 
-      {/* Spotlight: Ngày Giỗ Gần Nhất */}
-      {nearestGroup && nearestMember && (
+      {/* Banner nhẹ cho Khách chưa đăng nhập */}
+      {isGuest && (
+        <div className="max-w-md w-full mb-10 p-4 rounded-xl bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/70 text-center shadow-xs">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Đăng nhập tài khoản Google để xem Lịch Giỗ, Tra cứu xưng hô và các tính năng nội bộ dòng họ.
+          </p>
+        </div>
+      )}
+
+      {/* Spotlight: Ngày Giỗ Gần Nhất (Chỉ hiển thị khi tính năng bật và người dùng đã đăng nhập) */}
+      {!isGuest && nearestGroup && nearestMember && featureFlags.enable_anniversaries && (
         <div className="max-w-3xl w-full mb-10 p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-emerald-500/10 dark:from-amber-950/40 dark:via-slate-900/60 dark:to-emerald-950/40 border border-amber-500/30 dark:border-amber-700/40 shadow-lg shadow-amber-500/[0.03]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-amber-500/20 dark:border-amber-700/30">
             <div className="flex items-center gap-2">

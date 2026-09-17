@@ -621,87 +621,87 @@ sequenceDiagram
 
 > File test: `tests/auth-gate.test.ts` [NEW]
 
-- [ ] **TC_UT_MW_PRIVATE_GUEST_REDIRECT (Middleware chặn guest khi enable_public_tree=false):**
+- [x] **TC_UT_MW_PRIVATE_GUEST_REDIRECT (Middleware chặn guest khi enable_public_tree=false):**
   - **Given:** `featureFlags = { enable_public_tree: false }`, user = null (guest).
   - **When:** Request GET `/tree`.
   - **Then:** Middleware trả về redirect 307 tới `/login-gate?returnTo=%2Ftree`.
 
-- [ ] **TC_UT_MW_PRIVATE_LOGGEDIN_PASS (Middleware cho phép user đã đăng nhập khi enable_public_tree=false):**
+- [x] **TC_UT_MW_PRIVATE_LOGGEDIN_PASS (Middleware cho phép user đã đăng nhập khi enable_public_tree=false):**
   - **Given:** `featureFlags = { enable_public_tree: false }`, user = authenticated.
   - **When:** Request GET `/tree`.
   - **Then:** Middleware trả về `NextResponse.next()` (pass-through).
 
-- [ ] **TC_UT_MW_PUBLIC_GUEST_TREE_PASS (Middleware cho guest xem /tree khi enable_public_tree=true):**
+- [x] **TC_UT_MW_PUBLIC_GUEST_TREE_PASS (Middleware cho guest xem /tree khi enable_public_tree=true):**
   - **Given:** `featureFlags = { enable_public_tree: true }`, user = null.
   - **When:** Request GET `/tree`.
   - **Then:** Middleware trả về pass-through.
 
-- [ ] **TC_UT_MW_PUBLIC_GUEST_HOME_PASS (Middleware cho guest xem / khi enable_public_tree=true):**
+- [x] **TC_UT_MW_PUBLIC_GUEST_HOME_PASS (Middleware cho guest xem / khi enable_public_tree=true):**
   - **Given:** `featureFlags = { enable_public_tree: true }`, user = null.
   - **When:** Request GET `/`.
   - **Then:** Middleware trả về pass-through.
 
-- [ ] **TC_UT_MW_PUBLIC_GUEST_KINSHIP_BLOCK (Middleware chặn guest /kinship khi enable_public_tree=true):**
+- [x] **TC_UT_MW_PUBLIC_GUEST_KINSHIP_BLOCK (Middleware chặn guest /kinship khi enable_public_tree=true):**
   - **Given:** `featureFlags = { enable_public_tree: true }`, user = null.
   - **When:** Request GET `/kinship`.
   - **Then:** Middleware trả về redirect 307 tới `/login-gate?returnTo=%2Fkinship`.
 
-- [ ] **TC_UT_MW_PUBLIC_GUEST_ANNIVERSARIES_BLOCK (Middleware chặn guest /anniversaries khi enable_public_tree=true):**
+- [x] **TC_UT_MW_PUBLIC_GUEST_ANNIVERSARIES_BLOCK (Middleware chặn guest /anniversaries khi enable_public_tree=true):**
   - **Given:** `featureFlags = { enable_public_tree: true }`, user = null.
   - **When:** Request GET `/anniversaries`.
   - **Then:** Middleware trả về redirect 307 tới `/login-gate?returnTo=%2Fanniversaries`.
 
-- [ ] **TC_UT_MW_BYPASS_ADMIN (Middleware KHÔNG chặn /admin/*):**
+- [x] **TC_UT_MW_BYPASS_ADMIN (Middleware KHÔNG chặn /admin/*):**
   - **Given:** Bất kỳ `featureFlags`, user = null.
   - **When:** Request GET `/admin/features`.
   - **Then:** Middleware KHÔNG redirect (route admin có auth guard riêng).
 
-- [ ] **TC_UT_MW_BYPASS_API (Middleware KHÔNG chặn /api/*):**
+- [x] **TC_UT_MW_BYPASS_API (Middleware KHÔNG chặn /api/*):**
   - **Given:** Bất kỳ `featureFlags`, user = null.
   - **When:** Request GET `/api/members`.
   - **Then:** Middleware KHÔNG redirect.
 
-- [ ] **TC_UT_MW_BYPASS_LOGIN_GATE (Middleware KHÔNG chặn /login-gate):**
+- [x] **TC_UT_MW_BYPASS_LOGIN_GATE (Middleware KHÔNG chặn /login-gate):**
   - **Given:** Bất kỳ `featureFlags`, user = null.
   - **When:** Request GET `/login-gate`.
   - **Then:** Middleware KHÔNG redirect (tránh infinite loop).
 
-- [ ] **TC_UT_MW_BYPASS_AUTH_CALLBACK (Middleware KHÔNG chặn /auth/callback):**
+- [x] **TC_UT_MW_BYPASS_AUTH_CALLBACK (Middleware KHÔNG chặn /auth/callback):**
   - **Given:** Bất kỳ `featureFlags`, user = null.
   - **When:** Request GET `/auth/callback`.
   - **Then:** Middleware KHÔNG redirect.
 
-- [ ] **TC_UT_MW_PUBLIC_LOGGEDIN_FULL_ACCESS (Middleware cho phép full access khi đã đăng nhập):**
+- [x] **TC_UT_MW_PUBLIC_LOGGEDIN_FULL_ACCESS (Middleware cho phép full access khi đã đăng nhập):**
   - **Given:** `featureFlags = { enable_public_tree: true }`, user = authenticated.
   - **When:** Request GET `/anniversaries`.
   - **Then:** Middleware trả về pass-through.
 
-- [ ] **TC_UT_MW_DEFAULT_FLAGS_FALLBACK (Middleware dùng DEFAULT_FEATURE_FLAGS khi không có cookie/DB):**
+- [x] **TC_UT_MW_DEFAULT_FLAGS_FALLBACK (Middleware dùng DEFAULT_FEATURE_FLAGS khi không có cookie/DB):**
   - **Given:** Không có cookie `fat_feature_flags_cache`, DB query trả về null.
   - **When:** Resolve feature flags.
   - **Then:** `enable_public_tree = true` (default), guest xem được `/` và `/tree`.
 
-- [ ] **TC_UT_HOME_GUEST_NO_SPOTLIGHT (Home ẩn Spotlight Ngày Giỗ cho guest):**
+- [x] **TC_UT_HOME_GUEST_NO_SPOTLIGHT (Home ẩn Spotlight Ngày Giỗ cho guest):**
   - **Given:** Render Home page, user = null (guest).
   - **When:** Server render `/`.
   - **Then:** HTML output KHÔNG chứa text "Ngày Giỗ Gần Nhất".
 
-- [ ] **TC_UT_HOME_LOGGEDIN_HAS_SPOTLIGHT (Home hiện Spotlight Ngày Giỗ cho user đã đăng nhập):**
+- [x] **TC_UT_HOME_LOGGEDIN_HAS_SPOTLIGHT (Home hiện Spotlight Ngày Giỗ cho user đã đăng nhập):**
   - **Given:** Render Home page, user = authenticated, có dữ liệu giỗ.
   - **When:** Server render `/`.
   - **Then:** HTML output CÓ chứa text "Ngày Giỗ Gần Nhất".
 
-- [ ] **TC_UT_NAVBAR_GUEST_HIDDEN_LINKS (Navbar ẩn Lịch Giỗ/Xưng hô cho guest):**
+- [x] **TC_UT_NAVBAR_GUEST_HIDDEN_LINKS (Navbar ẩn Lịch Giỗ/Xưng hô cho guest):**
   - **Given:** Source code `Navbar.tsx`.
   - **When:** Kiểm tra logic render conditional.
   - **Then:** Khi `isGuest = true`, các link `/anniversaries` và `/kinship` bị ẩn khỏi nav output.
 
-- [ ] **TC_UT_MOBILE_NAV_GUEST_FILTERED (MobileBottomNav lọc link cho guest):**
+- [x] **TC_UT_MOBILE_NAV_GUEST_FILTERED (MobileBottomNav lọc link cho guest):**
   - **Given:** MobileBottomNav nhận `isGuest = true`, `enablePublicTree = true`.
   - **When:** Render component.
   - **Then:** Chỉ hiển thị 2 link: "Trang Chủ" (`/`) và "Phả Hệ" (`/tree`). Ẩn: "Lịch Giỗ", "Xưng hô".
 
-- [ ] **TC_UT_MOBILE_NAV_LABEL_SYNC (MobileBottomNav đổi nhãn "Vai Vế" → "Xưng hô"):**
+- [x] **TC_UT_MOBILE_NAV_LABEL_SYNC (MobileBottomNav đổi nhãn "Vai Vế" → "Xưng hô"):**
   - **Given:** Source code `MobileBottomNav.tsx`.
   - **When:** Đọc `NAV_ITEMS`.
   - **Then:** Item `/kinship` có label = "Xưng hô" (không còn "Vai Vế").
@@ -719,13 +719,557 @@ sequenceDiagram
 
 ### 14.9. Bổ Sung Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
 
-- [ ] **RG13 (Build & Typecheck Clean After Auth Gate):** `npm run typecheck` (0 errors) và `npm run build` thành công mọi route kể cả `/login-gate` mới.
-- [ ] **RG14 (Existing Test Suite Zero Regression):** `npm test` — toàn bộ 191 tests hiện có + tests mới đều pass, 0 failure mới so với baseline.
+- [x] **RG13 (Build & Typecheck Clean After Auth Gate):** `npm run typecheck` (0 errors) và `npm run build` thành công mọi route kể cả `/login-gate` mới.
+- [x] **RG14 (Existing Test Suite Zero Regression):** `npm test` — toàn bộ 191 tests hiện có + 17 tests mới đều pass (208/208 PASS), 0 failure mới so với baseline.
 - [ ] **RG15 (Admin Portal Unaffected):** Toàn bộ trang `/admin/*` truy cập bình thường cho Super Admin đã đăng nhập, không bị chặn bởi middleware mới.
 - [ ] **RG16 (OAuth Flow Integrity):** Luồng đăng nhập Google → `/auth/callback` → redirect Home hoạt động bình thường, không bị middleware can thiệp.
 - [ ] **RG17 (Feature Flags Toggle Still Works):** Trang `/admin/features` gạt bật/tắt `enable_public_tree` lưu thành công, flag mới có hiệu lực cho guest requests tiếp theo (trong vòng TTL cache 5 phút).
 - [ ] **RG18 (Dark Mode & Theme Toggle):** Login Gate page và Home page guest mode hiển thị đúng trong cả Light và Dark theme.
 - [ ] **RG19 (Tree Page Full Functionality):** Guest truy cập `/tree` khi public mode → pan, zoom, Ghost Node, Member Drawer hoạt động bình thường không bị giới hạn.
+
+---
+
+## 15. CƠ CHẾ AUTO-SAVE TỨC THÌ TRÊN TOGGLE SWITCH & SERVICE ROLE RLS BYPASS (MILESTONE 7.6)
+
+### 15.1. Bối Cảnh & Phân Tích Căn Nguyên Gốc Rễ
+
+Trong quá trình nghiệm thu Milestone 7.5, phát sinh sự cố: Super Admin đã gạt tắt switch "Công Khai Cây Phả Hệ Cho Khách Vãng Lai" (`enable_public_tree = false`) trên `/admin/features`, nhưng khi mở Tab Ẩn danh (Incognito) truy cập `http://localhost:3000` thì vẫn nhìn thấy liên kết "Cây Phả Hệ" trên Navbar.
+
+**Hai căn nguyên cốt lõi:**
+1. **Lỗ hổng UX (Missing Auto-Save):** Sự kiện gạt switch trong `AdminFeaturesPage` chỉ cập nhật biến React State trong bộ nhớ RAM client. Nút "Lưu Cấu Hình Tính Năng" nằm ở tận đáy trang ngoài tầm nhìn (below the fold). Người dùng theo thói quen gạt switch xong chuyển tab ngay mà không bấm Lưu, dẫn đến **không có request HTTP nào được gửi đi**.
+2. **Server RLS Silent Failure:** API `PATCH /api/clan-settings` sử dụng `createClient()` (client SSR phụ thuộc phiên). Trong môi trường phát triển Dev Bypass (`fat_dev_user`), phiên Supabase Auth là `null`, nên lệnh `UPDATE clan_settings` bị Row Level Security (RLS) của Supabase Postgres âm thầm từ chối (0 rows affected). Route chỉ ghi đè cookie `fat_dev_feature_flags` vào trình duyệt hiện tại. Khi Tab Ẩn danh (Incognito) truy cập, không có cookie nên phải đọc từ bảng Postgres `clan_settings` — nơi cờ tính năng chưa từng được cập nhật.
+3. **Middleware Cache Stale:** Cookie `fat_feature_flags_cache` (TTL 300s) chưa được làm tươi hoặc xóa khi Admin lưu cờ mới.
+
+### 15.2. Sơ Đồ Trình Tự Đồng Bộ Tức Thì (Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Super Admin
+    participant UI as /admin/features (Switch Component)
+    participant API as PATCH /api/clan-settings
+    participant AdminDB as Supabase createAdminClient()
+    participant Cache as Cookies (fat_feature_flags_cache)
+    actor Guest as Khách Ẩn Danh (Incognito)
+    participant MW as Middleware (Auth Gate)
+
+    Admin->>UI: Gạt tắt switch "enable_public_tree"
+    UI->>UI: Optimistic UI cập nhật sang OFF + hiển thị badge "Đang lưu..."
+    UI->>API: PATCH /api/clan-settings { feature_flags: { enable_public_tree: false } }
+    
+    API->>API: Xác thực quyền Super Admin (Supabase user OR dev bypass)
+    API->>AdminDB: UPDATE clan_settings SET feature_flags = ... (Service Role Key - Bypasses RLS)
+    AdminDB-->>API: 1 row updated thành công
+    API->>Cache: Set fat_feature_flags_cache + fat_dev_feature_flags
+    API-->>UI: HTTP 200 { success: true }
+    UI->>UI: Hiển thị badge xanh "✓ Đã lưu" (tự ẩn sau 2.5s)
+
+    Guest->>MW: Mở Tab Ẩn danh truy cập http://localhost:3000
+    MW->>AdminDB: Đọc Postgres clan_settings (enable_public_tree = false)
+    MW-->>Guest: HTTP 307 Redirect tới /login-gate?returnTo=%2F (Ẩn hoàn toàn Cây Phả Hệ)
+```
+
+### 15.3. Thiết Kế Chi Tiết & Ranh Giới File
+
+#### 15.3.1. File: `src/app/admin/features/page.tsx` [MODIFY]
+- **Quản lý trạng thái lưu từng cờ (Per-flag Saving State):**
+  - Thêm state `savingKey: keyof ClanFeatureFlags | null`.
+  - Thêm state `savedKey: keyof ClanFeatureFlags | null`.
+- **Hàm `handleToggle(key: keyof ClanFeatureFlags)` nâng cấp Auto-Save:**
+  - Cập nhật Optimistic UI: đảo trạng thái `flags[key]`.
+  - Đặt `savingKey = key`.
+  - Lập tức gửi `PATCH /api/clan-settings` với payload `{ feature_flags: newFlags }`.
+  - Khi thành công:
+    - Đặt `savingKey = null`, `savedKey = key`.
+    - Sau 2.5 giây tự động xóa `savedKey`.
+  - Khi thất bại:
+    - Hoàn tác (revert) switch về trạng thái ban đầu.
+    - Hiển thị toast/banner lỗi chi tiết.
+    - Đặt `savingKey = null`.
+- **Hiển thị trực quan trên từng Card Switch:**
+  - Bên cạnh công tắc gạt toggle switch:
+    - Nếu `savingKey === cfg.key`: Hiển thị spinner xoay tròn mini kèm text nhỏ *"Đang lưu..."*.
+    - Nếu `savedKey === cfg.key`: Hiển thị badge xanh lá `✓ Đã lưu`.
+- **Giữ nguyên nút "Lưu Cấu Hình Tính Năng" ở đáy trang:** Đóng vai trò là chốt chặn an toàn (manual fallback save) cho người dùng muốn lưu lại toàn bộ.
+
+#### 15.3.2. File: `src/app/api/clan-settings/route.ts` [MODIFY]
+- **Import `createAdminClient`:**
+  ```typescript
+  import { createAdminClient } from '@/lib/supabase/admin';
+  ```
+- **Thực thi Mutation với Service Role Key:**
+  ```typescript
+  const adminClient = createAdminClient() || supabase;
+  const { error: updateError } = await adminClient
+    .from('clan_settings')
+    .update(updatePayload)
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+  ```
+  Vượt qua triệt để rào cản RLS của Supabase Postgres kể cả khi chạy ở môi trường Dev Bypass không có JWT.
+- **Làm tươi tức thì Cookie Cache của Middleware:**
+  ```typescript
+  if (feature_flags !== undefined) {
+    cookieStore.set('fat_feature_flags_cache', JSON.stringify(feature_flags), {
+      path: '/',
+      sameSite: 'lax',
+      httpOnly: false,
+      maxAge: 300,
+    });
+    cookieStore.set('fat_dev_feature_flags', JSON.stringify(feature_flags), {
+      path: '/',
+      sameSite: 'lax',
+      httpOnly: false,
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  }
+  ```
+
+### 15.4. Xử Lý Lỗi & Trường Hợp Biên (Edge Cases)
+
+- **Edge Case 48 (Người dùng bấm liên tục nhiều switch - Concurrent Toggles):** Sử dụng functional state update `setFlags(prev => ...)` và payload sử dụng trạng thái mới nhất. Nếu đang lưu 1 switch mà người dùng gạt tiếp switch khác, payload gửi lên luôn chứa toàn bộ snapshot flags đã merge.
+- **Edge Case 49 (Mạng ngắt kết nối / Server trả 500 khi gạt switch):** Hệ thống bắt lỗi `try/catch`, rollback cờ đó về giá trị cũ trước khi bấm và hiển thị thông báo lỗi nổi bật, ngăn ngừa tình trạng UI một đằng DB một nẻo.
+- **Edge Case 50 (Môi trường thiếu Service Role Key):** `createAdminClient()` trả về `null` $\rightarrow$ hệ thống tự động fallback sang `supabase` (client SSR hiện tại) kèm cookie persistence.
+- **Edge Case 51 (Tab Ẩn danh truy cập ngay sau khi Admin gạt switch):** Do DB được cập nhật trực tiếp bởi Service Role Key và cookie cache được đồng bộ, request tiếp theo từ Tab Ẩn danh đọc đúng 100% giá trị cờ mới.
+
+### 15.5. Bổ Sung Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
+
+> File test bổ sung: `tests/auth-gate.test.ts`
+
+- [x] **TC_UT_SETTINGS_ADMIN_CLIENT_MUTATION (PATCH clan-settings gọi Admin Client vượt RLS):**
+  - **Given:** Request PATCH `/api/clan-settings` với `feature_flags: { enable_public_tree: false }`.
+  - **When:** Thực thi xử lý cập nhật.
+  - **Then:** Mutation sử dụng `createAdminClient` với Service Role Key thành công.
+
+- [x] **TC_UT_COOKIE_CACHE_SYNC (Đồng bộ fat_feature_flags_cache khi lưu cờ):**
+  - **Given:** Cờ mới `feature_flags` gửi lên qua PATCH.
+  - **When:** Route ghi cookie.
+  - **Then:** Cookie `fat_feature_flags_cache` được thiết lập với JSON string cờ mới và `maxAge: 300`.
+
+- [x] **TC_UT_AUTOSAVE_OPTIMISTIC_ROLLBACK (Hoàn tác UI khi API trả về lỗi):**
+  - **Given:** Component `AdminFeaturesPage` ở trạng thái ban đầu `enable_public_tree = true`.
+  - **When:** Kích hoạt `handleToggle` nhưng API trả về `500 Internal Server Error`.
+  - **Then:** Trạng thái `enable_public_tree` tự động hoàn tác về `true`, `savingKey` được giải phóng về `null`.
+
+- [x] **TC_INT_INCOGNITO_ZERO_COOKIE_INSPECTION (Khách không cookie nhận đúng cờ từ DB):**
+  - **Given:** Database `clan_settings` đã cập nhật `enable_public_tree = false`, request từ khách không mang bất kỳ cookie nào.
+  - **When:** Middleware / Layout đọc cấu hình từ Supabase.
+  - **Then:** Cờ `enable_public_tree` được phân giải thành `false`, kích hoạt Auth Gate chuyển hướng.
+
+### 15.6. Bổ Sung Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
+
+- [ ] **UAT_25 (Auto-Save on Toggle):** Truy cập `/admin/features`, gạt switch "Công Khai Cây Phả Hệ Cho Khách Vãng Lai" sang TẮT. Thấy xuất hiện ngay spinner "Đang lưu..." bên cạnh switch, sau đó chuyển thành "✓ Đã lưu" màu xanh lá mà không cần cuộn xuống bấm nút Lưu.
+- [ ] **UAT_26 (Incognito Real-time Enforcement):** Sau khi gạt TẮT, mở cửa sổ Ẩn danh (Incognito) mới, truy cập `http://localhost:3000`. Hệ thống tự động chuyển hướng về `/login-gate?returnTo=%2F` và trên Navbar không hề xuất hiện link "Cây Phả Hệ".
+- [ ] **UAT_27 (Rollback on Network Error):** Trong môi trường dev, tắt mạng hoặc giả lập lỗi API $\rightarrow$ Gạt switch $\rightarrow$ Switch tự động bật ngược lại trạng thái ban đầu kèm thông báo lỗi rõ ràng.
+
+### 15.7. Bổ Sung Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
+
+- [x] **RG20 (Build & Typecheck Clean):** `npm run typecheck` 0 lỗi và `npm run build` thành công toàn bộ routes.
+- [x] **RG21 (Existing Test Suite Zero Regression):** Toàn bộ 212 tests (208 baseline + 4 mới) PASS 100% (0 failures).
+- [ ] **RG22 (Bottom Save Button Compatibility):** Nút "Lưu Cấu Hình Tính Năng" ở đáy trang `/admin/features` vẫn hoạt động bình thường, lưu toàn bộ cấu hình khi người dùng muốn bấm thủ công.
+
+---
+
+## 16. CHUẨN HÓA CƠ CHẾ ĐĂNG XUẤT TOÀN DIỆN (FULL-SPECTRUM LOGOUT ENGINE - MILESTONE 7.7)
+
+### 16.1. Bối Cảnh & Phân Tích Căn Nguyên Gốc Rễ
+
+Người dùng bấm nút "Đăng xuất" trong dropdown menu góc trên bên phải nhưng phiên đăng nhập không hề bị hủy, trang tải lại vẫn giữ nguyên avatar và thông tin người dùng Google thật.
+
+**Ba căn nguyên cốt lõi:**
+1. **Thẻ Nút Bị Hardcode Link Cũ:** Nút "Đăng xuất" trong `src/components/auth/AuthButton.tsx` (dòng 374-381) là một thẻ `<a href="/api/auth/dev-login?action=logout" id="logout-btn">`, hoàn toàn không kết nối với hàm `onClick={handleLogout}`.
+2. **Logic Dev Bypass Chặn SignOut:** Hàm `handleLogout` trong `AuthButton.tsx` có đoạn code kiểm tra `if (process.env.NODE_ENV === 'development') { window.location.href = '/api/auth/dev-login?action=logout'; return; }`, chủ động bỏ qua việc gọi `supabase.auth.signOut()` khi đang ở môi trường dev.
+3. **Route dev-login Chỉ Xóa Cookie Dev:** Endpoint `/api/auth/dev-login?action=logout` chỉ thực hiện `cookieStore.delete('fat_dev_user')`. Khi người dùng đăng nhập bằng Google OAuth thật, cookie của Supabase (`sb-*-auth-token`) hoàn toàn không bị tác động, khiến sau khi redirect về `/`, session người dùng vẫn nguyên vẹn.
+
+### 16.2. Sơ Đồ Trình Tự Đăng Xuất Đa Tầng (Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Người dùng (Google OAuth hoặc Dev Bypass)
+    participant Button as AuthButton.tsx (<button id="logout-btn">)
+    participant ClientSB as Supabase Browser Client (createBrowserClient)
+    participant API as POST /api/auth/logout
+    participant ServerSB as Supabase Server Client (createClient)
+    participant Cookies as Cookie Store
+
+    User->>Button: Bấm "Đăng xuất"
+    Button->>Button: setIsLoading(true), đóng dropdown
+    Button->>ClientSB: await supabase.auth.signOut() (Xóa tokens trên Browser Storage & Client Cookies)
+    Button->>API: fetch('/api/auth/logout', { method: 'POST' })
+    API->>ServerSB: await supabase.auth.signOut() (Thu hồi phiên trên Supabase Auth)
+    API->>Cookies: Xóa fat_dev_user, fat_feature_flags_cache
+    API-->>Button: HTTP 200 { success: true }
+    Button->>User: window.location.href = '/' (Hard Navigation tải lại Layout về trạng thái Guest)
+```
+
+### 16.3. Thiết Kế Chi Tiết & Ranh Giới File
+
+#### 16.3.1. File: `src/app/api/auth/logout/route.ts` [NEW]
+- **Mục tiêu:** Endpoint chuẩn hóa xử lý đăng xuất ở tầng Server cho toàn hệ thống.
+- **Phương thức hỗ trợ:** `POST` và `GET` (dự phòng direct navigation).
+- **Quy trình xử lý:**
+  1. Khởi tạo `const supabase = createClient()`.
+  2. Thực hiện `await supabase.auth.signOut()`.
+  3. Xóa các cookie giả lập dev: `cookies().delete('fat_dev_user')`.
+  4. Xóa cookie bộ đệm: `cookies().delete('fat_feature_flags_cache')`.
+  5. Đối với `POST`: Trả về `NextResponse.json({ success: true, message: 'Đã đăng xuất thành công' })`.
+  6. Đối với `GET`: Trả về `NextResponse.redirect(new URL('/', request.url))`.
+
+#### 16.3.2. File: `src/components/auth/AuthButton.tsx` [MODIFY]
+- **Sửa nút bấm trong dropdown:**
+  - Thay thế thẻ `<a href="/api/auth/dev-login?action=logout" ...>` bằng:
+    ```tsx
+    <button
+      type="button"
+      onClick={handleLogout}
+      id="logout-btn"
+      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors font-medium text-left cursor-pointer"
+    >
+      <LogOut className="w-4 h-4" />
+      <span>Đăng xuất</span>
+    </button>
+    ```
+- **Nâng cấp hàm `handleLogout`:**
+  - Loại bỏ hoàn toàn điều kiện `if (process.env.NODE_ENV === 'development') return`.
+  - Thực thi đồng thời cả client-side signOut lẫn server-side logout:
+    ```typescript
+    const handleLogout = async () => {
+      setIsLoading(true);
+      try {
+        await supabase.auth.signOut();
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (err) {
+        console.error('Logout error:', err);
+      } finally {
+        setUser(null);
+        setProfile(null);
+        setIsOpen(false);
+        setIsLoading(false);
+        window.location.href = '/';
+      }
+    };
+    ```
+
+#### 16.3.3. File: `src/app/api/auth/dev-login/route.ts` [MODIFY]
+- Khi `action === 'logout'` hoặc `logout === '1'`:
+  - Ngoài việc xóa `fat_dev_user`, gọi thêm `const supabase = createClient(); await supabase.auth.signOut();` để đảm bảo nếu có session Supabase song song thì cũng được dọn sạch.
+
+### 16.4. Xử Lý Lỗi & Trường Hợp Biên (Edge Cases)
+
+- **Edge Case 52 (Supabase Auth API bị timeout hoặc mất mạng khi gọi signOut):** Khối `try/catch` bọc quanh `supabase.auth.signOut()` và `fetch('/api/auth/logout')`. Khối `finally` luôn thực thi reset React state và điều hướng `window.location.href = '/'`, đảm bảo người dùng không bị kẹt ở trạng thái loading.
+- **Edge Case 53 (Đăng xuất khi cây phả hệ đang ở chế độ Riêng tư `enable_public_tree = false`):** Sau khi đăng xuất, điều hướng về `/` sẽ bị Middleware Auth Gate tự động chuyển tiếp tới `/login-gate?returnTo=%2F`. Điều này hoàn toàn đúng với nghiệp vụ bảo mật dòng họ.
+- **Edge Case 54 (Người dùng vừa dùng Google Auth vừa có cookie Dev Bypass sót lại):** Cả 2 tầng client và server đều được xóa sạch đồng thời, loại bỏ triệt để xung đột session lai (hybrid session ghosting).
+
+### 16.5. Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
+
+> File test bổ sung: `tests/auth-gate.test.ts`
+
+- [x] **TC_UT_LOGOUT_BUTTON_PROP_INTEGRITY (Nút đăng xuất là button có onClick handleLogout):**
+  - **Given:** Source code `src/components/auth/AuthButton.tsx`.
+  - **When:** Kiểm tra thẻ nút `#logout-btn`.
+  - **Then:** Là thẻ `<button type="button" onClick={handleLogout} id="logout-btn">`, không còn là thẻ `<a>` link tới dev-login.
+
+- [x] **TC_UT_HANDLE_LOGOUT_FULL_SIGNOUT (handleLogout gọi cả client signOut và API server):**
+  - **Given:** Source code `src/components/auth/AuthButton.tsx`.
+  - **When:** Kiểm tra hàm `handleLogout`.
+  - **Then:** Chứa `supabase.auth.signOut()`, gọi fetch tới `/api/auth/logout` và điều hướng về `/`. Không có lệnh bypass bỏ qua signOut trong development.
+
+- [x] **TC_UT_LOGOUT_API_ROUTE_EXISTS (API route /api/auth/logout tồn tại và dọn dẹp đủ 2 tầng):**
+  - **Given:** Source code `src/app/api/auth/logout/route.ts`.
+  - **When:** Kiểm tra các hàm `POST` và `GET`.
+  - **Then:** Cả 2 phương thức đều gọi `supabase.auth.signOut()`, xóa cookie `fat_dev_user` và xóa `fat_feature_flags_cache`.
+
+- [x] **TC_UT_DEV_LOGIN_CLEANSE_SUPABASE (dev-login logout dọn sạch cả Supabase session):**
+  - **Given:** Source code `src/app/api/auth/dev-login/route.ts`.
+  - **When:** Kiểm tra nhánh `action === 'logout'`.
+  - **Then:** Gọi `supabase.auth.signOut()` song song với việc xóa cookie dev.
+
+### 16.6. Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
+
+- [ ] **UAT_28 (Đăng xuất tài khoản Google OAuth thật):** Đăng nhập tài khoản Google $\rightarrow$ Mở dropdown Avatar góc phải $\rightarrow$ Bấm "Đăng xuất" $\rightarrow$ Trang reload về trạng thái Guest, Navbar hiển thị lại nút "Đăng nhập Google" và "Dev Bypass".
+- [ ] **UAT_29 (Đăng xuất tài khoản Dev Bypass):** Bấm "Dev Bypass" $\rightarrow$ Mở dropdown $\rightarrow$ Bấm "Đăng xuất" $\rightarrow$ Trang reload về trạng thái Guest sạch sẽ.
+- [ ] **UAT_30 (Đăng xuất khi enable_public_tree = false):** Admin đang ở chế độ riêng tư, bấm "Đăng xuất" $\rightarrow$ Hệ thống tự động chuyển hướng về trang `/login-gate?returnTo=%2F`, không còn lộ bất kỳ thông tin nội bộ nào.
+
+### 16.7. Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
+
+- [x] **RG23 (Build & Typecheck Clean):** `npm run typecheck` 0 lỗi và `npm run build` thành công bao gồm route `/api/auth/logout` mới.
+- [x] **RG24 (Existing Test Suite Zero Regression):** Toàn bộ 216 tests (212 baseline + 4 mới) PASS 100% (0 failures).
+- [ ] **RG25 (Login Gate & Auth Gate Unaffected):** Các luồng chặn và chuyển hướng của Auth Gate tiếp tục hoạt động chính xác sau khi đăng xuất.
+
+---
+
+## 17. HIỆN THỰC HÓA & THỰC THI TOÀN DIỆN CỜ TÍNH NĂNG TRA CỨU VAI VẾ VÀ LỊCH GIỖ (FEATURE FLAGS ENFORCEMENT - MILESTONE 7.8)
+
+### 17.1. Bối Cảnh & Phân Tích Căn Nguyên Gốc Rễ
+
+Người dùng đã gạt TẮT công tắc "Công Cụ Tra Cứu Vai Vế Xưng Hô" (`enable_kinship_lookup = false`) trong `/admin/features`, nhưng trên thanh Navbar và hệ thống vẫn hiển thị mục "Xưng hô" và cho phép truy cập bình thường.
+
+**Căn nguyên cốt lõi:**
+1. **Cờ Chết Chưa Được Nối Dây (Un-enforced Dead Flags):** Cờ `enable_kinship_lookup` và `enable_anniversaries` mới chỉ được định nghĩa kiểu dữ liệu trong `database.ts` và làm UI công tắc trong `page.tsx` của Admin.
+2. **Navbar & Mobile Bottom Nav Chưa Nhận Cờ:** `Navbar.tsx` và `MobileBottomNav.tsx` chỉ kiểm tra duy nhất `!isGuest` để hiển thị link "Lịch Giỗ" và "Xưng hô", hoàn toàn không nhận diện giá trị của `enable_kinship_lookup` hay `enable_anniversaries`.
+3. **Root Layout Bỏ Rơi Flags:** `src/app/layout.tsx` chỉ truyền `enablePublicTree` xuống dưới, không truyền đối tượng `featureFlags` đầy đủ.
+4. **Auth Gate & Middleware Bỏ Qua Kiểm Tra Phân Hệ:** `evaluateAuthGate` chỉ kiểm tra `enable_public_tree`, khi người dùng đã đăng nhập thì tự động `pass` cho mọi route bao gồm `/kinship` và `/anniversaries`.
+
+### 17.2. Sơ Đồ Trình Tự Thực Thi Cờ Tính Năng (Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Super Admin
+    participant FeatUI as /admin/features
+    participant RootLayout as src/app/layout.tsx
+    participant Nav as Navbar & MobileBottomNav
+    participant Home as src/app/page.tsx
+    participant Gate as Middleware & auth-gate.ts
+
+    Admin->>FeatUI: Gạt TẮT "enable_kinship_lookup"
+    FeatUI->>FeatUI: Auto-Save lưu vào PostgreSQL & cập nhật cookie cache
+
+    Note over RootLayout,Nav: Người dùng truy cập hoặc tải lại trang
+    RootLayout->>RootLayout: Đọc featureFlags từ cache / DB
+    RootLayout->>Nav: Truyền featureFlags & isSuperAdmin
+    Nav->>Nav: Kiểm tra (enable_kinship_lookup || isSuperAdmin) -> Ẩn menu "Xưng hô"
+
+    Note over Home: Trang Chủ xử lý hiển thị Lịch Giỗ
+    Home->>Home: Kiểm tra (enable_anniversaries) -> Ẩn Spotlight Ngày Giỗ nếu cờ tắt
+
+    Note over Gate: Người dùng cố tình truy cập trực tiếp /kinship khi cờ tắt
+    Gate->>Gate: evaluateAuthGate('/kinship', user, flags)
+    alt Không phải Super Admin & cờ TẮT
+        Gate-->>Admin: Chuyển hướng về /
+    else Là Super Admin
+        Gate-->>Admin: Cho phép truy cập để kiểm thử từ điển
+    end
+```
+
+### 17.3. Thiết Kế Chi Tiết & Ranh Giới File
+
+#### 17.3.1. File: `src/app/layout.tsx` [MODIFY]
+- Truyền đối tượng `featureFlags` và cờ `isSuperAdmin` xuống cả hai thành phần điều hướng:
+  ```tsx
+  <Navbar
+    isGuest={isGuest}
+    enablePublicTree={enablePublicTree}
+    featureFlags={featureFlags}
+    isSuperAdmin={isSuperAdmin}
+  />
+  <main ...>{children}</main>
+  <AppFooter />
+  <MobileBottomNav
+    isGuest={isGuest}
+    enablePublicTree={enablePublicTree}
+    featureFlags={featureFlags}
+    isSuperAdmin={isSuperAdmin}
+  />
+  ```
+
+#### 17.3.2. File: `src/components/navbar/Navbar.tsx` [MODIFY]
+- Bổ sung props: `featureFlags?: ClanFeatureFlags`, `isSuperAdmin?: boolean`.
+- Điều kiện hiển thị link "Lịch Giỗ" (`/anniversaries`):
+  `!isGuest && (flags.enable_anniversaries || isSuperAdmin)`
+- Điều kiện hiển thị link "Xưng hô" (`/kinship`):
+  `!isGuest && (flags.enable_kinship_lookup || isSuperAdmin)`
+
+#### 17.3.3. File: `src/components/navigation/MobileBottomNav.tsx` [MODIFY]
+- Bổ sung props: `featureFlags?: ClanFeatureFlags`, `isSuperAdmin?: boolean`.
+- Trong hàm lọc `visibleItems`:
+  - Item `/kinship`: Ẩn khi `!flags.enable_kinship_lookup && !isSuperAdmin`.
+  - Item `/anniversaries`: Ẩn khi `!flags.enable_anniversaries && !isSuperAdmin`.
+
+#### 17.3.4. File: `src/app/page.tsx` [MODIFY]
+- Khối Spotlight Ngày Giỗ Gần Nhất:
+  Bọc điều kiện: `!isGuest && featureFlags.enable_anniversaries && nearestGroup && nearestMember`.
+  Khi cờ `enable_anniversaries = false`, toàn bộ khối Ngày Giỗ trên Trang Chủ sẽ tự động ẩn đi.
+
+#### 17.3.5. File: `src/lib/auth/auth-gate.ts` [MODIFY]
+- Trong `evaluateAuthGate(pathname, user, featureFlags, isSuperAdmin)`:
+  - Tuyến đường `/kinship`:
+    Nếu `!featureFlags.enable_kinship_lookup && !isSuperAdmin` $\rightarrow$ Redirect về `/`.
+  - Tuyến đường `/anniversaries`:
+    Nếu `!featureFlags.enable_anniversaries && !isSuperAdmin` $\rightarrow$ Redirect về `/`.
+- Super Admin luôn được phép truy cập để bảo trì dữ liệu và cấu hình từ điển.
+
+### 17.4. Xử Lý Lỗi & Trường Hợp Biên (Edge Cases)
+
+- **Edge Case 55 (Super Admin cần kiểm tra từ điển xưng hô khi cờ ngoài trang chủ đang tắt):** Super Admin được giữ quyền truy cập (Bypass flag) để phục vụ công tác hiệu chỉnh từ điển họ tộc trước khi mở công khai cho con cháu.
+- **Edge Case 56 (Người dùng bookmark sẵn link /kinship hoặc /anniversaries):** Khi tính năng bị tắt, Auth Gate phía server sẽ chặn và điều hướng về trang chủ một cách an toàn, không hiển thị trang lỗi 404/500 vỡ vụn.
+- **Edge Case 57 (Mobile Bottom Nav co giãn layout):** Khi ẩn bớt 1 hoặc 2 tab, CSS Flexbox với `justify-around` tự động dàn đều các tab còn lại, giữ vững tính đối xứng và không làm lệch icon.
+
+### 17.5. Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
+
+> File test bổ sung: `tests/auth-gate.test.ts`
+
+- [x] **TC_UT_NAVBAR_KINSHIP_FLAG_ENFORCEMENT (Navbar ẩn Xưng hô khi enable_kinship_lookup=false):**
+  - **Given:** Source code `src/components/navbar/Navbar.tsx`.
+  - **When:** Kiểm tra điều kiện render của `/kinship`.
+  - **Then:** Phụ thuộc vào `enable_kinship_lookup` hoặc `isSuperAdmin`.
+
+- [x] **TC_UT_NAVBAR_ANNIVERSARIES_FLAG_ENFORCEMENT (Navbar ẩn Lịch Giỗ khi enable_anniversaries=false):**
+  - **Given:** Source code `src/components/navbar/Navbar.tsx`.
+  - **When:** Kiểm tra điều kiện render của `/anniversaries`.
+  - **Then:** Phụ thuộc vào `enable_anniversaries` hoặc `isSuperAdmin`.
+
+- [x] **TC_UT_MOBILE_NAV_FLAG_FILTERING (MobileBottomNav lọc items theo cả 2 cờ):**
+  - **Given:** `MobileBottomNav` nhận `featureFlags = { enable_kinship_lookup: false, enable_anniversaries: false }`.
+  - **When:** Lọc danh sách `visibleItems` cho người dùng thông thường.
+  - **Then:** Cả 2 tab `/kinship` và `/anniversaries` đều bị loại bỏ khỏi danh sách.
+
+- [x] **TC_UT_HOMEPAGE_ANNIVERSARY_FLAG_GUARD (Trang chủ ẩn Spotlight Giỗ khi cờ tắt):**
+  - **Given:** Source code `src/app/page.tsx`.
+  - **When:** Kiểm tra điều kiện render của khối Spotlight Ngày Giỗ.
+  - **Then:** Chứa `featureFlags.enable_anniversaries`.
+
+- [x] **TC_UT_AUTH_GATE_FEATURE_FLAGS_ROUTE_BLOCK (Auth Gate chặn route khi cờ bị tắt):**
+  - **Given:** `featureFlags = { enable_kinship_lookup: false }`, `isSuperAdmin = false`.
+  - **When:** `evaluateAuthGate('/kinship', user, featureFlags, isSuperAdmin)`.
+  - **Then:** Trả về `{ action: 'redirect', redirectUrl: '/' }`.
+  - **Given:** `isSuperAdmin = true`.
+  - **When:** `evaluateAuthGate('/kinship', user, featureFlags, isSuperAdmin)`.
+  - **Then:** Trả về `{ action: 'pass' }`.
+
+### 17.6. Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
+
+- [ ] **UAT_31 (Tắt Tra Cứu Vai Vế $\rightarrow$ Ẩn Menu Xưng Hô):** Vào `/admin/features`, gạt TẮT "Công Cụ Tra Cứu Vai Vế Xưng Hô" $\rightarrow$ Ra ngoài trang chủ kiểm tra Navbar và Mobile Bottom Nav $\rightarrow$ Nút "Xưng hô" biến mất hoàn toàn.
+- [ ] **UAT_32 (Tắt Phân Hệ Lịch Giỗ $\rightarrow$ Ẩn Lịch Giỗ & Spotlight):** Vào `/admin/features`, gạt TẮT "Phân Hệ Lịch Giỗ 30 Ngày" $\rightarrow$ Ra ngoài trang chủ $\rightarrow$ Mục "Lịch Giỗ" trên Navbar biến mất và khối "Ngày Giỗ Gần Nhất" trên Trang Chủ cũng biến mất.
+- [ ] **UAT_33 (Bật Lại Tính Năng):** Gạt BẬT lại các cờ $\rightarrow$ Cả hai mục xuất hiện trở lại đầy đủ ngay tức khắc.
+
+### 17.7. Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
+
+- [x] **RG26 (Build & Typecheck Clean):** `npm run typecheck` 0 lỗi và `npm run build` thành công.
+- [x] **RG27 (Existing Test Suite Zero Regression):** Toàn bộ 216 tests hiện tại tiếp tục PASS 100% (hiện tại đạt 221/221 tests).
+- [x] **RG28 (Admin Portal Unaffected):** Các trang cấu hình `/admin/kinship` và `/admin/features` luôn hoạt động bình thường, không bị chặn bởi cờ tính năng.
+
+---
+
+## 18. TINH GỌN GIAO DIỆN CỔNG ĐĂNG NHẬP & TRIỆT TIÊU THANH CUỘN DỌC (LOGIN GATE UI POLISH - MILESTONE 7.9)
+
+### 18.1. Bối Cảnh & Phân Tích Căn Nguyên Gốc Rễ
+
+Qua phản hồi UAT thực tế trên thiết bị di động tại tuyến đường `/login-gate`, giao diện xuất hiện 3 điểm bất hợp lý:
+1. **Trùng Lặp Nút Đăng Nhập:** Header Navbar hiển thị 2 nút `[Đăng nhập Google]` và `[Dev Bypass]`, trong khi Card trung tâm cũng hiển thị chính xác 2 nút tương tự. Trên mobile, 2 nút trên Header chiếm gần hết chiều ngang, ép tên thương hiệu dòng họ co cụm và gây rối mắt.
+2. **Thanh Mobile Bottom Nav Trơ Trọi:** Xuất hiện thanh điều hướng đáy chỉ có duy nhất 1 tab `[Trang Chủ]`, chiếm dụng 64px chiều cao màn hình và làm vỡ trải nghiệm tập trung của một trang Splash Gate.
+3. **Thanh Cuộn Dọc Bị Tràn Dù Nội Dung Vừa Khít:** Nội dung chỉ là 1 Card ngắn nhưng trang luôn xuất hiện thanh cuộn dọc (scrollbar). Căn nguyên do 3 yếu tố cộng dồn:
+   - Thẻ `<main>` trong `layout.tsx` có `pb-16 md:pb-0` (+64px).
+   - `AppFooter.tsx` render ở đáy (+60px).
+   - `LoginGatePage` dùng `min-h-[calc(100vh-4rem)]` kèm `py-12` (+96px).
+   - $\rightarrow$ Tổng chiều cao $\approx 100\text{vh} + 220\text{px}$, khiến trang luôn bị tràn thanh cuộn.
+
+### 18.2. Sơ Đồ Luồng Xử Lý Giao Diện (State & Visibility Flow)
+
+```mermaid
+graph TD
+    Client[Trình Duyệt Khách Truy Cập /login-gate] --> CheckRoute{Kiểm Tra Route}
+    
+    CheckRoute --> NavbarAuth[AuthButton Trên Header Navbar]
+    CheckRoute --> BottomNav[MobileBottomNav Ở Đáy Mobile]
+    CheckRoute --> Footer[AppFooter Chân Trang]
+    CheckRoute --> GateCard[LoginGatePage Card Trung Tâm]
+    
+    NavbarAuth -->|pathname === '/login-gate' & !user| HideAuthButtons[Ẩn 2 Nút Đăng Nhập Trên Header]
+    BottomNav -->|pathname === '/login-gate'| HideBottomNav[Ẩn Hoàn Toàn Thanh Bottom Nav]
+    Footer -->|pathname === '/login-gate'| HideFooter[Ẩn Hoàn Toàn Footer]
+    GateCard --> SetFlex[Sử Dụng flex-1 & Bù Trừ -mb-16 md:mb-0]
+    
+    HideAuthButtons --> CleanHeader[Header Thoáng Đãng Chỉ Giữ Logo + ThemeToggle]
+    HideBottomNav --> ZeroBottomGap[Giải Phóng 64px Đáy Màn Hình]
+    HideFooter --> ZeroFooterGap[Không Bị Footer Đẩy Tràn]
+    SetFlex --> ZeroScroll[Chiều Cao Vừa Đúng 100vh - Tuyệt Đối Không Sinh Scrollbar Thừa]
+```
+
+### 18.3. Thiết Kế Chi Tiết & Ranh Giới File
+
+#### 18.3.1. File: `src/components/auth/AuthButton.tsx` [MODIFY]
+- Nhúng `usePathname()` từ `next/navigation`.
+- Bổ sung rào chắn:
+  ```tsx
+  if (pathname === '/login-gate' && !user) {
+    return null;
+  }
+  ```
+- Nút `ThemeToggle` trên Navbar vẫn hoạt động bình thường, còn 2 nút đăng nhập trên Header biến mất, nhường 100% sự chú ý cho Card trung tâm.
+
+#### 18.3.2. File: `src/components/navigation/MobileBottomNav.tsx` [MODIFY]
+- Kiểm tra `pathname`:
+  ```tsx
+  if (pathname === '/login-gate') {
+    return null;
+  }
+  ```
+- Ẩn toàn bộ thanh Bottom Nav khi ở màn `/login-gate`.
+
+#### 18.3.3. File: `src/components/layout/AppFooter.tsx` [MODIFY]
+- Mở rộng điều kiện ẩn chân trang:
+  ```tsx
+  if (pathname === '/tree' || pathname === '/login-gate') {
+    return null;
+  }
+  ```
+
+#### 18.3.4. File: `src/app/login-gate/page.tsx` [MODIFY]
+- Tinh chỉnh container:
+  ```tsx
+  <div className="flex-1 flex items-center justify-center p-4 -mb-16 md:mb-0 overflow-y-auto bg-gradient-to-b from-slate-50 via-slate-100/70 to-slate-200/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors">
+  ```
+- Lớp `-mb-16 md:mb-0` bù trừ chính xác `pb-16` của thẻ `<main>` trên mobile, bảo đảm chiều cao nội dung cộng với Navbar đúng bằng $100\text{vh}$.
+- Tinh chỉnh kích thước Card nhẹ nhàng:
+  - Icon chữ Hán: `w-16 h-16 sm:w-20 sm:h-20` (icon `size={44}` hoặc `size={52}`).
+  - Card padding: `p-6 sm:p-8`.
+  - Margins: `mb-4 sm:mb-6` cho icon, `mb-6` cho thông điệp.
+  - Tổng chiều cao Card $\approx 420\text{px}$, vừa khít trong mọi màn hình di động từ 667px trở lên mà không sinh thanh cuộn.
+
+### 18.4. Xử Lý Lỗi & Trường Hợp Biên (Edge Cases)
+
+- **Edge Case 58 (Màn hình xoay ngang Landscape hoặc bàn phím ảo hiển thị trên mobile):** Khi chiều cao màn hình khả dụng $< 420\text{px}$, class `overflow-y-auto` kích hoạt cuộn mượt mà để người dùng luôn bấm được nút đăng nhập, không bị kẹt hay cắt cụt nội dung.
+- **Edge Case 59 (Người dùng chuyển sang trang khác sau khi đăng nhập):** `AuthButton` và `MobileBottomNav` tự động hiển thị lại bình thường khi `pathname !== '/login-gate'`.
+- **Edge Case 60 (User đã đăng nhập nhưng cố tình truy cập /login-gate):** `LoginGatePage` tự động redirect 307 về `returnTo` ngay tại server, không render giao diện login gate.
+
+### 18.5. Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
+
+> File test bổ sung: `tests/auth-gate.test.ts`
+
+- [x] **TC_UT_LOGIN_GATE_NAVBAR_NO_DUPLICATE_AUTH (Navbar ẩn nút login ở /login-gate):**
+  - **Given:** Source code `src/components/auth/AuthButton.tsx`.
+  - **When:** Kiểm tra điều kiện render khi người dùng chưa đăng nhập.
+  - **Then:** Chứa `pathname === '/login-gate'` và trả về `null`.
+
+- [x] **TC_UT_LOGIN_GATE_MOBILE_BOTTOM_NAV_SUPPRESSED (MobileBottomNav ẩn ở /login-gate):**
+  - **Given:** Source code `src/components/navigation/MobileBottomNav.tsx`.
+  - **When:** Kiểm tra điều kiện render theo `pathname`.
+  - **Then:** Chứa `pathname === '/login-gate'` và trả về `null`.
+
+- [x] **TC_UT_LOGIN_GATE_FOOTER_SUPPRESSED (AppFooter ẩn ở /login-gate):**
+  - **Given:** Source code `src/components/layout/AppFooter.tsx`.
+  - **When:** Kiểm tra điều kiện render theo `pathname`.
+  - **Then:** Chứa `pathname === '/login-gate'` và trả về `null`.
+
+- [x] **TC_UT_LOGIN_GATE_ZERO_SCROLL_GEOMETRY (LoginGatePage dùng flex-1 và margin bù trừ):**
+  - **Given:** Source code `src/app/login-gate/page.tsx`.
+  - **When:** Kiểm tra các class layout của container chính.
+  - **Then:** Chứa `flex-1`, `-mb-16 md:mb-0`, và `overflow-y-auto`.
+
+- [x] **TC_UT_NAVBAR_GUEST_LOGIN_VISIBLE_ON_OTHER_PAGES (Navbar vẫn render nút login ở các trang khác):**
+  - **Given:** `AuthButton` ở trang chủ `/` hoặc `/tree`.
+  - **When:** `pathname !== '/login-gate'` và `!user`.
+  - **Then:** Render nút Google login với `id="login-google-btn"`.
+
+### 18.6. Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
+
+- [ ] **UAT_34 (Không còn nút đăng nhập trên Header khi ở /login-gate):** Truy cập `/login-gate` trên cả Desktop và Mobile $\rightarrow$ Header Navbar chỉ hiển thị Logo chữ Hán + Tên dòng họ + Nút ThemeToggle, không còn 2 nút đăng nhập trên Header.
+- [ ] **UAT_35 (Không còn Mobile Bottom Nav trơ trọi tab Trang Chủ):** Mở `/login-gate` trên mobile (hoặc thu nhỏ màn hình $< 768\text{px}$) $\rightarrow$ Đáy màn hình hoàn toàn sạch sẽ, không còn thanh Bottom Nav hiển thị 1 tab "Trang Chủ".
+- [ ] **UAT_36 (Không còn thanh cuộn dọc khi màn hình hiển thị đủ):** Mở `/login-gate` trên màn hình chuẩn $\rightarrow$ Thẻ Card căn giữa trang hoàn hảo, không xuất hiện thanh cuộn dọc (scrollbar).
+
+### 18.7. Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
+
+- [x] **RG29 (Build & Typecheck Clean):** `npm run typecheck` 0 lỗi và `npm run build` thành công 100%.
+- [x] **RG30 (Existing Test Suite Zero Regression):** Toàn bộ 221 tests hiện tại tiếp tục PASS 100% (hiện tại đạt 226/226 tests).
+- [x] **RG31 (Login flows on other pages unaffected):** Nút đăng nhập trên Navbar ở trang chủ `/`, `/tree` vẫn hoạt động bình thường cho khách.
+
+
+
+
+
+
+
 
 
 

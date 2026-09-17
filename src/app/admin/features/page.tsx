@@ -96,6 +96,8 @@ export default function AdminFeaturesPage() {
   const [flags, setFlags] = useState<ClanFeatureFlags>(DEFAULT_FEATURE_FLAGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [savingKey, setSavingKey] = useState<keyof ClanFeatureFlags | null>(null);
+  const [savedKey, setSavedKey] = useState<keyof ClanFeatureFlags | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -117,11 +119,50 @@ export default function AdminFeaturesPage() {
     loadFlags();
   }, []);
 
-  const handleToggle = (key: keyof ClanFeatureFlags) => {
-    setFlags((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+  const handleToggle = async (key: keyof ClanFeatureFlags) => {
+    // 1. Optimistic update
+    const previousFlags = { ...flags };
+    const newFlags = {
+      ...flags,
+      [key]: !flags[key],
+    };
+    setFlags(newFlags);
+    setSavingKey(key);
+    setStatusMessage(null);
+
+    // 2. Instant Auto-Save via PATCH
+    try {
+      const res = await fetch('/api/clan-settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feature_flags: newFlags }),
+      });
+
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setSavedKey(key);
+        setTimeout(() => {
+          setSavedKey((current) => (current === key ? null : current));
+        }, 2500);
+      } else {
+        // Rollback on server error
+        setFlags(previousFlags);
+        setStatusMessage({
+          type: 'error',
+          text: json.error || `Không thể lưu cấu hình "${key}". Đã hoàn tác về trạng thái cũ.`,
+        });
+      }
+    } catch (err) {
+      console.error('Auto-save error:', err);
+      // Rollback on network error
+      setFlags(previousFlags);
+      setStatusMessage({
+        type: 'error',
+        text: 'Lỗi kết nối máy chủ khi tự động lưu. Đã hoàn tác trạng thái công tắc.',
+      });
+    } finally {
+      setSavingKey(null);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -256,24 +297,40 @@ export default function AdminFeaturesPage() {
                     </div>
                   </div>
 
-                  {/* Toggle Switch */}
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={isChecked}
-                    id={`toggle-${cfg.key}`}
-                    onClick={() => handleToggle(cfg.key)}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                      isChecked ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
-                    }`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                        isChecked ? 'translate-x-5' : 'translate-x-0'
+                  {/* Toggle Switch & Status */}
+                  <div className="flex items-center gap-3">
+                    {savingKey === cfg.key && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 animate-pulse">
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        <span>Đang lưu...</span>
+                      </span>
+                    )}
+                    {savedKey === cfg.key && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Đã lưu</span>
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isChecked}
+                      id={`toggle-${cfg.key}`}
+                      onClick={() => handleToggle(cfg.key)}
+                      disabled={savingKey === cfg.key}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-75 ${
+                        isChecked ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
                       }`}
-                    />
-                  </button>
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                          isChecked ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

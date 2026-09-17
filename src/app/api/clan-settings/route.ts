@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { validateBranchTree, DEFAULT_BRANCH_TIERS } from '@/lib/tree-layout/branch-engine';
 import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 
@@ -240,9 +241,10 @@ export async function PATCH(request: Request) {
       updatePayload.root_ancestor_id = body.root_ancestor_id || null;
     }
 
-    // 3. Update Database with safety timeout
+    // 3. Update Database with safety timeout (using Admin Client to bypass RLS)
     try {
-      const updatePromise = supabase
+      const adminClient = createAdminClient() || supabase;
+      const updatePromise = adminClient
         .from('clan_settings')
         .update(updatePayload)
         .neq('id', '00000000-0000-0000-0000-000000000000');
@@ -296,6 +298,12 @@ export async function PATCH(request: Request) {
         sameSite: 'lax',
         httpOnly: false,
         maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+      cookieStore.set('fat_feature_flags_cache', JSON.stringify(feature_flags), {
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: false,
+        maxAge: 300, // 5 minutes cache
       });
     }
 

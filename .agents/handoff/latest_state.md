@@ -2,35 +2,33 @@
 
 ### 1. Key Context
 - **Dự án:** `gia-pha` — Hệ thống quản lý Gia Phả dòng họ Phạm.
-- **Phiên làm việc (conversation 085efe27):** Xuyên suốt nhiều vòng `/feature-brainstorm` → `/feature-spec` → `/feature-code` → `/g-compact`:
-  - **Milestone 5 (Anniversaries/WebPush/Cron):** Đã hoàn tất các Edge Case 39 (Smart Pairing UnlinkedMembersDrawer), Edge Case 40 (Flat Radio + Zero Box-in-Box).
-  - **Brand Identity Logo:** Tạo chữ Hán thư pháp "Phạm" (范) dạng SVG vector path, tối ưu kích thước +35% (Phương án A), rescale 88% viewBox, `size=28` Navbar / `size=38` Admin Profile.
-  - **Đổi tên Navbar link:** "Hỏi Vai Vế" → "Xưng hô" (đồng bộ trên Navbar.tsx, Micro-Spec, lessons_learned.md).
-- **Test Suite:** 191/191 tests PASS (27+ suites, 0 fail, 0 regression) tại thời điểm build gần nhất.
-- **Build:** Thành công 28/28 pages (`NEXT_DIST_DIR=.next-build`), typecheck sạch 0 errors.
-- **Git:** HEAD `a19d955` (main), chưa push lên origin. Có 3 file modified chưa commit:
-  - `.agents/brain/lessons_learned.md` — đổi "Hỏi Vai Vế" → "Xưng hô"
-  - `docs/14_Micro-Spec_Milestone_5_Anniversaries_WebPush_Cron.md` — đổi "Hỏi Vai Vế" → "Xưng hô"
-  - `src/components/navbar/Navbar.tsx` — đổi `<span>Hỏi Vai Vế</span>` → `<span>Xưng hô</span>`
-- **Dev Server:** `npm run dev` đang chạy tại `http://localhost:3000`.
-- **VERIFY_COMMANDS:** `Typecheck: npm.cmd run typecheck`, `Build: npm.cmd run build`, `Test: npm.cmd test`, `Dev_URL: http://localhost:3000`.
+- **Tính năng vừa hoàn tất (Milestone 7.5):** Enforce Cờ `enable_public_tree` — Middleware Auth Gate & Guest Visibility Matrix:
+  - `src/lib/auth/auth-gate.ts`: Pure function `evaluateAuthGate` xử lý bypass, phân luồng guest theo `enable_public_tree`.
+  - `src/middleware.ts`: Enforce cổng chặn, cookie-first caching TTL 5 phút cho `fat_feature_flags_cache`.
+  - `src/app/login-gate/page.tsx` & `src/components/auth/LoginGateAuthButton.tsx`: Trang Login Gate trang trọng với huy hiệu chữ Hán "Phạm" (范), Google OAuth, Dev bypass.
+  - `src/app/page.tsx`: Ẩn Spotlight "Ngày Giỗ Gần Nhất" khi `isGuest = true`.
+  - `src/components/navbar/Navbar.tsx`: Ẩn Lịch Giỗ & Xưng hô cho guest.
+  - `src/components/navigation/MobileBottomNav.tsx`: Đồng bộ nhãn "Xưng hô", ẩn Lịch Giỗ & Xưng hô cho guest.
+- **Verification Status:**
+  - **Tầng 1 (Compile & Build):** `npm run typecheck` (0 errors), `npm run build` (29/29 routes build sạch 100%).
+  - **Tầng 2 (Automated Test Suite):** `npm test` đạt **208/208 tests PASS (0 fail, 0 regression)**.
+  - **Tầng 3 (Human UAT):** Đang chờ nghiệm thu thị giác từ User tại `http://localhost:3000`.
 
 ### 2. Task Checklist
-- [x] Brainstorm & phân tích Edge Case 39 (Smart Pairing — con riêng tách đôi ngoài canvas).
-- [x] Cập nhật Micro-Spec 13 với Edge Case 39, test cases, RG29.
-- [x] Code Edge Case 39: Smart Pairing trong `UnlinkedMembersDrawer.tsx` (172/172 PASS).
-- [x] Fix dữ liệu thực tế 2 cháu Nam và Phương.
-- [x] Brainstorm & phân tích Edge Case 40 (Checkbox→Radio, Box-in-Box).
-- [x] Cập nhật Micro-Spec 13 với Edge Case 40, test cases, RG30.
-- [x] Code Edge Case 40: Flat Radio Group + Zero Box-in-Box (174/174 PASS).
-- [x] Brainstorm Logo chữ Hán thư pháp "Phạm" (范) — chọn nét chữ, bỏ màu background.
-- [x] Feature-spec Logo scale up (+35%, Phương án A).
-- [x] Feature-code Logo scale up — rescale SVG vector path, cập nhật 3 component files.
-- [x] Tầng 1: Typecheck sạch, Build thành công.
-- [x] Tầng 2: 191/191 Automated Tests PASS.
-- [/] Đổi nhãn "Hỏi Vai Vế" → "Xưng hô" trên Navbar + Spec + lessons_learned (3 file modified, chưa commit).
-- [ ] Tầng 3 (Human UAT): User kiểm tra thị giác logo + nhãn "Xưng hô" trên localhost:3000.
-- [ ] Git push lên origin/main.
+- [x] Reverse Sync toàn bộ tinh chỉnh thủ công của User vào Specs (`10`, `16`, `01`, `04`, `05`).
+- [x] Tạo `src/lib/auth/auth-gate.ts` phân luồng logic Auth Gate.
+- [x] Cập nhật `src/lib/supabase/middleware.ts` trả về user và supabase client.
+- [x] Cập nhật `src/middleware.ts` enforce Auth Gate và cookie cache.
+- [x] Tạo `src/components/auth/LoginGateAuthButton.tsx` (Google OAuth).
+- [x] Tạo `src/app/login-gate/page.tsx` (Login Gate Page trang trọng).
+- [x] Cập nhật `src/app/page.tsx` ẩn Spotlight Giỗ cho Guest.
+- [x] Cập nhật `src/components/navbar/Navbar.tsx` ẩn link nội bộ cho Guest.
+- [x] Cập nhật `src/components/navigation/MobileBottomNav.tsx` đổi nhãn "Xưng hô" và lọc tabs cho Guest.
+- [x] Cập nhật `src/app/layout.tsx` truyền `isGuest` và `enablePublicTree`.
+- [x] Tạo `tests/auth-gate.test.ts` phủ 17 kịch bản kiểm thử tự động (208/208 PASS).
+- [x] Tầng 1: Typecheck sạch 0 lỗi, Build thành công 29/29 routes.
+- [x] Tầng 2: Automated Tests 208/208 PASS.
+- [ ] Tầng 3: Human Visual UAT trên trình duyệt thực tế (`http://localhost:3000`).
 
 ### 3. Immediate Next Step
-- Commit 3 file đổi nhãn "Hỏi Vai Vế" → "Xưng hô" → chạy lại test xác nhận không regression → Human UAT trên `http://localhost:3000`.
+- Bàn giao checklist UAT (UAT_17 ~ UAT_24) để User mở trình duyệt ẩn danh kiểm chứng trên `http://localhost:3000`.

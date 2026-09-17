@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { UserProfile } from '@/types/database';
@@ -34,6 +35,7 @@ export default function AuthButton({
   const [isPersonalSettingsOpen, setIsPersonalSettingsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
+  const pathname = usePathname();
 
   useEffect(() => {
     let isMounted = true;
@@ -225,16 +227,18 @@ export default function AuthButton({
 
   const handleLogout = async () => {
     setIsLoading(true);
-    if (process.env.NODE_ENV === 'development') {
-      window.location.href = '/api/auth/dev-login?action=logout';
-      return;
+    try {
+      await supabase.auth.signOut();
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      setUser(null);
+      setProfile(null);
+      setIsOpen(false);
+      setIsLoading(false);
+      window.location.href = '/';
     }
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    setIsOpen(false);
-    setIsLoading(false);
-    window.location.href = '/';
   };
 
   if (isLoading) {
@@ -247,6 +251,11 @@ export default function AuthButton({
   }
 
   if (!user) {
+    // Khi đang ở màn Login Gate, không hiển thị nút đăng nhập trên Header Navbar để tránh trùng lặp với Card chính giữa
+    if (pathname === '/login-gate') {
+      return null;
+    }
+
     return (
       <div className="flex items-center gap-2">
         <button
@@ -371,14 +380,15 @@ export default function AuthButton({
           )}
 
           <div className="py-1">
-            <a
-              href="/api/auth/dev-login?action=logout"
+            <button
+              type="button"
+              onClick={handleLogout}
               id="logout-btn"
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors font-medium text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors font-medium text-left cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>Đăng xuất</span>
-            </a>
+            </button>
           </div>
         </div>
       )}

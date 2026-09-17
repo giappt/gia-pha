@@ -29,8 +29,18 @@ export async function GET(request: Request) {
   }
 
   if (searchParams.get('action') === 'logout' || searchParams.get('logout') === '1') {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn('Supabase dev signOut warning:', e);
+    }
     cookieStore.delete('fat_dev_user');
-    return NextResponse.redirect(new URL('/', request.url));
+    cookieStore.delete('fat_feature_flags_cache');
+    const res = NextResponse.redirect(new URL('/', request.url));
+    res.cookies.delete('fat_dev_user');
+    res.cookies.delete('fat_feature_flags_cache');
+    return res;
   }
 
   const devUserCookie = cookieStore.get('fat_dev_user');

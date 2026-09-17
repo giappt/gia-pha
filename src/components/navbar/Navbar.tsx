@@ -5,9 +5,20 @@ import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 import ClanHanLogoNavbar from '@/components/navbar/ClanHanLogoNavbar';
 import { createClient } from '@/lib/supabase/server';
 import { Calendar, Compass } from 'lucide-react';
-import type { UserProfile } from '@/types/database';
+import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
+import type { UserProfile, ClanFeatureFlags } from '@/types/database';
 
-export default async function Navbar() {
+export default async function Navbar({
+  isGuest: propIsGuest,
+  enablePublicTree: propEnablePublicTree,
+  featureFlags: propFeatureFlags,
+  isSuperAdmin: propIsSuperAdmin,
+}: {
+  isGuest?: boolean;
+  enablePublicTree?: boolean;
+  featureFlags?: ClanFeatureFlags;
+  isSuperAdmin?: boolean;
+} = {}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -41,6 +52,35 @@ export default async function Navbar() {
     }
   }
 
+  const isSuperAdmin =
+    propIsSuperAdmin !== undefined
+      ? propIsSuperAdmin
+      : userProfile?.user_role === 'super_admin' || user?.id === '00000000-0000-0000-0000-000000000001';
+
+  // Xác định Feature Flags
+  let flags = propFeatureFlags;
+  if (!flags) {
+    try {
+      const { data: clanData } = await supabase
+        .from('clan_settings')
+        .select('feature_flags')
+        .limit(1)
+        .single();
+      if (clanData?.feature_flags) {
+        flags = resolveFeatureFlags(clanData.feature_flags);
+      }
+    } catch {
+      // fallback
+    }
+  }
+  if (!flags) {
+    flags = resolveFeatureFlags(undefined);
+  }
+
+  // Xác định trạng thái Guest
+  const isGuest = propIsGuest !== undefined ? propIsGuest : !user;
+  const enablePublicTree = propEnablePublicTree ?? flags.enable_public_tree;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -59,29 +99,37 @@ export default async function Navbar() {
           </Link>
         </div>
 
-        {/* Center: Navigation Links */}
+        {/* Center: Navigation Links (Ẩn Lịch Giỗ & Xưng hô khi cờ tắt hoặc là Guest; Super Admin luôn thấy) */}
         <nav className="hidden md:flex items-center gap-1">
-          <Link
-            href="/tree"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
-          >
-            <FamilyTreeIcon className="w-4 h-4 text-emerald-600" />
-            <span>Cây Phả Hệ</span>
-          </Link>
-          <Link
-            href="/anniversaries"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
-          >
-            <Calendar className="w-4 h-4 text-emerald-600" />
-            <span>Lịch Giỗ</span>
-          </Link>
-          <Link
-            href="/kinship"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
-          >
-            <Compass className="w-4 h-4 text-emerald-600" />
-            <span>Xưng hô</span>
-          </Link>
+          {(!isGuest || enablePublicTree) && (
+            <Link
+              href="/tree"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
+            >
+              <FamilyTreeIcon className="w-4 h-4 text-emerald-600" />
+              <span>Cây Phả Hệ</span>
+            </Link>
+          )}
+
+          {!isGuest && (flags.enable_anniversaries || isSuperAdmin) && (
+            <Link
+              href="/anniversaries"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
+            >
+              <Calendar className="w-4 h-4 text-emerald-600" />
+              <span>Lịch Giỗ</span>
+            </Link>
+          )}
+
+          {!isGuest && (flags.enable_kinship_lookup || isSuperAdmin) && (
+            <Link
+              href="/kinship"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
+            >
+              <Compass className="w-4 h-4 text-emerald-600" />
+              <span>Xưng hô</span>
+            </Link>
+          )}
         </nav>
 
         {/* Right: Theme Toggle & Auth Action (Đã tinh gọn, bỏ nút Quản Trị) */}
