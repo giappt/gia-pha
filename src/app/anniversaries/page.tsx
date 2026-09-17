@@ -45,9 +45,7 @@ export default function AnniversariesPage() {
     const lunar = solarToLunar(day, month, year);
     return {
       solarStr: formatSolarDateWithDayOfWeek(year, month, day),
-      lunarStr: `Ngày ${lunar.lunarDay < 10 ? '0' : ''}${lunar.lunarDay} tháng ${
-        lunar.lunarMonth < 10 ? '0' : ''
-      }${lunar.lunarMonth} Âm lịch`,
+      lunarStr: `Ngày ${lunar.lunarDay < 10 ? '0' : ''}${lunar.lunarDay} tháng ${lunar.lunarMonth < 10 ? '0' : ''}${lunar.lunarMonth}`,
     };
   }, []);
 
@@ -109,7 +107,7 @@ export default function AnniversariesPage() {
           setEnablePush(res.data.feature_flags.enable_push_notifications);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     fetch('/api/members')
       .then((r) => r.json())
@@ -118,7 +116,7 @@ export default function AnniversariesPage() {
           setAllMembers(res.members);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Làm phẳng cây phân chi chính thức
@@ -180,15 +178,11 @@ export default function AnniversariesPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider uppercase bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 mb-3">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Hiếu Nghĩa Truyền Gia</span>
-              </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Lịch Giỗ Gia Tộc
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
-                Quét và theo dõi ngày giỗ của các bậc tiền nhân trong gia phả theo chuẩn Lịch Âm Việt Nam, tự động thông báo để con cháu hướng về cội nguồn.
+                Theo dõi ngày giỗ trong gia phả theo chuẩn Lịch Âm Việt Nam, tự động thông báo để con cháu hướng về cội nguồn.
               </p>
             </div>
 
@@ -234,11 +228,10 @@ export default function AnniversariesPage() {
               <button
                 key={tab.value}
                 onClick={() => setDaysRange(tab.value)}
-                className={`px-3 py-1.5 rounded-md font-medium transition-all ${
-                  daysRange === tab.value
-                    ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-md font-medium transition-all ${daysRange === tab.value
+                  ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
               >
                 {tab.label}
               </button>
@@ -343,13 +336,12 @@ export default function AnniversariesPage() {
                   >
                     {/* Header Của Ngày */}
                     <div
-                      className={`px-5 py-3.5 border-b flex flex-wrap items-center justify-between gap-3 ${
-                        isToday
-                          ? 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50'
-                          : isTomorrow
+                      className={`px-5 py-3.5 border-b flex flex-wrap items-center justify-between gap-3 ${isToday
+                        ? 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50'
+                        : isTomorrow
                           ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50'
                           : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800/80'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         {/* Countdown Badge */}
@@ -374,8 +366,8 @@ export default function AnniversariesPage() {
                           <span className="text-sm font-bold text-slate-900 dark:text-white">
                             {formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day)}
                           </span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                            Ngày {group.lunar_day < 10 ? '0' : ''}{group.lunar_day}/{group.lunar_month < 10 ? '0' : ''}{group.lunar_month} Âm lịch
+                          <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">
+                            Âm lịch: Ngày {group.lunar_day < 10 ? '0' : ''}{group.lunar_day}/{group.lunar_month < 10 ? '0' : ''}{group.lunar_month}
                           </span>
                         </div>
                       </div>
@@ -398,11 +390,10 @@ export default function AnniversariesPage() {
                             <div className="flex items-start gap-4">
                               {/* Avatar */}
                               <div
-                                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 tracking-wider ${
-                                  isMale
-                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                                    : 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200 dark:border-pink-800'
-                                }`}
+                                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 tracking-wider ${isMale
+                                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                                  : 'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200 dark:border-pink-800'
+                                  }`}
                               >
                                 {member.avatar_url ? (
                                   // eslint-disable-next-line @next/next/no-img-element

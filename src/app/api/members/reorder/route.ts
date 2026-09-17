@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { verifyServerRole } from '@/lib/auth/permissions';
 
 export interface ReorderChildrenRequest {
   parentId: string;
@@ -9,6 +10,10 @@ export interface ReorderChildrenRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rào chắn bảo mật RBAC: Chỉ super_admin và branch_editor mới được sắp xếp thứ tự con
+    const authError = await verifyServerRole(request, ['super_admin', 'branch_editor']);
+    if (authError) return authError;
+
     const body: ReorderChildrenRequest = await request.json();
     const { parentId, orderedChildIds } = body;
 

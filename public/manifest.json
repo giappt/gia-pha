@@ -1,8 +1,8 @@
 {
-  "name": "FAT - Hệ Thống Quản Lý Gia Phả Đại Tộc",
-  "short_name": "Gia Phả",
-  "description": "Phả hệ trực quan, tính toán vai vế & thông báo ngày giỗ tổ tiên",
-  "start_url": "/tree",
+  "name": "Gia Phả Phạm Văn",
+  "short_name": "Gia Phả Phạm Văn",
+  "description": "Hệ thống số hóa phả hệ, phân định vai vế & thông báo ngày giỗ tổ tiên dòng họ Phạm Văn",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#059669",

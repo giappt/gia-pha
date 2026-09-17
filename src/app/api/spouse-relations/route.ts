@@ -4,9 +4,14 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { detectConsanguinity } from '@/lib/tree-layout/graph-validation';
 import { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import { SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS } from '@/lib/tree-layout/sample-data';
+import { verifyServerRole } from '@/lib/auth/permissions';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rào chắn bảo mật RBAC: Chỉ super_admin và branch_editor mới được ghép hôn phối
+    const authError = await verifyServerRole(request, ['super_admin', 'branch_editor']);
+    if (authError) return authError;
+
     const body = await request.json();
     const { member_a_id, member_b_id, marriage_order = 1, marriage_status = 'married', notes = null } = body;
 

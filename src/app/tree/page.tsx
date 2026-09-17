@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS } from '@/lib/tree-layout/sample-data';
 import { FamilyTreeCanvas } from '@/components/tree/FamilyTreeCanvas';
 import { MemberRecord, SpouseRelationRecord } from '@/types/tree';
-import type { BranchNode } from '@/types/database';
+import type { BranchNode, UserRole } from '@/types/database';
+import { canManageTree } from '@/lib/auth/permissions';
 
 export const metadata: Metadata = {
   title: 'Cây Phả Hệ Tương Tác - FAT Family Tree',
@@ -17,10 +18,47 @@ export default async function TreePage() {
   let clanName = 'DÒNG HỌ NGUYỄN VĂN';
   let clanBranches: BranchNode[] = [];
   let rootAncestorId: string | null = null;
+  let userRole: UserRole = 'viewer';
 
   try {
     const supabase = createClient();
     const cookieStore = cookies();
+
+    // 1. Trích xuất vai trò người dùng (Dev Cookie trước, Supabase Auth sau)
+    const devUserCookie = cookieStore.get('fat_dev_user')?.value;
+    if (devUserCookie) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(devUserCookie));
+        if (parsed?.user_role) {
+          userRole = parsed.user_role;
+        } else if (parsed?.id === '00000000-0000-0000-0000-000000000001') {
+          userRole = 'super_admin';
+        }
+      } catch {}
+    } else {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          if (user.id === '00000000-0000-0000-0000-000000000001') {
+            userRole = 'super_admin';
+          } else if (user.user_metadata?.user_role) {
+            userRole = user.user_metadata.user_role;
+          } else {
+            const { data: profile } = await supabase
+              .from('users')
+              .select('user_role')
+              .eq('id', user.id)
+              .maybeSingle();
+            if (profile?.user_role) {
+              userRole = profile.user_role;
+            }
+          }
+        }
+      } catch {}
+    }
+
     const devBranchesStr = cookieStore.get('fat_dev_branches')?.value;
     if (devBranchesStr) {
       try {
@@ -69,6 +107,8 @@ export default async function TreePage() {
     spouseRelations = SAMPLE_SPOUSE_RELATIONS;
   }
 
+  const canManage = canManageTree(userRole);
+
   return (
     <div className="relative w-full h-full flex-1 overflow-hidden flex flex-col">
       <FamilyTreeCanvas
@@ -77,6 +117,8 @@ export default async function TreePage() {
         clanName={clanName}
         clanBranches={clanBranches}
         rootAncestorId={rootAncestorId}
+        userRole={userRole}
+        canManageTree={canManage}
       />
     </div>
   );

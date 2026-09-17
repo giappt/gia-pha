@@ -42,6 +42,7 @@ export interface MemberDetailDrawerProps {
   onAddSpouse?: (member: MemberRecord) => void;
   onDeleteMember?: (memberId: string) => Promise<void>;
   onOpenReorder?: (parentId: string) => void;
+  canManageTree?: boolean;
 }
 
 export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
@@ -57,6 +58,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
   onAddSpouse,
   onDeleteMember,
   onOpenReorder,
+  canManageTree = false,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -640,7 +642,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
 
         {/* Footer Action Bar */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center gap-2">
-          {onEditMember && target && (
+          {canManageTree && onEditMember && target && (
             <button
               onClick={() => onEditMember(target)}
               className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors"
@@ -665,7 +667,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
             <Users className="w-3.5 h-3.5 text-blue-600" /> Tra cứu xưng hô
           </Link>
 
-          {onDeleteMember && target && (
+          {canManageTree && onDeleteMember && target && (
             <button
               type="button"
               disabled={!deleteCheck.canDelete || isDeleting}

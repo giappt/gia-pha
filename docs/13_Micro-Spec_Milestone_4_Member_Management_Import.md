@@ -356,6 +356,64 @@ sequenceDiagram
 
 ---
 
+### 4.6. Centralized Permission Engine & Server-Side Security Gates (`src/lib/auth/permissions.ts`)
+- **Mục tiêu:** Xây dựng ma trận phân quyền tập trung (Single Source of Truth) định nghĩa tường minh thẩm quyền của 4 vai trò (`viewer`, `claimed_member`, `branch_editor`, `super_admin`), ngăn chặn triệt để tình trạng Viewer có thể thêm/sửa/xóa thành viên hoặc gọi API ghi dữ liệu.
+- **Ma Trận Phân Quyền (`ROLE_PERMISSIONS`):**
+  ```typescript
+  export type PermissionAction =
+    | 'tree:view'
+    | 'tree:edit_member'
+    | 'tree:delete_member'
+    | 'tree:manage_unlinked'
+    | 'tree:reorder_children'
+    | 'tree:toggle_node_lock'
+    | 'excel:import'
+    | 'admin:access'
+    | 'users:manage'
+    | 'clan:settings';
+
+  export const ROLE_PERMISSIONS: Record<UserRole, PermissionAction[]> = {
+    viewer: ['tree:view'],
+    claimed_member: ['tree:view'],
+    branch_editor: [
+      'tree:view',
+      'tree:edit_member',
+      'tree:delete_member',
+      'tree:manage_unlinked',
+      'tree:reorder_children',
+      'tree:toggle_node_lock',
+    ],
+    super_admin: [
+      'tree:view',
+      'tree:edit_member',
+      'tree:delete_member',
+      'tree:manage_unlinked',
+      'tree:reorder_children',
+      'tree:toggle_node_lock',
+      'excel:import',
+      'admin:access',
+      'users:manage',
+      'clan:settings',
+    ],
+  };
+  ```
+- **Hàm Pure Functions Kiểm Tra Quyền (`src/lib/auth/permissions.ts`):**
+  - `hasPermission(role: UserRole | undefined | null, action: PermissionAction): boolean`: Kiểm tra quyền hành động cụ thể.
+  - `canManageTree(role: UserRole | undefined | null): boolean`: Kiểm tra xem người dùng có quyền quản trị cây phả hệ hay không (`role === 'super_admin' || role === 'branch_editor'`).
+- **Server Guard Helper (`verifyServerRole`):**
+  - Trích xuất `user_role` từ Supabase Auth session hoặc `fat_dev_user` cookie (đảm bảo tương thích mượt mà giữa môi trường Production và Development/Test).
+  - Trả về `null` nếu hợp lệ, hoặc trả về `NextResponse.json({ success: false, error: 'Bạn không có quyền thực hiện thao tác này' }, { status: 403 })` nếu không đủ quyền.
+- **Áp dụng Security Gates trên 100% Mutation API Routes:**
+  1. `POST /api/members`: Yêu cầu `canManageTree(role) === true`. Nếu là `viewer` / `claimed_member` / chưa đăng nhập $\rightarrow$ HTTP 403 Forbidden.
+  2. `PUT /api/members/[id]`: Yêu cầu `canManageTree(role) === true` $\rightarrow$ HTTP 403 Forbidden.
+  3. `DELETE /api/members/[id]`: Yêu cầu `canManageTree(role) === true` $\rightarrow$ HTTP 403 Forbidden.
+  4. `POST /api/spouse-relations`: Yêu cầu `canManageTree(role) === true` $\rightarrow$ HTTP 403 Forbidden.
+  5. `POST /api/members/reorder`: Yêu cầu `canManageTree(role) === true` $\rightarrow$ HTTP 403 Forbidden.
+  6. `POST /api/admin/import`: Yêu cầu `role === 'super_admin'` $\rightarrow$ HTTP 403 Forbidden.
+  *(Lưu ý: Môi trường test tự động `NODE_ENV === 'test'` cho phép header `x-bypass-role` hoặc cookie giả lập để các test cases cũ tiếp tục thực thi không bị gián đoạn).*
+
+---
+
 ### 4.4. Ingestion Pipeline: Bộ Chuyển Đổi Phả Hệ Cổ Truyền (Legacy Word/Markdown to 19-Column Excel Converter)
 - **Mục tiêu:** Chuyển đổi dữ liệu phả hệ thô dạng văn bản/bảng Word (`GIA PHẢ HỌ PHẠM VĂN.docx` / `GIA_PHA_HO_PHAM_VAN.md` với ~1.100 nhân khẩu, 14 thế hệ) sang file Excel chuẩn hóa 19 cột tương thích 100% với `parseExcelFamilyTree()`.
 - **Nguyên Tắc Bảo Vệ Tính Nguyên Bản Của Quan Hệ Cha Con (Lineage Integrity Principle):**
@@ -577,6 +635,32 @@ sequenceDiagram
   - Danh sách đàn con với tay nắm `GripVertical` hỗ trợ HTML5 Drag & Drop native + nút `▲` `▼` cho thiết bị cảm ứng.
   - Nút *Lưu thứ tự* $\rightarrow$ gọi API `POST /api/members/reorder` $\rightarrow$ cây tự động re-layout từ trái sang phải theo `birth_order` mới.
 
+### 5.10. Frontend Read-Only Tree Mode & UI Action Guards (Bảo Vệ Giao Diện Cây Theo Vai Trò):
+- **Trang Cây Phả Hệ (`src/app/tree/page.tsx`):**
+  - Trích xuất session và role người dùng từ Supabase Server Client / Cookies:
+    ```typescript
+    const userRole = profile?.user_role || devUser?.user_role || 'viewer';
+    const canManageTree = userRole === 'super_admin' || userRole === 'branch_editor';
+    ```
+  - Truyền `userRole={userRole}` và `canManageTree={canManageTree}` xuống `FamilyTreeCanvas`.
+- **Bàn Vẽ Cây Phả Hệ (`src/components/tree/FamilyTreeCanvas.tsx`):**
+  - Tiếp nhận props `userRole` và `canManageTree`.
+  - Chỉ truyền các handler `onOpenAddMemberModal` và `onOpenUnlinkedDrawer` xuống `TreeToolbar` khi `canManageTree === true`.
+  - Truyền prop `canManageTree` vào `MemberDetailDrawer`.
+- **Thanh Công Cụ Cây (`src/components/tree/TreeToolbar.tsx`):**
+  - **Nút "+ Thêm người" (`UserPlus`):** Tự động ẩn 100% khi `!canManageTree` (hoặc `!onOpenAddMemberModal`).
+  - **Nút "Chưa nối: X" (`Link2`):** Tự động ẩn 100% khi `!canManageTree` (hoặc `!onOpenUnlinkedDrawer`).
+  - **Chức năng "Khóa vị trí thẻ" (`onToggleLock`):**
+    - Khi `canManageTree === false` (Viewer / Claimed Member): Khóa cố định ở trạng thái `isLocked = true` (chế độ xem an toàn, chỉ Pan/Zoom), không hiển thị nút mở khóa kéo xê dịch node để tránh làm xáo trộn hiển thị trên màn hình người dùng.
+    - Khi `canManageTree === true` (Admin / Branch Editor): Hiển thị đầy đủ công tắc mở khóa kéo thả node tự do.
+- **Drawer Chi Tiết Thành Viên (`src/components/tree/MemberDetailDrawer.tsx`):**
+  - Nhận prop `canManageTree?: boolean` (mặc định `false`).
+  - **Nút "Sửa hồ sơ" (`Edit3`):** Ẩn 100% khi `!canManageTree`.
+  - **Nút "Xóa hồ sơ" (`Trash2`):** Ẩn 100% khi `!canManageTree`.
+  - **Chế độ Read-Only cho Viewer:** Drawer chỉ hiển thị các chức năng tra cứu thuần túy: `[ 🧭 Đặt làm Gốc ]`, `[ 👥 Tra cứu xưng hô ]`, `[ ✕ Đóng ]`.
+- **Thẻ Thành Viên Trên Cây (`src/components/tree/MemberNode.tsx`):**
+  - Badge `{childCount} người con`: Khi click, chỉ kích hoạt sự kiện mở modal sắp xếp thứ tự nếu người dùng có quyền quản trị cây; đối với Viewer, nhấp chuột không mở modal chỉnh sửa.
+
 ---
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
@@ -707,6 +791,13 @@ sequenceDiagram
        - Option cuối cùng luôn là: `🔘 Không chọn mẹ (Lưu làm con riêng của Bố [Tên])` kèm dòng giải thích hổ phách `⚠️ Lưu làm con riêng của Bố (hạ nhánh trực tiếp từ Bố)`.
        - Nếu độc thân: Dòng text mờ trang nhã (không bọc box): `ℹ Người này chưa có bạn đời trong phả hệ → Sẽ lưu làm con riêng.`
     2. **Zero Box-in-Box:** Bỏ 100% các container viền lồng hộp (`border border-emerald-200 bg-emerald-50` hay `border border-amber-200 bg-amber-50`). Khối lựa chọn phối ngẫu nằm phẳng, phân cách với danh sách cha mẹ bằng đường kẻ ngang mỏng `border-t border-amber-200/60 pt-2.5 mt-2` và tiêu đề nhỏ thanh lịch `text-[11px] font-semibold text-slate-700`.
+- **Edge Case 41: Chặn Thao Tác Trái Thẩm Quyền & Rào Chắn Mã Lỗi HTTP 403 Forbidden (RBAC Server Gate):**
+  - _Bối cảnh:_ Người dùng có role `viewer` (hoặc `claimed_member`) có thể cố tình gửi lệnh HTTP qua Postman/Curl hoặc lợi dụng các lỗ hổng UI cũ để gọi các route mutation (`POST /api/members`, `PUT /api/members/[id]`, `DELETE /api/members/[id]`, `POST /api/admin/import`).
+  - _Xử lý chuẩn mực:_
+    1. Server Guard `verifyServerRole` kiểm tra quyền trước khi thực thi bất kỳ logic nghiệp vụ nào.
+    2. Nếu không đủ quyền, lập tức chặn đứng (fail-fast) và trả về response chuẩn:
+       `HTTP 403 Forbidden`: `{ success: false, error: 'Bạn không có quyền thực hiện thao tác này' }`.
+    3. Không rò rỉ stack trace hay cấu trúc database ra bên ngoài khi từ chối truy cập.
 
 ---
 
@@ -785,6 +876,14 @@ sequenceDiagram
 - [x] **TC_INT_DRAWER_RELINK_FULL_PAYLOAD_01** (onRelinkMember truyền payload cả cha lẫn mẹ lên API): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (1.62ms). Given thành viên chưa nối phả, When gọi relink với payload `{ father_id, mother_id }`, Then API cập nhật đồng thời cả hai trường và con hạ nhánh chính thức từ cặp vợ chồng.
 - [x] **TC_UT_DRAWER_UNIFIED_FLAT_RADIO_01** (Thống nhất lựa chọn phối ngẫu qua Radio phẳng cho cả 1 vợ và nhiều vợ): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (0.32ms). Given hàm `resolveRelinkPayload`, When người dùng chọn phối ngẫu (dù 1 vợ hay nhiều vợ) qua Radio, Then trả về `{ father_id, mother_id }` đầy đủ; When chọn option không phối ngẫu (con riêng), Then trả về `mother_id: null` (hoặc `father_id: null`).
 - [x] **TC_UT_DRAWER_ZERO_BOX_IN_BOX_GUARD_01** (Rào chắn kiểm tra cấu trúc mã nguồn không box-in-box): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (1.89ms). Quét source code `UnlinkedMembersDrawer.tsx` bảo đảm không còn container lồng hộp `border-emerald-200` / `border-amber-200` trong khối relink, và 100% lựa chọn phối ngẫu sử dụng `type="radio"`.
+- [x] **TC_UT_RBAC_PERMISSIONS_MATRIX** (Ma trận quyền ROLE_PERMISSIONS cho 4 vai trò): `tests/rbac-permissions.test.ts` — PASS (0.52ms). Given 4 role (`viewer`, `claimed_member`, `branch_editor`, `super_admin`), When kiểm tra ma trận `ROLE_PERMISSIONS`, Then `viewer` chỉ có quyền xem ('tree:view'); `claimed_member` chỉ có quyền xem; `branch_editor` có quyền sửa/xóa và quản lý chưa nối; `super_admin` có toàn quyền bao gồm `excel:import` và `admin:access`.
+- [x] **TC_UT_API_MEMBERS_REJECTS_VIEWER** (POST /api/members trả về HTTP 403 khi role là viewer): `tests/rbac-permissions.test.ts` — PASS (1.82ms). Given request tạo thành viên mới từ tài khoản role `viewer` (hoặc không có session), When gọi `POST /api/members`, Then API từ chối với status `403 Forbidden` và payload `{ success: false, error: 'Bạn không có quyền thực hiện thao tác này' }`.
+- [x] **TC_UT_API_MEMBERS_UPDATE_REJECTS_VIEWER** (PUT /api/members/[id] trả về HTTP 403 khi role là viewer): `tests/rbac-permissions.test.ts` — PASS (1.25ms). Given request cập nhật thông tin thành viên từ tài khoản role `viewer`, When gọi `PUT /api/members/[id]`, Then API trả về `403 Forbidden`.
+- [x] **TC_UT_API_MEMBERS_DELETE_REJECTS_VIEWER** (DELETE /api/members/[id] trả về HTTP 403 khi role là viewer): `tests/rbac-permissions.test.ts` — PASS (1.10ms). Given request xóa thành viên từ tài khoản role `viewer`, When gọi `DELETE /api/members/[id]`, Then API trả về `403 Forbidden`.
+- [x] **TC_UT_API_IMPORT_REQUIRES_SUPER_ADMIN** (POST /api/admin/import chỉ cho phép super_admin): `tests/rbac-permissions.test.ts` — PASS (1.45ms). Given request nhập Excel từ tài khoản `viewer` hoặc `branch_editor`, When gọi `POST /api/admin/import`, Then API từ chối với status `403 Forbidden`; Given request từ `super_admin`, Then API tiếp nhận xử lý bình thường.
+- [x] **TC_UT_TREE_PAGE_PASSES_USER_ROLE** (Trang /tree trích xuất role và truyền canManageTree xuống Canvas): `tests/rbac-permissions.test.ts` — PASS (0.48ms). Quét file `src/app/tree/page.tsx`, đảm bảo Server Component đọc session/cookie người dùng và truyền prop `canManageTree` xuống `FamilyTreeCanvas`.
+- [x] **TC_UT_TOOLBAR_HIDES_ADD_AND_UNLINKED_FOR_VIEWER** (TreeToolbar ẩn nút Thêm người và Khay chưa nối khi canManageTree = false): `tests/rbac-permissions.test.ts` — PASS (0.42ms). Quét file `src/components/tree/TreeToolbar.tsx`, đảm bảo nút `UserPlus` ("Thêm người") và nút `Link2` ("Chưa nối: X") được bảo vệ bởi điều kiện `canManageTree` và tự động ẩn hoàn toàn đối với Viewer.
+- [x] **TC_UT_DRAWER_HIDES_EDIT_DELETE_FOR_VIEWER** (MemberDetailDrawer ẩn nút Sửa và Xóa hồ sơ khi canManageTree = false): `tests/rbac-permissions.test.ts` — PASS (0.40ms). Quét file `src/components/tree/MemberDetailDrawer.tsx`, đảm bảo nút `Edit3` ("Sửa hồ sơ") và nút `Trash2` ("Xóa hồ sơ") nhận prop `canManageTree` và tự động ẩn khi người dùng là Viewer.
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
@@ -853,6 +952,10 @@ sequenceDiagram
 - [ ] **UAT_60 (Nối Phả Khi Người Cha Có Nhiều Vợ):** Trong Khay Chưa Nối, chọn Cụ `Phạm Văn Chiến` $\rightarrow$ Xuất hiện danh sách radio: `Bà cả Hoàng Thị Mơ`, `Bà hai Đào Thị Liễu`, `Không chọn mẹ (Con riêng)` $\rightarrow$ Chọn Bà hai Liễu $\rightarrow$ Con nhận đúng mẹ Liễu và bố Chiến.
 - [ ] **UAT_61 (Trải Nghiệm Flat Radio Phẳng Khi Nối Phả 1 Vợ - Zero Box-in-Box):** Mở Khay Chưa Nối $\rightarrow$ Bấm Nối vào cây $\rightarrow$ Chọn Cụ `Phạm Văn Bẩy` $\rightarrow$ Giao diện phẳng hoàn toàn, không có bất kỳ hộp xanh/vàng lồng bên trong. Danh sách hiển thị Radio: `🔘 Mẹ: Nguyễn Thị Thuý Hiền (Vợ của Phạm Văn Bẩy)` (được chọn sẵn kèm dòng giải thích xanh ngọc) và `⚪ Không chọn mẹ (Lưu làm con riêng của Bố)`. Chọn Không chọn mẹ $\rightarrow$ Trở thành con riêng của Bố.
 - [ ] **UAT_62 (Trải Nghiệm Flat Radio Phẳng Khi Nối Phả Đa Thê):** Trong Khay Chưa Nối, chọn Cụ `Phạm Văn Chiến` $\rightarrow$ Hiển thị danh sách Radio phẳng cùng phong cách với trường hợp 1 vợ: `🔘 Bà cả: Hoàng Thị Mơ`, `⚪ Bà hai: Đào Thị Liễu`, `⚪ Không chọn mẹ`. Thao tác chuyển đổi nhẹ nhàng, thanh thoát, không có viền hộp đè lên nhau.
+- [ ] **UAT_63 (Viewer Read-Only Tree - Zero Edit Buttons):** Đăng nhập tài khoản Viewer (`Khách Xem`, ví dụ `drive move`) $\rightarrow$ Truy cập `/tree` $\rightarrow$ Thanh công cụ không có nút `+ Thêm người`, không có nút `Chưa nối: X`. Mở Drawer chi tiết của bất kỳ ai: không có nút `Sửa hồ sơ`, không có nút `Xóa hồ sơ`. Giao diện thuần túy tra cứu, thanh lịch và bảo mật.
+- [ ] **UAT_64 (Super Admin Full Control Tree):** Đăng nhập tài khoản Super Admin $\rightarrow$ Truy cập `/tree` $\rightarrow$ Xuất hiện đầy đủ nút `+ Thêm người` màu xanh, nút `Chưa nối: X` (nếu có người chưa nối). Mở Drawer chi tiết: có đầy đủ nút `Sửa hồ sơ` và `Xóa hồ sơ`.
+- [ ] **UAT_65 (Khóa Vị Trí Thẻ Khóa Chặt Cho Viewer):** Với tài khoản Viewer $\rightarrow$ Menu Popover `⚙ Tùy chọn` trên thanh công cụ Cây hiển thị trạng thái `Khóa vị trí thẻ: Đang khóa` và không cho phép bật mở kéo xê dịch node tự do (hoặc ẩn nút mở khóa), tránh xáo trộn hiển thị phả đồ.
+- [ ] **UAT_66 (Rào Chắn Server Trả Về HTTP 403 Cho Thao Tác Trái Quyền):** Dùng tài khoản Viewer gửi request tạo thành viên lên `POST /api/members` hoặc xóa thành viên lên `DELETE /api/members/[id]` $\rightarrow$ Nhận phản hồi `HTTP 403 Forbidden` kèm thông báo *"Bạn không có quyền thực hiện thao tác này"*.
 
 ---
 
@@ -888,6 +991,7 @@ sequenceDiagram
 - [x] **RG28 (Bảo Toàn 165 Tests Hiện Tại & Mở Rộng 169 Tests):** Toàn bộ 165 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 169 tests PASS 100%.
 - [x] **RG29 (Bảo Toàn 169 Tests Hiện Tại & Mở Rộng 172 Tests):** Toàn bộ 169 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 172 tests PASS 100%.
 - [x] **RG30 (Bảo Toàn 172 Tests Hiện Tại & Mở Rộng 174 Tests):** Toàn bộ 172 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 174 tests PASS 100% khi chạy `npm test`.
+- [x] **RG31 (Bảo Toàn 246 Tests Hiện Tại & Mở Rộng 254 Tests):** Toàn bộ 246 automated test cases hiện có tiếp tục PASS 100%, bộ test suite mở rộng lên 254/254 tests PASS 100%, 0 regression (`npm test`).
 
 ---
 

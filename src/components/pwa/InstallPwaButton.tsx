@@ -32,6 +32,11 @@ export default function InstallPwaButton({
   useEffect(() => {
     setIsMounted(true);
 
+    // Đăng ký Service Worker để thỏa mãn PWA Installability của Chromium
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
     // 1. Kiểm tra standalone mode
     const checkStandalone = () => {
       const isStandaloneMode =

@@ -10,8 +10,8 @@ import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 import { ShieldCheck, ArrowLeft, Sparkles, Lock } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Đăng nhập - Gia Phả Dòng Họ',
-  description: 'Vui lòng đăng nhập tài khoản Google để truy cập hệ thống gia phả dòng họ.',
+  title: 'Đăng nhập',
+  description: 'Vui lòng đăng nhập tài khoản Google để truy cập Gia Phả Phạm Văn.',
 };
 
 export default async function LoginGatePage({

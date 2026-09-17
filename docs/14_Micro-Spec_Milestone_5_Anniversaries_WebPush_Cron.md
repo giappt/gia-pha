@@ -582,6 +582,29 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - **Khi `enable_anniversaries = true` và `enable_push_notifications = false`:**
     - Con cháu vẫn tự do truy cập Lịch Giỗ, xem ngày cúng, tra cứu ngày âm/dương bình thường mà không bị quấy rầy bởi chuông báo đẩy.
 
+### 5.13. Kích Hoạt PWA Chuẩn Hóa Thương Hiệu "Gia Phả Phạm Văn" (Global SW, Manifest, Title) & Đồng Bộ Tiền Tố "Âm Lịch: Ngày DD/MM"
+- **1. Kích Hoạt Service Worker Toàn Cục & Đáp Ứng Chuẩn Chromium PWA Installability:**
+  - Di dời/bổ sung việc đăng ký Service Worker `navigator.serviceWorker.register('/sw.js')` ra phạm vi toàn cục (thực hiện ngay trong `src/app/layout.tsx` hoặc tự động trong `InstallPwaButton.tsx` khi mount), không để phụ thuộc vào việc người dùng có mở trang `/anniversaries` hay không.
+  - Bổ sung `fetch` listener pass-through vào `public/sw.js`: `self.addEventListener('fetch', (event) => { event.respondWith(fetch(event.request)); });` nhằm vượt qua bộ tiêu chí PWA Installability của Chromium.
+  - Đảm bảo sự kiện `beforeinstallprompt` được kích hoạt và lưu vào `deferredPrompt` ngay khi người dùng truy cập Trang Chủ (`/`) hoặc Cổng Đăng Nhập (`/login-gate`), sẵn sàng bật hộp thoại cài đặt native khi người dùng bấm nút.
+- **2. Chuẩn Hóa Thương Hiệu Ứng Dụng "Gia Phả Phạm Văn" (Triệt Tiêu Hoàn Toàn Lỗi Tên "Đăng Nhập"):**
+  - Cập nhật `public/manifest.json`:
+    - `name`: `"Gia Phả Phạm Văn"` (xóa bỏ tiền tố kỹ thuật `FAT - Hệ Thống Quản Lý...`).
+    - `short_name`: `"Gia Phả Phạm Văn"` (tên hiển thị dưới biểu tượng ứng dụng trên màn hình chính điện thoại).
+    - `description`: `"Hệ thống số hóa phả hệ, phân định vai vế & thông báo ngày giỗ tổ tiên dòng họ Phạm Văn"`
+    - `start_url`: `"/"` (mở ứng dụng đưa người dùng về Trang Chủ gia tộc thay vì ép vào `/tree`).
+  - Chuẩn hóa Metadata Tiêu đề hệ thống:
+    - `src/app/layout.tsx`: `title: { default: 'Gia Phả Phạm Văn', template: '%s | Gia Phả Phạm Văn' }`
+    - `src/app/login-gate/page.tsx`: `title: 'Đăng nhập | Gia Phả Phạm Văn'` (thay vì `'Đăng nhập - Gia Phả Dòng Họ'`).
+- **3. Đồng Bộ Tiền Tố Hiển Thị Ngày Âm Lịch (`Âm lịch: Ngày DD/MM`):**
+  - Trang Lịch Giỗ `src/app/anniversaries/page.tsx`:
+    - Header khối ngày giỗ: Dòng trên là Thứ và ngày Dương lịch `{formatSolarDateWithDayOfWeek(...)}`, dòng dưới là `Âm lịch: Ngày {lunarDay}/{lunarMonth}` (thay vì hậu tố `Ngày 12/08 Âm lịch`), màu ngọc bích `text-emerald-700 dark:text-emerald-400 font-medium`, đồng bộ 100% với Thẻ Ngày Giỗ Gần Nhất trên Trang Chủ.
+    - Thẻ Hôm Nay: `todayInfo.lunarStr` tinh gọn thành `Ngày DD tháng MM` để khi render `Âm lịch: {todayInfo.lunarStr}` không còn bị lặp lại từ "Âm lịch" ở cuối.
+  - Động cơ DTO `src/lib/anniversaries/anniversary-engine.ts`: `lunarFormatted` thống nhất trả về `Âm lịch: Ngày ${padZero(day)}/${padZero(month)}`.
+- **4. Tinh Giản Hero Header Trang Lịch Giỗ (`src/app/anniversaries/page.tsx`):**
+  - Xóa bỏ badge tiếp thị `Hiếu Nghĩa Truyền Gia` để giao diện thanh thoát, tôn nghiêm.
+  - Tinh gọn dòng mô tả: *"Theo dõi ngày giỗ trong gia phả theo chuẩn Lịch Âm Việt Nam, tự động thông báo để con cháu hướng về cội nguồn."*
+
 ---
 
 ## 7. MA TRẬN TEST CASES & TIÊU CHÍ NGHIỆM THU (TEST SPECIFICATION)
@@ -617,6 +640,11 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_PUSH_BANNER_FLAG_GUARD** | PushNotificationBanner ẩn hoàn toàn khi enable_push_notifications = false | `tests/theme-and-layout.test.ts` | Files `PushNotificationBanner.tsx`, `src/app/anniversaries/page.tsx` | Đọc mã nguồn và kiểm tra điều kiện render | Banner kiểm tra cờ push hoặc trang anniversaries kiểm tra cờ trước khi render | Defensive Gate | `[x] PASS` |
 | **TC_UT_PERSONAL_SETTINGS_PUSH_VISIBILITY** | PersonalSettingsModal ẩn Section Nhận Chuông Báo Giỗ khi cờ push tắt | `tests/theme-and-layout.test.ts` | File `src/components/auth/PersonalSettingsModal.tsx` | Đọc mã nguồn kiểm tra điều kiện render Section 2 | Section Nhận Chuông Báo Giỗ chỉ render khi cờ push bật | Defensive Gate | `[x] PASS` |
 | **TC_INT_CRON_RESPECTS_FEATURE_FLAG** | Route Cron hủy gửi push và trả về thông báo khi cờ push hoặc lịch giỗ tắt | `tests/cron-anniversary.test.ts` | Mock CSDL có feature_flags `enable_push_notifications: false` | Gọi GET `/api/cron/anniversary-reminder` với secret hợp lệ | HTTP 200 `{ success: true, sentCount: 0 }`, không gọi webpush.sendNotification | Background Safety | `[x] PASS` |
+| **TC_UT_GLOBAL_SW_AND_FETCH** | Service Worker được đăng ký toàn cục và public/sw.js có fetch listener | `tests/pwa-manifest.test.ts` | Files `public/sw.js`, `src/components/pwa/InstallPwaButton.tsx` hoặc `layout.tsx` | Đọc mã nguồn kiểm tra fetch handler và đăng ký SW | `sw.js` có fetch listener; SW được đăng ký toàn cục khi mount component PWA | PWA Compliance | `[x] PASS` |
+| **TC_UT_PWA_MANIFEST_CLAN_BRANDING** | public/manifest.json chuẩn hóa 100% thương hiệu "Gia Phả Phạm Văn" và start_url "/" | `tests/pwa-manifest.test.ts` | File `public/manifest.json` | Parse JSON và kiểm tra các trường | `name === 'Gia Phả Phạm Văn'`, `short_name === 'Gia Phả Phạm Văn'`, `start_url === '/'` | Clan Branding | `[x] PASS` |
+| **TC_UT_METADATA_CLAN_BRANDING** | layout.tsx và login-gate/page.tsx định danh thương hiệu Gia Phả Phạm Văn | `tests/theme-and-layout.test.ts` | Files `src/app/layout.tsx`, `src/app/login-gate/page.tsx` | Đọc mã nguồn kiểm tra title | Title chứa "Gia Phả Phạm Văn", không còn chuỗi "Đăng nhập - Gia Phả Dòng Họ" | Brand Consistency | `[x] PASS` |
+| **TC_UT_UNIFIED_LUNAR_PREFIX_FORMAT** | Cả Trang Chủ và Lịch Giỗ đều dùng cấu trúc tiền tố Âm lịch: Ngày DD/MM | `tests/theme-and-layout.test.ts` | Files `src/app/page.tsx`, `src/app/anniversaries/page.tsx`, `src/lib/anniversaries/anniversary-engine.ts` | Đọc mã nguồn kiểm tra JSX/format | Trang Lịch Giỗ chứa "Âm lịch: Ngày " thay vì " Ngày ... Âm lịch", thẻ Hôm Nay không lặp chữ Âm lịch | Visual Normalization | `[x] PASS` |
+| **TC_UT_ANNIV_HERO_CLEAN** | Trang Lịch Giỗ loại bỏ hoàn toàn badge Hiếu Nghĩa Truyền Gia | `tests/theme-and-layout.test.ts` | File `src/app/anniversaries/page.tsx` | Đọc mã nguồn kiểm tra JSX | Không còn chứa chuỗi "Hiếu Nghĩa Truyền Gia" | Clean Header | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -653,6 +681,9 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_30 (Nhãn Phạm Vi Ngắn Gọn):** Các nút phạm vi hiển thị `[ 7 ngày ] [ 15 ngày ] [ 30 ngày ]` (không còn chữ `tới`), dòng thống kê hiển thị `trong 30 ngày`.
 - [ ] **UAT_31 (Quản Trị Tính Năng 2 Công Tắc Tách Rời):** Truy cập `/admin/features` $\rightarrow$ Thấy 2 công tắc tách biệt: "Phân Hệ Lịch Giỗ Gia Tộc" và "Thông Báo Đẩy Web Push & Nhắc Giỗ".
 - [ ] **UAT_32 (Đồng Bộ Ẩn Chuông Báo Giỗ & Banner Khi Tắt Web Push):** Gạt tắt công tắc Web Push trong Admin $\rightarrow$ Mở `/anniversaries` không còn thấy Banner Web Push; mở modal *Cài Đặt Của Tôi* từ Header không còn thấy mục Nhận Chuông Báo Giỗ; nhưng danh sách Lịch Giỗ vẫn xem được bình thường.
+- [ ] **UAT_33 (Hộp Thoại Cài Đặt PWA Native Đúng Tên Gia Phả Phạm Văn):** Nhấp nút [Cài đặt ứng dụng] trên Trang Chủ hoặc Login Gate $\rightarrow$ Trình duyệt kích hoạt hộp thoại cài đặt native hiển thị rõ tên "Gia Phả Phạm Văn" và biểu tượng chữ Hán "范", không còn hiện "Đăng nhập - Gia Phả Dòng Họ".
+- [ ] **UAT_34 (Hiển Thị Tiền Tố Âm Lịch Đồng Bộ):** Mở `/anniversaries` $\rightarrow$ Header các khối ngày hiển thị rõ ràng `Âm lịch: Ngày 12/08` màu ngọc bích, đồng bộ 100% với Thẻ Ngày Giỗ Gần Nhất trên Trang Chủ. Thẻ Hôm Nay hiển thị `Âm lịch: Ngày 07 tháng 08` không lặp chữ.
+- [ ] **UAT_35 (Header Lịch Giỗ Tinh Gọn):** Mở `/anniversaries` $\rightarrow$ Phần đầu trang sạch sẽ, không còn badge `Hiếu Nghĩa Truyền Gia`, tập trung trực tiếp vào tiêu đề Lịch Giỗ Gia Tộc và Thẻ Ngày Hiện Tại.
 
 ---
 
@@ -683,6 +714,9 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **RG23 (Lịch Giỗ Hiển Thị Khi Tắt Push):** Tắt Web Push không làm ẩn trang Lịch Giỗ hay Thẻ Ngày Giỗ Trang Chủ.
 - [ ] **RG24 (Personal Settings Stability):** Ẩn mục Nhận Chuông không làm ảnh hưởng đến tính năng chọn Nhánh Theo Dõi Mặc Định trong *Cài Đặt Của Tôi*.
 - [ ] **RG25 (Cron Route Authorization):** Kiểm tra `CRON_SECRET` vẫn hoạt động nguyên vẹn khi cờ bật.
+- [x] **RG26 (PWA Manifest Compliance):** `manifest.json` tiếp tục thỏa mãn `tests/pwa-manifest.test.ts`.
+- [x] **RG27 (Service Worker Push & Fetch Integrity):** `sw.js` bảo toàn 100% xử lý `push` và `notificationclick` cho nhắc giỗ.
+- [x] **RG28 (Offline / Fallback Safety):** Khi chạy ở môi trường không có SW (như localhost HTTP không an toàn hoặc Private mode), nút Cài đặt ứng dụng fallback an toàn, không gây crash ứng dụng.
 
 ---
 

@@ -293,7 +293,7 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
 
     // 2. Trên trang lịch giỗ: trong thẻ Header của group, Dương lịch xuất hiện trước Âm lịch
     const annivSolarIdx = annivContent.indexOf('{formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day)}');
-    const annivLunarIdx = annivContent.indexOf('Ngày {group.lunar_day < 10 ? \'0\' : \'\'}{group.lunar_day}/{group.lunar_month < 10 ? \'0\' : \'\'}{group.lunar_month} Âm lịch');
+    const annivLunarIdx = annivContent.indexOf('Âm lịch: Ngày {group.lunar_day < 10 ? \'0\' : \'\'}{group.lunar_day}/{group.lunar_month < 10 ? \'0\' : \'\'}{group.lunar_month}');
     assert.ok(annivSolarIdx > 0, 'Trang Lịch Giỗ phải hiển thị Dương lịch có Thứ trong Header group');
     assert.ok(annivLunarIdx > 0, 'Trang Lịch Giỗ phải hiển thị Âm lịch trong Header group');
     assert.ok(
@@ -973,6 +973,90 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
     assert.ok(
       authBtnContent.includes('featureFlags={featureFlags}'),
       'AuthButton.tsx phải truyền featureFlags cho PersonalSettingsModal'
+    );
+  });
+
+  // TC_UT_METADATA_CLAN_BRANDING: layout.tsx và login-gate/page.tsx định danh thương hiệu Gia Phả Phạm Văn
+  it('TC_UT_METADATA_CLAN_BRANDING: layout.tsx và login-gate/page.tsx định danh thương hiệu Gia Phả Phạm Văn', () => {
+    const layoutPath = path.resolve(process.cwd(), 'src/app/layout.tsx');
+    const loginGatePath = path.resolve(process.cwd(), 'src/app/login-gate/page.tsx');
+
+    assert.ok(fs.existsSync(layoutPath), 'src/app/layout.tsx phải tồn tại');
+    assert.ok(fs.existsSync(loginGatePath), 'src/app/login-gate/page.tsx phải tồn tại');
+
+    const layoutContent = fs.readFileSync(layoutPath, 'utf8');
+    const loginGateContent = fs.readFileSync(loginGatePath, 'utf8');
+
+    // 1. layout.tsx title template và default là Gia Phả Phạm Văn
+    assert.ok(
+      layoutContent.includes("default: 'Gia Phả Phạm Văn'") || layoutContent.includes('default: "Gia Phả Phạm Văn"'),
+      'layout.tsx metadata title default phải là "Gia Phả Phạm Văn"'
+    );
+    assert.ok(
+      layoutContent.includes("template: '%s | Gia Phả Phạm Văn'") || layoutContent.includes('template: "%s | Gia Phả Phạm Văn"'),
+      'layout.tsx metadata title template phải là "%s | Gia Phả Phạm Văn"'
+    );
+
+    // 2. login-gate không còn chứa chuỗi cũ "Đăng nhập - Gia Phả Dòng Họ"
+    assert.strictEqual(
+      loginGateContent.includes('Đăng nhập - Gia Phả Dòng Họ'),
+      false,
+      'login-gate/page.tsx không được chứa chuỗi "Đăng nhập - Gia Phả Dòng Họ"'
+    );
+    assert.ok(
+      loginGateContent.includes("title: 'Đăng nhập'") || loginGateContent.includes('title: "Đăng nhập"'),
+      'login-gate/page.tsx phải có title là "Đăng nhập"'
+    );
+  });
+
+  // TC_UT_UNIFIED_LUNAR_PREFIX_FORMAT: Cả Trang Chủ và Lịch Giỗ đều dùng cấu trúc tiền tố Âm lịch: Ngày DD/MM
+  it('TC_UT_UNIFIED_LUNAR_PREFIX_FORMAT: Header Lịch Giỗ và Trang Chủ đồng bộ tiền tố "Âm lịch: Ngày DD/MM"', () => {
+    const homePath = path.resolve(process.cwd(), 'src/app/page.tsx');
+    const annivPagePath = path.resolve(process.cwd(), 'src/app/anniversaries/page.tsx');
+    const annivEnginePath = path.resolve(process.cwd(), 'src/lib/anniversaries/anniversary-engine.ts');
+
+    assert.ok(fs.existsSync(homePath), 'src/app/page.tsx phải tồn tại');
+    assert.ok(fs.existsSync(annivPagePath), 'src/app/anniversaries/page.tsx phải tồn tại');
+    assert.ok(fs.existsSync(annivEnginePath), 'src/lib/anniversaries/anniversary-engine.ts phải tồn tại');
+
+    const homeContent = fs.readFileSync(homePath, 'utf8');
+    const annivPageContent = fs.readFileSync(annivPagePath, 'utf8');
+    const annivEngineContent = fs.readFileSync(annivEnginePath, 'utf8');
+
+    // 1. Trang Chủ có tiền tố "Âm lịch: Ngày "
+    assert.ok(
+      homeContent.includes('Âm lịch: Ngày'),
+      'src/app/page.tsx phải có tiền tố "Âm lịch: Ngày"'
+    );
+
+    // 2. Trang Lịch Giỗ Header ngày có tiền tố "Âm lịch: Ngày "
+    assert.ok(
+      annivPageContent.includes('Âm lịch: Ngày {group.lunar_day'),
+      'src/app/anniversaries/page.tsx Header ngày phải có cấu trúc "Âm lịch: Ngày {group.lunar_day..."'
+    );
+    assert.strictEqual(
+      annivPageContent.includes('/{group.lunar_month} Âm lịch'),
+      false,
+      'src/app/anniversaries/page.tsx không được còn hậu tố "/{group.lunar_month} Âm lịch"'
+    );
+
+    // 3. anniversary-engine: lunarFormatted có tiền tố "Âm lịch: Ngày "
+    assert.ok(
+      annivEngineContent.includes('Âm lịch: Ngày ${padZero(day)}/${padZero(month)}'),
+      'anniversary-engine.ts lunarFormatted phải có tiền tố "Âm lịch: Ngày "'
+    );
+  });
+
+  // TC_UT_ANNIV_HERO_CLEAN: Trang Lịch Giỗ loại bỏ hoàn toàn badge Hiếu Nghĩa Truyền Gia
+  it('TC_UT_ANNIV_HERO_CLEAN: Trang Lịch Giỗ không còn chứa badge tiếp thị "Hiếu Nghĩa Truyền Gia"', () => {
+    const annivPagePath = path.resolve(process.cwd(), 'src/app/anniversaries/page.tsx');
+    assert.ok(fs.existsSync(annivPagePath), 'src/app/anniversaries/page.tsx phải tồn tại');
+
+    const content = fs.readFileSync(annivPagePath, 'utf8');
+    assert.strictEqual(
+      content.includes('Hiếu Nghĩa Truyền Gia'),
+      false,
+      'src/app/anniversaries/page.tsx không được chứa badge "Hiếu Nghĩa Truyền Gia"'
     );
   });
 });

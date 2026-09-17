@@ -35,4 +35,56 @@ describe('PWA Manifest & Service Worker Compliance Test Suite (Milestone 5)', ()
       'SW phải bắt sự kiện notificationclick'
     );
   });
+
+  // TC_UT_GLOBAL_SW_AND_FETCH: Service Worker được đăng ký toàn cục và public/sw.js có fetch listener
+  it('TC_UT_GLOBAL_SW_AND_FETCH: sw.js có fetch listener và ServiceWorkerRegister/layout.tsx đăng ký SW toàn cục', () => {
+    const swPath = path.join(process.cwd(), 'public', 'sw.js');
+    const layoutPath = path.join(process.cwd(), 'src', 'app', 'layout.tsx');
+    const swRegisterPath = path.join(process.cwd(), 'src', 'components', 'pwa', 'ServiceWorkerRegister.tsx');
+
+    assert.ok(fs.existsSync(swPath), 'public/sw.js phải tồn tại');
+    assert.ok(fs.existsSync(layoutPath), 'src/app/layout.tsx phải tồn tại');
+    assert.ok(fs.existsSync(swRegisterPath), 'ServiceWorkerRegister.tsx phải tồn tại');
+
+    const swContent = fs.readFileSync(swPath, 'utf-8');
+    const layoutContent = fs.readFileSync(layoutPath, 'utf-8');
+    const swRegisterContent = fs.readFileSync(swRegisterPath, 'utf-8');
+
+    // 1. sw.js có fetch listener đáp ứng tiêu chuẩn Chromium PWA Installability
+    assert.ok(
+      swContent.includes("addEventListener('fetch'"),
+      'public/sw.js phải bắt sự kiện fetch để đủ điều kiện cài đặt PWA'
+    );
+
+    // 2. ServiceWorkerRegister đăng ký /sw.js
+    assert.ok(
+      swRegisterContent.includes("navigator.serviceWorker.register('/sw.js')"),
+      'ServiceWorkerRegister phải gọi navigator.serviceWorker.register'
+    );
+
+    // 3. layout.tsx nhúng ServiceWorkerRegister toàn cục
+    assert.ok(
+      layoutContent.includes('ServiceWorkerRegister'),
+      'src/app/layout.tsx phải nhúng ServiceWorkerRegister'
+    );
+  });
+
+  // TC_UT_PWA_MANIFEST_CLAN_BRANDING: public/manifest.json chuẩn hóa 100% thương hiệu Gia Phả Phạm Văn
+  it('TC_UT_PWA_MANIFEST_CLAN_BRANDING: manifest.json có name, short_name là "Gia Phả Phạm Văn" và start_url là "/"', () => {
+    const manifestPath = path.join(process.cwd(), 'public', 'manifest.json');
+    assert.ok(fs.existsSync(manifestPath), 'File public/manifest.json phải tồn tại');
+
+    const content = fs.readFileSync(manifestPath, 'utf-8');
+    const json = JSON.parse(content);
+
+    // 1. Tên App đầy đủ và tên ngắn phải là "Gia Phả Phạm Văn"
+    assert.strictEqual(json.name, 'Gia Phả Phạm Văn', 'manifest.json name phải là "Gia Phả Phạm Văn"');
+    assert.strictEqual(json.short_name, 'Gia Phả Phạm Văn', 'manifest.json short_name phải là "Gia Phả Phạm Văn"');
+
+    // 2. start_url phải là "/"
+    assert.strictEqual(json.start_url, '/', 'manifest.json start_url phải là "/"');
+
+    // 3. Không còn chứa FAT hay chữ "Đại Tộc" chung chung
+    assert.strictEqual(json.name.includes('FAT'), false, 'Tên không được chứa FAT');
+  });
 });

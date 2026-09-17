@@ -50,6 +50,7 @@ interface TreeToolbarProps {
   unlinkedCount?: number;
   onOpenUnlinkedDrawer?: () => void;
   onOpenAddMemberModal?: () => void;
+  canManageTree?: boolean;
 }
 
 export const TreeToolbar: React.FC<TreeToolbarProps> = ({
@@ -71,6 +72,7 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
   unlinkedCount = 0,
   onOpenUnlinkedDrawer,
   onOpenAddMemberModal,
+  canManageTree = false,
 }) => {
   const { fitView } = useReactFlow();
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
@@ -249,8 +251,8 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
 
       {/* CỤM PHẢI: Spotlight Search & Nút Tiện Ích Popover */}
       <div className="pointer-events-auto flex items-center gap-2">
-        {/* Nút Khay Chưa Nối (nếu có người chưa nối) */}
-        {unlinkedCount > 0 && onOpenUnlinkedDrawer && (
+        {/* Nút Khay Chưa Nối (chỉ hiện khi có quyền quản trị cây và có người chưa nối) */}
+        {canManageTree && unlinkedCount > 0 && onOpenUnlinkedDrawer && (
           <button
             type="button"
             onClick={onOpenUnlinkedDrawer}
@@ -262,8 +264,8 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
           </button>
         )}
 
-        {/* Nút Thêm Thành Viên Mới */}
-        {onOpenAddMemberModal && (
+        {/* Nút Thêm Thành Viên Mới (chỉ hiện khi có quyền quản trị cây) */}
+        {canManageTree && onOpenAddMemberModal && (
           <button
             type="button"
             onClick={onOpenAddMemberModal}
@@ -312,7 +314,7 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
                 </div>
 
                 {/* Switch Khóa phả đồ */}
-                {onToggleLock && (
+                {canManageTree && onToggleLock ? (
                   <button
                     type="button"
                     onClick={onToggleLock}
@@ -336,6 +338,16 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
                       {isLocked ? 'Đang khóa' : 'Mở khóa'}
                     </span>
                   </button>
+                ) : (
+                  <div className="w-full flex items-center justify-between p-2 rounded-lg text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-2">
+                      <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                      Khóa vị trí thẻ
+                    </span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                      Cố định
+                    </span>
+                  </div>
                 )}
 
                 {/* Switch Mở rộng họ ngoại */}

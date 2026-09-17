@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/navbar/Navbar';
 import AppFooter from '@/components/layout/AppFooter';
 import MobileBottomNav from '@/components/navigation/MobileBottomNav';
+import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister';
 import { createClient } from '@/lib/supabase/server';
 import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 import { cookies } from 'next/headers';
@@ -16,9 +17,12 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: 'Gia Phả Dòng Họ - Hệ Thống Quản Lý Phả Hệ Trực Tuyến',
+  title: {
+    default: 'Gia Phả Phạm Văn',
+    template: '%s | Gia Phả Phạm Văn',
+  },
   description:
-    'Nền tảng số hóa gia phả dòng họ, phân định vai vế xưng hô, tra cứu ngày giỗ âm lịch và kết nối con cháu.',
+    'Nền tảng số hóa gia phả dòng họ Phạm Văn, phân định vai vế xưng hô, tra cứu ngày giỗ âm lịch và kết nối con cháu.',
   manifest: '/manifest.json',
   icons: {
     icon: [
@@ -125,6 +129,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900">
+        <ServiceWorkerRegister />
         <Navbar
           isGuest={isGuest}
           enablePublicTree={enablePublicTree}

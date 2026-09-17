@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { MemberFormData, MemberRecord } from '@/types/tree';
 import { validateNoCycle, CycleDetectedError } from '@/lib/tree-layout/graph-validation';
 import { SAMPLE_MEMBERS_28 } from '@/lib/tree-layout/sample-data';
+import { verifyServerRole } from '@/lib/auth/permissions';
 
 export async function GET() {
   try {
@@ -25,6 +26,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rào chắn bảo mật RBAC: Chỉ super_admin và branch_editor mới được thêm thành viên
+    const authError = await verifyServerRole(request, ['super_admin', 'branch_editor']);
+    if (authError) return authError;
+
     const body: MemberFormData = await request.json();
 
     if (!body.full_name || !body.full_name.trim()) {

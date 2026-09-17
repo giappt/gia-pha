@@ -9,6 +9,7 @@ import {
   recalculateGenerations,
 } from '@/lib/tree-layout/graph-validation';
 import { SAMPLE_MEMBERS_28 } from '@/lib/tree-layout/sample-data';
+import { verifyServerRole } from '@/lib/auth/permissions';
 
 export async function GET(
   _request: NextRequest,
@@ -55,6 +56,10 @@ export async function PUT(
 ) {
   const memberId = params.id;
   try {
+    // Rào chắn bảo mật RBAC: Chỉ super_admin và branch_editor mới được sửa thành viên
+    const authError = await verifyServerRole(request, ['super_admin', 'branch_editor']);
+    if (authError) return authError;
+
     const body: Partial<MemberFormData> = await request.json();
 
     let existingMembers: MemberRecord[] = [];
@@ -335,11 +340,14 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const memberId = params.id;
   try {
+    // Rào chắn bảo mật RBAC: Chỉ super_admin và branch_editor mới được xóa thành viên
+    const authError = await verifyServerRole(request, ['super_admin', 'branch_editor']);
+    if (authError) return authError;
     let existingMembers: MemberRecord[] = [];
     try {
       const admin = createAdminClient();

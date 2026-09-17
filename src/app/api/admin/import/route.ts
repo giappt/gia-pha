@@ -3,9 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ExcelMemberRow, MemberRecord } from '@/types/tree';
 import { topologicalSortExcelRows } from '@/lib/excel/excel-parser';
+import { verifyServerRole } from '@/lib/auth/permissions';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rào chắn bảo mật RBAC: Chỉ duy nhất super_admin mới được nhập dữ liệu Excel
+    const authError = await verifyServerRole(request, ['super_admin']);
+    if (authError) return authError;
+
     const body = await request.json();
     const { rows = [], mode = 'append' } = body as {
       rows: ExcelMemberRow[];

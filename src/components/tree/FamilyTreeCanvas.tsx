@@ -32,7 +32,7 @@ import { MemberRecord, SpouseRelationRecord, LayoutNode, TreeNodeData } from '@/
 import { getUnlinkedMembers } from '@/lib/tree-layout/graph-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { Keyboard } from 'lucide-react';
-import type { BranchNode } from '@/types/database';
+import type { BranchNode, UserRole } from '@/types/database';
 import { resolveMemberBranchHierarchy } from '@/lib/tree-layout/branch-engine';
 
 const nodeTypes: NodeTypes = {
@@ -50,6 +50,8 @@ interface FamilyTreeCanvasProps {
   clanName: string;
   clanBranches?: BranchNode[];
   rootAncestorId?: string | null;
+  userRole?: UserRole;
+  canManageTree?: boolean;
 }
 
 const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
@@ -58,6 +60,8 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   clanName,
   clanBranches,
   rootAncestorId,
+  userRole = 'viewer',
+  canManageTree = false,
 }) => {
   const { getNode, setCenter, fitView } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
@@ -264,6 +268,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   // Lắng nghe sự kiện fat:open-reorder-children từ thẻ Node
   useEffect(() => {
     const handler = (e: any) => {
+      if (!canManageTree) return;
       const memberId = e.detail?.memberId;
       if (memberId) {
         handleOpenReorderModal(memberId);
@@ -271,7 +276,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
     };
     window.addEventListener('fat:open-reorder-children', handler);
     return () => window.removeEventListener('fat:open-reorder-children', handler);
-  }, [handleOpenReorderModal]);
+  }, [handleOpenReorderModal, canManageTree]);
 
   // Lắng nghe sự kiện fat:members-reordered toàn cục để cập nhật liveMembers tức thì
   useEffect(() => {
@@ -495,8 +500,9 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         memberCount={activeMembers.length}
         nodeCount={nodes.length}
         nodes={nodes as unknown as LayoutNode[]}
-        isLocked={isLocked}
-        onToggleLock={() => setIsLocked((prev) => !prev)}
+        canManageTree={canManageTree}
+        isLocked={canManageTree ? isLocked : true}
+        onToggleLock={canManageTree ? () => setIsLocked((prev) => !prev) : undefined}
         showMaternalBranches={showMaternalBranches}
         onToggleMaternalBranches={() => setShowMaternalBranches((prev) => !prev)}
         showInternalHusbands={showInternalHusbands}
@@ -506,9 +512,9 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         availableRoots={availableRoots}
         currentDataset={currentDataset}
         onSwitchDataset={handleSwitchDataset}
-        unlinkedCount={unlinkedMembers.length}
-        onOpenUnlinkedDrawer={() => setIsUnlinkedDrawerOpen(true)}
-        onOpenAddMemberModal={handleOpenAddMemberModal}
+        unlinkedCount={canManageTree ? unlinkedMembers.length : 0}
+        onOpenUnlinkedDrawer={canManageTree ? () => setIsUnlinkedDrawerOpen(true) : undefined}
+        onOpenAddMemberModal={canManageTree ? handleOpenAddMemberModal : undefined}
       />
 
       {/* Vùng Vẽ Cây React Flow */}
@@ -519,7 +525,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        nodesDraggable={!isLocked}
+        nodesDraggable={canManageTree ? !isLocked : false}
         minZoom={0.05}
         maxZoom={2.0}
         defaultViewport={{ x: -600, y: 40, zoom: 0.55 }}
@@ -560,11 +566,12 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
           setFocusRootId(id);
           setIsDrawerOpen(false);
         }}
-        onEditMember={handleEditMemberFromDrawer}
-        onAddChild={handleAddChildFromDrawer}
-        onAddSpouse={handleAddSpouseFromDrawer}
-        onDeleteMember={handleDeleteMember}
-        onOpenReorder={handleOpenReorderModal}
+        canManageTree={canManageTree}
+        onEditMember={canManageTree ? handleEditMemberFromDrawer : undefined}
+        onAddChild={canManageTree ? handleAddChildFromDrawer : undefined}
+        onAddSpouse={canManageTree ? handleAddSpouseFromDrawer : undefined}
+        onDeleteMember={canManageTree ? handleDeleteMember : undefined}
+        onOpenReorder={canManageTree ? handleOpenReorderModal : undefined}
       />
 
       {/* Slide-over Khay Thành Viên Chưa Nối Phả */}
