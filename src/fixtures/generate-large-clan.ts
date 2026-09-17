@@ -33,7 +33,7 @@ export function generateLargeClan(targetSize: number = 1500): {
     return `srel-${++spouseRelSeq}`;
   }
 
-  // --- ĐỜI 1: Cụ Thủy tổ & 2 Cụ Bà (Đa thê khởi nguyên) ---
+  // --- ĐỜI 1: Cụ Tổ & 2 Cụ Bà (Đa thê khởi nguyên) ---
   const rootId = nextMemberId();
   const rootWife1Id = nextMemberId();
   const rootWife2Id = nextMemberId();
@@ -53,7 +53,7 @@ export function generateLargeClan(targetSize: number = 1500): {
       is_root: true,
       branch_name: 'Gốc Gia Tộc',
       burial_location: 'Khu lăng mộ Tổ họ Phạm - Đồi Côn Sơn',
-      notes: 'Cụ Thủy tổ khởi dựng cơ nghiệp dòng họ tại Hà Nam.',
+      notes: 'Cụ Tổ khởi dựng cơ nghiệp dòng họ tại Hà Nam.',
     },
     {
       id: rootWife1Id,
@@ -159,8 +159,8 @@ export function generateLargeClan(targetSize: number = 1500): {
           notes: isAnon
             ? 'Tư liệu lịch sử Đời thứ 2 bị thất truyền trong gia phả cổ.'
             : childIdx === 1 && isMale
-            ? 'Trưởng nam gánh vác việc họ'
-            : null,
+              ? 'Trưởng nam gánh vác việc họ'
+              : null,
         };
 
         members.push(childRecord);

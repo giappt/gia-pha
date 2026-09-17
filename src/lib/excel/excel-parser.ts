@@ -48,8 +48,8 @@ export function parseExcelFamilyTree(data: ArrayBuffer | Buffer | Uint8Array): E
       rawGender === 'nam' || rawGender === 'male' || rawGender === 'm'
         ? 'Nam'
         : rawGender === 'nữ' || rawGender === 'nu' || rawGender === 'female' || rawGender === 'f'
-        ? 'Nữ'
-        : 'Khác';
+          ? 'Nữ'
+          : 'Khác';
 
     // Chuẩn hóa trạng thái sống/mất
     const rawStatus = String(row['Trạng thái'] || '').trim().toLowerCase();
@@ -362,7 +362,7 @@ export function generateExcelTemplate(): Uint8Array {
       'Con nuôi (Đ/S)': 'S',
       'Cụ Tổ (Đ/S)': 'Đ',
       'Nơi an táng': 'Nghĩa trang Dòng họ, Lô A1',
-      'Ghi chú / Tiểu sử': 'Cụ Thủy Tổ khai hoang lập nghiệp dòng họ',
+      'Ghi chú / Tiểu sử': 'Cụ Tổ khai hoang lập nghiệp dòng họ',
     },
     {
       'STT': 2,

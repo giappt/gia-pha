@@ -19,10 +19,13 @@ import {
   FileText,
   Lock,
   Info,
+  ArrowUpDown,
+  UserMinus,
 } from 'lucide-react';
 import { MemberRecord, SpouseRelationRecord, MemberFormData, Gender, LifeStatus, MaritalStatus } from '@/types/tree';
 import { validateNoCycle, detectConsanguinity, validateParentChildAge } from '@/lib/tree-layout/graph-validation';
 import { KINSHIP_TERMS } from '@/constants/kinship-terms';
+import { ReorderChildrenModal } from './ReorderChildrenModal';
 
 export interface MemberFormModalProps {
   isOpen: boolean;
@@ -40,7 +43,8 @@ export interface MemberFormModalProps {
     newSpouse?: MemberRecord,
     newSpouseRelation?: any,
     clearedBirthOrderId?: string | null,
-    demotedSeniorId?: string | null
+    demotedSeniorId?: string | null,
+    unlinkedChildIds?: string[]
   ) => void;
 }
 
@@ -55,6 +59,78 @@ const CAN_CHI_YEARS = [
   'Nhâm Tý', 'Quý Sửu', 'Giáp Dần', 'Ất Mão', 'Bính Thìn', 'Đinh Tỵ',
   'Mậu Ngọ', 'Kỷ Mùi', 'Canh Thân', 'Tân Dậu', 'Nhâm Tuất', 'Quý Hợi',
 ];
+
+export interface ParentPairingStatus {
+  status: 'valid_couple' | 'single_parent' | 'invalid_couple' | 'none';
+  title: string;
+  badge: string;
+  description: string;
+  isValid: boolean;
+}
+
+export function resolveParentPairingStatus(
+  fatherId: string | null | undefined,
+  motherId: string | null | undefined,
+  allMembers: MemberRecord[],
+  allSpouses: SpouseRelationRecord[]
+): ParentPairingStatus {
+  if (!fatherId && !motherId) {
+    return {
+      status: 'none',
+      title: 'Chưa chọn cha mẹ',
+      badge: 'Chưa có',
+      description: 'Thành viên sẽ được tạo ở trạng thái chưa nối phả (mồ côi).',
+      isValid: true,
+    };
+  }
+
+  const father = fatherId ? allMembers.find((m) => m.id === fatherId) : null;
+  const mother = motherId ? allMembers.find((m) => m.id === motherId) : null;
+
+  if (fatherId && motherId) {
+    const isMarried = allSpouses.some(
+      (s) =>
+        (s.member_a_id === fatherId && s.member_b_id === motherId) ||
+        (s.member_a_id === motherId && s.member_b_id === fatherId)
+    );
+
+    if (isMarried) {
+      return {
+        status: 'valid_couple',
+        title: `Cặp phụ mẫu: ${father?.full_name || 'Bố'} & ${mother?.full_name || 'Mẹ'}`,
+        badge: 'Hôn phối hợp pháp',
+        description: 'Hạ nhánh con cái chính thức từ quan hệ hôn phối của hai người.',
+        isValid: true,
+      };
+    } else {
+      return {
+        status: 'invalid_couple',
+        title: `Cảnh báo xung đột: ${father?.full_name || 'Bố'} & ${mother?.full_name || 'Mẹ'}`,
+        badge: 'Không phải vợ chồng',
+        description: 'Người cha và người mẹ được chọn không có quan hệ hôn phối trong gia phả. Vui lòng kiểm tra lại.',
+        isValid: false,
+      };
+    }
+  }
+
+  if (fatherId && !motherId) {
+    return {
+      status: 'single_parent',
+      title: `Con riêng của Bố: ${father?.full_name || 'Bố'} (Chưa rõ mẹ)`,
+      badge: 'Con riêng của Bố',
+      description: 'Hạ nhánh con cái trực tiếp từ thẻ người Bố trên cây phả hệ.',
+      isValid: true,
+    };
+  }
+
+  return {
+    status: 'single_parent',
+    title: `Con riêng của Mẹ: ${mother?.full_name || 'Mẹ'} (Chưa rõ bố)`,
+    badge: 'Con riêng của Mẹ',
+    description: 'Hạ nhánh con cái trực tiếp từ thẻ người Mẹ trên cây phả hệ.',
+    isValid: true,
+  };
+}
 
 export const MemberFormModal: React.FC<MemberFormModalProps> = ({
   isOpen,
@@ -91,6 +167,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
   // 2. Thân tộc trực hệ
   const [fatherId, setFatherId] = useState<string>('');
   const [motherId, setMotherId] = useState<string>('');
+  const [isMotherOptedOut, setIsMotherOptedOut] = useState<boolean>(false);
+  const [isFatherOptedOut, setIsFatherOptedOut] = useState<boolean>(false);
   const [birthOrder, setBirthOrder] = useState<number>(1);
   const [isSenior, setIsSenior] = useState(false);
   const [isAdopted, setIsAdopted] = useState(false);
@@ -107,12 +185,16 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
 
   // 4. Hậu duệ (Con cái)
   const [selectedChildIdsToLink, setSelectedChildIdsToLink] = useState<string[]>([]);
+  const [stagedUnlinkChildIds, setStagedUnlinkChildIds] = useState<string[]>([]);
   const [showAddChildInline, setShowAddChildInline] = useState(false);
   const [quickChildName, setQuickChildName] = useState('');
   const [quickChildGender, setQuickChildGender] = useState<Gender>('male');
   const [quickChildBirthYear, setQuickChildBirthYear] = useState('');
+  const [quickChildMotherId, setQuickChildMotherId] = useState('');
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [reorderedMap, setReorderedMap] = useState<Record<string, number>>({});
   const [stagedQuickChildren, setStagedQuickChildren] = useState<
-    Array<{ id: string; name: string; gender: Gender; birthYear?: string }>
+    Array<{ id: string; name: string; gender: Gender; birthYear?: string; motherId?: string }>
   >([]);
 
   // 5. Ngày mất & Lịch giỗ Âm lịch
@@ -134,6 +216,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
     setShowAddChildInline(false);
     setStagedQuickChildren([]);
     setSelectedChildIdsToLink([]);
+    setStagedUnlinkChildIds([]);
 
     if (mode === 'edit' && initialData) {
       let rawFullName = initialData.full_name || '';
@@ -160,26 +243,20 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
       setBurialLocation(initialData.burial_location || '');
       setFatherId(initialData.father_id || '');
       setMotherId(initialData.mother_id || '');
+      setIsMotherOptedOut(false);
+      setIsFatherOptedOut(false);
       setBirthOrder(initialData.birth_order || 1);
       setIsSenior(!!initialData.is_senior);
       setIsAdopted(!!initialData.is_adopted);
       setIsRoot(!!initialData.is_root);
       setNotes(initialData.notes || '');
 
-      // Tìm phối ngẫu hiện tại nếu có
-      const existingRel = allSpouses.find(
-        (s) => s.member_a_id === initialData.id || s.member_b_id === initialData.id
-      );
-      if (existingRel) {
-        const partnerId = existingRel.member_a_id === initialData.id ? existingRel.member_b_id : existingRel.member_a_id;
-        setSpouseId(partnerId);
-        setSpouseMode('existing');
-      } else {
-        setSpouseId('');
-        setSpouseMode('none');
-      }
+      // Khởi tạo trạng thái phối ngẫu phẳng, không tự ý chọn existing
+      setSpouseId('');
+      setSpouseMode('none');
       setNewSpouseName('');
       setNewSpouseBirthYear('');
+      setReorderedMap({});
       setMaritalStatus(initialData.marital_status || null);
       setMaritalEventYear(initialData.marital_event_year ? String(initialData.marital_event_year) : '');
     } else {
@@ -197,6 +274,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
       setBurialLocation('');
       setIsAdopted(false);
       setIsRoot(defaultRole === 'root');
+      setIsMotherOptedOut(false);
+      setIsFatherOptedOut(false);
       setNotes('');
       setMaritalStatus(null);
       setMaritalEventYear('');
@@ -357,12 +436,51 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
   };
 
   // Danh sách con cái hiện có của người này (nếu đang ở chế độ edit)
+  // Danh sách các người vợ/chồng hiện tại của chính thành viên này
+  const currentMemberSpouses = useMemo(() => {
+    if (!initialData?.id) return [];
+    const rels = allSpouses.filter(
+      (s) => s.member_a_id === initialData.id || s.member_b_id === initialData.id
+    );
+    return rels
+      .map((rel) => {
+        const partnerId = rel.member_a_id === initialData.id ? rel.member_b_id : rel.member_a_id;
+        const partner = allMembers.find((m) => m.id === partnerId);
+        return {
+          relation: rel,
+          partner,
+          marriageOrder: rel.marriage_order || 1,
+        };
+      })
+      .sort((a, b) => a.marriageOrder - b.marriageOrder);
+  }, [initialData?.id, allSpouses, allMembers]);
+
+  const availableWivesForChildren = useMemo(() => {
+    return currentMemberSpouses
+      .filter((s) => s.partner && s.partner.gender === 'female')
+      .map((s) => ({
+        partner: s.partner!,
+        marriageOrder: s.marriageOrder,
+      }));
+  }, [currentMemberSpouses]);
+
   const existingChildren = useMemo(() => {
     if (mode !== 'edit' || !initialData?.id) return [];
-    return allMembers.filter(
-      (m) => m.father_id === initialData.id || m.mother_id === initialData.id
-    );
-  }, [mode, initialData, allMembers]);
+    const list = allMembers
+      .filter((m) => m.father_id === initialData.id || m.mother_id === initialData.id)
+      .map((m) => ({
+        ...m,
+        birth_order: reorderedMap[m.id] !== undefined ? reorderedMap[m.id] : m.birth_order,
+      }));
+
+    return list.sort((a, b) => {
+      if (a.birth_order != null && b.birth_order != null) return a.birth_order - b.birth_order;
+      if (a.birth_order != null && b.birth_order == null) return -1;
+      if (a.birth_order == null && b.birth_order != null) return 1;
+      if (a.birth_year != null && b.birth_year != null) return a.birth_year - b.birth_year;
+      return a.full_name.localeCompare(b.full_name);
+    });
+  }, [mode, initialData, allMembers, reorderedMap]);
 
   // Danh sách các thành viên chưa nối / mồ côi có thể nhận làm con
   const unlinkedCandidates = useMemo(() => {
@@ -398,6 +516,27 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
     }
   }, [mode, initialData, fatherId, motherId, allMembers]);
 
+  // Tự động gán Mẹ mặc định khi mở khung thêm con nhanh (Tuân thủ React Rules of Hooks: Khai báo trước mọi early return)
+  useEffect(() => {
+    if (!isOpen) return;
+    if (showAddChildInline) {
+      if (gender === 'male') {
+        if (availableWivesForChildren.length === 1) {
+          setQuickChildMotherId(availableWivesForChildren[0].partner.id);
+        } else {
+          setQuickChildMotherId('');
+        }
+      } else if (gender === 'female') {
+        setQuickChildMotherId(initialData?.id || '');
+      }
+    }
+  }, [isOpen, showAddChildInline, gender, availableWivesForChildren, initialData?.id]);
+
+  // Trạng thái Cặp Phụ Mẫu (Parent Pairing Confirmation)
+  const parentPairingStatus = useMemo(() => {
+    return resolveParentPairingStatus(fatherId, motherId, allMembers, allSpouses);
+  }, [fatherId, motherId, allMembers, allSpouses]);
+
   if (!isOpen) return null;
 
   // Thêm nhanh con tạm thời vào danh sách
@@ -410,10 +549,12 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
         name: quickChildName.trim(),
         gender: quickChildGender,
         birthYear: quickChildBirthYear || undefined,
+        motherId: quickChildMotherId || (gender === 'female' ? initialData?.id : undefined),
       },
     ]);
     setQuickChildName('');
     setQuickChildBirthYear('');
+    setQuickChildMotherId('');
     setShowAddChildInline(false);
   };
 
@@ -425,6 +566,71 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
     setSelectedChildIdsToLink((prev) =>
       prev.includes(childId) ? prev.filter((id) => id !== childId) : [...prev, childId]
     );
+  };
+
+  const handleToggleUnlinkChild = (childId: string) => {
+    setStagedUnlinkChildIds((prev) =>
+      prev.includes(childId) ? prev.filter((id) => id !== childId) : [...prev, childId]
+    );
+  };
+
+  // Cascading Parent Selection: Khi đổi Cha ruột, tự động đồng bộ Mẹ theo các vợ của Cha (hỗ trợ Opt-out con riêng)
+  const handleFatherChange = (newFatherId: string) => {
+    setFatherId(newFatherId);
+    if (!newFatherId) {
+      setMotherId('');
+      setIsMotherOptedOut(false);
+      return;
+    }
+    const spouseRels = allSpouses.filter(
+      (s) => s.member_a_id === newFatherId || s.member_b_id === newFatherId
+    );
+    const motherIds = spouseRels.map((s) => (s.member_a_id === newFatherId ? s.member_b_id : s.member_a_id));
+    const wives = allMembers.filter((m) => motherIds.includes(m.id));
+
+    if (wives.length === 1) {
+      if (!isMotherOptedOut) {
+        setMotherId(wives[0].id);
+      }
+    } else if (wives.length > 1) {
+      if (!motherIds.includes(motherId)) {
+        setMotherId('');
+      }
+    } else {
+      setMotherId('');
+    }
+  };
+
+  const handleOptOutMother = () => {
+    setMotherId('');
+    setIsMotherOptedOut(true);
+  };
+
+  // Cascading Parent Selection: Khi đổi Mẹ ruột nếu chưa có Cha thì gợi ý điền Cha (hỗ trợ Opt-out con riêng)
+  const handleMotherChange = (newMotherId: string) => {
+    setMotherId(newMotherId);
+    if (!newMotherId) {
+      setIsMotherOptedOut(true);
+    } else {
+      setIsMotherOptedOut(false);
+    }
+
+    if (!fatherId && newMotherId) {
+      const spouseRel = allSpouses.find(
+        (s) => s.member_a_id === newMotherId || s.member_b_id === newMotherId
+      );
+      if (spouseRel) {
+        const husbandId = spouseRel.member_a_id === newMotherId ? spouseRel.member_b_id : spouseRel.member_a_id;
+        if (!isFatherOptedOut) {
+          setFatherId(husbandId);
+        }
+      }
+    }
+  };
+
+  const handleOptOutFather = () => {
+    setFatherId('');
+    setIsFatherOptedOut(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -530,6 +736,22 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
       cleanedFullName = cleanedFullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim();
     }
 
+    // Rào chắn toàn vẹn hôn phối (Spouse Integrity Guard): Bố và Mẹ phải là vợ chồng
+    if (effectiveFatherId && effectiveMotherId) {
+      const isCoupled = allSpouses.some(
+        (s) =>
+          (s.member_a_id === effectiveFatherId && s.member_b_id === effectiveMotherId) ||
+          (s.member_a_id === effectiveMotherId && s.member_b_id === effectiveFatherId)
+      );
+      if (!isCoupled) {
+        const fName = allMembers.find((m) => m.id === effectiveFatherId)?.full_name || 'Bố';
+        const mName = allMembers.find((m) => m.id === effectiveMotherId)?.full_name || 'Mẹ';
+        setErrorMessage(`Người cha (${fName}) và người mẹ (${mName}) không phải là vợ chồng trong gia phả. Vui lòng chọn Mẹ là phối ngẫu của Bố hoặc để trống Mẹ.`);
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const formData: MemberFormData = {
       id: mode === 'edit' && initialData?.id ? initialData.id : undefined,
       full_name: cleanedFullName,
@@ -559,6 +781,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
       new_spouse_gender: gender === 'male' ? 'female' : 'male',
       marriage_order: effectiveMarriageOrder,
       child_ids_to_link: defaultRole === 'spouse' && spouseOrigin === 'external' ? [] : selectedChildIdsToLink,
+      child_ids_to_unlink: defaultRole === 'spouse' && spouseOrigin === 'external' ? [] : stagedUnlinkChildIds,
     };
 
     try {
@@ -588,8 +811,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
               full_name: child.name,
               gender: child.gender,
               birth_year: child.birthYear ? Number(child.birthYear) : null,
-              father_id: gender === 'male' ? savedParentId : null,
-              mother_id: gender === 'female' ? savedParentId : null,
+              father_id: gender === 'male' ? savedParentId : (fatherId || null),
+              mother_id: gender === 'female' ? savedParentId : (child.motherId || null),
               birth_order: (existingChildren.length || 0) + i + 1,
             }),
           });
@@ -601,7 +824,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
         result.newSpouse,
         result.newSpouseRelation,
         result.clearedBirthOrderId,
-        result.demotedSeniorId
+        result.demotedSeniorId,
+        result.unlinkedChildIds || stagedUnlinkChildIds
       );
       onClose();
     } catch (err: any) {
@@ -1061,65 +1285,112 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
             </div>
           </div>
 
-          {/* KHỐI 2: THÂN TỘC & THỨ BẬC GIA ĐÌNH (Ẩn khi là dâu/rể ngoại tộc) */}
+          {/* KHỐI 2: QUAN HỆ HUYẾT THỐNG CHA MẸ & THỨ BẬC (Ẩn khi là dâu/rể ngoại tộc) */}
           {!(defaultRole === 'spouse' && spouseOrigin === 'external') && (
             <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
               <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 2. {KINSHIP_TERMS.PARENTS.toUpperCase()} & THỨ BẬC GIA ĐÌNH
               </h4>
 
-              {defaultRole !== 'child' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                      {KINSHIP_TERMS.FATHER_FULL}
-                    </label>
-                    <select
-                      value={fatherId}
-                      onChange={(e) => setFatherId(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
-                    >
-                      <option value="">-- Chưa rõ / Không có --</option>
-                      {allMembers
-                        .filter((m) => m.gender === 'male' && m.id !== initialData?.id)
-                        .map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.full_name} (Đời {m.generation_level})
-                          </option>
-                        ))}
-                    </select>
+              {(mode === 'edit' || defaultRole !== 'child') && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-semibold text-slate-700 dark:text-slate-200">
+                          {KINSHIP_TERMS.FATHER_FULL}
+                        </label>
+                        {motherId && fatherId && (
+                          <button
+                            type="button"
+                            onClick={handleOptOutFather}
+                            className="text-[10px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline"
+                            title="Bỏ chọn bố nếu đây là con riêng của mẹ"
+                          >
+                            ✕ Bỏ chọn Bố (Con riêng)
+                          </button>
+                        )}
+                      </div>
+                      <select
+                        value={fatherId}
+                        onChange={(e) => handleFatherChange(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
+                      >
+                        <option value="">-- Chưa rõ / Không có --</option>
+                        {allMembers
+                          .filter((m) => m.gender === 'male' && m.id !== initialData?.id)
+                          .map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.full_name} (Đời {m.generation_level})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-semibold text-slate-700 dark:text-slate-200">
+                          {KINSHIP_TERMS.MOTHER_FULL} {availableMothers.length > 1 && <span className="text-amber-600 font-bold">(Đa thê)</span>}
+                        </label>
+                        {fatherId && motherId && availableMothers.length === 1 && (
+                          <button
+                            type="button"
+                            onClick={handleOptOutMother}
+                            className="text-[10px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline"
+                            title="Bỏ chọn mẹ nếu đây là con riêng của bố"
+                          >
+                            ✕ Bỏ chọn Mẹ (Con riêng)
+                          </button>
+                        )}
+                      </div>
+                      <select
+                        value={motherId}
+                        onChange={(e) => handleMotherChange(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
+                      >
+                        <option value="">-- Chưa rõ / Khuyết mẹ (Con riêng) --</option>
+                        {availableMothers.length > 0
+                          ? availableMothers.map((m, idx) => (
+                              <option key={m.id} value={m.id}>
+                                {m.full_name} ({idx === 0 ? KINSHIP_TERMS.WIFE_FIRST : idx === 1 ? KINSHIP_TERMS.WIFE_SECOND : KINSHIP_TERMS.WIFE_THIRD})
+                              </option>
+                            ))
+                          : allMembers
+                              .filter((m) => m.gender === 'female' && m.id !== initialData?.id)
+                              .map((m) => (
+                                <option key={m.id} value={m.id}>
+                                  {m.full_name} (Đời {m.generation_level})
+                                </option>
+                              ))}
+                      </select>
+                      {availableMothers.length > 1 && (
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                          Bố có {availableMothers.length} người vợ. Hãy chọn chính xác Mẹ ruột để phân nhóm con cái chuẩn xác.
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                      {KINSHIP_TERMS.MOTHER_FULL} {availableMothers.length > 1 && <span className="text-amber-600 font-bold">(Đa thê)</span>}
-                    </label>
-                    <select
-                      value={motherId}
-                      onChange={(e) => setMotherId(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
+                  {/* Thẻ Xác Nhận Cặp Phụ Mẫu (Parent Pairing Confirmation Card) */}
+                  {parentPairingStatus.status !== 'none' && (
+                    <div
+                      className={`p-2.5 rounded-lg border text-xs flex flex-col gap-1 transition-all ${
+                        parentPairingStatus.status === 'valid_couple'
+                          ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300'
+                          : parentPairingStatus.status === 'single_parent'
+                          ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300'
+                          : 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
+                      }`}
                     >
-                      <option value="">-- Chưa rõ / Khuyết mẹ --</option>
-                      {availableMothers.length > 0
-                        ? availableMothers.map((m, idx) => (
-                            <option key={m.id} value={m.id}>
-                              {m.full_name} ({idx === 0 ? KINSHIP_TERMS.WIFE_FIRST : idx === 1 ? KINSHIP_TERMS.WIFE_SECOND : KINSHIP_TERMS.WIFE_THIRD})
-                            </option>
-                          ))
-                        : allMembers
-                            .filter((m) => m.gender === 'female' && m.id !== initialData?.id)
-                            .map((m) => (
-                              <option key={m.id} value={m.id}>
-                                {m.full_name} (Đời {m.generation_level})
-                              </option>
-                            ))}
-                    </select>
-                    {availableMothers.length > 1 && (
-                      <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
-                        Bố có {availableMothers.length} người vợ. Hãy chọn chính xác Mẹ ruột để phân nhóm con cái chuẩn xác.
-                      </p>
-                    )}
-                  </div>
+                      <div className="flex items-center justify-between font-semibold">
+                        <span>{parentPairingStatus.title}</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/80 dark:bg-slate-900/60 border border-current">
+                          {parentPairingStatus.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] opacity-90">{parentPairingStatus.description}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1179,42 +1450,95 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                 3. {KINSHIP_TERMS.SPOUSE.toUpperCase()} (VỢ / CHỒNG)
               </h4>
 
-              {/* Segmented Control 3 Phân Đoạn Chuẩn Hình Học */}
-              <div className="flex p-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
-                <button
-                  type="button"
-                  onClick={() => setSpouseMode('none')}
-                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold transition-all ${
-                    spouseMode === 'none'
-                      ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                  }`}
-                >
-                  Chưa ghép / Độc thân
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSpouseMode('new')}
-                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold transition-all ${
-                    spouseMode === 'new'
-                      ? 'bg-emerald-700 text-white shadow-sm'
-                      : 'text-emerald-700 dark:text-emerald-400 hover:text-emerald-800'
-                  }`}
-                >
-                  + Thêm Vợ/Chồng ngoài họ
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSpouseMode('existing')}
-                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold transition-all ${
-                    spouseMode === 'existing'
-                      ? 'bg-purple-700 text-white shadow-sm'
-                      : 'text-purple-700 dark:text-purple-400 hover:text-purple-800'
-                  }`}
-                >
-                  Ghép người trong họ (Nội tộc)
-                </button>
-              </div>
+              {/* Phối ngẫu hiện tại */}
+              {currentMemberSpouses.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {gender === 'female' ? 'Chồng hiện tại:' : 'Vợ hiện tại:'} ({currentMemberSpouses.length} người)
+                  </span>
+                  <div className="space-y-1.5">
+                    {currentMemberSpouses.map((sp) => {
+                      const isMultiSpouse = currentMemberSpouses.length > 1;
+                      const orderLabel = !isMultiSpouse
+                        ? (gender === 'female' ? 'Chồng' : 'Vợ')
+                        : sp.marriageOrder === 1
+                        ? (gender === 'female' ? 'Chồng' : `${KINSHIP_TERMS.WIFE_FIRST} (Bà cả)`)
+                        : sp.marriageOrder === 2
+                        ? `${KINSHIP_TERMS.WIFE_SECOND} (Bà hai)`
+                        : `Bà ${sp.marriageOrder}`;
+                      return (
+                        <div
+                          key={sp.relation.id}
+                          className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">🌸</span>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                              {sp.partner?.full_name || 'Phối ngẫu'}
+                            </span>
+                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                              {orderLabel}
+                            </span>
+                            {sp.partner?.birth_year && (
+                              <span className="text-[10px] text-slate-400">
+                                (SN: {sp.partner.birth_year})
+                              </span>
+                            )}
+                            {sp.partner?.generation_level && (
+                              <span className="text-[10px] text-slate-400">
+                                · Đời {sp.partner.generation_level}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Nút thao tác thêm phối ngẫu */}
+              {spouseMode === 'none' ? (
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setSpouseMode('new')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> {gender === 'female' ? '+ Thêm Chồng ngoài họ' : '+ Thêm Vợ ngoài họ'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSpouseMode('existing')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900 transition-colors"
+                  >
+                    <Link2 className="w-3.5 h-3.5" /> Ghép người trong tộc
+                  </button>
+                  {currentMemberSpouses.length === 0 && (
+                    <span className="text-xs text-slate-400 italic">
+                      (Hiện tại chưa ghép phối ngẫu)
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {spouseMode === 'new' ? 'Thêm phối ngẫu mới ngoài họ:' : 'Ghép phối ngẫu trong dòng họ:'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSpouseMode('none');
+                      setSpouseId('');
+                      setNewSpouseName('');
+                      setNewSpouseBirthYear('');
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline"
+                  >
+                    Đóng / Hủy thêm
+                  </button>
+                </div>
+              )}
 
               {/* Chế độ 1: Thêm Vợ/Chồng Mới Ngoài Tộc Tại Chỗ */}
               {spouseMode === 'new' && (
@@ -1354,39 +1678,120 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                 <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   4. {KINSHIP_TERMS.CHILDREN.toUpperCase()}
                 </h4>
-                <button
-                  type="button"
-                  onClick={() => setShowAddChildInline(!showAddChildInline)}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Thêm nhanh con mới
-                </button>
+                <div className="flex items-center gap-2">
+                  {existingChildren.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowReorderModal(true)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      title="Sắp xếp thứ tự đàn con"
+                    >
+                      <ArrowUpDown className="w-3.5 h-3.5" /> Sắp xếp thứ tự
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowAddChildInline(!showAddChildInline)}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Thêm nhanh con mới
+                  </button>
+                </div>
               </div>
 
               {/* Danh sách con đã có trong CSDL */}
               {existingChildren.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                    Con hiện có trong gia phả ({existingChildren.length} người):
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      Con hiện có trong gia phả ({existingChildren.length} người):
+                    </p>
+                    {stagedUnlinkChildIds.length > 0 && (
+                      <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400">
+                        (Sẽ gỡ {stagedUnlinkChildIds.length} người con khi bấm Cập nhật)
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {existingChildren.map((c, idx) => (
-                      <div
-                        key={c.id}
-                        className="p-2.5 rounded-md bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
-                            {c.birth_order || idx + 1}
-                          </span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">{c.full_name}</span>
-                          <span className="text-[10px] text-slate-400">
-                            ({c.gender === 'male' ? 'Nam' : c.gender === 'female' ? 'Nữ' : 'Khác'}{c.birth_year ? `, ${c.birth_year}` : ''})
-                          </span>
-                        </div>
-                        {c.is_senior && <span className="text-[10px] font-bold text-amber-600">({KINSHIP_TERMS.SENIOR_CHILD})</span>}
-                      </div>
-                    ))}
+                    {(() => {
+                      const seen = new Set<number>();
+                      let hasDuplicate = false;
+                      for (const ch of existingChildren) {
+                        if (ch.birth_order != null) {
+                          if (seen.has(ch.birth_order)) {
+                            hasDuplicate = true;
+                            break;
+                          }
+                          seen.add(ch.birth_order);
+                        }
+                      }
+                      return existingChildren.map((c, idx) => {
+                        const isStagedUnlink = stagedUnlinkChildIds.includes(c.id);
+                        const displayOrder = hasDuplicate ? idx + 1 : (c.birth_order || idx + 1);
+                        return (
+                          <div
+                            key={c.id}
+                            className={`p-2.5 rounded-md border flex items-center justify-between transition-colors ${
+                              isStagedUnlink
+                                ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 opacity-70'
+                                : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/60'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span
+                                className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${
+                                  isStagedUnlink
+                                    ? 'bg-rose-100 text-rose-600 dark:bg-rose-900 dark:text-rose-300'
+                                    : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                                }`}
+                              >
+                                {displayOrder}
+                              </span>
+                              <span
+                                className={`font-semibold truncate text-xs ${
+                                  isStagedUnlink
+                                    ? 'line-through text-slate-400 dark:text-slate-500'
+                                    : 'text-slate-800 dark:text-slate-200'
+                                }`}
+                              >
+                                {c.full_name}
+                              </span>
+                              <span className="text-[10px] text-slate-400 shrink-0">
+                                ({c.gender === 'male' ? 'Nam' : c.gender === 'female' ? 'Nữ' : 'Khác'}
+                                {c.birth_year ? `, ${c.birth_year}` : ''})
+                              </span>
+                              {c.is_senior && !isStagedUnlink && (
+                                <span className="text-[10px] font-bold text-amber-600 shrink-0">
+                                  ({KINSHIP_TERMS.SENIOR_CHILD})
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0 ml-2">
+                              {isStagedUnlink ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleUnlinkChild(c.id)}
+                                  className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-900/50 dark:hover:bg-rose-900 dark:text-rose-300 font-medium transition-colors"
+                                  title="Hủy gỡ con"
+                                >
+                                  Hoàn tác
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleUnlinkChild(c.id)}
+                                  className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-900/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                                  title="Gỡ con khỏi cha mẹ (chuyển về khay Chưa nối phả)"
+                                >
+                                  <UserMinus className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               )}
@@ -1398,27 +1803,35 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                     Con mới thêm nhanh (sẽ tạo kèm cùng hồ sơ):
                   </p>
                   <div className="space-y-1.5">
-                    {stagedQuickChildren.map((sc, idx) => (
-                      <div
-                        key={sc.id}
-                        className="p-2.5 rounded-md bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">Con #{existingChildren.length + idx + 1}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">{sc.name}</span>
-                          <span className="text-[10px] text-slate-500">
-                            ({sc.gender === 'male' ? 'Nam' : sc.gender === 'female' ? 'Nữ' : 'Khác'}{sc.birthYear ? `, ${sc.birthYear}` : ''})
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveStagedChild(sc.id)}
-                          className="text-rose-500 hover:text-rose-700 p-1"
+                    {stagedQuickChildren.map((sc, idx) => {
+                      const motherPartner = allMembers.find((m) => m.id === sc.motherId);
+                      return (
+                        <div
+                          key={sc.id}
+                          className="p-2.5 rounded-md bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">Con #{existingChildren.length + idx + 1}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">{sc.name}</span>
+                            <span className="text-[10px] text-slate-500">
+                              ({sc.gender === 'male' ? 'Nam' : sc.gender === 'female' ? 'Nữ' : 'Khác'}{sc.birthYear ? `, ${sc.birthYear}` : ''})
+                            </span>
+                            {motherPartner && (
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                · Mẹ: {motherPartner.full_name}
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveStagedChild(sc.id)}
+                            className="text-rose-500 hover:text-rose-700 p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1446,6 +1859,59 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       />
                     </div>
                   </div>
+
+                  {/* Chọn Mẹ cho con nếu người cha đang được sửa */}
+                  {gender === 'male' && (
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                      {availableWivesForChildren.length === 1 ? (
+                        <div className="flex items-center justify-between p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                          <span className="text-slate-700 dark:text-slate-300">
+                            Mẹ của con: <strong className="text-emerald-700 dark:text-emerald-400">🌸 {availableWivesForChildren[0].partner.full_name} ({KINSHIP_TERMS.WIFE_FIRST})</strong>
+                          </span>
+                          {quickChildMotherId === availableWivesForChildren[0].partner.id ? (
+                            <button
+                              type="button"
+                              onClick={() => setQuickChildMotherId('')}
+                              className="text-[11px] text-slate-400 hover:text-rose-500 underline"
+                            >
+                              Bỏ chọn (Chưa rõ mẹ)
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setQuickChildMotherId(availableWivesForChildren[0].partner.id)}
+                              className="text-[11px] text-emerald-600 font-semibold underline"
+                            >
+                              Đặt lại mặc định ({availableWivesForChildren[0].partner.full_name})
+                            </button>
+                          )}
+                        </div>
+                      ) : availableWivesForChildren.length >= 2 ? (
+                        <div className="space-y-1">
+                          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            Chọn Mẹ ruột của con (<span className="text-rose-500">*</span> Đa thê: Bố có {availableWivesForChildren.length} người vợ)
+                          </label>
+                          <select
+                            value={quickChildMotherId}
+                            onChange={(e) => setQuickChildMotherId(e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-900"
+                          >
+                            <option value="">-- Chọn mẹ ruột của con --</option>
+                            {availableWivesForChildren.map((w) => (
+                              <option key={w.partner.id} value={w.partner.id}>
+                                🌸 {w.partner.full_name} ({w.marriageOrder === 1 ? KINSHIP_TERMS.WIFE_FIRST : w.marriageOrder === 2 ? KINSHIP_TERMS.WIFE_SECOND : `Bà ${w.marriageOrder}`})
+                              </option>
+                            ))}
+                            <option value="">❓ Chưa rõ thông tin mẹ</option>
+                          </select>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400 italic">
+                          Bố chưa có thông tin vợ trong gia phả (Con sẽ lưu là chưa rõ mẹ).
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -1727,6 +2193,23 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Modal Sắp Xếp Đàn Con Kéo Thả Trực Tiếp Trong Form */}
+      {showReorderModal && initialData && (
+        <ReorderChildrenModal
+          isOpen={showReorderModal}
+          onClose={() => setShowReorderModal(false)}
+          parentMember={initialData as MemberRecord}
+          childrenList={existingChildren}
+          onSaved={(updated) => {
+            const newMap = { ...reorderedMap };
+            updated.forEach((c) => {
+              newMap[c.id] = c.birth_order || 1;
+            });
+            setReorderedMap(newMap);
+          }}
+        />
+      )}
     </div>
   );
 };

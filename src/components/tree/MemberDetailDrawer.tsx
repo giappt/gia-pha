@@ -24,6 +24,7 @@ import {
   Info,
   Trash2,
   AlertTriangle,
+  ArrowUpDown,
 } from 'lucide-react';
 import Link from 'next/link';
 import { canDeleteMember } from '@/lib/tree-layout/graph-validation';
@@ -40,6 +41,7 @@ export interface MemberDetailDrawerProps {
   onAddChild?: (parent: MemberRecord, motherId?: string | null) => void;
   onAddSpouse?: (member: MemberRecord) => void;
   onDeleteMember?: (memberId: string) => Promise<void>;
+  onOpenReorder?: (parentId: string) => void;
 }
 
 export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
@@ -54,6 +56,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
   onAddChild,
   onAddSpouse,
   onDeleteMember,
+  onOpenReorder,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -361,9 +364,12 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
               {familyData && familyData.spouses.length > 0 ? (
                 <div className="space-y-1.5">
                   {familyData.spouses.map(({ member, relation }, idx) => {
+                    const isMultiSpouse = familyData.spouses.length > 1;
                     const roleLabel =
                       member.gender === 'male'
                         ? KINSHIP_TERMS.HUSBAND_DEFAULT
+                        : !isMultiSpouse
+                        ? KINSHIP_TERMS.WIFE_DEFAULT
                         : relation.marriage_order === 1
                         ? KINSHIP_TERMS.WIFE_FIRST
                         : relation.marriage_order === 2
@@ -429,28 +435,43 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   {KINSHIP_TERMS.CHILDREN} ({familyData?.children.length || 0}):
                 </span>
-                {onAddChild && target && (
-                  <button
-                    type="button"
-                    onClick={() => onAddChild(target)}
-                    className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
-                  >
-                    <UserPlus className="w-3 h-3" /> + Thêm con
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {onOpenReorder && target && familyData?.children && familyData.children.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenReorder(target.id)}
+                      className="text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline flex items-center gap-0.5"
+                      title="Sắp xếp thứ tự đàn con"
+                    >
+                      <ArrowUpDown className="w-3 h-3" /> Sắp xếp
+                    </button>
+                  )}
+                  {onAddChild && target && (
+                    <button
+                      type="button"
+                      onClick={() => onAddChild(target)}
+                      className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
+                    >
+                      <UserPlus className="w-3 h-3" /> + Thêm con
+                    </button>
+                  )}
+                </div>
               </div>
               {familyData && familyData.children.length > 0 ? (
                 familyData.childrenGroups && familyData.childrenGroups.length > 1 ? (
                   <div className="space-y-3">
                     {familyData.childrenGroups.map((grp, gIdx) => {
-                      const groupTitle =
-                        grp.marriageOrder === 1
-                          ? `Con với bà ${grp.motherName} (${KINSHIP_TERMS.WIFE_FIRST} - ${grp.children.length} người)`
-                          : grp.marriageOrder === 2
-                          ? `Con với bà ${grp.motherName} (${KINSHIP_TERMS.WIFE_SECOND} - ${grp.children.length} người)`
-                          : grp.motherId
-                          ? `Con với bà ${grp.motherName} (${grp.children.length} người)`
-                          : `Chưa rõ thông tin mẹ (${grp.children.length} người)`;
+                      const isMultiSpouse = familyData.spouses.length > 1;
+                      const spouseLabel = !isMultiSpouse
+                        ? ''
+                        : grp.marriageOrder === 1
+                        ? ` (${KINSHIP_TERMS.WIFE_FIRST})`
+                        : grp.marriageOrder === 2
+                        ? ` (${KINSHIP_TERMS.WIFE_SECOND})`
+                        : '';
+                      const groupTitle = grp.motherId
+                        ? `Con với bà ${grp.motherName}${spouseLabel} (${grp.children.length} người)`
+                        : `Chưa rõ thông tin mẹ (${grp.children.length} người)`;
 
                       return (
                         <div
@@ -472,18 +493,24 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                             )}
                           </div>
                           <div className="space-y-1">
-                            {grp.children.map((child, cIdx) => {
-                              const chAge = child.birth_year ? calculateMemberAge(child.birth_year, child.death_year, child.life_status) : null;
-                              return (
-                                <div
-                                  key={child.id}
-                                  onClick={() => onSelectMember(child.id)}
-                                  className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
-                                      {child.birth_order || cIdx + 1}
-                                    </span>
+                            {(() => {
+                              const hasGrpDuplicates =
+                                grp.children.length > 1 &&
+                                new Set(grp.children.map((c) => c.birth_order).filter((o) => o != null)).size <
+                                  grp.children.filter((c) => c.birth_order != null).length;
+                              return grp.children.map((child, cIdx) => {
+                                const chAge = child.birth_year ? calculateMemberAge(child.birth_year, child.death_year, child.life_status) : null;
+                                const displayOrder = hasGrpDuplicates || child.birth_order == null ? cIdx + 1 : child.birth_order;
+                                return (
+                                  <div
+                                    key={child.id}
+                                    onClick={() => onSelectMember(child.id)}
+                                    className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
+                                        {displayOrder}
+                                      </span>
                                     <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
                                       {child.full_name}
                                     </span>
@@ -502,7 +529,8 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                                   <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                                 </div>
                               );
-                            })}
+                            });
+                          })()}
                           </div>
                         </div>
                       );
@@ -510,18 +538,24 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    {familyData.children.map((child, cIdx) => {
-                      const chAge = child.birth_year ? calculateMemberAge(child.birth_year, child.death_year, child.life_status) : null;
-                      return (
-                        <div
-                          key={child.id}
-                          onClick={() => onSelectMember(child.id)}
-                          className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
-                              {child.birth_order || cIdx + 1}
-                            </span>
+                    {(() => {
+                      const hasDuplicates =
+                        familyData.children.length > 1 &&
+                        new Set(familyData.children.map((c) => c.birth_order).filter((o) => o != null)).size <
+                          familyData.children.filter((c) => c.birth_order != null).length;
+                      return familyData.children.map((child, cIdx) => {
+                        const chAge = child.birth_year ? calculateMemberAge(child.birth_year, child.death_year, child.life_status) : null;
+                        const displayOrder = hasDuplicates || child.birth_order == null ? cIdx + 1 : child.birth_order;
+                        return (
+                          <div
+                            key={child.id}
+                            onClick={() => onSelectMember(child.id)}
+                            className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
+                                {displayOrder}
+                              </span>
                             <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
                               {child.full_name}
                             </span>
@@ -540,7 +574,8 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                         </div>
                       );
-                    })}
+                    });
+                  })()}
                   </div>
                 )
               ) : (

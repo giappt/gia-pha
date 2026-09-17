@@ -29,43 +29,43 @@ const CATEGORY_GROUPS: {
   desc: string;
   icon: string;
 }[] = [
-  {
-    key: 'direct',
-    title: 'I. QUAN HỆ TRỰC HỆ (NỘI & NGOẠI)',
-    desc: 'Quan hệ huyết thống trực hệ (Cha, Mẹ, Ông, Bà nội/ngoại, Cụ, Kỵ)',
-    icon: '🏛️',
-  },
-  {
-    key: 'same_gen',
-    title: 'II. CÙNG THẾ HỆ & DÂU / RỂ NGANG HÀNG',
-    desc: 'Anh chị em ruột, con chú con bác, chị dâu, anh rể, em dâu, em rể',
-    icon: '👥',
-  },
-  {
-    key: 'paternal_uncle_aunt',
-    title: 'III. BẬC BÁC / CHÚ / CÔ & PHU THÊ (BÊN NỘI)',
-    desc: 'Bác trai, Bác dâu, Bác gái, Bác rể, Chú, Thím, Cô, Dượng bên nội',
-    icon: '🤝',
-  },
-  {
-    key: 'maternal_uncle_aunt',
-    title: 'IV. BẬC BÁC / CẬU / DÌ & PHU THÊ (BÊN NGOẠI)',
-    desc: 'Bác ngoại, Bác dâu ngoại, Cậu, Mợ, Dì, Dượng bên ngoại',
-    icon: '🌸',
-  },
-  {
-    key: 'in_law_descendant',
-    title: 'V. DÂU / RỂ THẾ HỆ CON & CHÁU',
-    desc: 'Con dâu, Con rể, Cháu dâu, Cháu rể trong gia tộc',
-    icon: '💍',
-  },
-  {
-    key: 'grand_collateral',
-    title: 'VI. HỌ HÀNG LỆCH ĐỜI (ÔNG HỌ, BÀ HỌ)',
-    desc: 'Quan hệ họ hàng cách 2 thế hệ trong cùng dòng tộc',
-    icon: '🌿',
-  },
-];
+    {
+      key: 'direct',
+      title: 'I. QUAN HỆ TRỰC HỆ (NỘI & NGOẠI)',
+      desc: 'Quan hệ huyết thống trực hệ (Cha, Mẹ, Ông, Bà nội/ngoại, Cụ, Kỵ)',
+      icon: '🏛️',
+    },
+    {
+      key: 'same_gen',
+      title: 'II. CÙNG THẾ HỆ & DÂU / RỂ NGANG HÀNG',
+      desc: 'Anh chị em ruột, con chú con bác, chị dâu, anh rể, em dâu, em rể',
+      icon: '👥',
+    },
+    {
+      key: 'paternal_uncle_aunt',
+      title: 'III. BẬC BÁC / CHÚ / CÔ & PHU THÊ (BÊN NỘI)',
+      desc: 'Bác trai, Bác dâu, Bác gái, Bác rể, Chú, Thím, Cô, Dượng bên nội',
+      icon: '🤝',
+    },
+    {
+      key: 'maternal_uncle_aunt',
+      title: 'IV. BẬC BÁC / CẬU / DÌ & PHU THÊ (BÊN NGOẠI)',
+      desc: 'Bác ngoại, Bác dâu ngoại, Cậu, Mợ, Dì, Dượng bên ngoại',
+      icon: '🌸',
+    },
+    {
+      key: 'in_law_descendant',
+      title: 'V. DÂU / RỂ THẾ HỆ CON & CHÁU',
+      desc: 'Con dâu, Con rể, Cháu dâu, Cháu rể trong gia tộc',
+      icon: '💍',
+    },
+    {
+      key: 'grand_collateral',
+      title: 'VI. HỌ HÀNG LỆCH ĐỜI (ÔNG HỌ, BÀ HỌ)',
+      desc: 'Quan hệ họ hàng cách 2 thế hệ trong cùng dòng tộc',
+      icon: '🌿',
+    },
+  ];
 
 const FILTER_CHIPS = [
   { id: 'all', label: 'Tất Cả', icon: '📋' },
@@ -169,9 +169,8 @@ export default function ClanSettingsPage() {
     setRules(basePreset);
     setStatusMessage({
       type: 'success',
-      text: `Đã khôi phục danh mục từ điển về mẫu chuẩn ${
-        region === 'north' ? 'Miền Bắc' : region === 'central' ? 'Miền Trung' : 'Miền Nam'
-      }! Bấm "Lưu Thay Đổi" để lưu vào cơ sở dữ liệu.`,
+      text: `Đã khôi phục danh mục từ điển về mẫu chuẩn ${region === 'north' ? 'Miền Bắc' : region === 'central' ? 'Miền Trung' : 'Miền Nam'
+        }! Bấm "Lưu Thay Đổi" để lưu vào cơ sở dữ liệu.`,
     });
   };
 
@@ -294,20 +293,18 @@ export default function ClanSettingsPage() {
           type="button"
           id="tab-btn-branches"
           onClick={() => setActiveTab('branches')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-            activeTab === 'branches'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${activeTab === 'branches'
               ? 'bg-emerald-600 text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
+            }`}
         >
           <GitBranch className="w-4 h-4" />
           <span>Cấu Trúc Ngành/Chi</span>
           <span
-            className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-              activeTab === 'branches'
+            className={`text-[10px] px-1.5 py-0.2 rounded-full ${activeTab === 'branches'
                 ? 'bg-emerald-700 text-white'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-            }`}
+              }`}
           >
             {branches.length}
           </span>
@@ -317,11 +314,10 @@ export default function ClanSettingsPage() {
           type="button"
           id="tab-btn-info"
           onClick={() => setActiveTab('info_kinship')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-            activeTab === 'info_kinship'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${activeTab === 'info_kinship'
               ? 'bg-emerald-600 text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
+            }`}
         >
           <Settings className="w-4 h-4" />
           <span>Thông Tin & Xưng Hô</span>
@@ -358,13 +354,12 @@ export default function ClanSettingsPage() {
                 </label>
                 <span
                   id="char-counter"
-                  className={`font-semibold text-xs transition-colors ${
-                    isTooLong
+                  className={`font-semibold text-xs transition-colors ${isTooLong
                       ? 'text-rose-600'
                       : isNearLimit
-                      ? 'text-amber-600'
-                      : 'text-slate-400 dark:text-slate-500'
-                  }`}
+                        ? 'text-amber-600'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
                 >
                   {charCount} / 40 ký tự
                 </span>
@@ -394,9 +389,8 @@ export default function ClanSettingsPage() {
                 </span>
                 <h3
                   id="preview-clan-name"
-                  className={`font-black tracking-tight text-emerald-950 dark:text-emerald-50 mt-1 uppercase text-balance break-words ${
-                    clanName.length > 25 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
-                  }`}
+                  className={`font-black tracking-tight text-emerald-950 dark:text-emerald-50 mt-1 uppercase text-balance break-words ${clanName.length > 25 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
+                    }`}
                 >
                   {clanName.trim() || 'DÒNG HỌ NGUYỄN VĂN'}
                 </h3>
@@ -410,17 +404,17 @@ export default function ClanSettingsPage() {
               <div className="flex items-center gap-2">
                 <span className="text-amber-500 text-base">✨</span>
                 <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                  Cụ Thủy Tổ Của Dòng Họ (Gốc Phả Hệ Toàn Cục)
+                  Cụ Tổ Của Dòng Họ (Gốc Phả Hệ Toàn Cục)
                 </h2>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Chỉ định vị Cụ Thủy Tổ duy nhất của toàn bộ dòng họ. Người được chọn sẽ mang huy hiệu <strong>✨ Cụ Tổ</strong> trên cây phả hệ, và toàn bộ thế hệ con cháu cũng như dâu/rể sẽ tự động suy diễn bậc đời dựa theo Cụ.
+                Chỉ định vị Cụ Tổ duy nhất của toàn bộ dòng họ. Người được chọn sẽ mang huy hiệu <strong>✨ Cụ Tổ</strong> trên cây phả hệ, và toàn bộ thế hệ con cháu cũng như dâu/rể sẽ tự động suy diễn bậc đời dựa theo Cụ.
               </p>
             </div>
 
             <div className="space-y-3">
               <label htmlFor="root-ancestor-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                Chọn Cụ Thủy Tổ (Gốc Cây):
+                Chọn Cụ Tổ (Gốc Cây):
               </label>
 
               <select
@@ -446,7 +440,7 @@ export default function ClanSettingsPage() {
                   <span>Quy tắc suy diễn thế hệ tự động:</span>
                 </p>
                 <p className="text-[11px] text-amber-700/90 dark:text-amber-300/80 pl-5">
-                  • Cụ Thủy Tổ được thiết lập là <strong>Đời 1</strong>.<br />
+                  • Cụ Tổ được thiết lập là <strong>Đời 1</strong>.<br />
                   • Con cái tự động nhận đời bằng <strong>Đời của Cha/Mẹ + 1</strong>.<br />
                   • Dâu / Rể (phối ngẫu) tự động nhận <strong>cùng đời</strong> với bạn đời huyết thống, và hiển thị danh xưng phù hợp (Bà cả / Bà hai / Phu thê) thay vì bị gán nhầm là Cụ Tổ.
                 </p>
@@ -472,11 +466,10 @@ export default function ClanSettingsPage() {
                 {(['north', 'central', 'south'] as KinshipRegion[]).map((r) => (
                   <label
                     key={r}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                      region === r
+                    className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${region === r
                         ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/20'
                         : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-sm">
@@ -522,11 +515,10 @@ export default function ClanSettingsPage() {
                     key={chip.id}
                     type="button"
                     onClick={() => setActiveCategoryFilter(chip.id)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                      activeCategoryFilter === chip.id
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${activeCategoryFilter === chip.id
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
-                    }`}
+                      }`}
                   >
                     <span>{chip.icon}</span>
                     <span>{chip.label}</span>

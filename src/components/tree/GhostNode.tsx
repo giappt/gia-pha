@@ -41,7 +41,7 @@ export const GhostNode = memo(({ data }: NodeProps<GhostNodeType>) => {
 
   return (
     <div
-      className="group relative w-[200px] h-[96px] rounded-xl border-2 border-dashed border-amber-500 hover:border-amber-600 bg-amber-50/85 dark:bg-amber-950/40 backdrop-blur-sm p-2.5 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex flex-col justify-between"
+      className="group relative w-[200px] h-[96px] rounded-xl border-2 border-dashed border-amber-500 hover:border-amber-600 bg-amber-50/85 dark:bg-amber-950/40 backdrop-blur-sm p-2.5 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex flex-col"
       title="Thành viên phối ngẫu nội tộc"
     >
       {/* Target Handle cho cha mẹ nối xuống (Tàng hình) */}
@@ -67,7 +67,7 @@ export const GhostNode = memo(({ data }: NodeProps<GhostNodeType>) => {
       />
 
       {/* Header thẻ: Thế hệ & Nhãn dâu/rể nội tộc nét đứt vàng nổi bật */}
-      <div className="flex items-center justify-between text-[11px]">
+      <div className="h-[18px] shrink-0 flex items-center justify-between text-[11px]">
         <span className="font-semibold text-slate-600 dark:text-slate-400">
           Đời {nodeData.generationLevel}
         </span>
@@ -78,21 +78,21 @@ export const GhostNode = memo(({ data }: NodeProps<GhostNodeType>) => {
       </div>
 
       {/* Thân thẻ: Avatar & Tên đồng bộ MemberNode */}
-      <div className="flex items-center gap-2 my-0.5">
+      <div className="flex items-center gap-2 mt-1.5 shrink-0">
         <div
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${avatarBg}`}
         >
           {initials || <User className="w-4 h-4" />}
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 flex flex-col justify-center h-8">
           <p
             className="truncate text-[13px] font-bold text-slate-900 dark:text-slate-100"
             title={fullName}
           >
             {fullName}
           </p>
-          <p className="truncate text-[10px] text-slate-500 dark:text-slate-400">
+          <p className="truncate text-[10px] leading-[14px] h-[14px] text-slate-500 dark:text-slate-400">
             {nodeData.birthYear ? `SN: ${nodeData.birthYear}` : ''}
             {nodeData.deathYear ? ` - Mất: ${nodeData.deathYear}` : ''}
             {!nodeData.birthYear && !nodeData.deathYear && (nodeData.originalBranchName || 'Nội tộc')}
@@ -101,7 +101,7 @@ export const GhostNode = memo(({ data }: NodeProps<GhostNodeType>) => {
       </div>
 
       {/* Footer thẻ: Chi nhánh gốc & Nút lướt camera sang node gốc */}
-      <div className="flex items-center justify-between text-[9px] bg-amber-100/60 dark:bg-amber-900/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+      <div className="mt-auto h-[18px] shrink-0 flex items-center justify-between text-[9px] bg-amber-100/60 dark:bg-amber-900/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800">
         <span className="truncate max-w-[105px] text-amber-800 dark:text-amber-200 font-medium" title={nodeData.originalBranchName}>
           Gốc: {nodeData.originalBranchName || 'Chi khác'}
         </span>

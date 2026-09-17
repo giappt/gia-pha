@@ -143,7 +143,7 @@ export function calculateTreeLayout(
     // Nếu có focusRootId: Gốc chính là người được chọn
     primaryRoots = [focusMember];
   } else if (designatedRoot) {
-    // Nếu có Cụ Thủy Tổ cấu hình trong clan_settings
+    // Nếu có Cụ Tổ cấu hình trong clan_settings
     primaryRoots = [designatedRoot];
   } else {
     // Mặc định: Lấy root ancestor(s)

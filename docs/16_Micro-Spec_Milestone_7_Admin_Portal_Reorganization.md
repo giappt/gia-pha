@@ -189,7 +189,7 @@ sequenceDiagram
 
 ### 5.5. File: `src/app/admin/profile/page.tsx` [NEW]
 - Chuyên biệt cho **Căn Cước Dòng Họ**:
-  - Form nhập Tên dòng họ (giới hạn 40 ký tự), Cụ Thủy Tổ khởi nguồn, Lời tựa gia phả.
+  - Form nhập Tên dòng họ (giới hạn 40 ký tự), Cụ Tổ khởi nguồn, Lời tựa gia phả.
   - Bố cục 2 cột: Cột trái Form nhập liệu, Cột phải **Live Preview** diện mạo Trang Chủ thời gian thực.
   - Nút "Lưu Căn Cước Dòng Họ" độc lập.
 
@@ -304,7 +304,7 @@ sequenceDiagram
   - **Mô tả:** Thành viên có quê quán hoặc nơi ở là `ở Phú Thọ` hay `Phú Thọ – Hà Nội` thuộc thế hệ 11+ không bị nhận nhầm chữ "thọ" thành từ khóa qua đời, giữ nguyên trạng thái `Còn sống`.
   - **Trạng thái:** PASS (verified qua tests/root-setting-and-generation.test.ts).
 - [x] **TC_UT_MULTI_SPOUSE_ORDER_TITLES (Kiểm chứng phân định Bà cả và Bà hai cho gia đình đa thê):**
-  - **Mô tả:** Cụ Thủy Tổ Phạm Văn Chiến có 2 vợ: Bà Hoàng Thị Mơ nhận danh xưng `🌸 Bà cả` (order 1) và Bà Đào Thị Liễu nhận danh xưng `🌸 Bà hai` (order 2), triệt tiêu lỗi cả 2 cùng mang danh xưng Bà cả.
+  - **Mô tả:** Cụ Tổ Phạm Văn Chiến có 2 vợ: Bà Hoàng Thị Mơ nhận danh xưng `🌸 Bà cả` (order 1) và Bà Đào Thị Liễu nhận danh xưng `🌸 Bà hai` (order 2), triệt tiêu lỗi cả 2 cùng mang danh xưng Bà cả.
   - **Trạng thái:** PASS (verified qua tests/root-setting-and-generation.test.ts).
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
@@ -322,9 +322,9 @@ sequenceDiagram
 - [ ] **UAT_11 (SQL Migration Chạy Thành Công Từ File Riêng 20260907000001):** Mở Supabase Dashboard SQL Editor, dán nội dung file migration độc lập `supabase/migrations/20260907000001_add_is_adopted_column.sql` và bấm Run: 0 lỗi, bảng `members` nhận cột `is_adopted`.
 - [ ] **UAT_12 (Nhập File Excel Thành Công Không Lỗi Schema):** Mở `/admin/import`, tải file `gia_pha_ho_pham_van_lite.xlsx` lên và bấm "Nhập Dữ Liệu": hệ thống báo nạp thành công 60 thành viên và 29 quan hệ hôn phối, không còn lỗi `Could not find the 'is_adopted' column of 'members' in the schema cache`.
 - [ ] **UAT_13 (Cây Phả Hệ Hiển Thị Dữ Liệu Thật):** Mở `/tree`, hiển thị đúng tên dòng họ thật và danh sách con cháu thật từ Supabase DB, 28 người mẫu cũ biến mất hoàn toàn khỏi màn hình.
-- [ ] **UAT_14 (Chỉ Định Cụ Thủy Tổ Trong Admin Settings):** Mở `/admin/settings` hoặc `/admin/profile`: Dropdown "Cụ Thủy Tổ Của Dòng Họ" chỉ hiển thị các thành viên nội tộc, chọn Cụ Phạm Văn Chiến và bấm Lưu $\rightarrow$ Hệ thống lưu `root_ancestor_id` vào `clan_settings`.
+- [ ] **UAT_14 (Chỉ Định Cụ Tổ Trong Admin Settings):** Mở `/admin/settings` hoặc `/admin/profile`: Dropdown "Cụ Tổ Của Dòng Họ" chỉ hiển thị các thành viên nội tộc, chọn Cụ Phạm Văn Chiến và bấm Lưu $\rightarrow$ Hệ thống lưu `root_ancestor_id` vào `clan_settings`.
 - [ ] **UAT_15 (Kiểm Chứng Huy Hiệu Cụ Tổ Duy Nhất & Đời của Phối Ngẫu):** Mở `/tree`:
-  - Thẻ của Cụ Thủy Tổ Phạm Văn Chiến hiển thị đúng huy hiệu `✨ Cụ Tổ`.
+  - Thẻ của Cụ Tổ Phạm Văn Chiến hiển thị đúng huy hiệu `✨ Cụ Tổ`.
   - Thẻ của Bà cả Hoàng Thị Mơ và Bà hai Đào Thị Liễu chỉ hiển thị `🌸 Bà cả` / `🌸 Bà hai` và `† Đã mất`, **hoàn toàn không có huy hiệu Cụ Tổ**.
   - Thẻ của Bà Vũ Thị Thìn mang đúng `Đời 2`, Bà Hoàng Thị Dĩnh mang đúng `Đời 3`, Bà Nguyễn Thị Hiến mang đúng `Đời 4`, Bà Lê Thị Nhân mang đúng `Đời 5`...
 - [ ] **UAT_16 (Re-import Ghi Đè Thành Công Với 60 Thành Viên Liền Mạch):** Nạp lại file `gia_pha_ho_pham_van_lite.xlsx` với tùy chọn "Xóa sạch dữ liệu cũ và nhập mới (Clean Mode)": Cây phả hệ dựng lên mượt mà, đầy đủ các tầng từ Đời 1 đến Đời 13 không đứt gãy.
@@ -369,9 +369,9 @@ sequenceDiagram
 
 ---
 
-## 12. MỞ RỘNG 7.3: THIẾT LẬP CỤ THỦY TỔ (ROOT SETTING), TỰ ĐỘNG SUY DIỄN THẾ HỆ THEO CÂY ĐỒ THỊ & CHUẨN HÓA DỮ LIỆU GIA PHẢ HỌ PHẠM VĂN
+## 12. MỞ RỘNG 7.3: THIẾT LẬP Cụ Tổ (ROOT SETTING), TỰ ĐỘNG SUY DIỄN THẾ HỆ THEO CÂY ĐỒ THỊ & CHUẨN HÓA DỮ LIỆU GIA PHẢ HỌ PHẠM VĂN
 
-### 12.1. Kiến Trúc Cụ Thủy Tổ Duy Nhất Trong Cài Đặt Dòng Họ (`clan_settings.root_ancestor_id`)
+### 12.1. Kiến Trúc Cụ Tổ Duy Nhất Trong Cài Đặt Dòng Họ (`clan_settings.root_ancestor_id`)
 - **Single Source of Truth:**
   - Bảng `clan_settings` sở hữu cột `root_ancestor_id UUID REFERENCES public.members(id) ON DELETE SET NULL`.
   - Toàn bộ họ tộc chỉ có **DUY NHẤT 1 Cụ Thủy Tổ** được lưu tại đây.
@@ -380,7 +380,7 @@ sequenceDiagram
   - `GET`: Trả về `root_ancestor_id` cùng các thông tin dòng họ.
   - `PATCH`: Nhận `{ root_ancestor_id: string | null }`, kiểm tra ràng buộc thành viên tồn tại và cập nhật vào `clan_settings`.
 - **Giao Diện Admin (`src/app/admin/settings/page.tsx`):**
-  - Thêm phần **"Cụ Thủy Tổ Của Dòng Họ"** với dropdown chọn thành viên.
+  - Thêm phần **"Cụ Tổ Của Dòng Họ"** với dropdown chọn thành viên.
   - Bộ lọc Dropdown: Chỉ lọc các thành viên nội tộc (không phải dâu/rể ngoại tộc).
   - Hiển thị badge nhận diện Cụ Tổ hiện tại kèm thế hệ và năm sinh.
 

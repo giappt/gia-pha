@@ -23,6 +23,7 @@ import { FamilyBusEdge } from './FamilyBusEdge';
 import { TreeToolbar, type RootOption } from './TreeToolbar';
 import { MemberDetailDrawer } from './MemberDetailDrawer';
 import { MemberFormModal } from '@/components/modals/MemberFormModal';
+import { ReorderChildrenModal } from '@/components/modals/ReorderChildrenModal';
 import { UnlinkedMembersDrawer } from './UnlinkedMembersDrawer';
 import { calculateTreeLayout } from '@/lib/tree-layout/genealogy-layout';
 import { generateLargeClan } from '@/fixtures/generate-large-clan';
@@ -84,6 +85,11 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   const [memberFormParent, setMemberFormParent] = useState<MemberRecord | null>(null);
   const [memberFormCurrentSpouse, setMemberFormCurrentSpouse] = useState<MemberRecord | null>(null);
   const [memberFormFixedMotherId, setMemberFormFixedMotherId] = useState<string | null>(null);
+
+  // State Modal Sắp xếp thứ tự đàn con
+  const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
+  const [reorderParent, setReorderParent] = useState<MemberRecord | null>(null);
+  const [reorderChildrenList, setReorderChildrenList] = useState<MemberRecord[]>([]);
 
   // Sinh dữ liệu giả lập 1.500 nodes (chỉ sinh 1 lần duy nhất khi được chọn)
   const largeClanData = useMemo(() => {
@@ -228,6 +234,57 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
     }
   }, [getNode, nodes, setCenter]);
 
+  // Mở modal kéo thả sắp xếp đàn con
+  const handleOpenReorderModal = useCallback((parentId: string) => {
+    const parent = activeMembers.find((m) => m.id === parentId);
+    if (!parent) return;
+    const children = activeMembers.filter(
+      (m) => m.father_id === parentId || m.mother_id === parentId
+    );
+    setReorderParent(parent);
+    setReorderChildrenList(children);
+    setIsReorderModalOpen(true);
+  }, [activeMembers]);
+
+  const handleReorderSaved = useCallback((updatedChildren: MemberRecord[]) => {
+    setLiveMembers((prev) => {
+      const updatedMap = new Map(updatedChildren.map((c) => [c.id, c.birth_order]));
+      return prev.map((m) => {
+        if (updatedMap.has(m.id)) {
+          return {
+            ...m,
+            birth_order: updatedMap.get(m.id),
+          };
+        }
+        return m;
+      });
+    });
+  }, []);
+
+  // Lắng nghe sự kiện fat:open-reorder-children từ thẻ Node
+  useEffect(() => {
+    const handler = (e: any) => {
+      const memberId = e.detail?.memberId;
+      if (memberId) {
+        handleOpenReorderModal(memberId);
+      }
+    };
+    window.addEventListener('fat:open-reorder-children', handler);
+    return () => window.removeEventListener('fat:open-reorder-children', handler);
+  }, [handleOpenReorderModal]);
+
+  // Lắng nghe sự kiện fat:members-reordered toàn cục để cập nhật liveMembers tức thì
+  useEffect(() => {
+    const handleMembersReordered = (e: any) => {
+      const updatedChildren = e.detail?.updatedChildren as MemberRecord[] | undefined;
+      if (Array.isArray(updatedChildren) && updatedChildren.length > 0) {
+        handleReorderSaved(updatedChildren);
+      }
+    };
+    window.addEventListener('fat:members-reordered', handleMembersReordered);
+    return () => window.removeEventListener('fat:members-reordered', handleMembersReordered);
+  }, [handleReorderSaved]);
+
   // Handler: Mở form thêm thành viên mới
   const handleOpenAddMemberModal = useCallback(() => {
     setMemberFormMode('create');
@@ -277,13 +334,32 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
     newSpouse?: MemberRecord,
     newSpouseRelation?: any,
     clearedBirthOrderId?: string | null,
-    demotedSeniorId?: string | null
+    demotedSeniorId?: string | null,
+    unlinkedChildIds?: string[]
   ) => {
     setLiveMembers((prev) => {
       let next = prev.map((m) => {
         if (m.id === savedMember.id) return savedMember;
         if (demotedSeniorId && m.id === demotedSeniorId) return { ...m, is_senior: false };
         if (clearedBirthOrderId && m.id === clearedBirthOrderId) return { ...m, birth_order: undefined };
+        if (unlinkedChildIds && unlinkedChildIds.includes(m.id)) {
+          // Family-level Soft Disconnect: ngắt cả cha lẫn mẹ nếu họ cùng một gia đình
+          const isSavedFather = savedMember.gender === 'male';
+          const spouseRel = liveSpouses.find(
+            (s) => s.member_a_id === savedMember.id || s.member_b_id === savedMember.id
+          );
+          const spouseId = spouseRel
+            ? spouseRel.member_a_id === savedMember.id
+              ? spouseRel.member_b_id
+              : spouseRel.member_a_id
+            : null;
+
+          return {
+            ...m,
+            father_id: isSavedFather ? null : m.father_id === spouseId ? null : m.father_id,
+            mother_id: !isSavedFather ? null : m.mother_id === spouseId ? null : m.mother_id,
+          };
+        }
         return m;
       });
       if (!next.some((m) => m.id === savedMember.id)) {
@@ -320,14 +396,27 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         });
       }
     }, 200);
-  }, [getNode, setCenter]);
+  }, [getNode, setCenter, liveSpouses]);
 
-  // Handler: Nối phả từ Khay Chưa Nối
-  const handleRelinkMember = useCallback(async (memberId: string, parentId: string) => {
+  // Handler: Nối phả từ Khay Chưa Nối (Nhận diện chuẩn giới tính Cha/Mẹ & Cặp phụ mẫu)
+  const handleRelinkMember = useCallback(async (
+    memberId: string,
+    relinkPayload: string | { father_id: string | null; mother_id: string | null }
+  ) => {
+    let updatePayload: { father_id?: string | null; mother_id?: string | null };
+
+    if (typeof relinkPayload === 'string') {
+      const parent = liveMembers.find((m) => m.id === relinkPayload);
+      const isMother = parent?.gender === 'female';
+      updatePayload = isMother ? { mother_id: relinkPayload } : { father_id: relinkPayload };
+    } else {
+      updatePayload = relinkPayload;
+    }
+
     const res = await fetch(`/api/members/${memberId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ father_id: parentId }),
+      body: JSON.stringify(updatePayload),
     });
 
     const data = await res.json();
@@ -348,7 +437,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         });
       }
     }, 200);
-  }, [getNode, setCenter]);
+  }, [liveMembers, getNode, setCenter]);
 
   // Handler: Xóa thành viên
   const handleDeleteMember = useCallback(async (memberId: string) => {
@@ -475,6 +564,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         onAddChild={handleAddChildFromDrawer}
         onAddSpouse={handleAddSpouseFromDrawer}
         onDeleteMember={handleDeleteMember}
+        onOpenReorder={handleOpenReorderModal}
       />
 
       {/* Slide-over Khay Thành Viên Chưa Nối Phả */}
@@ -500,6 +590,15 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         allMembers={activeMembers}
         allSpouses={activeSpouseRelations}
         onSaved={handleMemberSaved}
+      />
+
+      {/* Modal Kéo Thả Sắp Xếp Thứ Tự Đàn Con */}
+      <ReorderChildrenModal
+        isOpen={isReorderModalOpen}
+        onClose={() => setIsReorderModalOpen(false)}
+        parentMember={reorderParent}
+        childrenList={reorderChildrenList}
+        onSaved={handleReorderSaved}
       />
 
       {/* Footer gợi ý phím tắt */}

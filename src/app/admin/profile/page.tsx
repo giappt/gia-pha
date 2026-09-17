@@ -79,7 +79,7 @@ export default function ClanProfilePage() {
         }
         setStatusMessage({
           type: 'success',
-          text: 'Đã lưu Căn Cước Dòng Họ và Cụ Thủy Tổ thành công! Dữ liệu đã cập nhật trên toàn hệ thống.',
+          text: 'Đã lưu Căn Cước Dòng Họ và Cụ Tổ thành công! Dữ liệu đã cập nhật trên toàn hệ thống.',
         });
       } else {
         setStatusMessage({
@@ -131,11 +131,10 @@ export default function ClanProfilePage() {
 
       {statusMessage && (
         <div
-          className={`p-4 rounded-xl border flex items-center gap-3 text-xs font-semibold ${
-            statusMessage.type === 'success'
+          className={`p-4 rounded-xl border flex items-center gap-3 text-xs font-semibold ${statusMessage.type === 'success'
               ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
               : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
-          }`}
+            }`}
         >
           {statusMessage.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
@@ -156,13 +155,12 @@ export default function ClanProfilePage() {
               </label>
               <span
                 id="char-counter"
-                className={`font-semibold text-xs transition-colors ${
-                  isTooLong
+                className={`font-semibold text-xs transition-colors ${isTooLong
                     ? 'text-rose-600'
                     : isNearLimit
-                    ? 'text-amber-600'
-                    : 'text-slate-400 dark:text-slate-500'
-                }`}
+                      ? 'text-amber-600'
+                      : 'text-slate-400 dark:text-slate-500'
+                  }`}
               >
                 {charCount} / 40 ký tự
               </span>
@@ -203,9 +201,8 @@ export default function ClanProfilePage() {
               </span>
               <h3
                 id="preview-clan-name"
-                className={`font-black tracking-tight text-emerald-950 dark:text-emerald-50 mt-1 uppercase text-balance break-words ${
-                  clanName.length > 25 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
-                }`}
+                className={`font-black tracking-tight text-emerald-950 dark:text-emerald-50 mt-1 uppercase text-balance break-words ${clanName.length > 25 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
+                  }`}
               >
                 {clanName.trim() || 'DÒNG HỌ NGUYỄN VĂN'}
               </h3>
@@ -222,17 +219,17 @@ export default function ClanProfilePage() {
             <div className="flex items-center gap-2">
               <span className="text-amber-500 text-base">✨</span>
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                Cụ Thủy Tổ Của Dòng Họ (Gốc Phả Hệ Toàn Cục)
+                Cụ Tổ Của Dòng Họ (Gốc Phả Hệ Toàn Cục)
               </h2>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Chỉ định vị Cụ Thủy Tổ duy nhất của toàn bộ dòng họ. Người được chọn sẽ mang huy hiệu <strong>✨ Cụ Tổ</strong> trên cây phả hệ, và toàn bộ thế hệ con cháu cũng như dâu/rể sẽ tự động suy diễn bậc đời dựa theo Cụ.
+              Chỉ định vị Cụ Tổ duy nhất của toàn bộ dòng họ. Người được chọn sẽ mang huy hiệu <strong>✨ Cụ Tổ</strong> trên cây phả hệ, và toàn bộ thế hệ con cháu cũng như dâu/rể sẽ tự động suy diễn bậc đời dựa theo Cụ.
             </p>
           </div>
 
           <div className="space-y-3">
             <label htmlFor="root-ancestor-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Chọn Cụ Thủy Tổ (Gốc Cây):
+              Chọn Cụ Tổ (Gốc Cây):
             </label>
 
             <select
@@ -258,7 +255,7 @@ export default function ClanProfilePage() {
                 <span>Quy tắc suy diễn thế hệ tự động:</span>
               </p>
               <p className="text-[11px] text-amber-700/90 dark:text-amber-300/80 pl-5">
-                • Cụ Thủy Tổ được thiết lập là <strong>Đời 1</strong>.<br />
+                • Cụ Tổ được thiết lập là <strong>Đời 1</strong>.<br />
                 • Con cái tự động nhận đời bằng <strong>Đời của Cha/Mẹ + 1</strong>.<br />
                 • Dâu / Rể (phối ngẫu) tự động nhận <strong>cùng đời</strong> với bạn đời huyết thống, và hiển thị danh xưng phù hợp (Bà cả / Bà hai / Phu thê) thay vì bị gán nhầm là Cụ Tổ.
               </p>

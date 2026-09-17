@@ -141,8 +141,8 @@ describe('Root Ancestor Setting & Graph-Derived Generation Test Suite (Milestone
     assert.ok(nodeDinh, 'Node Cháu Dâu Dĩnh phải tồn tại');
 
     // Cụ Chiến là Root
-    assert.strictEqual(nodeChien.data.generationLevel, 1, 'Cụ Thủy Tổ phải có generationLevel = 1');
-    assert.strictEqual(nodeChien.data.isRoot, true, 'Cụ Thủy Tổ phải có isRoot = true');
+    assert.strictEqual(nodeChien.data.generationLevel, 1, 'Cụ Tổ phải có generationLevel = 1');
+    assert.strictEqual(nodeChien.data.isRoot, true, 'Cụ Tổ phải có isRoot = true');
 
     // Bà Mơ (Vợ Cụ Chiến)
     assert.strictEqual(nodeMo.data.generationLevel, 1, 'Bà Mơ phải có generationLevel = 1 (cùng đời chồng)');

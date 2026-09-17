@@ -262,6 +262,43 @@ export async function PUT(
         const updateField = updatedMember.gender === 'male' ? { father_id: updatedMember.id } : { mother_id: updatedMember.id };
         await supabase.from('members').update(updateField).in('id', body.child_ids_to_link);
       }
+
+      // Nếu có gỡ liên kết con cái (chuyển về khay chưa nối phả - Family-level Disconnect)
+      if (body.child_ids_to_unlink && body.child_ids_to_unlink.length > 0) {
+        // Tìm các phối ngẫu của updatedMember
+        const { data: spouseRels } = await supabase
+          .from('spouse_relations')
+          .select('member_a_id, member_b_id')
+          .or(`member_a_id.eq.${updatedMember.id},member_b_id.eq.${updatedMember.id}`);
+
+        const spouseIds = new Set(
+          (spouseRels || []).map((r: any) =>
+            r.member_a_id === updatedMember.id ? r.member_b_id : r.member_a_id
+          )
+        );
+
+        for (const childId of body.child_ids_to_unlink) {
+          const { data: childRecord } = await supabase
+            .from('members')
+            .select('father_id, mother_id')
+            .eq('id', childId)
+            .maybeSingle();
+
+          const unlinkPayload: Record<string, any> = {};
+          if (updatedMember.gender === 'male') {
+            unlinkPayload.father_id = null;
+            if (childRecord?.mother_id && (spouseIds.has(childRecord.mother_id) || spouseIds.size === 1)) {
+              unlinkPayload.mother_id = null;
+            }
+          } else {
+            unlinkPayload.mother_id = null;
+            if (childRecord?.father_id && (spouseIds.has(childRecord.father_id) || spouseIds.size === 1)) {
+              unlinkPayload.father_id = null;
+            }
+          }
+          await supabase.from('members').update(unlinkPayload).eq('id', childId);
+        }
+      }
     } catch (dbErr) {
       console.warn('[PUT /api/members/[id]] Database write warning (falling back to mock):', dbErr);
       if (body.new_spouse_name && body.new_spouse_name.trim()) {
@@ -286,6 +323,7 @@ export async function PUT(
       clearedBirthOrderId: conflictBirthOrderId,
       demotedSeniorId: oldSeniorId,
       linkedChildIds: body.child_ids_to_link || [],
+      unlinkedChildIds: body.child_ids_to_unlink || [],
       message: 'Cập nhật hồ sơ thành viên thành công',
     });
   } catch (err: any) {

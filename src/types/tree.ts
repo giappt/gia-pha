@@ -199,6 +199,8 @@ export interface MemberFormData {
   new_spouse_is_deceased?: boolean;
   // Gán nối danh sách con cái
   child_ids_to_link?: string[];
+  // Hủy gán (gỡ) danh sách con cái
+  child_ids_to_unlink?: string[];
 }
 
 export interface ExcelMemberRow {

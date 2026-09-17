@@ -338,6 +338,24 @@ sequenceDiagram
        - Tuyệt đối CẤM khối `catch` nuốt lỗi để trả về `{ success: true, importedCount: rows.length }` (thành công ảo). Phải đảm bảo tính liêm chính của dữ liệu CSDL.
   - _Output:_ `{ success: true, importedCount: number, message: "Nhập dữ liệu thành công" }` (HTTP 200).
 
+### 4.5. File: `src/app/api/members/reorder/route.ts` (Batch Reorder Children API)
+- **Mục tiêu:** Cập nhật đồng loạt thứ tự sinh `birth_order: 1..N` cho toàn bộ đàn con của một người cha/mẹ trong một giao dịch duy nhất, dọn sạch xung đột trùng lặp số thứ tự sinh.
+- **Method:** `POST`
+- **Request Body:**
+  ```typescript
+  interface ReorderChildrenRequest {
+    parentId: string; // ID của cha hoặc mẹ
+    orderedChildIds: string[]; // Mảng ID các con đã được sắp xếp từ con thứ 1 đến con thứ N
+  }
+  ```
+- **Xử lý:**
+  1. Kiểm tra xác thực Admin Client (`createAdminClient()`).
+  2. Validate `parentId` và mảng `orderedChildIds` (tối thiểu 1 phần tử).
+  3. Cập nhật `birth_order = index + 1` cho từng `childId` trong mảng qua Supabase.
+  4. Trả về HTTP 200 kèm danh sách các con với `birth_order` mới.
+
+---
+
 ### 4.4. Ingestion Pipeline: Bộ Chuyển Đổi Phả Hệ Cổ Truyền (Legacy Word/Markdown to 19-Column Excel Converter)
 - **Mục tiêu:** Chuyển đổi dữ liệu phả hệ thô dạng văn bản/bảng Word (`GIA PHẢ HỌ PHẠM VĂN.docx` / `GIA_PHA_HO_PHAM_VAN.md` với ~1.100 nhân khẩu, 14 thế hệ) sang file Excel chuẩn hóa 19 cột tương thích 100% với `parseExcelFamilyTree()`.
 - **Nguyên Tắc Bảo Vệ Tính Nguyên Bản Của Quan Hệ Cha Con (Lineage Integrity Principle):**
@@ -350,7 +368,7 @@ sequenceDiagram
   3. **Bóc tách Tự động Ngày Giỗ Âm Lịch & Tuổi Thọ (Regex Date Parser):**
      - Bóc tách các dạng chuỗi `DD / MM`, `DD – MM Thọ XX`, `DD- MM-YYYY Thọ XX` thành 2 giá trị số nguyên: `Ngày mất (Âm)` và `Tháng mất (Âm)`.
   4. **Liên kết Truyền Đơn Trực Hệ Khởi Nguyên (Đời 1 $\rightarrow$ Đời 4):**
-     - Tự động điền `STT Bố` cho 4 đời đầu đã được người dùng xác thực: Cụ Thủy Tổ Phạm Văn Chiến (Cụ Tổ = 'Đ') $\rightarrow$ Cụ Phạm Văn Đồng $\rightarrow$ Cụ Phạm Kim Chức $\rightarrow$ Cụ Phạm Khắc Tường (ngăn ngừa triệt để lỗi tự trỏ self-loop).
+     - Tự động điền `STT Bố` cho 4 đời đầu đã được người dùng xác thực: Cụ Tổ Phạm Văn Chiến (Cụ Tổ = 'Đ') $\rightarrow$ Cụ Phạm Văn Đồng $\rightarrow$ Cụ Phạm Kim Chức $\rightarrow$ Cụ Phạm Khắc Tường (ngăn ngừa triệt để lỗi tự trỏ self-loop).
   5. **Đánh dấu Node Lá (Leaf Node Recognition):**
      - Các trường hợp ghi chú `"Không con chết sớm"`, `"Chết không con"`, `"Không vợ con"`, `"Đi tu – chết sớm"` được bảo toàn trong cột `Ghi chú / Tiểu sử` để người nhập liệu nhận biết không cần tìm hậu duệ cho các cụ này.
 
@@ -540,6 +558,25 @@ sequenceDiagram
   - **Cố định cả Bố và Mẹ khi mở từ cụm con của người vợ cụ thể**: Bấm "+ Thêm con" từ nhóm con của bà vợ nào thì cả Bố và Mẹ của đứa con mới đều được KHÓA CỨNG [🔒].
   - **Ẩn Khối Phối ngẫu**: Con mới sinh mặc định độc thân, ẩn khối 3.
 
+### 5.9. Tối Ưu Hóa Khối Hôn Phối, Chọn Mẹ Khi Thêm Con & Modal Sắp Xếp Đàn Con Kéo Thả:
+- **Khối 3: Hôn phối (`MemberFormModal.tsx`):**
+  - Khi mở form chỉnh sửa một thành viên, truy vấn tất cả các mối quan hệ phối ngẫu từ `allSpouses`.
+  - **Nếu đã có vợ/chồng:** Render khu vực "Phối ngẫu hiện tại" dạng thẻ phẳng trang trọng (`🌸 Bà Cả: [Tên]`, `🌸 Bà Hai: [Tên]`) kèm nút `[Gỡ/Xóa]`. Không tự ý kích hoạt tab ghép người nội tộc.
+  - **Nút `[+ Thêm Vợ]` / `[+ Thêm Chồng]`:** Đặt nút rõ ràng, bấm vào mới mở ra 2 tùy chọn: *Thêm vợ ngoài tộc* hoặc *Ghép người trong tộc*.
+  - **Nếu chưa có phối ngẫu:** Hiển thị nhãn *Chưa có thông tin phối ngẫu (Độc thân)* kèm nút `[+ Thêm Vợ/Chồng]`.
+- **Khối 4: Chọn Mẹ khi thêm con nhanh (`MemberFormModal.tsx`):**
+  - **Chồng có 1 vợ:** Trường chọn Mẹ tự động gán mặc định (default) là người vợ đó (`selectedMotherId = wife.id`), có checkbox/tùy chọn click để chuyển sang *Chưa rõ mẹ*.
+  - **Chồng có $\ge 2$ vợ (Đa thê):** Bắt buộc hiển thị dropdown hoặc radio chọn Mẹ ruột trong danh sách các bà vợ (Bà cả / Bà hai / Chưa rõ mẹ).
+  - **Chưa có vợ:** Mặc định *Chưa rõ mẹ*.
+  - **Lưu CSDL:** Khi submit form, gửi `mother_id: child.motherId || null` lên API `POST /api/members` (loại bỏ triệt để việc hardcode `null`).
+- **Thẻ Node Canvas (`MemberNode.tsx`):**
+  - Chân thẻ bên phải hiển thị `{childCount} người con` trở thành nút bấm tương tác (có icon `⇅`).
+  - Click vào mở nhanh `ReorderChildrenModal`. Dùng `e.stopPropagation()` để không kích hoạt mở `MemberDetailDrawer`.
+- **Component Mới: `ReorderChildrenModal.tsx`:**
+  - Tiêu đề: *Sắp xếp thứ tự đàn con của [Tên Cha/Mẹ] (X người con)*.
+  - Danh sách đàn con với tay nắm `GripVertical` hỗ trợ HTML5 Drag & Drop native + nút `▲` `▼` cho thiết bị cảm ứng.
+  - Nút *Lưu thứ tự* $\rightarrow$ gọi API `POST /api/members/reorder` $\rightarrow$ cây tự động re-layout từ trái sang phải theo `birth_order` mới.
+
 ---
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
@@ -600,6 +637,76 @@ sequenceDiagram
   - _Xử lý:_ Trong Form nhập liệu `MemberFormModal.tsx`, khi mở chế độ sửa hoặc khi người dùng nhập chuỗi có chứa ngoặc đơn `(...)`, hệ thống tự động bóc tách phần trong ngoặc vào ô `Tên húy / Tên tự / Bí danh` và làm sạch ô `Họ và Tên (*)` chỉ chứa tên chính. Khi submit form và khi import Excel, `full_name` lưu tên chính sạch, `alias_name` lưu tên húy. Trong `MemberDetailDrawer.tsx` và `MemberNode.tsx`, tiêu đề hiển thị tên chính sạch, triệt tiêu hiện tượng hiển thị lặp `(Nuôi)` ở 2 nơi.
 - **Edge Case 28: Đổi nhãn tiền tố `Tự:` thành `Tức:`:**
   - _Xử lý:_ Trong `MemberDetailDrawer.tsx` và các tooltip liên quan, đổi tiền tố hiển thị tên húy/tên gọi ở nhà từ `Tự:` thành `Tức: <span ...>{alias_name}</span>`.
+- **Edge Case 29: Khối Hôn phối trong Form Modal hiển thị phối ngẫu hiện tại trước:**
+  - _Xử lý:_ Khi mở form chỉnh sửa thành viên đã có vợ/chồng, hệ thống không tự ý kích hoạt tab ghép người nội tộc `spouseMode = 'existing'`. Thay vào đó, khối Hôn phối hiển thị danh sách phối ngẫu hiện tại dạng thẻ phẳng trang trọng (Bà cả, Bà hai...) kèm nút `[Gỡ/Xóa]`. Bổ sung nút `[+ Thêm Vợ]` (hoặc `[+ Thêm Chồng]`) độc lập, khi người dùng chủ động bấm mới hiện các tùy chọn thêm ngoài họ hoặc ghép nội tộc.
+- **Edge Case 30: Chọn Mẹ thông minh khi thêm con (Default 1 vợ, Bắt buộc khi Đa thê):**
+  - _Xử lý:_ Khi thêm con nhanh trong form của người cha: Nếu cha có 1 vợ, hệ thống tự động gán mặc định (default) mẹ là người vợ đó (kèm tùy chọn gỡ default để về *Chưa rõ mẹ*). Nếu cha có từ 2 vợ trở lên, hệ thống bắt buộc hiển thị dropdown danh sách các bà vợ để chọn đúng mẹ ruột. Khi submit form, API `POST /api/members` lưu chuẩn xác `mother_id`, chấm dứt hoàn toàn việc hardcode `null`.
+- **Edge Case 31: Kéo thả sắp xếp thứ tự đàn con (Reorder Children via Drag & Drop):**
+  - _Xử lý:_ Tại thẻ `MemberNode`, badge `X người con` trở thành nút bấm tương tác (có icon `⇅`). Khi click, mở `ReorderChildrenModal` hiển thị danh sách đàn con với tay nắm kéo thả `GripVertical` (HTML5 Drag & Drop native) và cặp nút `▲`/`▼`. Sau khi sắp xếp và bấm Lưu, hệ thống gọi `POST /api/members/reorder` cập nhật đồng loạt `birth_order: 1..N`, cây gia phả tự động render lại các nhánh con từ trái sang phải theo thứ tự mới.
+- **Edge Case 32: Dọn trùng thứ tự sinh hàng loạt bằng Batch Reorder:**
+  - _Xử lý:_ Với các trường hợp dữ liệu cũ hoặc import Excel có nhiều con cùng mang `birth_order = 1` (hoặc null), API `POST /api/members/reorder` cập nhật mảng ID theo thứ tự gán lại tuần tự `1, 2, 3... N`, triệt tiêu hoàn toàn xung đột trùng số thứ tự sinh.
+- **Edge Case 33: Tuân thủ Quy tắc Bất biến React Hooks (Zero Hook After Return Guard):**
+  - _Xử lý:_ Trong `MemberFormModal.tsx`, toàn bộ các hooks (`useState`, `useMemo`, `useEffect`) bắt buộc phải được khai báo ở đầu component trước câu lệnh kiểm tra điều kiện đóng/mở `if (!isOpen) return null;`. Điều kiện `!isOpen` được đặt bên trong callback của effect, triệt tiêu 100% rủi ro chênh lệch số lượng hooks giữa lần render đóng và lần render mở (`Rendered more hooks than during the previous render`).
+- **Edge Case 34: Chuẩn hóa danh xưng hôn phối đơn (Vợ vs Vợ cả):**
+  - _Xử lý:_ Khi thành viên chỉ có 1 người phối ngẫu (`spouses.length === 1`), danh xưng hiển thị chuẩn mực là "Vợ" (`KINSHIP_TERMS.WIFE_DEFAULT`) hoặc "Chồng" (`KINSHIP_TERMS.HUSBAND_DEFAULT`), loại bỏ hoàn toàn chữ "Vợ cả" hay "Bà cả". Danh vị thứ bậc ("Vợ cả (Bà cả)", "Vợ hai (Bà hai)") CHỈ được kích hoạt khi gia đình có từ 2 phối ngẫu trở lên (`spouses.length >= 2`).
+- **Edge Case 35: Đồng bộ sự kiện Reorder toàn cục & Tự động khử trùng số thứ tự đàn con:**
+  - _Xử lý:_ Khi lưu thứ tự đàn con từ `ReorderChildrenModal`, phát sự kiện toàn cục `fat:members-reordered` để `FamilyTreeCanvas` cập nhật `liveMembers`, lan truyền sang `MemberDetailDrawer` và `MemberFormModal`. Đồng thời, nếu danh sách con trong CSDL có nhiều người bị trùng số thứ tự cũ (ví dụ nhiều con cùng mang `birth_order = 1`), giao diện Drawer và Modal tự động phân giải thứ tự hiển thị tuần tự `1, 2, 3... N` (`cIdx + 1` hoặc `birth_order` sạch) thay vì hiển thị một hàng toàn số 1.
+- **Edge Case 36: Neo cao độ Avatar & Dòng tên cố định bất biến (Fixed Baseline Anchor) & Dọn sạch ký tự thô:**
+  - _Căn nguyên:_ Container thẻ cha `w-[200px] h-[96px]` dùng `flex flex-col justify-between`. Khi chân thẻ (Footer) không có nội dung, chiều cao chân thẻ sụp đổ khiến `justify-between` chia đều khoảng trống thừa đẩy cụm [Avatar + Tên] bị tụt xuống dưới. Ngoài ra, việc đặt nhầm chuỗi escape Unicode `\u00A0` dạng văn bản thô trong thẻ JSX `<span>\u00A0</span>` khiến React render thẳng chữ `\u00A0` lên màn hình.
+  - _Xử lý:_
+    1. Loại bỏ hoàn toàn class `justify-between` khỏi container thẻ cha, chuyển sang `flex flex-col` tuần tự.
+    2. Header cố định chiều cao `h-[18px] shrink-0`.
+    3. Body (Avatar + Tên) luôn cách Header một khoảng cách cố định `mt-1.5 shrink-0`. Khi đó, đỉnh Y của Avatar của 100% thẻ trên toàn phả đồ luôn được neo cứng tại tọa độ bất biến: $Y = 10\text{px (padding)} + 18\text{px (header)} + 6\text{px (margin)} = \mathbf{34\text{px}}$.
+    4. Footer được đẩy xuống đáy bằng `mt-auto` và cố định chiều cao `h-[18px] shrink-0`. Loại bỏ hoàn toàn các thẻ placeholder thừa thãi mang text thô `\u00A0`, bảo đảm đường hairline `border-t` luôn nằm phẳng phiu ở đáy mọi thẻ card và giao diện sạch bóng 100%.
+- **Edge Case 37: Cơ chế Gỡ con khỏi cha mẹ (Unlink Child) & Đồng bộ đổi Cha Mẹ theo cặp Hôn phối (Cascading Parent Coupling):**
+  - _Bối cảnh & Căn nguyên:_ Khi nhập liệu hoặc import file Excel, một người con có thể bị gán nhầm vào một người cha/mẹ khác. Ở giao diện cũ, thẻ con trong mục "4. CON CÁI" của người cha chỉ là khối `div` thụ động không có nút hành động gỡ; đồng thời ở mục "2. BỐ MẸ & THỨ BẬC GIA ĐÌNH", dropdown Cha ruột và Mẹ ruột bị ẩn khi ở chế độ chỉnh sửa (`mode === 'edit'`) do điều kiện `{defaultRole !== 'child'}`. Ngoài ra, nếu người dùng đổi Cha sang người khác, việc không đồng bộ Mẹ theo cặp hôn phối có thể dẫn đến việc đứa con có Cha A và Mẹ B không phải vợ chồng của nhau, làm vỡ logic hạ nhánh con trên cây phả hệ.
+  - _Xử lý:_
+    1. **Thao tác trực tiếp tại Hồ sơ Cha/Mẹ (Section 4. CON CÁI):**
+       - Mỗi thẻ con trong `existingChildren` có thêm nút "Gỡ con (Hủy liên kết)" (icon `UserMinus` / `Unlink`). Khi bấm, con được đưa vào danh sách chờ gỡ (`stagedUnlinkChildIds`) và thẻ con chuyển sang trạng thái gạch mờ kèm badge đỏ `[Sẽ gỡ khi Lưu]` và nút `[Hoàn tác]`.
+       - Khi bấm "Cập nhật hồ sơ", gửi mảng `child_ids_to_unlink` lên API `PUT /api/members/[id]`. API tự động gỡ `father_id: null` (nếu cha đang sửa là nam) hoặc `mother_id: null` (nếu mẹ đang sửa là nữ), đưa đứa con về khay "Chưa nối phả" an toàn mà không làm mất thông tin thành viên.
+       - Thêm nút "Sửa hồ sơ con" (icon `Pencil`) trên thẻ con để mở modal chỉnh sửa trực tiếp đứa con đó.
+    2. **Mở khóa chọn lại Cha Mẹ tại Hồ sơ Người Con (Section 2. BỐ MẸ & THỨ BẬC GIA ĐÌNH):**
+       - Sửa điều kiện hiển thị thành `{(mode === 'edit' || defaultRole !== 'child') && (...)` để luôn mở khóa dropdown Cha ruột và Mẹ ruột trong `mode === 'edit'`.
+    3. **Cơ chế Cascading Auto-Sync & Coupled Marriage Filter (Đồng bộ theo cặp hôn phối):**
+       - Khi người dùng đổi Cha ruột sang một người cha mới:
+         - Nếu người cha mới chỉ có 1 vợ: Hệ thống tự động điền Mẹ ruột là người vợ duy nhất đó (1-click auto sync).
+         - Nếu người cha mới có nhiều vợ (đa thê): Hệ thống reset `motherId = ''` và dropdown Mẹ ruột chỉ lọc ra các bà vợ của người cha mới kèm ghi chú hướng dẫn chọn con là của Bà cả hay Bà hai.
+         - Nếu người cha mới chưa có vợ: Hệ thống reset `motherId = ''` (`-- Chưa rõ / Khuyết mẹ --`).
+       - Dropdown Mẹ ruột chỉ cho phép chọn các bà vợ hợp pháp của người Cha đã chọn (hoặc khuyết mẹ). Tuyệt đối không thể chọn người phụ nữ không phải vợ của người cha.
+       - Nếu chọn Cha là `-- Chưa rõ / Không có --`: Dropdown Mẹ mở rộng hiển thị danh sách phụ nữ trong họ/dâu họ. Khi chọn Mẹ, nếu mẹ đã có chồng trên phả đồ, hệ thống tự động gợi ý điền người chồng đó vào ô Cha.
+    4. **Rào chắn kiểm chứng trước khi lưu (Spouse Integrity Guard):**
+       - Nếu người dùng chọn cả Cha và Mẹ mà giữa họ không tồn tại quan hệ hôn phối trong `spouse_relations`: Nút Lưu bị chặn lại kèm cảnh báo lỗi đỏ: *"Người cha và người mẹ được chọn không phải là vợ chồng trong gia phả. Vui lòng kiểm tra lại."*
+- **Edge Case 39: Cơ chế Nối Phả Thông Minh Trong Khay Chưa Nối Phả (Smart Pairing & Stepchild Relink in Unlinked Drawer):**
+  - _Bối cảnh & Căn nguyên:_
+    1. Trong `UnlinkedMembersDrawer.tsx`, khi người dùng bấm "Nối vào cây" cho một thành viên mồ côi (chưa nối phả), giao diện chỉ cung cấp 1 ô input tìm kiếm và chỉ cho chọn DUY NHẤT 1 người (chọn Cha hoặc chọn Mẹ) rồi bấm `[Xác nhận nối phả]`.
+    2. Drawer hoàn toàn thiếu cơ chế đề xuất hoặc xác nhận người phối ngẫu còn lại. Khi người dùng bấm nối cho con, hệ thống chỉ gửi 1 ID duy nhất (`father_id` hoặc `mother_id`), để trống người còn lại (`null`).
+    3. Hậu quả trực quan nghiêm trọng ngoài Cây phả hệ: Khi người dùng nối cháu `Phạm Hải Nam` vào Cụ Bẩy (nam) thì cháu Nam nhận `father_id: Bẩy, mother_id: null` (hiểu là con riêng của Bố, vẽ dây xanh lá từ Bố); còn khi nối cháu `Phạm Hà Phương` vào Bà Hiền (nữ) thì cháu Phương nhận `mother_id: Hiền, father_id: null` (hiểu là con riêng của Mẹ, vẽ dây tím nét đứt từ Mẹ). Hai đứa trẻ cùng một gia đình nhưng ngoài Cây phả hệ lại bị vẽ thành 2 đứa con riêng đơn lẻ của 2 người khác nhau.
+  - _Xử lý chuẩn mực:_
+    1. **Tự động đề xuất người phối ngẫu khi có 1 vợ/chồng (Auto-Suggestion with Opt-Out):**
+       - Khi người dùng chọn một người Cha (nam) có duy nhất 1 người vợ: Hệ thống tự động hiển thị thẻ/checkbox đề xuất: `☑ Đồng thời nhận Mẹ: [Tên Mẹ] (Vợ của [Tên Cha])`. Mặc định được CHECKED sẵn. Khi bấm Xác nhận, gửi đồng thời cả `{ father_id, mother_id }` để con hạ nhánh chính thức từ giữa cặp vợ chồng.
+       - Cho phép **BỎ TICK (Opt-Out)**: Nếu người dùng chủ động bỏ tick, hiển thị thông báo hổ phách: `⚠️ Lưu làm con riêng của Bố [Tên Cha] (Chưa rõ mẹ)`. Khi bấm Xác nhận, gửi `{ father_id, mother_id: null }`.
+    2. **Bắt buộc lựa chọn khi người được chọn có $\ge 2$ vợ (Đa thê):**
+       - Nếu người Cha có từ 2 vợ trở lên: Hệ thống không tự gán bừa, mà hiển thị danh sách Radio Buttons:
+         - `( ) [Tên Vợ 1] (Bà cả)`
+         - `( ) [Tên Vợ 2] (Bà hai)`
+         - `(•) Không chọn mẹ (Lưu làm con riêng của Bố [Tên Cha])`
+       - Người dùng chọn bà nào thì con sẽ nhận Mẹ là bà đó; nếu chọn "Không chọn mẹ" thì con là con riêng của Bố.
+    3. **Tương tự đối xứng khi chọn người Mẹ (nữ):**
+       - Nếu Mẹ có 1 chồng: Tự động đề xuất chọn Bố (mặc định checked, cho phép bỏ tick nếu là con riêng của Mẹ).
+       - Nếu Mẹ có $\ge 2$ chồng (tái giá): Cho chọn người chồng hoặc không chọn.
+       - Nếu Mẹ độc thân: Lưu làm con riêng của Mẹ.
+    4. **Nâng cấp `onRelinkMember` API & Handler:**
+       - Nâng cấp `onRelinkMember(memberId, { father_id, mother_id })` để gửi đầy đủ cả cặp phụ mẫu lên `PUT /api/members/[id]`. Canvas và CSDL cập nhật đồng bộ cả 2 trường ngay tức thì.
+- **Edge Case 40: Thống Nhất Phong Cách Radio Phẳng & Xóa Bỏ Box-in-Box Trong Khay Chưa Nối (Unified Flat Radio Group & Zero Box-in-Box):**
+  - _Bối cảnh & Căn nguyên:_
+    1. Trong `UnlinkedMembersDrawer.tsx`, khi relink thành viên, hệ thống dùng 2 phong cách tương tác khác nhau: 1 vợ dùng Checkbox (`☑ Đồng thời nhận Mẹ...`), còn $\ge 2$ vợ (đa thê) lại dùng Radio List (`🔘 Bà cả...`). Bản chất cả hai trường hợp đều là lựa chọn loại trừ lẫn nhau (Mutually Exclusive: hoặc nhận phối ngẫu A, hoặc nhận B, hoặc lưu con riêng). Việc dùng 2 phong cách gây đứt gãy mô hình tư duy của người dùng.
+    2. Lỗi kiến trúc Box-in-Box (lồng hộp): Thẻ thành viên vốn đã là một hộp viền vàng (`p-3.5 rounded-xl border border-amber-400 bg-amber-50/40`), bên trong lại bọc thêm một thẻ viền xanh lá hoặc viền vàng con (`p-2.5 rounded-lg border border-emerald-200 bg-emerald-50...`). Trong ngăn kéo Drawer có chiều ngang hẹp (`max-w-md`), việc lồng hộp khiến giao diện bị chật chội, tù túng và rối mắt, vi phạm nguyên lý Flat & Seamless UX.
+  - _Xử lý chuẩn mực:_
+    1. **Thống nhất 100% sang Radio Button:** Dù là 1 vợ hay $\ge 2$ vợ, giao diện dùng DUY NHẤT một danh sách Radio Button:
+       - Danh sách người phối ngẫu (1 vợ hoặc các bà vợ): Mỗi option có Radio button amber, nhãn danh xưng và tên đậm, kèm dòng giải thích xanh ngọc nhẹ `✓ Con chung của cả hai người (hạ nhánh chính giữa cặp vợ chồng)`. Mặc định chọn vợ đầu tiên.
+       - Option cuối cùng luôn là: `🔘 Không chọn mẹ (Lưu làm con riêng của Bố [Tên])` kèm dòng giải thích hổ phách `⚠️ Lưu làm con riêng của Bố (hạ nhánh trực tiếp từ Bố)`.
+       - Nếu độc thân: Dòng text mờ trang nhã (không bọc box): `ℹ Người này chưa có bạn đời trong phả hệ → Sẽ lưu làm con riêng.`
+    2. **Zero Box-in-Box:** Bỏ 100% các container viền lồng hộp (`border border-emerald-200 bg-emerald-50` hay `border border-amber-200 bg-amber-50`). Khối lựa chọn phối ngẫu nằm phẳng, phân cách với danh sách cha mẹ bằng đường kẻ ngang mỏng `border-t border-amber-200/60 pt-2.5 mt-2` và tiêu đề nhỏ thanh lịch `text-[11px] font-semibold text-slate-700`.
 
 ---
 
@@ -655,6 +762,29 @@ sequenceDiagram
 - [x] **TC_UT_ALIAS_NAME_SEPARATION_CLEANSE** (Tự động làm sạch tên chính và bóc tách Tên húy/Bí danh): `tests/ui-normalization-and-identity.test.ts` — PASS (0.76ms). Chuỗi `Phạm Văn Uyên (Nuôi)` được tách thành `full_name = 'Phạm Văn Uyên'` và `alias_name = 'Nuôi'`.
 - [x] **TC_UT_DRAWER_TUC_LABEL** (MemberDetailDrawer hiển thị nhãn Tức: thay vì Tự:): `tests/ui-normalization-and-identity.test.ts` — PASS (0.33ms). Drawer render nhãn `Tức:` kèm `alias_name` và tiêu đề không bị lặp tên húy.
 - [x] **TC_UT_AGE_UTILS_NO_DAGGER** (Hàm calculateMemberAge không còn trả về ký tự †): `tests/ui-normalization-and-identity.test.ts` & `tests/age-utils.test.ts` — PASS (0.23ms). `calculateMemberAge(1920, null, 'deceased')` trả về nhãn `SN 1920 (Đã mất)` không chứa `†`.
+- [x] **TC_UT_REORDER_01** (API /api/members/reorder cập nhật đồng loạt birth_order 1..N): `tests/member-reorder.test.ts` — PASS (1.85ms). Given đàn con 8 người bị trùng `birth_order = 1`, When gọi batch reorder với mảng 8 ID đảo ngược, Then toàn bộ 8 con nhận `birth_order: 1..8` theo đúng thứ tự mảng, không bị xung đột gán null.
+- [x] **TC_UT_MOTHER_SELECT_01** (Logic chọn mẹ khi cha có 1 vợ vs đa thê): `tests/mother-selection.test.ts` — PASS (0.42ms). Given người cha có 1 vợ thì hàm helper/form trả về `defaultMotherId` là người vợ đó; Given người cha có 2 vợ thì danh sách mẹ trả về đủ 2 người và cờ `requiresSelection = true`.
+- [x] **TC_INT_QUICK_CHILD_MOTHER_01** (API tạo con nhanh lưu kèm mother_id chuẩn xác): `tests/mother-selection.test.ts` — PASS (0.65ms). Khi submit form với staged quick child có `motherId`, API `POST /api/members` lưu bản ghi có `mother_id !== null` và `father_id !== null`.
+- [x] **TC_UT_SPOUSE_DISPLAY_INIT_01** (Khởi tạo form thành viên đã có vợ không bị ép vào tab nội tộc): `tests/ui-normalization-and-identity.test.ts` — PASS (0.76ms). Form edit thành viên có vợ khởi tạo với danh sách phối ngẫu hiện có và `spouseMode === 'none'`, không tự động chọn tab 'existing'; thẻ Node tích hợp nút dispatch reorder.
+- [x] **TC_UT_ZERO_HOOK_AFTER_RETURN_GUARD** (MemberFormModal tuân thủ 100% React Rules of Hooks): `tests/ui-normalization-and-identity.test.ts` — PASS (1.62ms). Given mã nguồn `src/components/modals/MemberFormModal.tsx`, When phân tích vị trí các lệnh hooks và câu lệnh early return `if (!isOpen) return null;`, Then 100% khai báo hooks (`useState`, `useEffect`, `useMemo`, `useCallback`, `useRef`) phải nằm TRƯỚC câu lệnh early return, không có bất kỳ hook nào nằm sau.
+- [x] **TC_UT_SINGLE_SPOUSE_LABEL_01** (Thành viên 1 vợ chỉ hiển thị danh xưng "Vợ", không hiển thị "Vợ cả/Bà cả"): `tests/ui-normalization-and-identity.test.ts` — PASS (0.95ms). Given thành viên có 1 người vợ trong spouse relations, When kiểm tra nhãn hiển thị tại MemberDetailDrawer và MemberFormModal, Then nhãn là "Vợ", không chứa "Vợ cả" hay "Bà cả"; Given thành viên có 2 vợ, Then hiển thị phân định "Vợ cả (Bà cả)" và "Vợ hai (Bà hai)".
+- [x] **TC_UT_CHILDREN_DUPLICATE_ORDER_FALLBACK_01** (Tự động khử trùng số thứ tự đàn con khi hiển thị): `tests/ui-normalization-and-identity.test.ts` — PASS (1.09ms). Given đàn con 7 người có 6 người đầu cùng mang `birth_order = 1`, When render danh sách con trong Drawer và Modal, Then số thứ tự hiển thị trong badge tròn tự động phân giải tuần tự thành `1, 2, 3, 4, 5, 6, 7`, không còn hiện tượng toàn số 1.
+- [x] **TC_INT_REORDER_EVENT_SYNC_01** (Sự kiện fat:members-reordered đồng bộ liveMembers trên Canvas): `tests/member-reorder.test.ts` — PASS (1.20ms). Khi gọi lưu thứ tự từ ReorderChildrenModal, component phát CustomEvent `fat:members-reordered` mang payload `{ parentId, updatedChildren }` và Canvas cập nhật `liveMembers` đồng bộ tức thì.
+- [x] **TC_UT_NODE_AVATAR_BASELINE_ANCHOR_01** (Thẻ Node neo cứng vị trí Y của Avatar và Tên bằng mt-auto và fixed geometry, loại bỏ justify-between): `tests/ui-normalization-and-identity.test.ts` — PASS (0.38ms). Given mã nguồn `src/components/tree/MemberNode.tsx`, When kiểm tra class của container thẻ cha và các phần tử con, Then container thẻ cha không còn sử dụng `justify-between`, phần tử Body sử dụng khoảng cách cố định từ Header, và Footer sử dụng `mt-auto` với chiều cao cố định `h-[18px]` hoặc `min-h-[18px]` để triệt tiêu hoàn toàn hiện tượng tụt Avatar khi chân thẻ rỗng.
+- [x] **TC_UT_NO_RAW_UNICODE_IN_JSX_01** (Loại bỏ hoàn toàn ký tự thô \\u00A0 trong JSX của thẻ Node): `tests/ui-normalization-and-identity.test.ts` — PASS (0.38ms). Given mã nguồn `src/components/tree/MemberNode.tsx`, When kiểm tra toàn bộ JSX footer và children, Then không còn thẻ nào chứa chuỗi văn bản thô `\\u00A0` ngoài biểu thức JS hợp lệ, bảo đảm chân thẻ không in rác text lên giao diện người dùng.
+- [x] **TC_INT_UNLINK_CHILD_01** (API /api/members/[id] hỗ trợ child_ids_to_unlink): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (10.64ms). Given thành viên cha đang có 2 con, When gọi `PUT /api/members/[id]` với `child_ids_to_unlink: [child1.id]`, Then `child1.father_id` được cập nhật thành `null`, đưa con về khay chưa nối phả và `child2` vẫn giữ nguyên quan hệ.
+- [x] **TC_UT_PARENT_CASCADING_SELECT_01** (Logic Cascading Dropdown tự động đồng bộ Mẹ theo Cha): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (1.32ms). Given người cha mới có 1 vợ, When đổi Cha sang người đó, Then hàm phân giải/handler tự động gán Mẹ là người vợ đó; Given người cha mới có 2 vợ, Then Mẹ được reset và danh sách mẹ khả dụng chỉ chứa 2 người vợ đó.
+- [x] **TC_UT_SPOUSE_INTEGRITY_GUARD_01** (Rào chắn chặn lưu nếu Bố và Mẹ không phải vợ chồng): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (0.29ms). Given người dùng chọn Bố A và Mẹ B nhưng B không nằm trong danh sách phối ngẫu của A, When thực hiện kiểm tra tính hợp lệ (validateParentCoupling), Then trả về `isValid: false` kèm thông báo lỗi rõ ràng.
+- [x] **TC_UT_EDIT_MODE_PARENTS_UNLOCKED_01** (Mục Bố Mẹ luôn mở khóa dropdown trong mode edit): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (0.59ms). Given mã nguồn `src/components/modals/MemberFormModal.tsx`, When kiểm tra điều kiện render của Khối 2 Bố Mẹ & Thứ bậc gia đình, Then điều kiện cho phép hiển thị trong `mode === 'edit'` bất kể `defaultRole`.
+- [x] **TC_UT_PARENT_OPTOUT_SINGLE_PARENT_01** (Logic Opt-out cho phép lưu con riêng của Cha hoặc Mẹ): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (0.35ms). Given người cha có 1 vợ, When người dùng bấm bỏ chọn Mẹ (`motherId = ''`), Then state Mẹ giữ nguyên rỗng, không bị auto-sync điền lại và payload submit chứa `father_id !== null`, `mother_id === null`.
+- [x] **TC_UT_PARENT_PAIRING_CONFIRMATION_01** (Phân giải trạng thái Cặp Phụ Mẫu): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (0.42ms). Hàm phân giải trạng thái cặp phụ mẫu: Đủ cha mẹ hợp pháp $\rightarrow$ `status: 'valid_couple'`; Chỉ có cha (hoặc mẹ) $\rightarrow$ `status: 'single_parent'`; Cha mẹ không phải vợ chồng $\rightarrow$ `status: 'invalid_couple'`.
+- [x] **TC_INT_GENDER_AWARE_RELINK_01** (Nối phả nhận diện giới tính không gán nhầm cột): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (1.85ms). Khi gọi nối phả vào người Nam $\rightarrow$ cập nhật `father_id`; khi gọi nối phả vào người Nữ $\rightarrow$ cập nhật `mother_id`, không gán ID người nữ vào `father_id`.
+- [x] **TC_UT_UNLINKED_DRAWER_SPOUSE_CONTEXT_01** (Danh sách cha mẹ trong Khay Chưa Nối hiển thị kèm ngữ cảnh phối ngẫu): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (0.39ms). Given danh sách ứng viên cha mẹ trong Drawer, Then mỗi ứng viên hiển thị kèm thông tin bạn đời (ví dụ: `Nguyễn Thị Thuý Hiền (Vợ của Phạm Văn Bẩy)`) để người dùng không bị nhầm lẫn người trùng tên.
+- [x] **TC_UT_DRAWER_SMART_PAIRING_SINGLE_SPOUSE_01** (Khay Chưa Nối tự động đề xuất người còn lại khi có 1 vợ/chồng & hỗ trợ Opt-out con riêng): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (0.35ms). Given người cha có 1 vợ trong Drawer, When chọn người cha đó, Then hệ thống tự động đề xuất mẹ và mặc định checked (payload gồm cả cha và mẹ); When người dùng bỏ tick, Then payload chỉ chứa cha và mother_id là null (con riêng).
+- [x] **TC_UT_DRAWER_SMART_PAIRING_MULTI_SPOUSE_01** (Khay Chưa Nối hiển thị danh sách chọn mẹ khi người cha có đa thê): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (0.30ms). Given người cha có 2 vợ (Chiến có Mơ & Liễu), When chọn người cha đó trong Drawer, Then hệ thống hiển thị danh sách các bà vợ và tùy chọn con riêng, không tự động gán cứng bất kỳ ai.
+- [x] **TC_INT_DRAWER_RELINK_FULL_PAYLOAD_01** (onRelinkMember truyền payload cả cha lẫn mẹ lên API): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (1.62ms). Given thành viên chưa nối phả, When gọi relink với payload `{ father_id, mother_id }`, Then API cập nhật đồng thời cả hai trường và con hạ nhánh chính thức từ cặp vợ chồng.
+- [x] **TC_UT_DRAWER_UNIFIED_FLAT_RADIO_01** (Thống nhất lựa chọn phối ngẫu qua Radio phẳng cho cả 1 vợ và nhiều vợ): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (0.32ms). Given hàm `resolveRelinkPayload`, When người dùng chọn phối ngẫu (dù 1 vợ hay nhiều vợ) qua Radio, Then trả về `{ father_id, mother_id }` đầy đủ; When chọn option không phối ngẫu (con riêng), Then trả về `mother_id: null` (hoặc `father_id: null`).
+- [x] **TC_UT_DRAWER_ZERO_BOX_IN_BOX_GUARD_01** (Rào chắn kiểm tra cấu trúc mã nguồn không box-in-box): `tests/child-unlink-and-parent-reassignment.test.ts` — PASS (1.89ms). Quét source code `UnlinkedMembersDrawer.tsx` bảo đảm không còn container lồng hộp `border-emerald-200` / `border-amber-200` trong khối relink, và 100% lựa chọn phối ngẫu sử dụng `type="radio"`.
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
@@ -703,6 +833,26 @@ sequenceDiagram
 - [ ] **UAT_40 (Avatar Cụ Uyên Hiển Thị Đúng VU):** Trên cây phả hệ và trên Drawer, thẻ của Cụ Phạm Văn Uyên hiển thị avatar chữ cái đại diện là **VU** (thay vì `U(` trước đây).
 - [ ] **UAT_41 (Không Lặp Tên Húy Trên Drawer & Đổi Nhãn Tức):** Mở Drawer Cụ Phạm Văn Uyên $\rightarrow$ Tiêu đề hiển thị `Phạm Văn Uyên`, bên dưới hiển thị `Tức: Nuôi` (không bị lặp lại chữ Nuôi trên tiêu đề).
 - [ ] **UAT_42 (Form Tự Động Bóc Tách Họ Tên và Tên Húy):** Bấm sửa Cụ Phạm Văn Uyên $\rightarrow$ Ô `Họ và Tên (*)` hiển thị `Phạm Văn Uyên`, ô `Tên húy / Tên tự / Bí danh` hiển thị `Nuôi`. Nhãn trạng thái sinh tử hiển thị `Đã mất` (không có dấu thập `†`).
+- [ ] **UAT_43 (Nút Sắp Xếp Đàn Con Trên Thẻ Node & Khởi Động Modal):** Bấm vào badge `{childCount} người con` trên thẻ node ngoài Canvas $\rightarrow$ Mở ngay `ReorderChildrenModal` hiển thị đủ danh sách các con kèm avatar, năm sinh và số thứ tự.
+- [ ] **UAT_44 (Kéo Thả Sắp Xếp & Cây Đảo Nhánh Tức Thì):** Trong `ReorderChildrenModal`, kéo thả con út lên đầu danh sách (hoặc bấm nút `▲`) $\rightarrow$ Bấm Lưu $\rightarrow$ Cây phả hệ tự động bố trí lại, nhánh con vừa đổi xuất hiện ở vị trí đầu tiên bên trái.
+- [ ] **UAT_45 (Khối Hôn Phối Hiển Thị Vợ Hiện Tại & Nút Thêm Vợ):** Mở form sửa Cụ Phạm Văn Uyên $\rightarrow$ Khối Hôn phối hiển thị rõ thẻ `🌸 Bà Cả: Nguyễn Thị Chăm` kèm nút `+ Thêm Vợ`, không còn bị ép vào tab chọn người nội tộc.
+- [ ] **UAT_46 (Thêm Con Chọn Mẹ Thông Minh):** Trong form sửa người cha có 1 vợ, bấm "+ Thêm nhanh con mới" $\rightarrow$ Mẹ tự động được chọn là vợ đó; trong form sửa người cha có 2 vợ $\rightarrow$ xuất hiện dropdown cho phép chọn con là của Bà cả hay Bà hai.
+- [ ] **UAT_47 (Mở Modal Thêm/Sửa Không Còn Màn Hình Đỏ Rules of Hooks):** Bấm sửa bất kỳ thành viên nào trên Canvas hoặc bấm "Thêm con" từ Drawer khi đang ở trang `/tree` $\rightarrow$ Modal mở ra ngay lập tức, console sạch sẽ 0 lỗi đỏ, không còn crash "Rendered more hooks than during the previous render".
+- [ ] **UAT_48 (Danh Xưng Vợ Chuẩn Gia Đạo Khi Có 1 Vợ):** Mở form sửa hoặc Drawer của Cụ Phạm Văn Uyên (người có 1 vợ Nguyễn Thị Chăm) $\rightarrow$ Danh xưng hiển thị trang trọng là "Vợ" (không có chữ "Vợ cả" hay "Bà cả"). Mở người có 2 vợ (như Cụ Chiến hoặc Cụ Lim) $\rightarrow$ Mới hiển thị "Vợ cả (Bà cả)" và "Vợ hai (Bà hai)".
+- [ ] **UAT_49 (Số Thứ Tự Đàn Con Hiển Thị Tuần Tự 1..N Trên Toàn Bộ Giao Diện):** Mở Drawer và Form của Cụ Phạm Văn Uyên $\rightarrow$ Huy hiệu tròn của 7 người con hiển thị số thứ tự tuần tự từ 1 đến 7 (1, 2, 3, 4, 5, 6, 7), không còn hiện tượng 6 người con đầu đều mang số 1.
+- [ ] **UAT_50 (Đồng Nhất Cao Độ Hàng Ngang Avatar Giữa Các Thẻ Cạnh Nhau):** Mở `/tree`, quan sát hàng ngang đàn con Đời 12 của Cụ Phạm Văn Uyên (`Phạm Văn Nắng`, `Phạm Thị Chỉ`, `Tạ Duy Hưng`, `Phạm Văn Khương`, `Chu Thị Hà`) $\rightarrow$ Toàn bộ các Avatar tròn 32x32px (`VN`, `TC`, `DH`, `VK`, `TH`) nằm thẳng tắp trên cùng một đường gióng ngang chuẩn xác từng pixel; thẻ của người vợ (`Chu Thị Hà`) và người chưa có con (`Phạm Văn Nắng`) không còn bị tụt thấp hơn thẻ của người chồng (`Phạm Văn Khương`).
+- [ ] **UAT_51 (Dọn Sạch 100% Ký Tự Thô \\u00A0 Khỏi Chân Thẻ):** Mở `/tree`, quan sát chân thẻ của các thành viên không có con hoặc không có ghi chú (`Phạm Văn Nắng`, `Phạm Thị Chỉ`, `Tạ Duy Hưng`, `Chu Thị Hà`) $\rightarrow$ Góc dưới bên phải chân thẻ hoàn toàn sạch sẽ, phẳng phiu, không còn bất kỳ chữ `\u00A0` nào xuất hiện.
+- [ ] **UAT_52 (Gỡ con trực tiếp từ hồ sơ Người Cha):** Mở form sửa Cụ Phạm Văn Tráng $\rightarrow$ Ở mục 4. CON CÁI, bấm nút "Gỡ con" tại thẻ `Phạm Hà Phương` $\rightarrow$ Thẻ chuyển trạng thái gạch mờ kèm badge "Sẽ gỡ khi Lưu" $\rightarrow$ Bấm Cập nhật $\rightarrow$ Thẻ con biến mất khỏi nhánh ông Tráng và xuất hiện an toàn trong khay Chưa nối phả.
+- [ ] **UAT_53 (Đổi Bố tự động đồng bộ Mẹ theo cặp hôn phối):** Mở form sửa `Phạm Hà Phương` $\rightarrow$ Ở mục 2. BỐ MẸ, dropdown Bố và Mẹ hiển thị đầy đủ $\rightarrow$ Đổi Bố từ `Phạm Văn Tráng` sang `Phạm Văn Khương` $\rightarrow$ Mẹ tự động chuyển thành `Chu Thị Hà` $\rightarrow$ Bấm Cập nhật $\rightarrow$ Nhánh con trên Canvas tự động chuyển sang hạ nhánh dưới gia đình ông Khương.
+- [ ] **UAT_54 (Chặn lưu khi Bố và Mẹ không phải vợ chồng):** Thử chọn Bố và Mẹ của 2 gia đình khác nhau không có quan hệ hôn phối $\rightarrow$ Dropdown Mẹ chỉ lọc các bà vợ của Bố, hoặc nếu có xung đột thì hệ thống cảnh báo đỏ và chặn lưu an toàn.
+- [ ] **UAT_55 (Opt-out Bỏ chọn Mẹ & Xác nhận Con riêng):** Mở form sửa con $\rightarrow$ Chọn Bố có 1 vợ $\rightarrow$ Mẹ tự động điền $\rightarrow$ Bấm nút `[✕ Bỏ chọn Mẹ / Con riêng]` $\rightarrow$ Thẻ xác nhận chuyển sang trạng thái `⚠️ Con riêng của Bố / Chưa rõ Mẹ` màu hổ phách $\rightarrow$ Bấm Lưu $\rightarrow$ Cây phả hệ hạ nhánh con riêng trực tiếp từ thẻ người Bố.
+- [ ] **UAT_56 (Ngữ cảnh Gia đình trong Khay Chưa Nối):** Mở Khay Chưa Nối (`🔗 Chưa nối: X`) $\rightarrow$ Bấm `Nối vào cây` $\rightarrow$ Danh sách tìm kiếm cha mẹ hiển thị rõ ràng thông tin bạn đời: `Phạm Văn Tráng (Chồng bà Phạm Thị Thuý)` và `Phạm Văn Bẩy (Chồng bà Nguyễn Thị Thuý Hiền)` $\rightarrow$ Người dùng không bao giờ bị nhầm lẫn người trùng tên.
+- [ ] **UAT_57 (Nối Phả Chuẩn Giới Tính):** Trong Khay Chưa Nối, chọn nối con vào một người Mẹ (nữ giới) $\rightarrow$ CSDL lưu đúng cột `mother_id`, tuyệt đối không gán nhầm vào cột `father_id`.
+- [ ] **UAT_58 (Nối Phả Thông Minh Trong Khay Chưa Nối - Cặp 1 Vợ Chồng):** Mở Khay Chưa Nối $\rightarrow$ Bấm "Nối vào cây" cho cháu Phương/Nam $\rightarrow$ Chọn Cụ `Phạm Văn Bẩy` $\rightarrow$ Thấy hộp đề xuất `☑ Đồng thời nhận Mẹ: Nguyễn Thị Thuý Hiền (Vợ của Phạm Văn Bẩy)` đã được tick sẵn $\rightarrow$ Bấm Xác nhận nối $\rightarrow$ Trên Canvas, con hạ nhánh chính giữa cặp vợ chồng Cụ Bẩy - Bà Hiền (triệt tiêu hoàn toàn đường nối đơn lẻ 1 xanh 1 tím).
+- [ ] **UAT_59 (Bỏ Tick Để Lưu Con Riêng Trong Khay Chưa Nối):** Mở Khay Chưa Nối $\rightarrow$ Chọn Bố $\rightarrow$ Bỏ tick hộp đề xuất Mẹ $\rightarrow$ Thấy cảnh báo màu vàng `⚠️ Lưu làm con riêng của Bố` $\rightarrow$ Bấm Xác nhận $\rightarrow$ Con nối thành con riêng của Bố.
+- [ ] **UAT_60 (Nối Phả Khi Người Cha Có Nhiều Vợ):** Trong Khay Chưa Nối, chọn Cụ `Phạm Văn Chiến` $\rightarrow$ Xuất hiện danh sách radio: `Bà cả Hoàng Thị Mơ`, `Bà hai Đào Thị Liễu`, `Không chọn mẹ (Con riêng)` $\rightarrow$ Chọn Bà hai Liễu $\rightarrow$ Con nhận đúng mẹ Liễu và bố Chiến.
+- [ ] **UAT_61 (Trải Nghiệm Flat Radio Phẳng Khi Nối Phả 1 Vợ - Zero Box-in-Box):** Mở Khay Chưa Nối $\rightarrow$ Bấm Nối vào cây $\rightarrow$ Chọn Cụ `Phạm Văn Bẩy` $\rightarrow$ Giao diện phẳng hoàn toàn, không có bất kỳ hộp xanh/vàng lồng bên trong. Danh sách hiển thị Radio: `🔘 Mẹ: Nguyễn Thị Thuý Hiền (Vợ của Phạm Văn Bẩy)` (được chọn sẵn kèm dòng giải thích xanh ngọc) và `⚪ Không chọn mẹ (Lưu làm con riêng của Bố)`. Chọn Không chọn mẹ $\rightarrow$ Trở thành con riêng của Bố.
+- [ ] **UAT_62 (Trải Nghiệm Flat Radio Phẳng Khi Nối Phả Đa Thê):** Trong Khay Chưa Nối, chọn Cụ `Phạm Văn Chiến` $\rightarrow$ Hiển thị danh sách Radio phẳng cùng phong cách với trường hợp 1 vợ: `🔘 Bà cả: Hoàng Thị Mơ`, `⚪ Bà hai: Đào Thị Liễu`, `⚪ Không chọn mẹ`. Thao tác chuyển đổi nhẹ nhàng, thanh thoát, không có viền hộp đè lên nhau.
 
 ---
 
@@ -728,10 +878,21 @@ sequenceDiagram
 - [x] **RG18 (Kích Thước Thẻ Node 200x96px Bất Biến):** Thẻ Node cây giữ nguyên kích thước chuẩn `w-[200px] h-[96px]`, không tràn viền sau khi thêm nhãn Tái giá / Đã lấy vợ tại chân thẻ (`TC_UT_MARITAL_05` pass).
 - [x] **RG19 (Bảo Toàn 141 Tests Hiện Tại & Mở Rộng 148 Tests):** Toàn bộ 148/148 automated test cases PASS 100% khi chạy `npm test`.
 - [x] **RG20 (Kích Thước Thẻ Node 200x96px Bất Biến):** Thẻ Node cây giữ nguyên kích thước chuẩn `w-[200px] h-[96px]`, không tràn viền sau khi cố định dòng tên và dòng 2 slot.
+- [x] **RG21 (Bảo Toàn 148 Tests Hiện Tại & Mở Rộng 155 Tests):** Toàn bộ 155/155 test cases PASS 100%, 0 regression so với baseline khi chạy `npm test`.
+- [x] **RG22 (Bảo Toàn Logic Phân Nhóm Đàn Con Đa Thê):** Hàm `groupChildrenByMother` và cấu trúc phả đồ phân nhánh chính xác khi con được lưu kèm `mother_id` (`tests/mother-selection.test.ts` & `tests/genealogy-tree-layout.test.ts` pass).
+- [x] **RG23 (Bảo Toàn 155 Tests Hiện Tại & Mở Rộng 156 Tests):** Toàn bộ 156/156 test cases PASS 100%, 0 regression so với baseline khi chạy `npm test`.
+- [x] **RG24 (Bảo Toàn 156 Tests Hiện Tại & Mở Rộng 159 Tests):** Toàn bộ 159/159 test cases PASS 100%, 0 regression so với baseline khi chạy `npm test`.
+- [x] **RG25 (Bảo Toàn Kích Thước Thẻ 200x96px & Mở Rộng 160 Tests):** Thẻ Node cây bảo toàn kích thước chuẩn `w-[200px] h-[96px]`, toàn bộ 160/160 test cases PASS 100%, 0 regression so với baseline khi chạy `npm test`.
+- [x] **RG26 (Bảo Toàn 160 Tests Hiện Tại & Mở Rộng 161 Tests):** Toàn bộ 160 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 161 tests PASS 100%.
+- [x] **RG27 (Bảo Toàn 161 Tests Hiện Tại & Mở Rộng 165 Tests):** Toàn bộ 161 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 165 tests PASS 100%.
+- [x] **RG28 (Bảo Toàn 165 Tests Hiện Tại & Mở Rộng 169 Tests):** Toàn bộ 165 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 169 tests PASS 100%.
+- [x] **RG29 (Bảo Toàn 169 Tests Hiện Tại & Mở Rộng 172 Tests):** Toàn bộ 169 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 172 tests PASS 100%.
+- [x] **RG30 (Bảo Toàn 172 Tests Hiện Tại & Mở Rộng 174 Tests):** Toàn bộ 172 automated test cases cũ tiếp tục PASS 100%, test suite mở rộng lên 174 tests PASS 100% khi chạy `npm test`.
 
 ---
 
 ## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
 
 > "AI ơi, hãy đọc kỹ đặc tả `docs/13_Micro-Spec_Milestone_4_Member_Management_Import.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm các file test trong `tests/`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build → Automated Test Suite → Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+
 

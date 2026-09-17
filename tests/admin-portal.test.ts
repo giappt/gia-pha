@@ -84,7 +84,7 @@ describe('Admin Portal & Feature Governance Engine (Milestone 7)', () => {
     // TC_UT_DASHBOARD_ALERTS_02: Phát hiện thành viên chưa nối phả
     it('TC_UT_DASHBOARD_ALERTS_02: should accurately detect unlinked members with generation > 1 and missing parents', () => {
       const mockMembers = [
-        // Cụ Thủy Tổ Đời 1: không có cha mẹ -> hợp lệ, KHÔNG tính là unlinked
+        // Cụ Tổ Đời 1: không có cha mẹ -> hợp lệ, KHÔNG tính là unlinked
         { id: 'm1', full_name: 'Cụ Tổ', generation_level: 1, father_id: null, mother_id: null },
         // Đời 2 có cha là m1 -> hợp lệ
         { id: 'm2', full_name: 'Ông Hai', generation_level: 2, father_id: 'm1', mother_id: null },

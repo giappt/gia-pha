@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Tự động đồng bộ Cụ Thủy Tổ (root_ancestor_id) vào clan_settings nếu phát hiện hàng có isRoot
+      // Tự động đồng bộ Cụ Tổ (root_ancestor_id) vào clan_settings nếu phát hiện hàng có isRoot
       const rootRow = sortedRows.find((r) => r.isRoot);
       if (rootRow) {
         const rootMemberId = sttToUuid.get(String(rootRow.stt));

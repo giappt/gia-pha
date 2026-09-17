@@ -332,7 +332,7 @@ if tuong_stt and chuc_stt:
 print(f"Extraction summary:")
 print(f"Total processed members: {len(members)}")
 print(f"Filtered blank placeholder spouses: {filtered_blank_spouses}")
-print(f"Cụ Thủy Tổ Chiến STT: {chien_stt}")
+print(f"Cụ Tổ Chiến STT: {chien_stt}")
 print(f"Cụ Đồng (Đời 2) STT: {dong_stt}, fatherStt: {next(m['fatherStt'] for m in members if m['stt'] == dong_stt)}, motherStt: {next(m['motherStt'] for m in members if m['stt'] == dong_stt)}")
 print(f"Cụ Chức (Đời 3) STT: {chuc_stt}, fatherStt: {next(m['fatherStt'] for m in members if m['stt'] == chuc_stt)}")
 print(f"Cụ Tường (Đời 4) STT: {tuong_stt}, fatherStt: {next(m['fatherStt'] for m in members if m['stt'] == tuong_stt)}")

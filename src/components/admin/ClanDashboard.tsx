@@ -75,10 +75,19 @@ export default function ClanDashboard() {
   }, [loadDashboardData]);
 
   // Handler: Nối phả trực tiếp từ Drawer rà soát việc khẩn
-  const handleRelinkMember = async (memberId: string, parentId: string) => {
-    const parent = members.find((m) => m.id === parentId);
-    const isMother = parent?.gender === 'female';
-    const updatePayload = isMother ? { mother_id: parentId } : { father_id: parentId };
+  const handleRelinkMember = async (
+    memberId: string,
+    relinkPayload: string | { father_id: string | null; mother_id: string | null }
+  ) => {
+    let updatePayload: { father_id?: string | null; mother_id?: string | null };
+
+    if (typeof relinkPayload === 'string') {
+      const parent = members.find((m) => m.id === relinkPayload);
+      const isMother = parent?.gender === 'female';
+      updatePayload = isMother ? { mother_id: relinkPayload } : { father_id: relinkPayload };
+    } else {
+      updatePayload = relinkPayload;
+    }
 
     const res = await fetch(`/api/members/${memberId}`, {
       method: 'PUT',
@@ -194,7 +203,7 @@ export default function ClanDashboard() {
               {metrics?.maxGeneration || 1} <span className="text-sm font-bold text-slate-400">Thế Hệ</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
-              Tính từ Cụ Thủy Tổ Đời 1 đến thế hệ con cháu trẻ nhất.
+              Tính từ Cụ Tổ Đời 1 đến thế hệ con cháu trẻ nhất.
             </p>
           </div>
         </div>

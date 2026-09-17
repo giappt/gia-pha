@@ -20,8 +20,60 @@ export interface UnlinkedMembersDrawerProps {
   onClose: () => void;
   members: MemberRecord[];
   spouses: SpouseRelationRecord[];
-  onRelinkMember: (memberId: string, parentId: string) => Promise<void>;
+  onRelinkMember: (
+    memberId: string,
+    payload: string | { father_id: string | null; mother_id: string | null }
+  ) => Promise<void>;
   onDeleteMember: (memberId: string) => Promise<void>;
+}
+
+export function resolveRelinkPayload(
+  selectedParent: MemberRecord,
+  selectedSpouseId: string,
+  isSpouseOptedOut: boolean
+): { father_id: string | null; mother_id: string | null } {
+  const isFather = selectedParent.gender === 'male';
+
+  // Nếu người dùng chọn làm con riêng (bỏ chọn phối ngẫu hoặc không chọn ai)
+  if (isSpouseOptedOut || !selectedSpouseId) {
+    return {
+      father_id: isFather ? selectedParent.id : null,
+      mother_id: !isFather ? selectedParent.id : null,
+    };
+  }
+
+  // Nếu có chọn người phối ngẫu
+  return {
+    father_id: isFather ? selectedParent.id : selectedSpouseId,
+    mother_id: !isFather ? selectedParent.id : selectedSpouseId,
+  };
+}
+
+export function getParentDisplayNameWithSpouse(
+  parent: MemberRecord,
+  allMembers: MemberRecord[],
+  spouses: SpouseRelationRecord[]
+): string {
+  const relations = spouses.filter(
+    (s) => s.member_a_id === parent.id || s.member_b_id === parent.id
+  );
+  if (relations.length === 0) {
+    return `${parent.full_name} (${parent.gender === 'male' ? 'Bố' : 'Mẹ'}, Đời ${parent.generation_level})`;
+  }
+  const spouseNames = relations
+    .map((r) => {
+      const spouseId = r.member_a_id === parent.id ? r.member_b_id : r.member_a_id;
+      return allMembers.find((m) => m.id === spouseId)?.full_name;
+    })
+    .filter(Boolean);
+
+  if (spouseNames.length === 0) {
+    return `${parent.full_name} (${parent.gender === 'male' ? 'Bố' : 'Mẹ'}, Đời ${parent.generation_level})`;
+  }
+
+  const rolePrefix = parent.gender === 'male' ? 'Chồng' : 'Vợ';
+  const spouseInfo = `${rolePrefix} của ${spouseNames.join(' & ')}`;
+  return `${parent.full_name} (${spouseInfo}, Đời ${parent.generation_level})`;
 }
 
 export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
@@ -40,9 +92,28 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [relinkingMemberId, setRelinkingMemberId] = useState<string | null>(null);
   const [selectedParentId, setSelectedParentId] = useState<string>('');
+  const [selectedSpouseId, setSelectedSpouseId] = useState<string>('');
+  const [isSpouseOptedOut, setIsSpouseOptedOut] = useState<boolean>(false);
   const [parentSearchQuery, setParentSearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // Người cha/mẹ được chọn
+  const selectedParent = useMemo(() => {
+    return members.find((m) => m.id === selectedParentId) || null;
+  }, [members, selectedParentId]);
+
+  // Danh sách các bạn đời của người cha/mẹ được chọn
+  const candidateSpouses = useMemo(() => {
+    if (!selectedParentId) return [];
+    const spouseRels = spouses.filter(
+      (s) => s.member_a_id === selectedParentId || s.member_b_id === selectedParentId
+    );
+    const spouseIds = spouseRels.map((s) =>
+      s.member_a_id === selectedParentId ? s.member_b_id : s.member_a_id
+    );
+    return members.filter((m) => spouseIds.includes(m.id));
+  }, [selectedParentId, spouses, members]);
 
   // Lọc danh sách unlinked theo tìm kiếm
   const filteredUnlinked = useMemo(() => {
@@ -83,22 +154,57 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
   const handleStartRelink = (memberId: string) => {
     setRelinkingMemberId(memberId);
     setSelectedParentId('');
+    setSelectedSpouseId('');
+    setIsSpouseOptedOut(false);
     setParentSearchQuery('');
     setActionError(null);
   };
 
+  const handleSelectParent = (parentId: string) => {
+    setSelectedParentId(parentId);
+    const parent = members.find((m) => m.id === parentId);
+    if (!parent) return;
+
+    const spouseRels = spouses.filter(
+      (s) => s.member_a_id === parentId || s.member_b_id === parentId
+    );
+    const spouseIds = spouseRels.map((s) =>
+      s.member_a_id === parentId ? s.member_b_id : s.member_a_id
+    );
+    const wivesOrHusbands = members.filter((m) => spouseIds.includes(m.id));
+
+    if (wivesOrHusbands.length === 1) {
+      setSelectedSpouseId(wivesOrHusbands[0].id);
+      setIsSpouseOptedOut(false);
+    } else if (wivesOrHusbands.length > 1) {
+      setSelectedSpouseId('');
+      setIsSpouseOptedOut(false);
+    } else {
+      setSelectedSpouseId('');
+      setIsSpouseOptedOut(true);
+    }
+  };
+
   const handleConfirmRelink = async () => {
-    if (!relinkingMemberId || !selectedParentId) {
+    if (!relinkingMemberId || !selectedParentId || !selectedParent) {
       setActionError('Vui lòng chọn một người Cha/Mẹ để nối vào cây.');
       return;
     }
 
+    const payload = resolveRelinkPayload(
+      selectedParent,
+      selectedSpouseId,
+      isSpouseOptedOut
+    );
+
     setIsProcessing(true);
     setActionError(null);
     try {
-      await onRelinkMember(relinkingMemberId, selectedParentId);
+      await onRelinkMember(relinkingMemberId, payload);
       setRelinkingMemberId(null);
       setSelectedParentId('');
+      setSelectedSpouseId('');
+      setIsSpouseOptedOut(false);
     } catch (err: any) {
       setActionError(err.message || 'Không thể nối thành viên vào cây');
     } finally {
@@ -286,7 +392,7 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                             filteredParents.map((p) => (
                               <div
                                 key={p.id}
-                                onClick={() => setSelectedParentId(p.id)}
+                                onClick={() => handleSelectParent(p.id)}
                                 className={`p-2 text-xs flex items-center justify-between cursor-pointer transition-colors ${
                                   selectedParentId === p.id
                                     ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 font-bold'
@@ -294,13 +400,115 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                                 }`}
                               >
                                 <span>
-                                  {p.full_name} ({p.gender === 'male' ? 'Bố' : 'Mẹ'}, Đời {p.generation_level})
+                                  {getParentDisplayNameWithSpouse(p, members, spouses)}
                                 </span>
                                 {selectedParentId === p.id && <Check className="w-3.5 h-3.5 text-amber-600" />}
                               </div>
                             ))
                           )}
                         </div>
+
+                        {/* Khối Xác Nhận Người Phối Ngẫu (Flat Radio Group - Zero Box-in-Box) */}
+                        {selectedParent && (
+                          <div className="pt-2 border-t border-amber-200/60 dark:border-amber-800/60 space-y-2 animate-in fade-in duration-150">
+                            {candidateSpouses.length > 0 ? (
+                              <div className="space-y-1.5">
+                                <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                  {candidateSpouses.length === 1
+                                    ? `Xác nhận ${selectedParent.gender === 'male' ? 'Mẹ' : 'Bố'} cho con:`
+                                    : `${selectedParent.gender === 'male' ? 'Bố' : 'Mẹ'} ${selectedParent.full_name} có ${candidateSpouses.length} người phối ngẫu. Chọn ${selectedParent.gender === 'male' ? 'Mẹ' : 'Bố'} cho con:`}
+                                </p>
+
+                                <div className="space-y-1">
+                                  {candidateSpouses.map((spouse, sIdx) => {
+                                    const isSelected = selectedSpouseId === spouse.id && !isSpouseOptedOut;
+                                    const spouseTitle =
+                                      candidateSpouses.length === 1
+                                        ? selectedParent.gender === 'male'
+                                          ? 'Mẹ'
+                                          : 'Bố'
+                                        : selectedParent.gender === 'male'
+                                        ? sIdx === 0
+                                          ? 'Mẹ (Bà cả)'
+                                          : `Mẹ (Bà ${sIdx + 1})`
+                                        : sIdx === 0
+                                        ? 'Bố (Chồng cả)'
+                                        : `Bố (Chồng ${sIdx + 1})`;
+
+                                    return (
+                                      <label
+                                        key={spouse.id}
+                                        className={`flex items-start gap-2.5 p-1.5 rounded-lg cursor-pointer transition-colors ${
+                                          isSelected
+                                            ? 'bg-amber-100/60 dark:bg-amber-950/40 text-slate-900 dark:text-white font-medium'
+                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
+                                        }`}
+                                      >
+                                        <input
+                                          type="radio"
+                                          name={`candidate_spouse_${member.id}`}
+                                          checked={isSelected}
+                                          onChange={() => {
+                                            setSelectedSpouseId(spouse.id);
+                                            setIsSpouseOptedOut(false);
+                                          }}
+                                          className="w-3.5 h-3.5 text-amber-600 focus:ring-amber-500 mt-0.5 shrink-0"
+                                        />
+                                        <div className="text-xs leading-tight">
+                                          <div>
+                                            {spouseTitle}: <strong>{spouse.full_name}</strong>{' '}
+                                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
+                                              ({spouse.birth_year ? `Sinh ${spouse.birth_year}` : 'Chưa rõ năm sinh'})
+                                            </span>
+                                          </div>
+                                          {isSelected && (
+                                            <p className="text-[10.5px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-normal">
+                                              ✓ Con chung của cả hai người (hạ nhánh chính giữa cặp vợ chồng).
+                                            </p>
+                                          )}
+                                        </div>
+                                      </label>
+                                    );
+                                  })}
+
+                                  {/* Tùy chọn Lưu làm con riêng */}
+                                  <label
+                                    className={`flex items-start gap-2.5 p-1.5 rounded-lg cursor-pointer transition-colors ${
+                                      isSpouseOptedOut || !selectedSpouseId
+                                        ? 'bg-amber-100/60 dark:bg-amber-950/40 text-slate-900 dark:text-white font-medium'
+                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400'
+                                    }`}
+                                  >
+                                    <input
+                                      type="radio"
+                                      name={`candidate_spouse_${member.id}`}
+                                      checked={isSpouseOptedOut || !selectedSpouseId}
+                                      onChange={() => {
+                                        setSelectedSpouseId('');
+                                        setIsSpouseOptedOut(true);
+                                      }}
+                                      className="w-3.5 h-3.5 text-amber-600 focus:ring-amber-500 mt-0.5 shrink-0"
+                                    />
+                                    <div className="text-xs leading-tight">
+                                      <div>
+                                        Không chọn {selectedParent.gender === 'male' ? 'mẹ' : 'bố'} (Lưu làm con riêng của {selectedParent.full_name})
+                                      </div>
+                                      {(isSpouseOptedOut || !selectedSpouseId) && (
+                                        <p className="text-[10.5px] text-amber-600 dark:text-amber-400 mt-0.5 font-normal">
+                                          ⚠️ Lưu làm con riêng (hạ nhánh trực tiếp từ {selectedParent.gender === 'male' ? 'Bố' : 'Mẹ'}).
+                                        </p>
+                                      )}
+                                    </div>
+                                  </label>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 italic py-1">
+                                ℹ Người này chưa có bạn đời trong phả hệ → Con sẽ được lưu làm con riêng.
+                              </p>
+                            )}
+                          </div>
+                        )}
 
                         <div className="flex items-center justify-end gap-2 pt-1">
                           <button

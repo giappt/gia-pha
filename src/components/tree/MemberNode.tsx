@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import { Handle, Position, type Node, type NodeProps, useReactFlow } from '@xyflow/react';
-import { User, Sparkles, ArrowUpRight, Link2 } from 'lucide-react';
+import { User, Sparkles, ArrowUpRight, Link2, ArrowUpDown } from 'lucide-react';
 import { TreeNodeData } from '@/types/tree';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 
@@ -58,7 +58,7 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
 
   return (
     <div
-      className={`group relative w-[200px] h-[96px] rounded-xl border bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-2.5 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex flex-col justify-between overflow-hidden cursor-pointer ${
+      className={`group relative w-[200px] h-[96px] rounded-xl border bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-2.5 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex flex-col overflow-hidden cursor-pointer ${
         isAnonymous ? 'bg-amber-50/30 dark:bg-amber-950/20' : ''
       } ${borderColor}`}
     >
@@ -85,7 +85,7 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
       />
 
       {/* Header thẻ: Thế hệ & Huy hiệu trạng thái sinh tử / Cụ Tổ / Khuyết danh */}
-      <div className="flex items-center justify-between text-[11px]">
+      <div className="h-[18px] shrink-0 flex items-center justify-between text-[11px]">
         <div className="flex items-center gap-1 font-semibold text-slate-500 dark:text-slate-400">
           <span>Đời {nodeData.generationLevel}</span>
           {nodeData.isSenior && (
@@ -124,8 +124,8 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
         )}
       </div>
 
-      {/* Thân thẻ: Avatar & Tên */}
-      <div className="flex items-center gap-2 my-0.5">
+      {/* Thân thẻ: Avatar & Tên (Neo Y cố định) */}
+      <div className="flex items-center gap-2 mt-1.5 shrink-0">
         <div
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${avatarBg}`}
         >
@@ -147,7 +147,7 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
 
       {/* Footer thẻ: Thông tin hôn phối nội tộc (khi ẩn node) HOẶC Chi nhánh & Số con */}
       {nodeData.internalSpouse && !nodeData.spouseIds?.includes(nodeData.internalSpouse.id) ? (
-        <div className="flex items-center justify-between text-[9px] pt-1 mt-0.5 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="mt-auto h-[18px] shrink-0 flex items-center justify-between text-[9px] pt-1 border-t border-slate-100 dark:border-slate-800/80">
           <span
             className="truncate max-w-[125px] flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300"
             title={`${nodeData.internalSpouse.roleTitle || 'Hôn phối'}: ${nodeData.internalSpouse.fullName}${
@@ -172,8 +172,8 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
           </button>
         </div>
       ) : (
-        <div className="flex items-center justify-between text-[9px] pt-1 mt-0.5 border-t border-slate-100/80 dark:border-slate-800/60 text-slate-400">
-          <span className="truncate max-w-[120px]">
+        <div className="mt-auto h-[18px] shrink-0 flex items-center justify-between text-[9px] pt-1 border-t border-slate-100/80 dark:border-slate-800/60 text-slate-400">
+          <span className="truncate max-w-[120px] h-[14px] leading-[14px] flex items-center">
             {nodeData.maritalStatus === 'remarried'
               ? (nodeData.gender === 'female' ? 'Tái giá' : 'Đã lấy vợ')
               : nodeData.maritalStatus === 'divorced'
@@ -181,7 +181,25 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
               : (nodeData.branchName || '')}
           </span>
           {!nodeData.inlawRole && nodeData.childCount != null && nodeData.childCount > 0 && (
-            <span>{nodeData.childCount} người con</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const memberId = nodeData.originalMemberId || nodeData.id;
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(
+                    new CustomEvent('fat:open-reorder-children', {
+                      detail: { memberId },
+                    })
+                  );
+                }
+              }}
+              className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group/reorder"
+              title="Nhấp để kéo thả sắp xếp thứ tự đàn con"
+            >
+              <span>{nodeData.childCount} người con</span>
+              <ArrowUpDown className="w-2.5 h-2.5 opacity-60 group-hover/reorder:opacity-100 transition-opacity" />
+            </button>
           )}
         </div>
       )}

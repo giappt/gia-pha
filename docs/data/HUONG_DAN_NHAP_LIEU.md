@@ -50,7 +50,7 @@ Cột **`STT Bố` (Cột E)** và **`STT Mẹ` (Cột F)** từ Đời 5 trở 
 ### Đợt 2: Nhánh Chi Của Gia Đình Bạn (Đời 7 $\rightarrow$ Đời 14)
 - Mở bộ lọc (Filter) trong Excel, lọc nhánh Chi của gia đình bạn.
 - Điền `STT Bố` dọc theo nhánh từ Cụ Tổ Chi xuống đến ông bà, bố mẹ và bạn/con cái bạn (khoảng 30 – 50 người).
-- Upload file $\rightarrow$ Nhánh gia đình bạn đã liên thông 100% từ Cụ Thủy Tổ đến thế hệ trẻ nhất!
+- Upload file $\rightarrow$ Nhánh gia đình bạn đã liên thông 100% từ Cụ Tổ đến thế hệ trẻ nhất!
 
 ### Đợt 3: Bàn Giao Cho Các Chi Khác
 - Gửi file này cho các Bác Trưởng Chi khác để họ điền phần chi của họ theo sổ sách gia đình.
