@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/navbar/Navbar';
 import AppFooter from '@/components/layout/AppFooter';
+import MobileBottomNav from '@/components/navigation/MobileBottomNav';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -47,8 +48,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased min-h-screen flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900">
         <Navbar />
-        <main className="flex-1 flex flex-col min-h-0 relative">{children}</main>
+        <main className="flex-1 flex flex-col min-h-0 relative pb-16 md:pb-0">{children}</main>
         <AppFooter />
+        <MobileBottomNav />
       </body>
     </html>
   );

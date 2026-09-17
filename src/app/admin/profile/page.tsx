@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Landmark, Save, RefreshCw, Eye, CheckCircle2, AlertCircle } from 'lucide-react';
 
 import { MemberRecord } from '@/types/tree';
+import ClanHanLogo from '@/components/icons/ClanHanLogo';
 
 export default function ClanProfilePage() {
   const [clanName, setClanName] = useState('');
@@ -195,7 +196,14 @@ export default function ClanProfilePage() {
               <span>MÔ PHỎNG HIỂN THỊ THỰC TẾ TRÊN TRANG CHỦ & BANNER:</span>
             </div>
 
-            <div className="rounded-xl p-6 bg-radial-gradient from-emerald-500/10 via-slate-50 to-white dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-950 border border-slate-200/60 dark:border-slate-800 text-center">
+            <div className="rounded-xl p-6 bg-radial-gradient from-emerald-500/10 via-slate-50 to-white dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-950 border border-slate-200/60 dark:border-slate-800 text-center flex flex-col items-center justify-center">
+              <div
+                id="admin-profile-clan-han-logo"
+                className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-700/25 border border-emerald-500/30 mb-2.5 transition-transform hover:scale-105 select-none"
+                title="Huy Hiệu Chữ Hán Thư Pháp Gia Tộc"
+              >
+                <ClanHanLogo size={38} className="text-white" />
+              </div>
               <span className="text-[10px] font-bold tracking-widest text-emerald-700 dark:text-emerald-400 uppercase">
                 HỆ THỐNG PHẢ HỆ TRỰC TUYẾN
               </span>

@@ -18,7 +18,7 @@ import {
 import { AnniversaryDayGroup, AnniversaryMemberItem } from '@/types/anniversary';
 import { PushNotificationBanner } from '@/components/anniversaries/PushNotificationBanner';
 import { solarToLunar, getYearCanChi } from '@/lib/lunar/vietnamese-lunar';
-import { getVietnamDate } from '@/lib/anniversaries/anniversary-engine';
+import { getVietnamDate, formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 import {
   getUserPreferences,
@@ -44,7 +44,7 @@ export default function AnniversariesPage() {
     const lunar = solarToLunar(day, month, year);
     const canChi = getYearCanChi(lunar.lunarYear);
     return {
-      solarStr: `${day < 10 ? '0' : ''}${day}/${month < 10 ? '0' : ''}${month}/${year}`,
+      solarStr: formatSolarDateWithDayOfWeek(year, month, day),
       lunarStr: `Ngày ${lunar.lunarDay < 10 ? '0' : ''}${lunar.lunarDay} tháng ${
         lunar.lunarMonth < 10 ? '0' : ''
       }${lunar.lunarMonth} Âm lịch (${canChi})`,
@@ -361,12 +361,12 @@ export default function AnniversariesPage() {
                           </span>
                         )}
 
-                        <div>
+                        <div className="flex flex-col">
                           <span className="text-sm font-bold text-slate-900 dark:text-white">
-                            Ngày {group.lunar_day < 10 ? '0' : ''}{group.lunar_day}/{group.lunar_month < 10 ? '0' : ''}{group.lunar_month} Âm lịch ({group.lunar_year_name})
+                            {formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day)} (Dương lịch)
                           </span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 ml-2 font-medium">
-                            · Dương lịch: {group.solar_day < 10 ? '0' : ''}{group.solar_day}/{group.solar_month < 10 ? '0' : ''}{group.solar_month}/{group.solar_year}
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                            Ngày {group.lunar_day < 10 ? '0' : ''}{group.lunar_day}/{group.lunar_month < 10 ? '0' : ''}{group.lunar_month} Âm lịch ({group.lunar_year_name})
                           </span>
                         </div>
                       </div>

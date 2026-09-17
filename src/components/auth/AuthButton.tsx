@@ -7,6 +7,7 @@ import type { User } from '@supabase/supabase-js';
 import type { UserProfile } from '@/types/database';
 import { LogIn, LogOut, ShieldCheck, User as UserIcon, Loader2, Sparkles, Settings } from 'lucide-react';
 import PersonalSettingsModal from './PersonalSettingsModal';
+import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 
 function getDevCookie() {
   if (typeof document === 'undefined') return null;
@@ -297,18 +298,18 @@ export default function AuthButton({
       <button
         id="user-menu-btn"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1 pr-2.5 rounded-full hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors border border-slate-200/80 dark:border-slate-800"
+        className="flex items-center justify-center sm:justify-start gap-2 p-0.5 sm:p-1 sm:pr-2.5 rounded-full aspect-square sm:aspect-auto hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors border border-slate-200/80 dark:border-slate-800 shrink-0"
       >
         {user.user_metadata?.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={user.user_metadata.avatar_url}
             alt={user.user_metadata.full_name || 'User Avatar'}
-            className="w-7 h-7 rounded-full border border-emerald-500 object-cover"
+            className="w-7 h-7 rounded-full border border-emerald-500/50 object-cover aspect-square shrink-0 shadow-sm"
           />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
-            {(user.email?.[0] || 'U').toUpperCase()}
+          <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs aspect-square shrink-0 shadow-sm">
+            {getMemberInitials(user.user_metadata?.full_name || user.email)}
           </div>
         )}
 

@@ -3,6 +3,8 @@ import assert from 'node:assert';
 import {
   getUpcomingAnniversaries,
   getAccurateSolarAnniversary,
+  getVietnameseDayOfWeek,
+  formatSolarDateWithDayOfWeek,
 } from '../src/lib/anniversaries/anniversary-engine';
 import { calculateNextAnniversary } from '../src/lib/lunar/vietnamese-lunar';
 import { MemberRecord } from '../src/types/tree';
@@ -185,6 +187,25 @@ describe('Anniversary Calculation & Kinship Integration Test Suite (Milestone 5)
     // Tuổi hưởng thọ theo phong tục tính tuổi truyền thống (kèm tuổi mụ / năm mất - năm sinh + 1)
     const lifespan = item.death_year && item.birth_year ? item.death_year - item.birth_year + 1 : null;
     assert.strictEqual(lifespan, 71, 'Tuổi hưởng thọ 2005 - 1935 + 1 phải là 71 tuổi');
+  });
+
+  // TC_UT_SOLAR_DAY_OF_WEEK: Tính đúng Thứ trong tuần (Thứ Hai -> Chủ Nhật) và format Dương lịch đầy đủ
+  it('TC_UT_SOLAR_DAY_OF_WEEK: Tính đúng Thứ trong tuần (Thứ Hai -> Chủ Nhật) và format Dương lịch đầy đủ', () => {
+    // 18/10/2026 là Chủ Nhật (Date(2026, 9, 18).getDay() === 0)
+    const dowSun = getVietnameseDayOfWeek(2026, 10, 18);
+    assert.strictEqual(dowSun, 'Chủ Nhật');
+    const formattedSun = formatSolarDateWithDayOfWeek(2026, 10, 18);
+    assert.strictEqual(formattedSun, 'Chủ Nhật, ngày 18/10/2026');
+
+    // 19/10/2026 là Thứ Hai (Date(2026, 9, 19).getDay() === 1)
+    const dowMon = getVietnameseDayOfWeek(2026, 10, 19);
+    assert.strictEqual(dowMon, 'Thứ Hai');
+    const formattedMon = formatSolarDateWithDayOfWeek(2026, 10, 19);
+    assert.strictEqual(formattedMon, 'Thứ Hai, ngày 19/10/2026');
+
+    // Kiểm tra padding số 0 cho ngày/tháng < 10
+    const formattedPad = formatSolarDateWithDayOfWeek(2026, 5, 3);
+    assert.strictEqual(formattedPad, 'Chủ Nhật, ngày 03/05/2026');
   });
 });
 

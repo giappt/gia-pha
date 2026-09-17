@@ -544,7 +544,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         <Controls
           showInteractive={false}
           position="bottom-right"
-          className="!bg-white/90 dark:!bg-slate-900/90 !border-slate-200 dark:!border-slate-800 !rounded-xl !shadow-sm backdrop-blur-md"
+          className="!bg-white/90 dark:!bg-slate-900/90 !border-slate-200 dark:!border-slate-800 !rounded-xl !shadow-sm backdrop-blur-md !mb-16 md:!mb-0"
         />
       </ReactFlow>
 

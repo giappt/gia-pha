@@ -1,7 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
-import { GitBranch, Calendar, Compass, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
+import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
+import { Calendar, Compass, Shield, AlertCircle, Sparkles, Clock, ArrowRight } from 'lucide-react';
+import { getUpcomingAnniversaries, formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
+import { SAMPLE_MEMBERS_28 } from '@/lib/tree-layout/sample-data';
+import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
+import type { MemberRecord } from '@/types/tree';
 
 export default async function HomePage({
   searchParams,
@@ -46,6 +51,7 @@ export default async function HomePage({
         email: user.email,
         full_name: user.user_metadata?.full_name || 'Giáp Phạm',
         user_role: 'super_admin',
+        linked_member_id: null,
       };
     } else {
       try {
@@ -63,8 +69,34 @@ export default async function HomePage({
 
   const isSuperAdmin = userProfile?.user_role === 'super_admin';
 
+  // Fetch members to compute the nearest upcoming anniversary
+  let membersList: MemberRecord[] = [];
+  try {
+    const { data: dbMembers, error: memberErr } = await supabase
+      .from('members')
+      .select('*')
+      .order('generation_level', { ascending: true });
+
+    if (!memberErr && dbMembers && dbMembers.length > 0) {
+      membersList = dbMembers as unknown as MemberRecord[];
+    } else {
+      membersList = SAMPLE_MEMBERS_28;
+    }
+  } catch {
+    membersList = SAMPLE_MEMBERS_28;
+  }
+
+  // Calculate upcoming anniversaries over a full 365-day window to guarantee finding the nearest one
+  const upcomingAnniversaries = getUpcomingAnniversaries(membersList, {
+    daysAhead: 365,
+    viewerMemberId: userProfile?.linked_member_id || undefined,
+  });
+
+  const nearestGroup = upcomingAnniversaries.length > 0 ? upcomingAnniversaries[0] : null;
+  const nearestMember = nearestGroup && nearestGroup.members.length > 0 ? nearestGroup.members[0] : null;
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-16">
+    <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
       {/* Auth Error Notification */}
       {searchParams.auth_error && (
         <div className="max-w-xl w-full mb-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-200">
@@ -83,12 +115,7 @@ export default async function HomePage({
       )}
 
       {/* Hero Header */}
-      <div className="text-center max-w-3xl mx-auto">
-        {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Nền Tảng Phả Hệ Số Hiện Đại</span>
-        </div> */}
-
+      <div className="text-center max-w-3xl mx-auto mb-10">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-400 mb-3">
           Hệ Thống Phả Hệ Trực Tuyến
         </p>
@@ -96,23 +123,32 @@ export default async function HomePage({
         <h1
           id="hero-clan-name"
           className={`${clanName.length > 25 ? 'text-3xl sm:text-5xl' : 'text-4xl sm:text-6xl'
-            } font-black text-slate-900 dark:text-white tracking-tight leading-[1.12] mb-6 uppercase text-balance break-words max-w-4xl mx-auto`}
+            } font-black text-slate-900 dark:text-white tracking-tight leading-[1.12] mb-5 uppercase text-balance break-words max-w-4xl mx-auto`}
         >
           <span className="bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-200 bg-clip-text text-transparent">
             {clanName}
           </span>
         </h1>
 
-        <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8 font-normal">
-          Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu, nhắc nhở ngày giỗ theo Âm lịch truyền thống.
+        <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-6 font-normal">
+          Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu, tự động xác định vai vế xưng hô chuẩn mực và nhắc nhở ngày giỗ theo Âm lịch truyền thống.
         </p>
 
         {/* User Greeting if logged in */}
         {user ? (
-          <div className="inline-flex items-center gap-3 px-4 py-2.5 mb-8 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800 shadow-sm text-left">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
-              {(user.email?.[0] || 'U').toUpperCase()}
-            </div>
+          <div className="inline-flex items-center gap-3 px-4 py-2 mb-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800 shadow-sm text-left">
+            {user.user_metadata?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.user_metadata.avatar_url}
+                alt={user.user_metadata.full_name || 'User Avatar'}
+                className="w-9 h-9 rounded-full border border-emerald-500/50 object-cover aspect-square shrink-0 shadow-sm"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs aspect-square shrink-0 shadow-sm">
+                {getMemberInitials(user.user_metadata?.full_name || user.email)}
+              </div>
+            )}
             <div>
               <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
                 Xin chào, {user.user_metadata?.full_name || user.email}!
@@ -134,75 +170,121 @@ export default async function HomePage({
         ) : null}
       </div>
 
-      {/* Feature Navigation Cards Grid - Open Architecture, No Box-in-Box */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full mt-4">
-        {/* Card 1: Family Tree */}
-        <Link
-          href="/tree"
-          className="group relative flex flex-col p-7 rounded-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg hover:shadow-emerald-500/[0.04] transition-all duration-300"
-        >
-          <div className="mb-5 flex items-center justify-between">
-            <GitBranch className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform duration-200" strokeWidth={1.75} />
-            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/60">
-              Canvas Tương Tác
+      {/* Spotlight: Ngày Giỗ Gần Nhất */}
+      {nearestGroup && nearestMember && (
+        <div className="max-w-3xl w-full mb-10 p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-emerald-500/10 dark:from-amber-950/40 dark:via-slate-900/60 dark:to-emerald-950/40 border border-amber-500/30 dark:border-amber-700/40 shadow-lg shadow-amber-500/[0.03]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-amber-500/20 dark:border-amber-700/30">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 animate-pulse" />
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                Ngày Giỗ Gần Nhất
+              </h2>
+            </div>
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${nearestGroup.days_left === 0
+                ? 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/80 dark:text-rose-200 dark:border-rose-800'
+                : nearestGroup.days_left === 1
+                  ? 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800'
+                  : 'bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-800'
+                }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              {nearestGroup.days_left === 0
+                ? 'Hôm nay là Ngày Giỗ'
+                : nearestGroup.days_left === 1
+                  ? 'Ngày mai là Ngày Giỗ'
+                  : `Còn ${nearestGroup.days_left} ngày nữa`}
             </span>
           </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
-            Cây Phả Hệ Tương Tác
-          </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 flex-1 font-normal">
-            Trực quan hóa phả đồ nhiều thế hệ với Pan, Zoom, bộ lọc chi nhánh và giải pháp Ghost Node cho hôn nhân nội tộc.
-          </p>
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-            <span>Khám Phá Cây Phả Hệ</span>
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
-          </div>
-        </Link>
 
-        {/* Card 2: Kinship Engine */}
-        <div className="group relative flex flex-col p-7 rounded-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-slate-200/70 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-lg hover:shadow-blue-500/[0.04] transition-all duration-300">
-          <div className="mb-5 flex items-center justify-between">
-            <Compass className="w-7 h-7 text-blue-600 group-hover:scale-110 transition-transform duration-200" strokeWidth={1.75} />
-            <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800/60">
-              Milestone 2
-            </span>
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
-            Tra Cứu Vai Vế Xưng Hô
-          </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 flex-1 font-normal">
-            Thuật toán đồ thị tìm tổ tiên chung gần nhất (LCA) kết hợp từ điển Bắc - Trung - Nam cho ra cách gọi chuẩn mực.
-          </p>
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 text-xs font-semibold text-blue-700 dark:text-blue-400">
-            <span>Lõi thuật toán Kinship Engine</span>
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              {/* Avatar hoặc Initials */}
+              {nearestMember.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={nearestMember.avatar_url}
+                  alt={nearestMember.full_name}
+                  className="w-14 h-14 rounded-full border-2 border-amber-500 object-cover shadow-sm flex-shrink-0"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-amber-600 text-white font-bold text-lg flex items-center justify-center border-2 border-amber-400 flex-shrink-0 shadow-sm">
+                  {getMemberInitials(nearestMember.full_name)}
+                </div>
+              )}
+
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-50">
+                  {nearestMember.full_name}
+                </h3>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-600 dark:text-slate-300">
+                  <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                    Đời thứ {nearestMember.generation}
+                  </span>
+                  {nearestMember.branch_code && (
+                    <>
+                      <span>•</span>
+                      <span>{nearestMember.branch_code}</span>
+                    </>
+                  )}
+                  {nearestMember.birth_year && nearestMember.death_year && (
+                    <>
+                      <span>•</span>
+                      <span>
+                        Hưởng thọ {nearestMember.death_year - nearestMember.birth_year} tuổi ({nearestMember.birth_year} - {nearestMember.death_year})
+                      </span>
+                    </>
+                  )}
+                  {nearestMember.relative_kinship && (
+                    <span className="px-2 py-0.5 rounded bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold">
+                      {nearestMember.relative_kinship}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 flex flex-col gap-1 text-xs">
+                  {/* Dòng Dương lịch ở trên: có Thứ đầy đủ */}
+                  <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100">
+                    <span>
+                      {formatSolarDateWithDayOfWeek(nearestGroup.solar_year, nearestGroup.solar_month, nearestGroup.solar_day)}
+                    </span>
+                    <span className="text-[11px] font-normal text-slate-400 dark:text-slate-500">
+                      (Dương lịch)
+                    </span>
+                  </div>
+                  {/* Dòng Âm lịch ở dưới */}
+                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-medium">
+                    <span className="bg-amber-100/80 dark:bg-amber-950/80 px-2 py-0.5 rounded border border-amber-300/60 dark:border-amber-800/60">
+                      Âm lịch: Ngày {nearestGroup.lunar_day < 10 ? '0' : ''}{nearestGroup.lunar_day}/{nearestGroup.lunar_month < 10 ? '0' : ''}{nearestGroup.lunar_month} ({nearestGroup.lunar_year_name})
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex sm:flex-col gap-2 w-full sm:w-auto flex-shrink-0">
+              <Link
+                href="/tree"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95"
+              >
+                <FamilyTreeIcon className="w-3.5 h-3.5" />
+                <span>Xem trên Cây</span>
+              </Link>
+              <Link
+                href="/anniversaries"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800 text-xs font-bold transition-all active:scale-95"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Lịch Giỗ</span>
+              </Link>
+            </div>
           </div>
         </div>
-
-        {/* Card 3: Anniversaries & Push */}
-        <div className="group relative flex flex-col p-7 rounded-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-slate-200/70 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-lg hover:shadow-amber-500/[0.04] transition-all duration-300">
-          <div className="mb-5 flex items-center justify-between">
-            <Calendar className="w-7 h-7 text-amber-600 group-hover:scale-110 transition-transform duration-200" strokeWidth={1.75} />
-            <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/60">
-              Milestone 5
-            </span>
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
-            Lịch Giỗ & Nhắc Nhở PWA
-          </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 flex-1 font-normal">
-            Theo dõi ngày giỗ âm lịch trong 30 ngày tới và tự động nhận Web Push Notification vào đúng 7h sáng ngày giỗ.
-          </p>
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
-            <span>Đồng bộ Âm - Dương & Web Push</span>
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Admin Panel Quick Access if Super Admin */}
       {isSuperAdmin && (
-        <div className="mt-8 p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/60 max-w-xl w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="mt-4 p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/60 max-w-xl w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0" />
             <div>
@@ -220,10 +302,11 @@ export default async function HomePage({
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all shadow-xs flex-shrink-0"
           >
             <span>Cài Đặt Dòng Họ</span>
-            <span>→</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       )}
     </div>
   );
 }
+

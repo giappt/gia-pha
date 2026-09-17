@@ -63,6 +63,25 @@ export function getVietnamDate(d: Date = new Date()): { year: number; month: num
   return { year, month, day, dateObj };
 }
 
+const VIETNAMESE_DAYS_OF_WEEK = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+
+/**
+ * Lấy thứ trong tuần bằng tiếng Việt chuẩn xác (Chủ Nhật, Thứ Hai, ..., Thứ Bảy)
+ */
+export function getVietnameseDayOfWeek(year: number, month: number, day: number): string {
+  const d = new Date(year, month - 1, day);
+  return VIETNAMESE_DAYS_OF_WEEK[d.getDay()];
+}
+
+/**
+ * Định dạng ngày Dương lịch kèm Thứ đầy đủ (VD: "Chủ Nhật, ngày 18/10/2026")
+ */
+export function formatSolarDateWithDayOfWeek(year: number, month: number, day: number): string {
+  const dayOfWeek = getVietnameseDayOfWeek(year, month, day);
+  const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+  return `${dayOfWeek}, ngày ${pad(day)}/${pad(month)}/${year}`;
+}
+
 /**
  * Tính ngày giỗ Dương lịch kế tiếp chuẩn xác, hỗ trợ tháng nhuận và tháng thiếu
  */

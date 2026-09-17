@@ -395,6 +395,87 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   3. `src/components/tree/GhostNode.tsx`: Dùng `getMemberInitials(fullName, false)`.
   4. `src/components/tree/MemberDetailDrawer.tsx`: Hiển thị Avatar 2 chữ cái khi không có `avatar_url`, thay thế icon `<User />`.
 
+### 5.5. File: `src/components/navigation/MobileBottomNav.tsx` & Kiến Trúc Điều Hướng Di Động 1 Chạm (Mobile-First Navigation Engine)
+- **Vị trí & Breakpoint:** Cố định ở đáy màn hình `fixed bottom-0 left-0 right-0 z-40 md:hidden`. Hoàn toàn ẩn trên Desktop ($\ge 768\text{px}$).
+- **Kích thước & Visual Aesthetics:**
+  - Chiều cao `h-16 pb-safe` (chuẩn công thái học ngón tay cái và tương thích iOS Safari Safe Area).
+  - Nền kính mờ Modern Vietnamese Heritage: `backdrop-blur-md bg-white/90 dark:bg-slate-950/90 border-t border-slate-200/80 dark:border-slate-800/80 shadow-lg`.
+- **4 Tab Điều Hướng Độc Lập:**
+  1. 🏠 **Trang Chủ** (`/`) — Icon `Home`
+  2. 🌳 **Phả Hệ** (`/tree`) — Icon `GitBranch`
+  3. 📅 **Lịch Giỗ** (`/anniversaries`) — Icon `Calendar`
+  4. 🧭 **Vai Vế** (`/kinship`) — Icon `Compass`
+- **Cơ Chế Sáng Đèn (Active Highlight):**
+  - Sử dụng hook `usePathname()`.
+  - Tab đang active: `text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50/80 dark:bg-emerald-950/60 rounded-xl px-3 py-1`.
+  - Tab inactive: `text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors`.
+- **Layout & Canvas Resilience (Chống Che Khuất):**
+  - `src/app/layout.tsx`: Thêm `pb-16 md:pb-0` cho thẻ `<main>` để nội dung và footer không bị Bottom Nav che lấp khi cuộn xuống đáy.
+  - `src/components/tree/FamilyTreeCanvas.tsx`: Thêm class `!mb-16 md:!mb-0` cho `<Controls>` của React Flow để cụm nút zoom nổi lên trên thanh Bottom Nav trên Mobile.
+
+### 5.6. File: `src/components/navbar/Navbar.tsx`, `src/components/icons/FamilyTreeIcon.tsx`, `src/components/auth/AuthButton.tsx`, `src/app/page.tsx` & Chuẩn Hóa Nhận Diện Thương Hiệu, Biểu Tượng Cây Phả Hệ và Đồng Bộ Avatar
+- **1. Loại bỏ nút Quản trị trên Header Navbar (`Navbar.tsx`):**
+  - Tinh gọn thanh Header: Loại bỏ hoàn toàn nút `[Quản Trị]` / `[Quản Trị Dòng Họ]` và icon `Shield` tương ứng khỏi Header Desktop và Mobile Menu trên Header.
+  - Header Navbar chỉ giữ các liên kết cốt lõi hướng tới đại chúng gia tộc: `Phả Hệ` (`/tree`), `Lịch Giỗ` (`/anniversaries`), `Hỏi Vai Vế` (`/kinship`), cùng nút Profile/Đăng nhập `AuthButton`.
+- **2. Logo chữ Hán "Phạm" (`范` - Unicode U+8303):**
+  - Thay thế icon hoa sen / cây cũ bằng huy hiệu chữ Hán "Phạm" (`范` - bộ Thảo 艹) màu trắng `text-white font-serif font-bold text-lg leading-none`.
+  - Khối huy hiệu: `bg-emerald-600 rounded-lg w-9 h-9 flex items-center justify-center shadow-sm shrink-0 border border-emerald-500/30`.
+  - Giữ bên cạnh là tên thương hiệu "Gia Phả Họ Phạm" với typography trang nhã, kế thừa âm hưởng di sản người Việt.
+- **3. Biểu tượng Cây Phả Hệ Chuẩn 3 Ô Vuông (`FamilyTreeIcon.tsx`):**
+  - Thay thế toàn bộ icon `GitBranch` (biểu tượng phân nhánh git công nghệ) tại:
+    - Tab `Phả Hệ` trên Navbar (`Navbar.tsx`).
+    - Tab `Phả Hệ` trên Mobile Bottom Nav (`MobileBottomNav.tsx`).
+    - Nút `[Xem trên Cây]` tại Tiêu điểm Ngày Giỗ Trang Chủ (`src/app/page.tsx`).
+  - Cấu trúc SVG tỷ lệ 24x24 mô phỏng cây phả hệ chuẩn:
+    - Ô vuông thế hệ tiền nhân ở trên: `<rect x="9" y="3" width="6" height="5" rx="1" stroke="currentColor" strokeWidth="2" fill="none" />`
+    - Đường trục nối hạ xuống: `<path d="M12 8v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />`
+    - Đường rẽ nhánh ngang sang 2 bên: `<path d="M6 12h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />`
+    - Hai đường hạ xuống 2 thế hệ hậu duệ: `<path d="M6 12v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />` và `<path d="M18 12v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />`
+    - Hai ô vuông hậu duệ ở dưới: `<rect x="3" y="16" width="6" height="5" rx="1" stroke="currentColor" strokeWidth="2" fill="none" />` và `<rect x="15" y="16" width="6" height="5" rx="1" stroke="currentColor" strokeWidth="2" fill="none" />`
+- **4. Khắc phục Avatar méo và đồng bộ Avatar toàn hệ thống:**
+  - **Khắc phục méo bầu dục trên Mobile tại `AuthButton.tsx`:**
+    - Button bọc ngoài: Thay vì padding lệch `p-1 pr-2.5` khi ẩn text tên trên mobile (`hidden sm:inline`), chuyển thành `p-0.5 sm:pr-2.5 rounded-full aspect-square sm:aspect-auto flex items-center justify-center`.
+    - Thẻ `<img>`: Bổ sung `w-7 h-7 rounded-full object-cover aspect-square shrink-0 border border-emerald-500/50 shadow-sm`, đảm bảo ảnh luôn là hình tròn hoàn hảo 1:1 trên mọi màn hình.
+  - **Đồng bộ khối Chào Mừng trên Trang Chủ (`src/app/page.tsx`):**
+    - Loại bỏ hoàn toàn ô vuông xanh chữ 1 ký tự (`rounded-lg bg-emerald-100 text-emerald-700 w-8 h-8 font-bold`).
+    - Sử dụng Avatar hình tròn hoàn hảo `rounded-full w-9 h-9 aspect-square object-cover shadow-sm` hiển thị ảnh chân dung thật từ `user.user_metadata?.avatar_url`.
+    - Khi người dùng không có ảnh chân dung: Sử dụng pure function `getMemberInitials(user.user_metadata?.full_name || user.email)` hiển thị 2 chữ cái initials trang nhã trên nền tròn ngọc bích `bg-emerald-600 text-white font-semibold text-xs flex items-center justify-center rounded-full w-9 h-9 aspect-square shrink-0`, đồng nhất 100% với quy chuẩn Avatar của toàn bộ dự án.
+
+### 5.7. File: `src/components/icons/ClanHanLogo.tsx`, `/admin/profile/page.tsx`, `PersonalSettingsModal.tsx` & Huy Hiệu Thư Pháp Chữ Hán "Phạm" Biểu Trưng Dòng Họ
+- **1. Component Vector Thư Pháp Đích Thực `ClanHanLogo.tsx`:**
+  - **Trích xuất nguyên bản từ tác phẩm thư pháp chính thống:** Nét chữ Hán "Phạm" (`范` - Unicode `\u8303`) được vector hóa chính xác 100% từ ảnh tác phẩm thư pháp do Quản trị viên dòng họ cung cấp:
+    - Bộ Thảo đầu (`艹`) sắc sảo, đầu bút vung nét phóng khoáng.
+    - 3 chấm bộ Thủy (`氵`) thanh thoát, nét hất gươm vát nhọn mạnh mẽ.
+    - Thân chữ bên phải (`卩`): Nét hoành gập uốn cong, nét thụ loan câu uốn lượn hất nhọn ở đuôi kèm rãnh khoét lỗ rỗng (`fillRule="evenodd"`) chuẩn xác 100%.
+  - **Quy chuẩn màu sắc & kích thước:**
+    - Nét chữ: Màu trắng tinh khôi (`text-white` / `#FFFFFF`), thể hiện sự thanh bạch, tôn nghiêm.
+    - Nền biểu trưng: Khối vuông bo góc màu xanh ngọc bích (`bg-emerald-600 rounded-lg`), nhận diện thương hiệu đặc trưng của Gia Phả Họ Phạm.
+    - Dung lượng siêu nhẹ (~3.6KB), hoàn toàn độc lập, không phụ thuộc font chữ Hán mạng ngoài, hiển thị sắc nét tuyệt đối trên màn hình Retina/4K.
+- **2. Quy Về Căn Cước Dòng Họ & Trả Lại Thẩm Quyền Cá Nhân:**
+  - **Căn Cước Dòng Họ ([`/admin/profile`](file:///home/kakashi/sources/pj/gia-pha/src/app/admin/profile/page.tsx)):** Huy hiệu thư pháp chữ "范" chính thức được hiển thị trang trọng trong hộp mô phỏng biểu ngữ chính thức, đồng bộ bên cạnh Tên Dòng Họ và Cụ Tổ Toàn Tộc.
+  - **Cài Đặt Cá Nhân ([`PersonalSettingsModal.tsx`](file:///home/kakashi/sources/pj/gia-pha/src/components/auth/PersonalSettingsModal.tsx)):** Loại bỏ hoàn toàn khối tùy chỉnh logo dòng họ. Nhận diện dòng họ là thiêng liêng và duy nhất, cá nhân không tự ý thay đổi trên giao diện chung.
+- **3. Hiển Thị Đồng Nhất Trên Header Navbar ([`Navbar.tsx`](file:///home/kakashi/sources/pj/gia-pha/src/components/navbar/Navbar.tsx)):**
+  - Mọi thành viên con cháu và khách viếng thăm khi truy cập website đều nhìn thấy cùng một huy hiệu thư pháp chữ Hán "Phạm" chính thống của dòng tộc.
+
+### 5.8. Tối Ưu Kích Thước Hiển Thị Chữ Thư Pháp "Phạm" (范) — Phương Án A (+35%)
+- **Căn nguyên khắc phục:**
+  - Bounding box cũ của chữ chỉ chiếm $77.8\%$ chiều cao viewBox, kết hợp `size={24}` trong container `w-9 h-9` ($36\text{px}$) khiến chiều cao thực của chữ chỉ đạt $18.6\text{px}$ (chiếm $51.6\%$ huy hiệu), tạo cảm giác chữ bị bé và khó đọc.
+- **Quy chuẩn kỹ thuật Phương án A (+35% kích thước hiển thị):**
+  - **1. Tái chuẩn hóa Vector Path (`ClanHanLogo.tsx`):**
+    - Mở rộng độ phủ chiều cao chữ từ $77.8\% \rightarrow \mathbf{88.0\%}$ bên trong viewBox $100 \times 100$:
+      - Tọa độ $Y$: từ $[11.1, 88.9] \rightarrow [6.0, 94.0]$ (chiều cao $88.0$).
+      - Tọa độ $X$: từ $[18.7, 80.9] \rightarrow [14.8, 85.2]$ (chiều rộng $70.4$).
+      - Tâm đối xứng được căn chỉnh hoàn hảo tại $(50.0, 50.0)$.
+    - Bảo toàn 100% tỷ lệ khung hình (aspect ratio) và nét bút lông thư pháp nguyên bản từ tác phẩm của dòng tộc, không làm méo hay biến dạng nét.
+    - Tiếp tục giữ nguyên cơ chế đục rỗng `fillRule="evenodd"`.
+  - **2. Tối ưu kích thước SVG trong Navbar (`ClanHanLogoNavbar.tsx`):**
+    - Tăng kích thước SVG từ `size={24}` lên `size={28}` (trong container $36\text{px}$).
+    - Chiều cao chữ thực tế: $18.6\text{px} \rightarrow \mathbf{24.6\text{px}}$ (chiếm $68.3\%$ diện tích huy hiệu).
+    - Khoảng cách an toàn tới biên trên/dưới: $\sim 5.7\text{px}$, hoàn toàn không chạm vào góc bo tròn `rounded-lg` (bán kính $8\text{px}$).
+  - **3. Tối ưu kích thước SVG trên Căn Cước Dòng Họ (`/admin/profile/page.tsx`):**
+    - Tăng kích thước SVG từ `size={32}` lên `size={38}` (trong container $48\text{px}$).
+    - Huy hiệu thư pháp hiển thị bề thế, trang trọng, tương xứng với Tên Dòng Họ và Cụ Tổ Toàn Tộc.
+
 ---
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
@@ -415,6 +496,10 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - _Xử lý:_ Khi gọi `webpush.sendNotification` trả về HTTP 404 hoặc 410, Serverless Route tự động xóa subscription chết này khỏi CSDL, giữ bảng dữ liệu luôn tinh gọn và không hao phí tài nguyên.
 - **Edge Case 7: Lệch múi giờ giữa máy chủ Vercel (UTC) và Việt Nam (UTC+7).**
   - _Xử lý:_ Toàn bộ logic tính ngày hôm nay bắt buộc phải dùng chuỗi múi giờ `Asia/Ho_Chi_Minh` hoặc cộng đúng 7 giờ (`+ 7 * 3600 * 1000`). Tuyệt đối không dùng `new Date()` thuần theo giờ UTC của server vì sẽ gây lệch chậm 1 ngày trước 7:00 AM.
+- **Edge Case 8: Che khuất giao diện khi bàn phím ảo hoặc bottom bar xuất hiện trên Mobile.**
+  - _Xử lý:_ `<main>` luôn có `pb-16 md:pb-0`, các modal/drawer sử dụng `z-50` cao hơn `z-40` của Bottom Nav để overlay trọn vẹn màn hình khi mở ra.
+- **Edge Case 9: Lỗ rỗng (hole) của chữ Hán thư pháp bị tô kín màu khi render vector.**
+  - _Xử lý:_ Sử dụng thuộc tính `fillRule="evenodd"` trên thẻ `<path>` SVG để tự động đục rỗng chính xác khoảng không bên trong chữ 卩.
 
 ---
 
@@ -439,6 +524,21 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_AVATAR_MULTI_WORD** | Trích xuất 2 chữ cái initials (Đệm + Tên) cho tên tiếng Việt $\ge 2$ từ | `tests/avatar-utils.test.ts` | Tên "Nguyễn Văn Trưởng", "Lê Thị Hoa", "Phạm Chiến" | Gọi `getMemberInitials(name)` | Trả về chuẩn xác "VT", "TH", "PC" (in hoa 2 chữ cái) | Happy Path | `[x] PASS` |
 | **TC_UT_AVATAR_EDGE_CASES** | Xử lý tên 1 từ, Khuyết danh và fallback chuỗi rỗng | `tests/avatar-utils.test.ts` | Tên "Trưởng", Khuyết danh `is_anonymous: true`, chuỗi null/rỗng | Gọi `getMemberInitials(...)` | "Trưởng" $\rightarrow$ "TR", Khuyết danh $\rightarrow$ "KD", null/rỗng $\rightarrow$ "TV" | Edge Case | `[x] PASS` |
 | **TC_UT_ANNIV_DEDUP_INFO** | Dòng thành viên không lặp lại chuỗi ngày âm, tính đúng tuổi thọ | `tests/anniversary.test.ts` | Thành viên có `birth_year: 1935, death_year: 2005` | Tính toán thông tin hiển thị dòng người giỗ | Tuổi thọ đạt 71 tuổi (`2005 - 1935 + 1`), không chứa chuỗi ngày âm lặp lại | Happy Path | `[x] PASS` |
+| **TC_UT_HOMEPAGE_CLEAN_NO_REDUNDANT_CARDS** | Loại bỏ hoàn toàn khối 3 thẻ tính năng thừa trên trang chủ, tiêu đề Ngày Giỗ Gần Nhất tinh gọn | `tests/theme-and-layout.test.ts` | Đọc mã nguồn `src/app/page.tsx` | Kiểm tra các chuỗi và thẻ điều hướng | Không chứa 3 thẻ thừa; chứa đúng tiêu đề "Ngày Giỗ Gần Nhất" | Architecture / UX | `[x] PASS` |
+| **TC_UT_SOLAR_DAY_OF_WEEK** | Tính đúng Thứ trong tuần (Thứ Hai $\rightarrow$ Chủ Nhật) và format Dương lịch đầy đủ | `tests/anniversary.test.ts` | Ngày 18/10/2026 (Chủ Nhật), Ngày 19/10/2026 (Thứ Hai) | Gọi `formatSolarDateWithDayOfWeek(year, month, day)` | Trả về chuỗi có chứa tên Thứ và ngày tháng năm chuẩn xác | Logic Engine | `[x] PASS` |
+| **TC_UT_MOBILE_ANNIV_DATE_STACK** | Cấu trúc hiển thị ngày trên Mobile: Dương lịch ở trên, Âm lịch ở dưới | `tests/theme-and-layout.test.ts` | Đọc mã nguồn `src/app/page.tsx` và `src/app/anniversaries/page.tsx` | Kiểm tra thứ tự các block hiển thị ngày | Khối Dương lịch có Thứ xuất hiện trước khối Âm lịch trong DOM | Mobile UX | `[x] PASS` |
+| **TC_UT_MOBILE_BOTTOM_NAV_STRUCTURE** | Cấu trúc và liên kết của thanh MobileBottomNav | `tests/theme-and-layout.test.ts` | File `src/components/navigation/MobileBottomNav.tsx` | Đọc mã nguồn và kiểm tra markup | Chứa `md:hidden`, liên kết đủ 4 đường dẫn (`/`, `/tree`, `/anniversaries`, `/kinship`), dùng `usePathname` | Navigation Contract | `[x] PASS` |
+| **TC_UT_LAYOUT_BOTTOM_NAV_INJECTION** | layout.tsx nhúng MobileBottomNav và có padding-bottom an toàn | `tests/theme-and-layout.test.ts` | File `src/app/layout.tsx` | Đọc mã nguồn layout | Có render `<MobileBottomNav />`, `<main>` có class `pb-16 md:pb-0` chống che lấp | Layout Integrity | `[x] PASS` |
+| **TC_UT_CANVAS_CONTROLS_MOBILE_LIFT** | Controls của React Flow trên mobile nâng cao độ chống che lấp | `tests/theme-and-layout.test.ts` | File `src/components/tree/FamilyTreeCanvas.tsx` | Đọc mã nguồn Controls | Thẻ `<Controls>` có class `!mb-16 md:!mb-0` | Canvas Resilience | `[x] PASS` |
+| **TC_UT_NAVBAR_NO_ADMIN_BUTTON** | Loại bỏ hoàn toàn nút Quản trị trên Header Navbar | `tests/theme-and-layout.test.ts` | File `src/components/navbar/Navbar.tsx` | Đọc mã nguồn kiểm tra JSX/links | Không chứa đường dẫn `/admin` hay nút "Quản Trị" / "Quản Trị Dòng Họ" trên Header | Clean Navbar | `[x] PASS` |
+| **TC_UT_NAVBAR_HAN_LOGO** | Logo chữ Hán "Phạm" (`范`) trên nền xanh ngọc bích | `tests/theme-and-layout.test.ts` | File `src/components/navbar/Navbar.tsx` | Đọc mã nguồn phần Logo thương hiệu | Chứa ký tự chữ Hán `范`, class `bg-emerald-600` và `text-white font-serif` | Brand Identity | `[x] PASS` |
+| **TC_UT_FAMILY_TREE_ICON_STRUCTURE** | Cấu trúc SVG biểu tượng Cây Phả Hệ chuẩn 3 ô vuông | `tests/theme-and-layout.test.ts` | File `src/components/icons/FamilyTreeIcon.tsx` | Đọc mã nguồn SVG icon | Chứa 3 thẻ `<rect>` (1 trên, 2 dưới) và thẻ `<path>` rẽ nhánh mô phỏng cây phả hệ | Icon Specification | `[x] PASS` |
+| **TC_UT_AUTH_AVATAR_NO_OVAL_DISTORTION** | Avatar AuthButton tròn hoàn hảo không méo bầu dục trên mobile | `tests/theme-and-layout.test.ts` | File `src/components/auth/AuthButton.tsx` | Đọc mã nguồn markup Avatar | Nút bọc và ảnh `<img>` có class `rounded-full` và `aspect-square`, triệt tiêu padding lệch khi text ẩn | Visual Geometry | `[x] PASS` |
+| **TC_UT_WELCOME_CARD_AVATAR_CONSISTENCY** | Khối Chào Mừng Trang Chủ đồng bộ Avatar tròn và fallback 2 chữ cái | `tests/theme-and-layout.test.ts` | File `src/app/page.tsx` | Đọc mã nguồn khối Welcome Card | Render thẻ `<img>` tròn `rounded-full aspect-square` với `avatar_url` hoặc fallback initials `getMemberInitials`, không dùng ô vuông xanh 1 ký tự | Design Consistency | `[x] PASS` |
+| **TC_UT_CLAN_HAN_LOGO_AUTHENTIC_VECTOR** | Kiểm tra component ClanHanLogo render chuẩn xác nét thư pháp đích thực | `tests/theme-and-layout.test.ts` | File `src/components/icons/ClanHanLogo.tsx` | Đọc mã nguồn component | Chứa đường path vector từ ảnh thư pháp, có `fillRule="evenodd"` và nền `bg-emerald-600` | Calligraphy Engine | `[x] PASS` |
+| **TC_UT_ADMIN_PROFILE_CLAN_LOGO_PREVIEW** | Căn Cước Dòng Họ (/admin/profile) hiển thị huy hiệu Logo Thư Pháp | `tests/theme-and-layout.test.ts` | File `src/app/admin/profile/page.tsx` | Đọc mã nguồn trang admin profile | Render ClanHanLogo bên cạnh tên dòng họ trong hộp mô phỏng biểu ngữ chính thức | Clan Identity UI | `[x] PASS` |
+| **TC_UT_PERSONAL_SETTINGS_NO_LOGO_OPTION** | Modal Cài Đặt Cá Nhân không còn chứa tùy chọn đổi logo dòng họ | `tests/theme-and-layout.test.ts` | File `src/components/auth/PersonalSettingsModal.tsx` | Đọc mã nguồn modal | Không còn chứa các thẻ chọn phong cách thư pháp logo (trả lại đúng thẩm quyền cá nhân) | Settings Cleanliness | `[x] PASS` |
+| **TC_UT_CLAN_HAN_LOGO_SCALE_UP** | Khắc phục chữ bé: Tăng kích thước SVG lên size 28 và mở rộng tọa độ vector chiếm 88% viewBox | `tests/theme-and-layout.test.ts` | Files `src/components/navbar/ClanHanLogoNavbar.tsx`, `src/components/icons/ClanHanLogo.tsx`, `src/app/admin/profile/page.tsx` | Đọc mã nguồn và kiểm tra kích thước `size={28}`, `size={38}` và bounding box vector | Navbar dùng `size={28}`, Admin profile dùng `size={38}`, path vector có độ phủ Y đạt 88% (Y min <= 6.0, Y max >= 94.0) | Calligraphy Scale-Up | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -450,20 +550,45 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_05 (Responsive & Console Sạch):** Thử nghiệm trên cả Mobile (375px) và Desktop (1440px): Bố cục co giãn linh hoạt, nút bấm đạt chuẩn WCAG cảm ứng tối thiểu 44px. Mở Developer Console $\rightarrow$ **0 lỗi đỏ, 0 cảnh báo Hydration mismatch**.
 - [ ] **UAT_06 (Avatar 2 Chữ Cái Đồng Bộ):** Truy cập `/anniversaries`: Avatar các cụ hiển thị chuẩn 2 chữ cái initials (Cụ Trưởng: **VT**, Cụ Hoa: **TH**, Cụ Thứ: **VT**). Mở Sơ đồ Cây `/tree` và Drawer chi tiết: Avatar hiển thị hoàn toàn đồng bộ, không còn icon User chung chung.
 - [ ] **UAT_07 (Phân Cấp Thông Tin Thoáng Đãng & Không Lặp):** Tiêu đề khối ngày hiển thị Âm lịch nổi bật kèm Dương lịch đối chiếu, không còn từ "Nhằm ngày". Dòng từng cụ hiển thị năm sinh - mất và tuổi thọ rõ ràng, thoáng đãng, không bị lặp lại chuỗi ngày âm.
+- [ ] **UAT_08 (Trang Chủ Tinh Gọn - Loại Bỏ Thẻ Thừa):** Truy cập `/` (Trang chủ) $\rightarrow$ Giao diện trang nhã, không còn khối 3 thẻ tính năng thừa thãi ở dưới chân trang; Tiêu điểm Ngày Giỗ Gần Nhất hiển thị ấm cúng, tôn nghiêm và đầy đủ liên kết một chạm.
+- [ ] **UAT_09 (Bố Cục Mobile - Dương Trên Âm Dưới & Có Thứ):** Mở giao diện trên thiết bị di động (375px) tại cả Trang Chủ và Lịch Giỗ $\rightarrow$ Dòng Dương lịch kèm Thứ hiển thị trang trọng ở trên, dòng Âm lịch hiển thị ở dưới; bố cục ngăn nắp, không bị tràn viền hay rớt chữ.
+- [ ] **UAT_10 (Thanh Điều Hướng Đáy Màn Hình - Mobile Bottom Nav):** Mở giao diện trên thiết bị di động (375px): Thanh Bottom Nav hiển thị cố định ở đáy với 4 tab (Trang Chủ, Phả Hệ, Lịch Giỗ, Vai Vế). Chạm thử từng tab $\rightarrow$ Chuyển trang mượt mà tức thì, tab tương ứng sáng màu ngọc bích.
+- [ ] **UAT_11 (Bảo Toàn 100% Giao Diện Desktop):** Mở trên màn hình Desktop ($\ge 768\text{px}$): Thanh Bottom Nav ẩn hoàn toàn 100%, Header Navbar giữ nguyên 3 menu ở giữa, footer và trang chủ không có bất kỳ xê dịch hay khoảng trắng thừa nào.
+- [ ] **UAT_12 (Nhận Diện Chữ Hán & Header Tinh Gọn):** Mở giao diện trên cả Mobile và PC $\rightarrow$ Logo góc trái hiển thị chữ Hán "Phạm" (`范`) màu trắng trên nền xanh ngọc bích sắc nét, trang nghiêm. Nút Quản Trị không còn xuất hiện trên Header, giúp thanh điều hướng thoáng đãng, tập trung vào trải nghiệm thành viên dòng họ.
+- [ ] **UAT_13 (Biểu Tượng Cây Phả Hệ Chuẩn 3 Ô Vuông):** Tab "Phả Hệ" trên Navbar, Mobile Bottom Nav và nút bấm trên Trang chủ hiển thị biểu tượng Cây Phả Hệ chuẩn (1 ô vuông trên, 2 ô vuông dưới nối nhánh), thay thế hoàn toàn biểu tượng GitBranch nhánh cây công nghệ.
+- [ ] **UAT_14 (Avatar Tròn Chuẩn Tỷ Lệ & Đồng Bộ Tuyệt Đối):** Avatar trên nút đăng nhập góc phải Navbar và trên khối Lời Chào Mừng Trang Chủ hiển thị hình tròn chuẩn tỷ lệ 1:1 (`aspect-square`), không bị méo bầu dục trên mobile. Hiển thị ảnh đại diện Google thật sắc nét hoặc 2 chữ cái initials trang nhã, xóa bỏ hoàn toàn ô vuông xanh chữ cái đơn lẻ.
+- [ ] **UAT_15 (Thần Thái Thư Pháp Đích Thực Của Dòng Họ):** Quan sát chữ "范" trên Header Navbar và Trang Chủ $\rightarrow$ Đúng 100% nét chữ mẫu từ tác phẩm thư pháp người dùng cung cấp: nét bút lông trắng uyển chuyển, sắc nét, rãnh khoét lỗ rỗng chuẩn xác trên nền xanh ngọc bích.
+- [ ] **UAT_16 (Biểu Ngữ Căn Cước Dòng Họ `/admin/profile`):** Mở trang `/admin/profile` $\rightarrow$ Hộp mô phỏng biểu ngữ chính thức hiển thị trang trọng Huy hiệu Logo Thư Pháp kết hợp hài hòa cùng Tên Dòng Họ và Cụ Tổ.
+- [ ] **UAT_17 (Cài Đặt Cá Nhân Tinh Gọn):** Bấm vào Avatar góc phải Navbar $\rightarrow$ Chọn "Cài đặt cá nhân" $\rightarrow$ Modal hiển thị các tùy chọn cá nhân gọn gàng, không còn xuất hiện khối tùy chọn đổi logo dòng họ.
+- [ ] **UAT_18 (Kích Thước Chữ Thư Pháp To Rõ - Phương Án A):** Mở Header Navbar trên cả PC và Mobile $\rightarrow$ Chữ "范" trắng to rõ (+35%), đường nét thư pháp sắc sảo, nổi bật đĩnh đạc trên nền xanh ngọc bích, không còn cảm giác bị nhỏ hay lọt thỏm giữa khối vuông, lề cách góc bo tròn đều đặn.
+- [ ] **UAT_19 (Biểu Ngữ Căn Cước Dòng Họ To Đẹp):** Mở `/admin/profile` $\rightarrow$ Huy hiệu chữ Hán trong hộp mô phỏng biểu ngữ hiển thị to rõ (size 38px trong khối 48px), cân đối hoàn hảo bên cạnh Tên Dòng Họ.
 
 ---
 
 ## 8. BẢO VỆ CHỐNG THOÁI LUI (REGRESSION GUARD CHECKLIST)
 
-- [x] **RG01 (Build & Typecheck Clean):** Chạy `npm run typecheck` & `NEXT_DIST_DIR=.next-build npm run build` — 0 lỗi, toàn bộ 20/20 pages tĩnh/động build thành công 100%.
-- [x] **RG02 (Automated Test Regression):** Chạy `npm test` — Toàn bộ 94/94 tests (82 tests cũ + 12 tests mới) PASS 100%, 0 regression.
+- [x] **RG01 (Build & Typecheck Clean):** Chạy `npm run typecheck` & `NEXT_DIST_DIR=.next-build npm run build` — 0 lỗi, toàn bộ 28/28 pages tĩnh/động build thành công 100%.
+- [x] **RG02 (Automated Test Regression):** Chạy `npm test` — Toàn bộ 190/190 tests PASS 100%, 0 regression.
 - [x] **RG03 (Blast Radius - Navigation Bar):** Menu điều hướng trên Header và thanh điều hướng Mobile giữ nguyên liên kết tới `/anniversaries` hoạt động trơn tru, không làm lệch alignment hay rớt dòng icon.
 - [x] **RG04 (Blast Radius - Member Detail Drawer):** Cụm thông tin ngày giỗ kế tiếp (`anniversaryInfo`) trên `MemberDetailDrawer.tsx` vẫn tính toán chính xác và đồng bộ hoàn toàn với dữ liệu trên trang `/anniversaries`.
 - [x] **RG05 (Blast Radius - Kinship Engine):** Việc tái sử dụng `calculateKinship` và `findKinshipTerm` không làm biến đổi hay rò rỉ trạng thái tính toán của trang `/kinship`.
 - [x] **RG06 (Avatar Refactor Tree Safety):** Đồng bộ `getMemberInitials` trên `MemberNode.tsx`, `GhostNode.tsx` và `MemberDetailDrawer.tsx` không làm biến đổi kích thước bounding box ($200\text{px} \times 96\text{px}$) hay gây gãy các tests đồ thị hiện có.
+- [x] **RG07 (Clean Homepage Focus):** Trang chủ giữ trọn vẹn sự tập trung vào Tiêu điểm Ngày Giỗ Gần Nhất, triệt tiêu 100% các khối marketing thẻ tính năng thừa.
+- [x] **RG08 (Desktop & Mobile Date Hierarchy):** Bố cục ngày giỗ hiển thị phân tầng hài hòa trên cả Mobile và Desktop.
+- [x] **RG09 (Desktop Navigation Untouched):** Header Navbar trên Desktop hiển thị đầy đủ 3 liên kết, không bị ảnh hưởng bởi Mobile Bottom Nav.
+- [x] **RG10 (Canvas Interaction on Mobile):** Nút zoom/pan của React Flow trên Mobile không bị che bởi thanh Bottom Nav.
+- [x] **RG11 (Header Navbar Responsiveness):** Thanh Navbar trên PC và Mobile vẫn co giãn linh hoạt, menu Mobile (nếu có) hoặc các nút chức năng không bị vỡ bố cục khi bỏ nút Quản trị và đổi logo.
+- [x] **RG12 (Auth Flow & Session Unbroken):** Việc tối ưu hóa styling của `AuthButton` không làm ảnh hưởng đến luồng đăng nhập Google OAuth, menu dropdown tài khoản hoặc chức năng đăng xuất.
+- [x] **RG13 (Theme & Logo Layout Stability):** Logo vector thư pháp chuẩn hiển thị sắc nét, không làm xô lệch chiều cao Navbar (`h-16`), rãnh khoét lỗ rỗng đục đúng qua `fillRule="evenodd"`.
+- [x] **RG14 (Calligraphy Geometry Integrity):** Tái chuẩn hóa vector không làm thay đổi hình dáng nét bút lông hoặc méo tỷ lệ X/Y gốc của chữ "范".
+- [x] **RG15 (No Corner Clipping):** Khoảng cách từ đỉnh và đáy nét chữ tới viền bo góc tròn tối thiểu $\ge 5.5\text{px}$, hoàn toàn không bị tràn hoặc cắt phạm góc bởi `overflow-hidden` và `rounded-lg` / `rounded-xl`.
 
 ---
 
 ## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
 
 > "AI ơi, hãy đọc kỹ đặc tả `docs/14_Micro-Spec_Milestone_5_Anniversaries_WebPush_Cron.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build $\rightarrow$ Automated Test Suite $\rightarrow$ Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+
+
+
+
