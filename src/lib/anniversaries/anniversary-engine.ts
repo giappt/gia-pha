@@ -280,7 +280,7 @@ export function getUpcomingAnniversaries(
         }
       }
 
-      const lunarFormatted = `Ngày ${padZero(day)}/${padZero(month)} Âm lịch (${anniv.lunarYearName})`;
+      const lunarFormatted = `Ngày ${padZero(day)}/${padZero(month)} Âm lịch`;
       const generation = getMemberGen(m);
       const branch = getMemberBranch(m);
       const honorificPrefix = computeDeceasedHonorificPrefix(m, maxGen, relativeKinship);

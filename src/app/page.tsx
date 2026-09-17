@@ -283,7 +283,7 @@ export default async function HomePage({
                   {/* Dòng Âm lịch ở dưới */}
                   <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-medium">
                     <span className="bg-amber-100/80 dark:bg-amber-950/80 px-2 py-0.5 rounded border border-amber-300/60 dark:border-amber-800/60">
-                      Âm lịch: Ngày {nearestGroup.lunar_day < 10 ? '0' : ''}{nearestGroup.lunar_day}/{nearestGroup.lunar_month < 10 ? '0' : ''}{nearestGroup.lunar_month} ({nearestGroup.lunar_year_name})
+                      Âm lịch: Ngày {nearestGroup.lunar_day < 10 ? '0' : ''}{nearestGroup.lunar_day}/{nearestGroup.lunar_month < 10 ? '0' : ''}{nearestGroup.lunar_month}
                     </span>
                   </div>
                 </div>

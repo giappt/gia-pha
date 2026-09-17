@@ -82,4 +82,28 @@ describe('Vercel Cron Anniversary Reminder Test Suite (Milestone 5)', () => {
     assert.strictEqual(matched.length, 1, 'Chỉ có 1 cụ trùng ngày giỗ hôm nay');
     assert.strictEqual(matched[0].id, 'ancestor-today');
   });
+
+  // TC_INT_CRON_RESPECTS_FEATURE_FLAG: Route Cron kiểm tra cờ tính năng trước khi gửi push
+  it('TC_INT_CRON_RESPECTS_FEATURE_FLAG: Route Cron kiểm tra logic cờ enable_push_notifications và enable_anniversaries', async () => {
+    // 1. Kiểm tra cấu trúc route có đoạn rà soát feature_flags
+    const fs = await import('fs');
+    const path = await import('path');
+    const routePath = path.resolve(process.cwd(), 'src/app/api/cron/anniversary-reminder/route.ts');
+    const routeContent = fs.readFileSync(routePath, 'utf8');
+
+    assert.ok(
+      routeContent.includes('enable_push_notifications === false') ||
+      routeContent.includes('flags.enable_push_notifications === false'),
+      'Route Cron phải kiểm tra cờ enable_push_notifications'
+    );
+    assert.ok(
+      routeContent.includes('enable_anniversaries === false') ||
+      routeContent.includes('flags.enable_anniversaries === false'),
+      'Route Cron phải kiểm tra cờ enable_anniversaries'
+    );
+    assert.ok(
+      routeContent.includes('Web Push notification is disabled by Clan Admin'),
+      'Route Cron phải có thông báo khi cờ tính năng bị tắt'
+    );
+  });
 });

@@ -135,7 +135,7 @@ export default async function Navbar({
         {/* Right: Theme Toggle & Auth Action (Đã tinh gọn, bỏ nút Quản Trị) */}
         <div className="flex items-center gap-2 sm:gap-3">
           <ThemeToggle />
-          <AuthButton initialUser={user} initialProfile={userProfile} />
+          <AuthButton initialUser={user} initialProfile={userProfile} featureFlags={flags} />
         </div>
       </div>
     </header>

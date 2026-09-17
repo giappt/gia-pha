@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
-import type { UserProfile } from '@/types/database';
+import type { UserProfile, ClanFeatureFlags } from '@/types/database';
 import { LogIn, LogOut, ShieldCheck, User as UserIcon, Loader2, Sparkles, Settings } from 'lucide-react';
 import PersonalSettingsModal from './PersonalSettingsModal';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
@@ -24,9 +24,11 @@ function getDevCookie() {
 export default function AuthButton({
   initialUser = null,
   initialProfile = null,
+  featureFlags = null,
 }: {
   initialUser?: User | null;
   initialProfile?: UserProfile | null;
+  featureFlags?: ClanFeatureFlags | null;
 }) {
   const [user, setUser] = useState<User | null>(initialUser);
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile);
@@ -398,6 +400,7 @@ export default function AuthButton({
         isOpen={isPersonalSettingsOpen}
         onClose={() => setIsPersonalSettingsOpen(false)}
         userEmail={user.email}
+        featureFlags={featureFlags}
       />
     </div>
   );

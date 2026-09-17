@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveFeatureFlags, DEFAULT_FEATURE_FLAGS } from '../src/lib/admin/admin-engine';
 
 describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
   // TC_UT_THEME_01: Kiểm tra Đồng Bộ Hóa Theme Globals & Tailwind Contract
@@ -822,6 +823,156 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
       pwaContent.includes('FAT (PWA)'),
       false,
       'InstallPwaButton không được chứa chuỗi kỹ thuật "FAT (PWA)"'
+    );
+  });
+
+  // TC_UT_NO_LUNAR_YEAR_NAME: Triệt tiêu hoàn toàn tên năm Can Chi (Bính Ngọ) trên Trang Chủ và Trang Lịch Giỗ
+  it('TC_UT_NO_LUNAR_YEAR_NAME: Trang Chủ, Trang Lịch Giỗ và anniversary-engine loại bỏ hoàn toàn tên năm Can Chi', () => {
+    const homePath = path.resolve(process.cwd(), 'src/app/page.tsx');
+    const annivPagePath = path.resolve(process.cwd(), 'src/app/anniversaries/page.tsx');
+    const annivEnginePath = path.resolve(process.cwd(), 'src/lib/anniversaries/anniversary-engine.ts');
+
+    assert.ok(fs.existsSync(homePath), 'src/app/page.tsx phải tồn tại');
+    assert.ok(fs.existsSync(annivPagePath), 'src/app/anniversaries/page.tsx phải tồn tại');
+    assert.ok(fs.existsSync(annivEnginePath), 'src/lib/anniversaries/anniversary-engine.ts phải tồn tại');
+
+    const homeContent = fs.readFileSync(homePath, 'utf8');
+    const annivPageContent = fs.readFileSync(annivPagePath, 'utf8');
+    const annivEngineContent = fs.readFileSync(annivEnginePath, 'utf8');
+
+    // 1. Trang chủ không còn (${nearestGroup.lunar_year_name})
+    assert.strictEqual(
+      homeContent.includes('(${nearestGroup.lunar_year_name})'),
+      false,
+      'src/app/page.tsx không được chứa chuỗi (${nearestGroup.lunar_year_name})'
+    );
+
+    // 2. Trang Lịch Giỗ không còn (${canChi}) và (${group.lunar_year_name})
+    assert.strictEqual(
+      annivPageContent.includes('(${canChi})'),
+      false,
+      'src/app/anniversaries/page.tsx không được chứa (${canChi})'
+    );
+    assert.strictEqual(
+      annivPageContent.includes('(${group.lunar_year_name})'),
+      false,
+      'src/app/anniversaries/page.tsx không được chứa (${group.lunar_year_name})'
+    );
+
+    // 3. anniversary-engine: lunarFormatted không còn chứa anniv.lunarYearName
+    assert.strictEqual(
+      annivEngineContent.includes('(${anniv.lunarYearName})'),
+      false,
+      'src/lib/anniversaries/anniversary-engine.ts không được chứa (${anniv.lunarYearName}) trong lunarFormatted'
+    );
+  });
+
+  // TC_UT_DAYS_RANGE_LABEL_CLEAN: Nhãn chọn phạm vi thời gian loại bỏ hoàn toàn chữ "tới"
+  it('TC_UT_DAYS_RANGE_LABEL_CLEAN: Trang Lịch Giỗ loại bỏ chữ "tới" trong các nút phạm vi và text thống kê', () => {
+    const annivPagePath = path.resolve(process.cwd(), 'src/app/anniversaries/page.tsx');
+    assert.ok(fs.existsSync(annivPagePath), 'src/app/anniversaries/page.tsx phải tồn tại');
+
+    const content = fs.readFileSync(annivPagePath, 'utf8');
+
+    // 1. Nút tabs phạm vi là '7 ngày', '15 ngày', '30 ngày'
+    assert.ok(content.includes("'7 ngày'") || content.includes('"7 ngày"'), 'Phải chứa nhãn "7 ngày"');
+    assert.ok(content.includes("'15 ngày'") || content.includes('"15 ngày"'), 'Phải chứa nhãn "15 ngày"');
+    assert.ok(content.includes("'30 ngày'") || content.includes('"30 ngày"'), 'Phải chứa nhãn "30 ngày"');
+
+    // 2. Không còn chứa "7 ngày tới", "15 ngày tới", "30 ngày tới"
+    assert.strictEqual(content.includes('7 ngày tới'), false, 'Không được chứa "7 ngày tới"');
+    assert.strictEqual(content.includes('15 ngày tới'), false, 'Không được chứa "15 ngày tới"');
+    assert.strictEqual(content.includes('30 ngày tới'), false, 'Không được chứa "30 ngày tới"');
+
+    // 3. Text thống kê và empty state dùng "trong {daysRange} ngày"
+    assert.ok(
+      content.includes('trong ${daysRange} ngày') || content.includes('trong {daysRange} ngày'),
+      'Text thống kê/empty state phải dùng "trong {daysRange} ngày"'
+    );
+  });
+
+  // TC_UT_SPLIT_FEATURE_FLAGS: ClanFeatureFlags và resolveFeatureFlags hỗ trợ cả enable_anniversaries và enable_push_notifications độc lập
+  it('TC_UT_SPLIT_FEATURE_FLAGS: resolveFeatureFlags hỗ trợ tách biệt enable_anniversaries và enable_push_notifications độc lập', () => {
+    // 1. Mặc định cả 2 cờ đều là true
+    const defaultFlags = resolveFeatureFlags(undefined);
+    assert.strictEqual(defaultFlags.enable_anniversaries, true, 'enable_anniversaries mặc định là true');
+    assert.strictEqual(defaultFlags.enable_push_notifications, true, 'enable_push_notifications mặc định là true');
+
+    // 2. Tắt anniversaries độc lập
+    const noAnniv = resolveFeatureFlags({ enable_anniversaries: false });
+    assert.strictEqual(noAnniv.enable_anniversaries, false);
+    assert.strictEqual(noAnniv.enable_push_notifications, true);
+
+    // 3. Tắt push độc lập
+    const noPush = resolveFeatureFlags({ enable_push_notifications: false });
+    assert.strictEqual(noPush.enable_anniversaries, true);
+    assert.strictEqual(noPush.enable_push_notifications, false);
+
+    // 4. Tắt cả hai
+    const neither = resolveFeatureFlags({ enable_anniversaries: false, enable_push_notifications: false });
+    assert.strictEqual(neither.enable_anniversaries, false);
+    assert.strictEqual(neither.enable_push_notifications, false);
+  });
+
+  // TC_UT_PUSH_BANNER_FLAG_GUARD: PushNotificationBanner ẩn hoàn toàn khi enable_push_notifications = false
+  it('TC_UT_PUSH_BANNER_FLAG_GUARD: PushNotificationBanner có prop enabled và tự ẩn, trang anniversaries truyền cờ push', () => {
+    const bannerPath = path.resolve(process.cwd(), 'src/components/anniversaries/PushNotificationBanner.tsx');
+    const annivPagePath = path.resolve(process.cwd(), 'src/app/anniversaries/page.tsx');
+
+    assert.ok(fs.existsSync(bannerPath), 'PushNotificationBanner.tsx phải tồn tại');
+    assert.ok(fs.existsSync(annivPagePath), 'src/app/anniversaries/page.tsx phải tồn tại');
+
+    const bannerContent = fs.readFileSync(bannerPath, 'utf8');
+    const annivPageContent = fs.readFileSync(annivPagePath, 'utf8');
+
+    // 1. Banner có prop enabled và early return null khi false
+    assert.ok(
+      bannerContent.includes('enabled?: boolean') || bannerContent.includes('enabled: boolean'),
+      'PushNotificationBanner phải khai báo prop enabled'
+    );
+    assert.ok(
+      bannerContent.includes('if (!enabled)') || bannerContent.includes('if (enabled === false)'),
+      'PushNotificationBanner phải early return null khi !enabled'
+    );
+
+    // 2. Trang anniversaries đọc enable_push_notifications và truyền enabled vào PushNotificationBanner
+    assert.ok(
+      annivPageContent.includes('enablePush') || annivPageContent.includes('enable_push_notifications'),
+      'src/app/anniversaries/page.tsx phải quản lý trạng thái enablePush'
+    );
+    assert.ok(
+      annivPageContent.includes('enabled={enablePush}') || annivPageContent.includes('enablePush && <PushNotificationBanner'),
+      'src/app/anniversaries/page.tsx phải kiểm soát hiển thị PushNotificationBanner theo cờ push'
+    );
+  });
+
+  // TC_UT_PERSONAL_SETTINGS_PUSH_VISIBILITY: PersonalSettingsModal ẩn Section Nhận Chuông Báo Giỗ khi cờ push tắt
+  it('TC_UT_PERSONAL_SETTINGS_PUSH_VISIBILITY: PersonalSettingsModal kiểm soát ẩn Section Nhận Chuông Báo Giỗ khi cờ push tắt', () => {
+    const modalPath = path.resolve(process.cwd(), 'src/components/auth/PersonalSettingsModal.tsx');
+    const authBtnPath = path.resolve(process.cwd(), 'src/components/auth/AuthButton.tsx');
+
+    assert.ok(fs.existsSync(modalPath), 'PersonalSettingsModal.tsx phải tồn tại');
+    assert.ok(fs.existsSync(authBtnPath), 'AuthButton.tsx phải tồn tại');
+
+    const modalContent = fs.readFileSync(modalPath, 'utf8');
+    const authBtnContent = fs.readFileSync(authBtnPath, 'utf8');
+
+    // 1. PersonalSettingsModal có state/prop pushFeatureEnabled
+    assert.ok(
+      modalContent.includes('pushFeatureEnabled'),
+      'PersonalSettingsModal phải có biến pushFeatureEnabled'
+    );
+
+    // 2. Section 2 "Nhận Chuông Báo Giỗ" được bọc điều kiện pushFeatureEnabled
+    assert.ok(
+      modalContent.includes('pushFeatureEnabled &&') || modalContent.includes('{pushFeatureEnabled && ('),
+      'Section 2 Nhận Chuông Báo Giỗ phải được bọc bởi pushFeatureEnabled'
+    );
+
+    // 3. AuthButton truyền featureFlags xuống PersonalSettingsModal
+    assert.ok(
+      authBtnContent.includes('featureFlags={featureFlags}'),
+      'AuthButton.tsx phải truyền featureFlags cho PersonalSettingsModal'
     );
   });
 });

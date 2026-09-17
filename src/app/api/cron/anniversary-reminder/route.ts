@@ -57,6 +57,31 @@ export async function GET(request: NextRequest) {
     };
     const supabase = getSafeSupabase();
 
+    // 1.5. Kiểm tra Feature Flags từ CSDL (enable_anniversaries & enable_push_notifications)
+    if (supabase) {
+      try {
+        const { data: clanData } = await supabase
+          .from('clan_settings')
+          .select('feature_flags')
+          .limit(1)
+          .single();
+        if (clanData?.feature_flags) {
+          const flags = clanData.feature_flags as Record<string, boolean>;
+          if (flags.enable_anniversaries === false || flags.enable_push_notifications === false) {
+            return NextResponse.json({
+              success: true,
+              message: 'Web Push notification is disabled by Clan Admin',
+              sent: 0,
+              failed: 0,
+              anniversariesCount: 0,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to check feature flags in cron:', err);
+      }
+    }
+
     // 2. Lấy danh sách thành viên dòng họ
     let members: MemberRecord[] = [];
     if (supabase) {

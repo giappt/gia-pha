@@ -37,17 +37,17 @@ export default function AnniversariesPage() {
   const [daysRange, setDaysRange] = useState<number>(30);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
+  const [enablePush, setEnablePush] = useState<boolean>(true);
 
   // Tính ngày hôm nay chuẩn Âm - Dương UTC+7
   const todayInfo = useMemo(() => {
     const { year, month, day } = getVietnamDate();
     const lunar = solarToLunar(day, month, year);
-    const canChi = getYearCanChi(lunar.lunarYear);
     return {
       solarStr: formatSolarDateWithDayOfWeek(year, month, day),
       lunarStr: `Ngày ${lunar.lunarDay < 10 ? '0' : ''}${lunar.lunarDay} tháng ${
         lunar.lunarMonth < 10 ? '0' : ''
-      }${lunar.lunarMonth} Âm lịch (${canChi})`,
+      }${lunar.lunarMonth} Âm lịch`,
     };
   }, []);
 
@@ -93,13 +93,20 @@ export default function AnniversariesPage() {
     return () => window.removeEventListener(USER_PREFERENCES_EVENT, handlePrefChange);
   }, []);
 
-  // Nạp cấu trúc Ngành/Chi chính thức và danh sách thành viên
+  // Nạp cấu trúc Ngành/Chi chính thức, cờ tính năng và danh sách thành viên
   useEffect(() => {
     fetch('/api/clan-settings')
       .then((r) => r.json())
       .then((res) => {
         if (res.success && Array.isArray(res.data?.branches)) {
           setClanBranches(res.data.branches);
+        }
+        if (
+          res.success &&
+          res.data?.feature_flags &&
+          typeof res.data.feature_flags.enable_push_notifications === 'boolean'
+        ) {
+          setEnablePush(res.data.feature_flags.enable_push_notifications);
         }
       })
       .catch(() => {});
@@ -201,10 +208,12 @@ export default function AnniversariesPage() {
             </div>
           </div>
 
-          {/* 2. Banner Đăng Ký Web Push */}
-          <div className="mt-8">
-            <PushNotificationBanner />
-          </div>
+          {/* 2. Banner Đăng Ký Web Push (Tự động ẩn khi quản trị viên tắt tính năng) */}
+          {enablePush && (
+            <div className="mt-8">
+              <PushNotificationBanner enabled={enablePush} />
+            </div>
+          )}
         </div>
       </section>
 
@@ -218,9 +227,9 @@ export default function AnniversariesPage() {
               <span>Phạm vi:</span>
             </span>
             {[
-              { label: '7 ngày tới', value: 7 },
-              { label: '15 ngày tới', value: 15 },
-              { label: '30 ngày tới', value: 30 },
+              { label: '7 ngày', value: 7 },
+              { label: '15 ngày', value: 15 },
+              { label: '30 ngày', value: 30 },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -282,7 +291,7 @@ export default function AnniversariesPage() {
         {/* 4. Thống kê kết quả */}
         <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-3">
           <span>
-            Hiển thị <strong>{totalMembersCount}</strong> ngày giỗ trong {daysRange} ngày tới
+            Hiển thị <strong>{totalMembersCount}</strong> ngày giỗ trong {daysRange} ngày
           </span>
           {searchQuery && (
             <span>
@@ -305,7 +314,7 @@ export default function AnniversariesPage() {
                 <CalendarIcon className="w-7 h-7" />
               </div>
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                Không có ngày giỗ trong {daysRange} ngày tới
+                Không có ngày giỗ trong {daysRange} ngày
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                 Trong khoảng thời gian này gia tộc không có ngày giỗ nào. Kính chúc toàn thể gia quyến và con cháu vạn sự an khang, thuận hòa!
@@ -366,7 +375,7 @@ export default function AnniversariesPage() {
                             {formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day)}
                           </span>
                           <span className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                            Ngày {group.lunar_day < 10 ? '0' : ''}{group.lunar_day}/{group.lunar_month < 10 ? '0' : ''}{group.lunar_month} Âm lịch ({group.lunar_year_name})
+                            Ngày {group.lunar_day < 10 ? '0' : ''}{group.lunar_day}/{group.lunar_month < 10 ? '0' : ''}{group.lunar_month} Âm lịch
                           </span>
                         </div>
                       </div>

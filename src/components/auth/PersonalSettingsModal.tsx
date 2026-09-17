@@ -9,23 +9,26 @@ import {
   flattenBranchTree,
   FlattenedBranchItem,
 } from '@/lib/tree-layout/branch-engine';
-import type { BranchNode } from '@/types/database';
+import type { BranchNode, ClanFeatureFlags } from '@/types/database';
 
 interface PersonalSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   userEmail?: string | null;
+  featureFlags?: ClanFeatureFlags | null;
 }
 
 export default function PersonalSettingsModal({
   isOpen,
   onClose,
   userEmail,
+  featureFlags,
 }: PersonalSettingsModalProps) {
   const [mounted, setMounted] = useState(false);
   const [branches, setBranches] = useState<FlattenedBranchItem[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [enablePush, setEnablePush] = useState<boolean>(false);
+  const [pushFeatureEnabled, setPushFeatureEnabled] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(true);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -59,15 +62,31 @@ export default function PersonalSettingsModal({
     setSelectedBranchId(currentPrefs.focusedBranchId);
     setEnablePush(currentPrefs.enablePushNotifications);
 
-    // 2. Fetch clan branch tree
-    async function loadBranches() {
+    // 2. Fetch clan branch tree and feature flags
+    async function loadBranchesAndSettings() {
       try {
         setIsLoading(true);
+
+        if (featureFlags) {
+          const isPushAllowed =
+            featureFlags.enable_push_notifications !== false &&
+            featureFlags.enable_anniversaries !== false;
+          setPushFeatureEnabled(isPushAllowed);
+        }
+
         const res = await fetch('/api/clan-settings');
         if (res.ok) {
           const json = await res.json();
           const rawBranches: BranchNode[] = json.data?.branches || [];
           setBranches(flattenBranchTree(rawBranches));
+
+          const flags = json.data?.feature_flags;
+          if (flags) {
+            const isPushAllowed =
+              flags.enable_push_notifications !== false &&
+              flags.enable_anniversaries !== false;
+            setPushFeatureEnabled(isPushAllowed);
+          }
         }
       } catch (err) {
         console.warn('Failed to load branches for personal settings:', err);
@@ -76,8 +95,8 @@ export default function PersonalSettingsModal({
       }
     }
 
-    loadBranches();
-  }, [isOpen]);
+    loadBranchesAndSettings();
+  }, [isOpen, featureFlags]);
 
   if (!isOpen || !mounted) return null;
 
@@ -192,30 +211,32 @@ export default function PersonalSettingsModal({
             </div>
           </div>
 
-          {/* Section 2: Push Notifications */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-                  Nhận Chuông Báo Giỗ
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
-                  Nhận thông báo đẩy trên thiết bị này trước ngày giỗ 3 ngày.
-                </span>
+          {/* Section 2: Push Notifications (Tự ẩn khi tính năng Push hoặc Lịch Giỗ bị tắt) */}
+          {pushFeatureEnabled && (
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+                    Nhận Chuông Báo Giỗ
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                    Nhận thông báo đẩy trên thiết bị này trước ngày giỗ 3 ngày.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEnablePush(!enablePush)}
+                  className={`p-2 rounded-xl transition-all ${
+                    enablePush
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                  }`}
+                >
+                  {enablePush ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setEnablePush(!enablePush)}
-                className={`p-2 rounded-xl transition-all ${
-                  enablePush
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                }`}
-              >
-                {enablePush ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-              </button>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}

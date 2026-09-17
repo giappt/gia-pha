@@ -32,6 +32,7 @@ export interface ClanFeatureFlags {
   enable_public_tree: boolean;
   enable_kinship_lookup: boolean;
   enable_anniversaries: boolean;
+  enable_push_notifications: boolean;
   allow_member_claims: boolean;
   mask_living_member_privacy: boolean;
   maintenance_mode: boolean;

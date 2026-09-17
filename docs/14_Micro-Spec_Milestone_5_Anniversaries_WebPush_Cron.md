@@ -557,6 +557,31 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - Phía dưới cụm đăng nhập là đường hairline mờ nhẹ `border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-2`.
   - Nút Cài đặt đặt tại chân Card với phong cách thanh thoát, đồng bộ màu ngọc bích nhạt, tự ẩn khi đã cài đặt.
 
+### 5.12. Tinh Gọn Hiển Thị Âm Lịch (Bỏ Can Chi Năm), Nhãn Phạm Vi (Bỏ Chữ "Tới") & Tách Rời 2 Cài Đặt Quản Trị Lịch Giỗ vs Web Push
+- **1. Tinh Gọn Chuỗi Ngày Âm Lịch (Triệt Tiêu Năm Can Chi Lặp Lại):**
+  - Loại bỏ hoàn toàn chuỗi `(Bính Ngọ)` hoặc Can Chi năm khỏi:
+    - Thẻ Ngày hôm nay trên `/anniversaries`: `Âm lịch: Ngày 07 tháng 08 Âm lịch` (bỏ `(${canChi})`).
+    - Header của từng nhóm ngày giỗ trên `/anniversaries`: `Ngày 12/08 Âm lịch` (bỏ `(${group.lunar_year_name})`).
+    - Thẻ Ngày Giỗ Gần Nhất trên Trang Chủ (`/`): `Âm lịch: Ngày 12/08` (bỏ `(${nearestGroup.lunar_year_name})`).
+    - DTO hàm tính toán trong `src/lib/anniversaries/anniversary-engine.ts`: `lunarFormatted` trả về `Ngày DD/MM Âm lịch`.
+  - Giữ lại sự tập trung cao nhất vào Ngày và Tháng Âm lịch để phục vụ việc làm mâm cúng giỗ truyền thống của con cháu.
+- **2. Tinh Gọn Nhãn Chọn Phạm Vi Thời Gian (Bỏ Chữ "Tới"):**
+  - Tiền tố đã có nhãn `"Phạm vi:"`, do đó rút gọn các nút lọc thành: `[ 7 ngày ]`, `[ 15 ngày ]`, `[ 30 ngày ]` (bỏ chữ `tới`).
+  - Dòng thống kê: `Hiển thị N ngày giỗ trong X ngày` (bỏ chữ `tới`).
+  - Trạng thái trống (Empty State): `Không có ngày giỗ trong X ngày` (bỏ chữ `tới`).
+- **3. Tách Rời 2 Cài Đặt Quản Trị Độc Lập Trong CSDL & Trang Admin Features:**
+  - Bổ sung trường cờ tính năng mới vào `ClanFeatureFlags`: `enable_push_notifications: boolean`.
+  - Phân định rõ 2 công tắc độc lập tại `/admin/features`:
+    - `enable_anniversaries`: **Phân Hệ Lịch Giỗ Gia Tộc** (Điều khiển: Menu Lịch Giỗ trên Navbar, Bottom Nav, Thẻ Spotlight Trang Chủ, route `/anniversaries`).
+    - `enable_push_notifications`: **Thông Báo Đẩy Web Push & Nhắc Giỗ** (Điều khiển: Banner Bật Thông Báo, mục Nhận Chuông Báo Giỗ trong *Cài Đặt Của Tôi*, và tiến trình Vercel Cron).
+- **4. Cơ Chế Thứ Bậc An Toàn & Rào Chắn Đa Tầng (Safety Cascade):**
+  - **Khi `enable_push_notifications = false` (hoặc `enable_anniversaries = false`):**
+    - Component `PushNotificationBanner` tự động ẩn 100% (`return null`).
+    - Section 2 *"Nhận Chuông Báo Giỗ"* trong `PersonalSettingsModal` (*Cài Đặt Của Tôi*) tự động ẩn 100%.
+    - Tiến trình Cron ngầm `/api/cron/anniversary-reminder` kiểm tra cờ từ CSDL: Nếu cờ tắt, dừng gửi push tức thì và trả về thông báo an toàn `{ success: true, message: 'Web Push notification is disabled by Clan Admin', sentCount: 0 }`.
+  - **Khi `enable_anniversaries = true` và `enable_push_notifications = false`:**
+    - Con cháu vẫn tự do truy cập Lịch Giỗ, xem ngày cúng, tra cứu ngày âm/dương bình thường mà không bị quấy rầy bởi chuông báo đẩy.
+
 ---
 
 ## 7. MA TRẬN TEST CASES & TIÊU CHÍ NGHIỆM THU (TEST SPECIFICATION)
@@ -586,6 +611,12 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_HOMEPAGE_UNIFIED_WIDTH_ALIGNMENT** | Thẻ Ngày Giỗ và Banner Tiện Ích PWA đồng bộ độ rộng chuẩn max-w-3xl | `tests/theme-and-layout.test.ts` | File `src/app/page.tsx` | Đọc mã nguồn và kiểm tra container classes | Thẻ Ngày Giỗ và Banner Tiện Ích PWA đều có class `max-w-3xl w-full` | Geometry Alignment | `[x] PASS` |
 | **TC_UT_HOMEPAGE_NO_ADMIN_CARD** | Trang Chủ loại bỏ hoàn toàn Khối Thẻ Quản Trị Viên (Super Admin) ở cuối trang | `tests/theme-and-layout.test.ts` | File `src/app/page.tsx` | Đọc mã nguồn kiểm tra JSX/text | Không còn chứa chuỗi "Khu vực Quản Trị Viên (Super Admin)" hay ID `admin-settings-btn` trên trang chủ | Clean Homepage | `[x] PASS` |
 | **TC_UT_PWA_RESPONSIVE_LABEL** | Nút / Banner Cài Đặt PWA hiển thị nhãn thông minh theo kích cỡ thiết bị | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` hoặc `page.tsx` | Đọc mã nguồn nhãn hiển thị | Chứa nhãn Desktop "Cài đặt ứng dụng" và Mobile "Cài đặt ứng dụng điện thoại", không chứa FAT/PWA | Responsive Labels | `[x] PASS` |
+| **TC_UT_NO_LUNAR_YEAR_NAME** | Triệt tiêu hoàn toàn tên năm Can Chi (Bính Ngọ) trên Trang Chủ và Trang Lịch Giỗ | `tests/theme-and-layout.test.ts` | Files `src/app/page.tsx`, `src/app/anniversaries/page.tsx`, `src/lib/anniversaries/anniversary-engine.ts` | Đọc mã nguồn và gọi format hàm | Không còn chứa `(${canChi})`, `(${nearestGroup.lunar_year_name})` hay `(${group.lunar_year_name})` | Clean Copywriting | `[x] PASS` |
+| **TC_UT_DAYS_RANGE_LABEL_CLEAN** | Nhãn chọn phạm vi thời gian loại bỏ hoàn toàn chữ "tới" | `tests/theme-and-layout.test.ts` | File `src/app/anniversaries/page.tsx` | Đọc mã nguồn kiểm tra tabs và text thống kê | Các nút là '7 ngày', '15 ngày', '30 ngày'; không còn 'ngày tới' | Clean Copywriting | `[x] PASS` |
+| **TC_UT_SPLIT_FEATURE_FLAGS** | ClanFeatureFlags và resolveFeatureFlags hỗ trợ cả enable_anniversaries và enable_push_notifications độc lập | `tests/theme-and-layout.test.ts` | Module `src/lib/admin/admin-engine.ts` | Gọi `resolveFeatureFlags` với các payload rỗng/khuyết/đủ | Trả về cả 2 cờ boolean với mặc định `true`, cho phép bật/tắt độc lập | Architectural Integrity | `[x] PASS` |
+| **TC_UT_PUSH_BANNER_FLAG_GUARD** | PushNotificationBanner ẩn hoàn toàn khi enable_push_notifications = false | `tests/theme-and-layout.test.ts` | Files `PushNotificationBanner.tsx`, `src/app/anniversaries/page.tsx` | Đọc mã nguồn và kiểm tra điều kiện render | Banner kiểm tra cờ push hoặc trang anniversaries kiểm tra cờ trước khi render | Defensive Gate | `[x] PASS` |
+| **TC_UT_PERSONAL_SETTINGS_PUSH_VISIBILITY** | PersonalSettingsModal ẩn Section Nhận Chuông Báo Giỗ khi cờ push tắt | `tests/theme-and-layout.test.ts` | File `src/components/auth/PersonalSettingsModal.tsx` | Đọc mã nguồn kiểm tra điều kiện render Section 2 | Section Nhận Chuông Báo Giỗ chỉ render khi cờ push bật | Defensive Gate | `[x] PASS` |
+| **TC_INT_CRON_RESPECTS_FEATURE_FLAG** | Route Cron hủy gửi push và trả về thông báo khi cờ push hoặc lịch giỗ tắt | `tests/cron-anniversary.test.ts` | Mock CSDL có feature_flags `enable_push_notifications: false` | Gọi GET `/api/cron/anniversary-reminder` với secret hợp lệ | HTTP 200 `{ success: true, sentCount: 0 }`, không gọi webpush.sendNotification | Background Safety | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -618,6 +649,10 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_26 (Trục Thẳng Hàng Trang Chủ max-w-3xl):** Mở Trang Chủ $\rightarrow$ Khối Ngày Giỗ Gần Nhất và Banner Tiện Ích Cài Đặt PWA gióng thẳng tắp 2 lề trái phải (`max-w-3xl`), không còn hiện tượng lệch lề thụt thò.
 - [ ] **UAT_27 (Loại Bỏ Hoàn Toàn Khối Quản Trị Viên Trang Chủ):** Mở Trang Chủ bằng tài khoản Super Admin $\rightarrow$ Cuối trang không còn xuất hiện thẻ xanh Quản Trị Viên, giao diện kết thúc trang nhã và tôn nghiêm tại Khối Ngày Giỗ / Banner.
 - [ ] **UAT_28 (Chân Card Login Gate Thanh Thoát):** Mở `/login-gate` $\rightarrow$ Nút Cài đặt ứng dụng đặt dưới đường kẻ hairline ở chân Card, không cạnh tranh với nút Đăng nhập Google.
+- [ ] **UAT_29 (Hiển Thị Ngày Âm Lịch Tinh Gọn Không Tên Năm Can Chi):** Xem Thẻ Hôm Nay, Header Ngày Giỗ trên `/anniversaries` và Thẻ Ngày Giỗ Gần Nhất trên Trang Chủ $\rightarrow$ Chỉ hiển thị ngày và tháng âm, tuyệt đối không còn chứa `(Bính Ngọ)` hay Can Chi năm.
+- [ ] **UAT_30 (Nhãn Phạm Vi Ngắn Gọn):** Các nút phạm vi hiển thị `[ 7 ngày ] [ 15 ngày ] [ 30 ngày ]` (không còn chữ `tới`), dòng thống kê hiển thị `trong 30 ngày`.
+- [ ] **UAT_31 (Quản Trị Tính Năng 2 Công Tắc Tách Rời):** Truy cập `/admin/features` $\rightarrow$ Thấy 2 công tắc tách biệt: "Phân Hệ Lịch Giỗ Gia Tộc" và "Thông Báo Đẩy Web Push & Nhắc Giỗ".
+- [ ] **UAT_32 (Đồng Bộ Ẩn Chuông Báo Giỗ & Banner Khi Tắt Web Push):** Gạt tắt công tắc Web Push trong Admin $\rightarrow$ Mở `/anniversaries` không còn thấy Banner Web Push; mở modal *Cài Đặt Của Tôi* từ Header không còn thấy mục Nhận Chuông Báo Giỗ; nhưng danh sách Lịch Giỗ vẫn xem được bình thường.
 
 ---
 
@@ -645,6 +680,9 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG20 (Standalone PWA Safety):** Ứng dụng khi chạy ở chế độ Standalone không hiển thị nút cài đặt thừa thãi.
 - [x] **RG21 (Admin Route Accessibility):** Super Admin vẫn truy cập `/admin` và `/admin/settings` dễ dàng qua Menu Avatar trên Navbar sau khi bỏ khối Admin ở Trang Chủ.
 - [x] **RG22 (PWA Standalone Vanishing):** Khi ứng dụng chạy trong chế độ Standalone, Banner Tiện Ích tự động biến mất 100%, không để lại khoảng trống thừa.
+- [ ] **RG23 (Lịch Giỗ Hiển Thị Khi Tắt Push):** Tắt Web Push không làm ẩn trang Lịch Giỗ hay Thẻ Ngày Giỗ Trang Chủ.
+- [ ] **RG24 (Personal Settings Stability):** Ẩn mục Nhận Chuông không làm ảnh hưởng đến tính năng chọn Nhánh Theo Dõi Mặc Định trong *Cài Đặt Của Tôi*.
+- [ ] **RG25 (Cron Route Authorization):** Kiểm tra `CRON_SECRET` vẫn hoạt động nguyên vẹn khi cờ bật.
 
 ---
 
@@ -652,12 +690,6 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 
 > "AI ơi, hãy đọc kỹ đặc tả `docs/14_Micro-Spec_Milestone_5_Anniversaries_WebPush_Cron.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build $\rightarrow$ Automated Test Suite $\rightarrow$ Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
 
-
----
-
-## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
-
-> "AI ơi, hãy đọc kỹ đặc tả `docs/14_Micro-Spec_Milestone_5_Anniversaries_WebPush_Cron.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build $\rightarrow$ Automated Test Suite $\rightarrow$ Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
 
 
 

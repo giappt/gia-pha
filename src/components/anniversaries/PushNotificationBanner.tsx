@@ -14,13 +14,19 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-export function PushNotificationBanner() {
+interface PushNotificationBannerProps {
+  enabled?: boolean;
+}
+
+export function PushNotificationBanner({ enabled = true }: PushNotificationBannerProps = {}) {
   const [isSupported, setIsSupported] = useState<boolean>(true);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [isIOS, setIsIOS] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  if (!enabled) return null;
 
   useEffect(() => {
     // 1. Kiểm tra môi trường hỗ trợ

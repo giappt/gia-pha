@@ -4,6 +4,7 @@ export const DEFAULT_FEATURE_FLAGS: ClanFeatureFlags = {
   enable_public_tree: true,
   enable_kinship_lookup: true,
   enable_anniversaries: true,
+  enable_push_notifications: true,
   allow_member_claims: true,
   mask_living_member_privacy: true,
   maintenance_mode: false,
@@ -37,6 +38,10 @@ export function resolveFeatureFlags(flags?: Partial<ClanFeatureFlags> | null): C
       typeof flags.enable_anniversaries === 'boolean'
         ? flags.enable_anniversaries
         : DEFAULT_FEATURE_FLAGS.enable_anniversaries,
+    enable_push_notifications:
+      typeof flags.enable_push_notifications === 'boolean'
+        ? flags.enable_push_notifications
+        : DEFAULT_FEATURE_FLAGS.enable_push_notifications,
     allow_member_claims:
       typeof flags.allow_member_claims === 'boolean'
         ? flags.allow_member_claims
