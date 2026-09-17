@@ -416,7 +416,7 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
 ### 5.6. File: `src/components/navbar/Navbar.tsx`, `src/components/icons/FamilyTreeIcon.tsx`, `src/components/auth/AuthButton.tsx`, `src/app/page.tsx` & Chuẩn Hóa Nhận Diện Thương Hiệu, Biểu Tượng Cây Phả Hệ và Đồng Bộ Avatar
 - **1. Loại bỏ nút Quản trị trên Header Navbar (`Navbar.tsx`):**
   - Tinh gọn thanh Header: Loại bỏ hoàn toàn nút `[Quản Trị]` / `[Quản Trị Dòng Họ]` và icon `Shield` tương ứng khỏi Header Desktop và Mobile Menu trên Header.
-  - Header Navbar chỉ giữ các liên kết cốt lõi hướng tới đại chúng gia tộc: `Phả Hệ` (`/tree`), `Lịch Giỗ` (`/anniversaries`), `Hỏi Vai Vế` (`/kinship`), cùng nút Profile/Đăng nhập `AuthButton`.
+  - Header Navbar chỉ giữ các liên kết cốt lõi hướng tới đại chúng gia tộc: `Phả Hệ` (`/tree`), `Lịch Giỗ` (`/anniversaries`), `Xưng hô` (`/kinship`), cùng nút Profile/Đăng nhập `AuthButton`.
 - **2. Logo chữ Hán "Phạm" (`范` - Unicode U+8303):**
   - Thay thế icon hoa sen / cây cũ bằng huy hiệu chữ Hán "Phạm" (`范` - bộ Thảo 艹) màu trắng `text-white font-serif font-bold text-lg leading-none`.
   - Khối huy hiệu: `bg-emerald-600 rounded-lg w-9 h-9 flex items-center justify-center shadow-sm shrink-0 border border-emerald-500/30`.

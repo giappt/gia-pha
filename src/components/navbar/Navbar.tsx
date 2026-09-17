@@ -80,7 +80,7 @@ export default async function Navbar() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
           >
             <Compass className="w-4 h-4 text-emerald-600" />
-            <span>Hỏi Vai Vế</span>
+            <span>Xưng hô</span>
           </Link>
         </nav>
 
