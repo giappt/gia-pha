@@ -21,10 +21,31 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    let effectiveViewerId = viewerMemberId;
     let members: MemberRecord[] = [];
 
     try {
       const supabase = createClient();
+
+      // Nếu chưa có viewerMemberId từ query, thử lấy từ session của user đăng nhập
+      if (!effectiveViewerId) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: profile } = await supabase
+              .from('users')
+              .select('linked_member_id')
+              .eq('id', user.id)
+              .single();
+            if (profile?.linked_member_id) {
+              effectiveViewerId = profile.linked_member_id;
+            }
+          }
+        } catch {
+          // Bỏ qua lỗi auth để fallback khách
+        }
+      }
+
       const { data: dbMembers, error } = await supabase
         .from('members')
         .select('*')
@@ -41,7 +62,7 @@ export async function GET(request: NextRequest) {
 
     const data = getUpcomingAnniversaries(members, {
       daysAhead,
-      viewerMemberId,
+      viewerMemberId: effectiveViewerId,
       branchFilter: branch,
     });
 

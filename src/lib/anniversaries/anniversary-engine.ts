@@ -154,6 +154,47 @@ export function getAccurateSolarAnniversary(
 }
 
 /**
+ * Tính toán tiền tố danh xưng cho người đã khuất:
+ * - Khi ĐÃ liên kết node (viewerKinshipTerm được truyền vào):
+ *   + Nếu quan hệ gần (cách 1-2 thế hệ như Bố, Mẹ, Ông, Bà, Bác, Chú, Cô, Dì...): ưu tiên dùng danh xưng thân tộc này (bỏ "của bạn" nếu có).
+ *   + Nếu quan hệ bậc Cụ/Kỵ trở lên: tiền tố là "Cụ".
+ * - Khi CHƯA liên kết node (hoặc không tìm thấy quan hệ thân tộc):
+ *   + Tính đời từ dưới lên: levelFromBottom = Math.max(maxGen - generation + 1, 1).
+ *   + levelFromBottom >= 4 (Đời thứ 4 từ dưới lên và các đời trên nữa): "Cụ"
+ *   + levelFromBottom in [2, 3] (Đời thứ 2, 3 từ dưới lên): Nam -> "Ông", Nữ -> "Bà"
+ *   + levelFromBottom === 1 (Đời thấp nhất): "" (tiền tố rỗng)
+ */
+export function computeDeceasedHonorificPrefix(
+  member: AnniversaryMemberInput,
+  maxGen: number,
+  viewerKinshipTerm?: string | null
+): string {
+  // 1. Nếu có xưng hô theo ngôi người xem đã liên kết
+  if (viewerKinshipTerm) {
+    const cleanedTerm = viewerKinshipTerm.replace(/\s+của bạn$/i, '').trim();
+    if (cleanedTerm && cleanedTerm !== 'Bản thân' && cleanedTerm !== 'Người ngoài họ') {
+      if (cleanedTerm.startsWith('Cụ') || cleanedTerm.startsWith('Kỵ')) {
+        return 'Cụ';
+      }
+      return cleanedTerm;
+    }
+  }
+
+  // 2. Nếu chưa liên kết node: tính theo phân cấp thế hệ từ đáy lên
+  const gen = getMemberGen(member);
+  const safeMaxGen = Math.max(maxGen, 1);
+  const levelFromBottom = Math.max(safeMaxGen - gen + 1, 1);
+
+  if (levelFromBottom >= 4) {
+    return 'Cụ';
+  }
+  if (levelFromBottom === 2 || levelFromBottom === 3) {
+    return member.gender === 'female' ? 'Bà' : 'Ông';
+  }
+  return '';
+}
+
+/**
  * Quét và gom nhóm danh sách ngày giỗ trong cửa sổ N ngày tới (mặc định 30 ngày)
  */
 export function getUpcomingAnniversaries(
@@ -166,6 +207,8 @@ export function getUpcomingAnniversaries(
     viewerMemberId,
     branchFilter,
   } = options;
+
+  const maxGen = members.reduce((max, m) => Math.max(max, getMemberGen(m)), 1);
 
   // Lọc các thành viên đã mất có đầy đủ ngày & tháng giỗ âm lịch
   const deceasedMembers = members.filter((m) => {
@@ -240,6 +283,8 @@ export function getUpcomingAnniversaries(
       const lunarFormatted = `Ngày ${padZero(day)}/${padZero(month)} Âm lịch (${anniv.lunarYearName})`;
       const generation = getMemberGen(m);
       const branch = getMemberBranch(m);
+      const honorificPrefix = computeDeceasedHonorificPrefix(m, maxGen, relativeKinship);
+      const displayName = honorificPrefix ? `${honorificPrefix} ${m.full_name}` : m.full_name;
 
       candidateItems.push({
         id: m.id,
@@ -261,6 +306,8 @@ export function getUpcomingAnniversaries(
         days_left: anniv.daysLeft,
         lunar_date_formatted: lunarFormatted,
         relative_kinship: relativeKinship,
+        honorific_prefix: honorificPrefix || undefined,
+        display_name: displayName,
       });
     }
   }

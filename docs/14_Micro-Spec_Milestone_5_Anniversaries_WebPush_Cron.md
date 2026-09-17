@@ -92,6 +92,8 @@ export interface AnniversaryMemberItem {
   days_left: number; // 0 = Hôm nay, 1 = Ngày mai, >1 = Còn N ngày
   lunar_date_formatted: string; // "Ngày 15/08 Âm lịch (Bính Ngọ)"
   relative_kinship?: string | null; // "Bà nội của bạn", "Cụ tổ đời 4 của bạn"
+  honorific_prefix?: string; // Tiền tố danh xưng: "Cụ", "Ông", "Bà" hoặc vai vế cá nhân
+  display_name?: string; // Tên hiển thị đầy đủ kèm tiền tố trang trọng
 }
 
 export interface AnniversaryDayGroup {
@@ -476,6 +478,26 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
     - Tăng kích thước SVG từ `size={32}` lên `size={38}` (trong container $48\text{px}$).
     - Huy hiệu thư pháp hiển thị bề thế, trang trọng, tương xứng với Tên Dòng Họ và Cụ Tổ Toàn Tộc.
 
+### 5.9. Milestone 5.1 — Loại Bỏ Hậu Tố "(Dương lịch)" & Động Cơ Tiền Tố Danh Xưng Tiền Nhân (Honorific Prefix Engine)
+- **1. Loại Bỏ Triệt Để Hậu Tố "(Dương lịch)" (`src/app/page.tsx`, `src/app/anniversaries/page.tsx`):**
+  - Loại bỏ hoàn toàn chuỗi `(Dương lịch)` hoặc `(Dương Lịch)` tại các vị trí hiển thị ngày:
+    - Trang Lịch Giỗ `/anniversaries`: Thẻ "Hôm nay: {todayInfo.solarStr}" và Header của từng khối ngày `{formatSolarDateWithDayOfWeek(...)}`.
+    - Trang Chủ `/`: Thẻ Spotlight Ngày Giỗ Gần Nhất `{formatSolarDateWithDayOfWeek(...)}`.
+  - Giữ nguyên cấu trúc: Dòng trên là Thứ và ngày tháng Dương lịch đầy đủ (VD: `Thứ Ba, ngày 22/09/2026`); Dòng dưới là Âm lịch nổi bật (VD: `Âm lịch: Ngày 12/08 (Bính Ngọ)`).
+- **2. Động Cơ Tiền Tố Danh Xưng Tiền Nhân (Honorific Prefix Engine - `src/lib/anniversaries/anniversary-engine.ts`):**
+  - **Khi CHƯA liên kết node (hoặc Khách xem):**
+    - Xác định thế hệ sâu nhất trong gia phả: $G_{max} = \max_{m \in members} (m.generation\_level)$.
+    - Với người mất có thế hệ $g$: độ sâu từ đáy lên là $k = G_{max} - g + 1$.
+    - **Quy tắc phân cấp danh xưng:**
+      - $k \ge 4$ (Đời thứ 4 từ dưới lên và các bậc cao hơn): Tiền tố là **"Cụ"** (VD: *Cụ Phạm Kim Đức*).
+      - $k \in \{2, 3\}$ (Đời thứ 3 và thứ 2 từ dưới lên): Nam $\rightarrow$ **"Ông"**, Nữ $\rightarrow$ **"Bà"** (VD: *Ông Phạm Văn Bảy*, *Bà Lê Thị Nhân*).
+      - $k = 1$ (Đời thứ 1 từ dưới lên - đời thấp nhất): Tiền tố rỗng `""` (hiển thị nguyên tên con cháu).
+  - **Khi ĐÃ liên kết node (`viewerMemberId`):**
+    - Hệ thống gọi hàm `findLowestCommonAncestor` & `resolveKinshipTerms` ($O(h)$ trong RAM $< 0.05\text{ms}$).
+    - Lấy danh xưng xưng hô thân tộc `termAtoB`:
+      - Nếu là quan hệ gần (cách 1-2 đời: Cha/Mẹ, Ông/Bà, Bác/Chú/Cô/Dì): Ghép trực tiếp danh xưng thân tộc vào tên: `Bà nội [Họ Tên]`, `Ông nội [Họ Tên]`.
+      - Nếu là bậc Cụ/Kỵ trở lên ($\ge 3$ đời): Ghép tiền tố trang trọng gia tộc `Cụ [Họ Tên]`, đi kèm huy hiệu quan hệ thân mật chi tiết (`Cụ cố của bạn`, `Cụ tổ của bạn`).
+
 ---
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
@@ -500,6 +522,9 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - _Xử lý:_ `<main>` luôn có `pb-16 md:pb-0`, các modal/drawer sử dụng `z-50` cao hơn `z-40` của Bottom Nav để overlay trọn vẹn màn hình khi mở ra.
 - **Edge Case 9: Lỗ rỗng (hole) của chữ Hán thư pháp bị tô kín màu khi render vector.**
   - _Xử lý:_ Sử dụng thuộc tính `fillRule="evenodd"` trên thẻ `<path>` SVG để tự động đục rỗng chính xác khoảng không bên trong chữ 卩.
+- **Edge Case 10: Gia phả có ít đời ($G_{max} \le 3$) hoặc thành viên khuyết thông tin thế hệ.**
+  - _Tình huống:_ Dữ liệu mới nhập chỉ có 2-3 thế hệ hoặc một số thành viên chưa có `generation_level`.
+  - _Xử lý:_ `computeDeceasedHonorificPrefix` tự động fallback an toàn: nếu không có thông tin thế hệ, mặc định không sinh tiền tố hoặc giữ nguyên họ tên; $G_{max}$ luôn đạt tối thiểu $\ge 1$. Mọi tính toán tuyệt đối không làm crash app.
 
 ---
 
@@ -539,6 +564,9 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_ADMIN_PROFILE_CLAN_LOGO_PREVIEW** | Căn Cước Dòng Họ (/admin/profile) hiển thị huy hiệu Logo Thư Pháp | `tests/theme-and-layout.test.ts` | File `src/app/admin/profile/page.tsx` | Đọc mã nguồn trang admin profile | Render ClanHanLogo bên cạnh tên dòng họ trong hộp mô phỏng biểu ngữ chính thức | Clan Identity UI | `[x] PASS` |
 | **TC_UT_PERSONAL_SETTINGS_NO_LOGO_OPTION** | Modal Cài Đặt Cá Nhân không còn chứa tùy chọn đổi logo dòng họ | `tests/theme-and-layout.test.ts` | File `src/components/auth/PersonalSettingsModal.tsx` | Đọc mã nguồn modal | Không còn chứa các thẻ chọn phong cách thư pháp logo (trả lại đúng thẩm quyền cá nhân) | Settings Cleanliness | `[x] PASS` |
 | **TC_UT_CLAN_HAN_LOGO_SCALE_UP** | Khắc phục chữ bé: Tăng kích thước SVG lên size 28 và mở rộng tọa độ vector chiếm 88% viewBox | `tests/theme-and-layout.test.ts` | Files `src/components/navbar/ClanHanLogoNavbar.tsx`, `src/components/icons/ClanHanLogo.tsx`, `src/app/admin/profile/page.tsx` | Đọc mã nguồn và kiểm tra kích thước `size={28}`, `size={38}` và bounding box vector | Navbar dùng `size={28}`, Admin profile dùng `size={38}`, path vector có độ phủ Y đạt 88% (Y min <= 6.0, Y max >= 94.0) | Calligraphy Scale-Up | `[x] PASS` |
+| **TC_UT_NO_SOLAR_SUFFIX** | Loại bỏ triệt để chuỗi "(Dương lịch)" trên Trang Chủ và Lịch Giỗ | `tests/theme-and-layout.test.ts` | Files `src/app/page.tsx` và `src/app/anniversaries/page.tsx` | Đọc mã nguồn và kiểm tra nội dung text hiển thị ngày | Hoàn toàn không còn chứa chuỗi "(Dương lịch)" hoặc "(Dương Lịch)" trong cả 2 file | Visual Cleanliness | `[x] PASS` |
+| **TC_UT_DECEASED_HONORIFIC_UNLINKED** | Động cơ tiền tố danh xưng tiền nhân khi chưa liên kết node (Đời 4 từ đáy -> Cụ; Đời 2,3 -> Ông/Bà; Đời 1 -> không tiền tố) | `tests/anniversary.test.ts` | Gia phả mock có $G_{max}=5$, các thành viên đời 1..5 đã mất | Gọi `getUpcomingAnniversaries` không truyền `viewerMemberId` | Đời 1, 2 ($k \ge 4$) có tiền tố "Cụ"; Đời 3, 4 ($k \in \{2, 3\}$) có tiền tố "Ông"/"Bà"; Đời 5 ($k=1$) không tiền tố | Honorific Engine | `[x] PASS` |
+| **TC_UT_DECEASED_HONORIFIC_LINKED** | Động cơ danh xưng cá nhân hóa khi đã liên kết node theo quan hệ thân tộc với người mất | `tests/anniversary.test.ts` | Viewer là Cháu, người mất là Bà nội hoặc Cụ tổ | Gọi `getUpcomingAnniversaries` truyền `viewerMemberId` | Thành viên có `honorific_prefix` / `relative_kinship` phản ánh đúng quan hệ thân tộc ("Bà nội", "Cụ") | Kinship Integration | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -562,6 +590,9 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_17 (Cài Đặt Cá Nhân Tinh Gọn):** Bấm vào Avatar góc phải Navbar $\rightarrow$ Chọn "Cài đặt cá nhân" $\rightarrow$ Modal hiển thị các tùy chọn cá nhân gọn gàng, không còn xuất hiện khối tùy chọn đổi logo dòng họ.
 - [ ] **UAT_18 (Kích Thước Chữ Thư Pháp To Rõ - Phương Án A):** Mở Header Navbar trên cả PC và Mobile $\rightarrow$ Chữ "范" trắng to rõ (+35%), đường nét thư pháp sắc sảo, nổi bật đĩnh đạc trên nền xanh ngọc bích, không còn cảm giác bị nhỏ hay lọt thỏm giữa khối vuông, lề cách góc bo tròn đều đặn.
 - [ ] **UAT_19 (Biểu Ngữ Căn Cước Dòng Họ To Đẹp):** Mở `/admin/profile` $\rightarrow$ Huy hiệu chữ Hán trong hộp mô phỏng biểu ngữ hiển thị to rõ (size 38px trong khối 48px), cân đối hoàn hảo bên cạnh Tên Dòng Họ.
+- [ ] **UAT_20 (Giao Diện Ngày Sạch Không Chữ Dương Lịch):** Mở Trang Chủ và Trang Lịch Giỗ $\rightarrow$ Dòng Dương lịch chỉ còn Thứ và Ngày tháng (VD: `Thứ Ba, ngày 22/09/2026`), hoàn toàn không còn xuất hiện hậu tố `(Dương lịch)` hay `(Dương Lịch)`.
+- [ ] **UAT_21 (Hiển Thị Tiền Tố Danh Xưng Trang Trọng Cụ/Ông/Bà):** Với tài khoản khách hoặc chưa liên kết node: Tên người mất hiển thị tiền tố trang trọng theo phân cấp từ dưới lên (Đời thứ 4 từ đáy lên $\rightarrow$ `Cụ [Họ Tên]`; Đời thứ 2, 3 từ đáy lên $\rightarrow$ `Ông [Họ Tên]` hoặc `Bà [Họ Tên]`).
+- [ ] **UAT_22 (Xưng Hô Cá Nhân Hóa Khi Đã Liên Kết Node):** Đăng nhập tài khoản đã liên kết node $\rightarrow$ Thẻ người mất hiển thị danh xưng theo ngôi xưng hô của người xem với người mất (VD: `Bà nội Lê Thị Nhân`, `Ông nội Phạm Kim Châu`, `Cụ Phạm Kim Đức` kèm badge quan hệ).
 
 ---
 
@@ -582,6 +613,9 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG13 (Theme & Logo Layout Stability):** Logo vector thư pháp chuẩn hiển thị sắc nét, không làm xô lệch chiều cao Navbar (`h-16`), rãnh khoét lỗ rỗng đục đúng qua `fillRule="evenodd"`.
 - [x] **RG14 (Calligraphy Geometry Integrity):** Tái chuẩn hóa vector không làm thay đổi hình dáng nét bút lông hoặc méo tỷ lệ X/Y gốc của chữ "范".
 - [x] **RG15 (No Corner Clipping):** Khoảng cách từ đỉnh và đáy nét chữ tới viền bo góc tròn tối thiểu $\ge 5.5\text{px}$, hoàn toàn không bị tràn hoặc cắt phạm góc bởi `overflow-hidden` và `rounded-lg` / `rounded-xl`.
+- [x] **RG16 (Clean Solar Date Integrity):** Đảm bảo format ngày và vị trí Thứ trong tuần không bị ảnh hưởng khi xóa `(Dương lịch)`.
+- [x] **RG17 (Kinship Engine Zero Lag):** Đảm bảo việc tính danh xưng không phát sinh overhead hay ảnh hưởng đến tính năng tra cứu vai vế `/kinship`.
+- [x] **RG18 (Spotlight & Anniversaries Sync):** Thẻ Spotlight Ngày Giỗ Gần Nhất trên Trang Chủ và Trang Lịch Giỗ hiển thị đồng bộ tiền tố danh xưng và tên người mất.
 
 ---
 

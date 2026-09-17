@@ -245,7 +245,7 @@ export default async function HomePage({
 
               <div>
                 <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-50">
-                  {nearestMember.full_name}
+                  {nearestMember.honorific_prefix ? `${nearestMember.honorific_prefix} ` : ''}{nearestMember.full_name}
                 </h3>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-600 dark:text-slate-300">
                   <span className="font-semibold text-emerald-700 dark:text-emerald-400">
@@ -277,9 +277,6 @@ export default async function HomePage({
                   <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100">
                     <span>
                       {formatSolarDateWithDayOfWeek(nearestGroup.solar_year, nearestGroup.solar_month, nearestGroup.solar_day)}
-                    </span>
-                    <span className="text-[11px] font-normal text-slate-400 dark:text-slate-500">
-                      (Dương lịch)
                     </span>
                   </div>
                   {/* Dòng Âm lịch ở dưới */}

@@ -192,7 +192,7 @@ export default function AnniversariesPage() {
               </div>
               <div className="text-xs">
                 <div className="font-semibold text-slate-900 dark:text-white">
-                  Hôm nay: {todayInfo.solarStr} (Dương lịch)
+                  Hôm nay: {todayInfo.solarStr}
                 </div>
                 <div className="text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">
                   Âm lịch: {todayInfo.lunarStr}
@@ -363,7 +363,7 @@ export default function AnniversariesPage() {
 
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-slate-900 dark:text-white">
-                            {formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day)} (Dương lịch)
+                            {formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day)}
                           </span>
                           <span className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                             Ngày {group.lunar_day < 10 ? '0' : ''}{group.lunar_day}/{group.lunar_month < 10 ? '0' : ''}{group.lunar_month} Âm lịch ({group.lunar_year_name})
@@ -410,7 +410,7 @@ export default function AnniversariesPage() {
                               <div>
                                 <div className="flex flex-wrap items-center gap-2">
                                   <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                                    {member.full_name}
+                                    {member.honorific_prefix ? `${member.honorific_prefix} ` : ''}{member.full_name}
                                   </h4>
 
                                   {/* Huy hiệu quan hệ thân tộc tương đối */}

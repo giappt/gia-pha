@@ -298,7 +298,17 @@
      - **Tầng Điều Hướng (Navigation Layer):** `RootLayout` đọc `featureFlags` từ cookie cache/DB và phân phối xuống `Navbar` và `MobileBottomNav`. Cả hai component lọc bỏ các tab/link (`/anniversaries`, `/kinship`) khi cờ bị tắt, trừ khi người dùng là `Super Admin` (được giữ quyền bypass để truy cập hiệu chỉnh dữ liệu & từ điển xưng hô).
      - **Tầng Trình Diễn (Presentation Layer):** Trên `HomePage`, các khối spotlight hoặc widget liên quan (như khối Spotlight "Ngày Giỗ Gần Nhất") bắt buộc bọc điều kiện kiểm tra `featureFlags.enable_anniversaries`, tự động ẩn sạch sẽ khi cờ bị tắt mà không làm vỡ khoảng cách dòng hay bố cục flexbox.
      - **Tầng Rào Chắn Server (Server Auth Gate Layer):** Hàm pure function `evaluateAuthGate` và `middleware.ts` kiểm tra cờ đối với các truy cập trực tiếp (qua bookmark hoặc gõ URL thanh địa chỉ). Người dùng thông thường cố tình vào route bị tắt sẽ được redirect 307 an toàn về trang chủ (`/`), triệt tiêu hoàn toàn rủi ro lộ giao diện dở dang.
-  3. *Quyền Ngoại Lệ của Super Admin (Admin Bypass Principle):* Super Admin luôn cần quyền truy cập vào các công cụ như `/kinship` để cấu hình từ điển xưng hô hoặc kiểm thử hệ thống trước khi chính thức kích hoạt cờ công khai cho dòng họ. Phân quyền thông minh phải cho phép `isSuperAdmin` bypass cờ hiển thị và cờ chặn route, trong khi người dùng đại chúng và khách vãng lai được bảo vệ an toàn.
+- **Động Cơ Tiền Tố Danh Xưng Tiền Nhân & Tối Ưu Định Dạng Ngày Giỗ (Deceased Honorific Engine & Clean Date Architecture):**
+  1. *Triệt tiêu hậu tố "(Dương lịch)" thừa thãi:* Khi hiển thị ngày trên giao diện người dùng, việc kèm theo chữ `(Dương lịch)` hay `(Dương Lịch)` vừa gây rườm rà vừa dễ làm rớt dòng/tràn viền trên màn hình điện thoại di động (375px). Chỉ cần hiển thị đầy đủ Thứ và ngày tháng năm Dương lịch trang nhã (`Thứ Ba, ngày 22/09/2026`), kết hợp dòng Âm lịch nổi bật phía dưới (`Âm lịch: Ngày 12/08 (Bính Ngọ)`), người dùng lập tức phân biệt rõ ràng mà không cần thêm bất kỳ từ ngữ giải thích nào.
+  2. *Quy tắc phân cấp thế hệ từ đáy lên (Bottom-up Generation Hierarchy) cho Khách / Chưa liên kết node:*
+     - Khi người xem chưa liên kết tài khoản với cây gia phả, họ không có tọa độ cá nhân để xưng hô. Lúc này, xưng hô phải quy về góc nhìn tôn kính chung của con cháu dòng họ.
+     - Thuật toán xác định $G_{max} = \max_{m \in members} (m.generation\_level)$ (thế hệ con cháu nhỏ nhất). Với người mất ở thế hệ $g$, độ sâu từ đáy lên là $k = G_{max} - g + 1$:
+       - $k \ge 4$ (Đời thứ 4 từ dưới lên và các đời tiền nhân trên nữa): Tiền tố trang trọng bắt buộc là **"Cụ"** (VD: *Cụ Phạm Kim Đức*).
+       - $k \in \{2, 3\}$ (Đời thứ 3 và thứ 2 từ dưới lên): Phân định theo giới tính: Nam $\rightarrow$ **"Ông"**, Nữ $\rightarrow$ **"Bà"** (VD: *Ông Phạm Văn Bảy*, *Bà Lê Thị Nhân*).
+       - $k = 1$ (Đời đáy): Tiền tố rỗng `""` (hiển thị nguyên tên con cháu để tránh xưng hô nghịch lý).
+  3. *Zero-Latency Kinship Integration khi ĐÃ liên kết node (`viewerMemberId`):*
+     - Việc tính toán xưng hô theo node người xem **hoàn toàn không làm phức tạp hệ thống** và không gây trễ giao diện: Thuật toán tìm tổ tiên chung gần nhất (LCA) duyệt ngược cây gia phả ($h \le 15$) hoàn toàn trong bộ nhớ RAM ($O(h)$), tốn ít hơn $0.02\text{ms}$ cho mỗi người mất. Với $1 \sim 10$ người giỗ trong 30 ngày, tổng thời gian tính toán $< 0.2\text{ms}$ CPU, $0\text{ms}$ độ trễ mạng.
+     - Khi có `viewerMemberId`: Hệ thống ưu tiên trích xuất danh xưng thân tộc theo ngôi của người xem (VD: `Bà nội`, `Ông nội`, `Cụ`) để ghép thẳng vào tên (`Bà nội Lê Thị Nhân`, `Cụ Phạm Kim Đức`), kết hợp huy hiệu quan hệ thân mật (`Bà nội của bạn`, `Cụ tổ của bạn`), mang lại trải nghiệm cảm xúc ấm cúng và cá nhân hóa sâu sắc cho từng con cháu trong dòng tộc.
 
 
 

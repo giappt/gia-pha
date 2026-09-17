@@ -21,6 +21,8 @@ export interface AnniversaryMemberItem {
   days_left: number; // 0 = Hôm nay, 1 = Ngày mai, >1 = Còn N ngày
   lunar_date_formatted: string; // "Ngày 15/08 Âm lịch (Bính Ngọ)"
   relative_kinship?: string | null; // "Bà nội của bạn", "Cụ kỵ của bạn"
+  honorific_prefix?: string; // "Cụ", "Ông", "Bà", "Bà nội", ...
+  display_name?: string; // "Cụ Phạm Kim Đức", "Bà nội Lê Thị Nhân", ...
 }
 
 export interface AnniversaryDayGroup {

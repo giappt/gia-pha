@@ -291,13 +291,31 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
     );
 
     // 2. Trên trang lịch giỗ: trong thẻ Header của group, Dương lịch xuất hiện trước Âm lịch
-    const annivSolarIdx = annivContent.indexOf('{formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day)} (Dương lịch)');
+    const annivSolarIdx = annivContent.indexOf('{formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day)}');
     const annivLunarIdx = annivContent.indexOf('Ngày {group.lunar_day < 10 ? \'0\' : \'\'}{group.lunar_day}/{group.lunar_month < 10 ? \'0\' : \'\'}{group.lunar_month} Âm lịch');
     assert.ok(annivSolarIdx > 0, 'Trang Lịch Giỗ phải hiển thị Dương lịch có Thứ trong Header group');
     assert.ok(annivLunarIdx > 0, 'Trang Lịch Giỗ phải hiển thị Âm lịch trong Header group');
     assert.ok(
       annivSolarIdx < annivLunarIdx,
       'Trên trang Lịch Giỗ, Dương lịch có Thứ phải nằm TRÊN (xuất hiện trước) Âm lịch trong Header group'
+    );
+  });
+
+  // TC_UT_NO_SOLAR_SUFFIX: Loại bỏ hoàn toàn chữ (Dương lịch) trên Trang Chủ và Trang Lịch Giỗ
+  it('TC_UT_NO_SOLAR_SUFFIX: Trang Chủ và Lịch Giỗ không còn chứa chuỗi (Dương lịch)', () => {
+    const homePath = path.resolve(process.cwd(), 'src/app/page.tsx');
+    const annivPath = path.resolve(process.cwd(), 'src/app/anniversaries/page.tsx');
+
+    const homeContent = fs.readFileSync(homePath, 'utf8');
+    const annivContent = fs.readFileSync(annivPath, 'utf8');
+
+    assert.ok(
+      !homeContent.includes('(Dương lịch)') && !homeContent.includes('(Dương Lịch)'),
+      'Trang chủ không được chứa chuỗi (Dương lịch) hoặc (Dương Lịch)'
+    );
+    assert.ok(
+      !annivContent.includes('(Dương lịch)') && !annivContent.includes('(Dương Lịch)'),
+      'Trang Lịch Giỗ không được chứa chuỗi (Dương lịch) hoặc (Dương Lịch)'
     );
   });
 

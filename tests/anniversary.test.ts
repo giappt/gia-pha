@@ -5,6 +5,7 @@ import {
   getAccurateSolarAnniversary,
   getVietnameseDayOfWeek,
   formatSolarDateWithDayOfWeek,
+  computeDeceasedHonorificPrefix,
 } from '../src/lib/anniversaries/anniversary-engine';
 import { calculateNextAnniversary } from '../src/lib/lunar/vietnamese-lunar';
 import { MemberRecord } from '../src/types/tree';
@@ -206,6 +207,149 @@ describe('Anniversary Calculation & Kinship Integration Test Suite (Milestone 5)
     // Kiểm tra padding số 0 cho ngày/tháng < 10
     const formattedPad = formatSolarDateWithDayOfWeek(2026, 5, 3);
     assert.strictEqual(formattedPad, 'Chủ Nhật, ngày 03/05/2026');
+  });
+
+  // TC_UT_DECEASED_HONORIFIC_UNLINKED: Động cơ tiền tố danh xưng tiền nhân khi chưa liên kết node
+  it('TC_UT_DECEASED_HONORIFIC_UNLINKED: Phân cấp thế hệ từ dưới lên chuẩn xác (>=4: Cụ, 2-3: Ông/Bà, 1: rỗng)', () => {
+    const maxGen = 5;
+
+    // Đời 1 ($k = 5 - 1 + 1 = 5 \ge 4$): Cụ
+    const p1 = computeDeceasedHonorificPrefix({ id: '1', full_name: 'Phạm Văn A', gender: 'male', generation_level: 1 }, maxGen);
+    assert.strictEqual(p1, 'Cụ', 'Đời 1 từ đáy lên là đời thứ 5 -> tiền tố Cụ');
+
+    // Đời 2 ($k = 5 - 2 + 1 = 4 \ge 4$): Cụ (cả nam và nữ)
+    const p2Male = computeDeceasedHonorificPrefix({ id: '2m', full_name: 'Phạm Văn B', gender: 'male', generation_level: 2 }, maxGen);
+    const p2Female = computeDeceasedHonorificPrefix({ id: '2f', full_name: 'Lê Thị C', gender: 'female', generation_level: 2 }, maxGen);
+    assert.strictEqual(p2Male, 'Cụ', 'Đời 2 (k=4) nam -> Cụ');
+    assert.strictEqual(p2Female, 'Cụ', 'Đời 2 (k=4) nữ -> Cụ');
+
+    // Đời 3 ($k = 5 - 3 + 1 = 3$): Nam -> Ông, Nữ -> Bà
+    const p3Male = computeDeceasedHonorificPrefix({ id: '3m', full_name: 'Phạm Văn D', gender: 'male', generation_level: 3 }, maxGen);
+    const p3Female = computeDeceasedHonorificPrefix({ id: '3f', full_name: 'Trần Thị E', gender: 'female', generation_level: 3 }, maxGen);
+    assert.strictEqual(p3Male, 'Ông', 'Đời 3 (k=3) nam -> Ông');
+    assert.strictEqual(p3Female, 'Bà', 'Đời 3 (k=3) nữ -> Bà');
+
+    // Đời 4 ($k = 5 - 4 + 1 = 2$): Nam -> Ông, Nữ -> Bà
+    const p4Male = computeDeceasedHonorificPrefix({ id: '4m', full_name: 'Phạm Văn F', gender: 'male', generation_level: 4 }, maxGen);
+    const p4Female = computeDeceasedHonorificPrefix({ id: '4f', full_name: 'Hoàng Thị G', gender: 'female', generation_level: 4 }, maxGen);
+    assert.strictEqual(p4Male, 'Ông', 'Đời 4 (k=2) nam -> Ông');
+    assert.strictEqual(p4Female, 'Bà', 'Đời 4 (k=2) nữ -> Bà');
+
+    // Đời 5 ($k = 5 - 5 + 1 = 1$, đời đáy): tiền tố rỗng
+    const p5 = computeDeceasedHonorificPrefix({ id: '5', full_name: 'Phạm Văn Con', gender: 'male', generation_level: 5 }, maxGen);
+    assert.strictEqual(p5, '', 'Đời 5 (k=1 đời đáy) -> không tiền tố');
+
+    // Kiểm tra tích hợp qua getUpcomingAnniversaries
+    const mockList: MemberRecord[] = [
+      {
+        id: 'ancestor-d2',
+        full_name: 'Phạm Kim Đức',
+        gender: 'male',
+        life_status: 'deceased',
+        death_lunar_day: 21,
+        death_lunar_month: 7,
+        generation_level: 2,
+        is_root: false,
+      },
+      {
+        id: 'member-d4',
+        full_name: 'Phạm Văn Bảy',
+        gender: 'male',
+        life_status: 'deceased',
+        death_lunar_day: 21,
+        death_lunar_month: 7,
+        generation_level: 4,
+        is_root: false,
+      },
+      {
+        id: 'member-d5-bottom',
+        full_name: 'Phạm Văn Chắt',
+        gender: 'male',
+        life_status: 'living',
+        generation_level: 5,
+        is_root: false,
+      },
+    ];
+
+    const refDate = new Date(2026, 8, 1);
+    const groups = getUpcomingAnniversaries(mockList, { referenceDate: refDate, daysAhead: 30 });
+    assert.ok(groups.length > 0);
+
+    const duc = groups[0].members.find((m) => m.id === 'ancestor-d2');
+    assert.ok(duc);
+    assert.strictEqual(duc.honorific_prefix, 'Cụ');
+    assert.strictEqual(duc.display_name, 'Cụ Phạm Kim Đức');
+
+    const bay = groups[0].members.find((m) => m.id === 'member-d4');
+    assert.ok(bay);
+    assert.strictEqual(bay.honorific_prefix, 'Ông');
+    assert.strictEqual(bay.display_name, 'Ông Phạm Văn Bảy');
+  });
+
+  // TC_UT_DECEASED_HONORIFIC_LINKED: Động cơ danh xưng cá nhân hóa khi đã liên kết node theo quan hệ thân tộc
+  it('TC_UT_DECEASED_HONORIFIC_LINKED: Tích hợp Kinship Engine xưng hô chuẩn theo ngôi người xem', () => {
+    // Cây 3 thế hệ: Ông Nội (Đời 1) -> Cha (Đời 2) -> Viewer Cháu (Đời 3)
+    const kinshipTree: MemberRecord[] = [
+      {
+        id: 'grandpa',
+        full_name: 'Phạm Văn Cội',
+        gender: 'male',
+        life_status: 'deceased',
+        death_lunar_day: 21,
+        death_lunar_month: 7,
+        generation_level: 1,
+        is_root: true,
+      },
+      {
+        id: 'grandma',
+        full_name: 'Lê Thị Nguồn',
+        gender: 'female',
+        life_status: 'deceased',
+        death_lunar_day: 21,
+        death_lunar_month: 7,
+        generation_level: 1,
+        is_root: false,
+      },
+      {
+        id: 'father',
+        full_name: 'Phạm Văn Thân',
+        gender: 'male',
+        father_id: 'grandpa',
+        mother_id: 'grandma',
+        life_status: 'living',
+        generation_level: 2,
+        is_root: false,
+      },
+      {
+        id: 'viewer',
+        full_name: 'Phạm Văn Cháu',
+        gender: 'male',
+        father_id: 'father',
+        life_status: 'living',
+        generation_level: 3,
+        is_root: false,
+      },
+    ];
+
+    const refDate = new Date(2026, 8, 1);
+    const groups = getUpcomingAnniversaries(kinshipTree, {
+      referenceDate: refDate,
+      daysAhead: 30,
+      viewerMemberId: 'viewer',
+    });
+
+    assert.ok(groups.length > 0);
+    const grandpa = groups[0].members.find((m) => m.id === 'grandpa');
+    assert.ok(grandpa);
+    assert.strictEqual(grandpa.relative_kinship, 'Ông nội của bạn');
+    assert.strictEqual(grandpa.honorific_prefix, 'Ông nội');
+    assert.strictEqual(grandpa.display_name, 'Ông nội Phạm Văn Cội');
+
+    const grandma = groups[0].members.find((m) => m.id === 'grandma');
+    assert.ok(grandma);
+    assert.strictEqual(grandma.relative_kinship, 'Bà nội của bạn');
+    assert.strictEqual(grandma.honorific_prefix, 'Bà nội');
+    assert.strictEqual(grandma.display_name, 'Bà nội Lê Thị Nguồn');
   });
 });
 
