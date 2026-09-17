@@ -43,7 +43,7 @@ Cột **`STT Bố` (Cột E)** và **`STT Mẹ` (Cột F)** từ Đời 5 trở 
 Đừng cố gắng điền một lúc cả 1.299 người! Hãy chia làm 3 đợt:
 
 ### Đợt 1: Trục Xương Sống 7 Đời Đầu (~30 người)
-- Điền `STT Bố` từ Đời 5 $\rightarrow$ Đời 7 (đến 7 Cụ Khởi tổ 7 Chi: Lúa, Bớp, Nguyệt, Chuyên, Quy, Diễn, Canh).
+- Điền `STT Bố` từ Đời 5 $\rightarrow$ Đời 7 (đến 7 Cụ Tổ 7 Chi: Lúa, Bớp, Nguyệt, Chuyên, Quy, Diễn, Canh).
 - Thời gian thực hiện: Khoảng **15 – 30 phút**.
 - Sau khi điền xong Đợt 1 $\rightarrow$ Lưu file và upload lên phần mềm để ngắm toàn bộ Cây Tổ 7 đời đầu!
 

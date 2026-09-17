@@ -141,8 +141,8 @@ _(Nguyên tắc: Milestone N phải nghiệm thu hoàn hảo 100% 0 lỗi mới 
 
 ### MILESTONE 2: Lõi Thuật Toán Gia Phả (Kinship Engine & Lịch Âm) & Giao Diện Tra Cứu Vai Vế
 - **Mục tiêu:**
-  - Xây dựng unit test độc lập cho thuật toán tìm tổ tiên chung gần nhất (LCA), tính độ lệch thế hệ, ánh xạ từ điển xưng hô vùng miền (`kinship-engine.ts`) và bộ chuyển đổi Âm - Dương / Năm Can Chi (`vietnamese-lunar.ts`).
-  - **Sơ đồ Cây Phả Hệ Mini Chữ V Ngược (Inverted-V Kinship Tree):** Vẽ đồ thị nhánh huyết thống trực quan chỉ lấy từ điểm giao nhau LCA (không lấy thừa từ Root), tích hợp cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời để giao diện luôn gọn gàng và không bị tràn cuộn.
+  - Xây dựng unit test độc lập cho thuật toán tìm Tổ Tiên Chung Gần Nhất, tính độ lệch thế hệ, ánh xạ từ điển xưng hô vùng miền (`kinship-engine.ts`) và bộ chuyển đổi Âm - Dương / Năm Can Chi (`vietnamese-lunar.ts`).
+  - **Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược):** Vẽ đồ thị nhánh huyết thống trực quan chỉ lấy từ điểm giao nhau LCA (không lấy thừa từ Root), tích hợp cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời để giao diện luôn gọn gàng và không bị tràn cuộn.
   - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:** Bỏ đoạn văn dài, chia thành khối Quy tắc vùng miền, Tục ngữ cổ phong và Bảng đối sánh tương quan trực diện (nhánh họ vs tuổi đời).
   - **Tập Dữ Liệu Kiểm Thử Toàn Diện (Comprehensive Clan Seed):** Mở rộng bộ dữ liệu mẫu đa dạng (6-7 đời, nhiều chi, vợ cả đã mất / vợ hai, con nuôi, hôn nhân nội tộc) để kiểm chứng 100% các ca thực tế.
 - **Thư mục/File:** `src/lib/kinship-engine/`, `src/lib/lunar/`, `src/app/kinship/`, `src/app/api/kinship/`, các file unit test `tests/`.

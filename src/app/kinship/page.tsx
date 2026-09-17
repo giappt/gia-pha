@@ -209,11 +209,11 @@ export default function KinshipPage() {
   // Khi 1 trong 2 người chính là Tổ Tiên / LCA của người kia (khoảng cách thế hệ 1 chiều)
   const isDirectLineage = Boolean(
     result &&
-      (result.relationshipType === 'parent_child' ||
-        result.relationshipType === 'direct_ancestor' ||
-        (result.lcaNode &&
-          (result.lcaNode.id === selectedPersonA?.id ||
-            result.lcaNode.id === selectedPersonB?.id)))
+    (result.relationshipType === 'parent_child' ||
+      result.relationshipType === 'direct_ancestor' ||
+      (result.lcaNode &&
+        (result.lcaNode.id === selectedPersonA?.id ||
+          result.lcaNode.id === selectedPersonB?.id)))
   );
 
   // Chuỗi phả hệ trực hệ từ Tiền Bối (trên) xuống Hậu Bối (dưới)
@@ -253,11 +253,10 @@ export default function KinshipPage() {
             <span>KINSHIP ENGINE · ĐỒ THỊ PHẢ HỆ VIỆT NAM</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight">
-            Tra Cứu Vai Vế Xưng Hô Dòng Họ
+            Tra Cứu Mối Quan Hệ
           </h1>
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Thuật toán tìm Tổ tiên chung gần nhất (LCA) kết hợp từ điển xưng hô 3 miền,
-            phân định tôn ti trật tự chính xác theo phong tục dòng tộc Việt.
+            Tìm Tổ tiên chung gần nhất.
           </p>
         </div>
 
@@ -485,11 +484,10 @@ export default function KinshipPage() {
                       handleCalculate(personAId, personBId, 'north', customDict);
                     }
                   }}
-                  className={`px-3 py-1 rounded-md transition-all ${
-                    region === 'north'
-                      ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
+                  className={`px-3 py-1 rounded-md transition-all ${region === 'north'
+                    ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
                 >
                   Miền Bắc
                 </button>
@@ -502,11 +500,10 @@ export default function KinshipPage() {
                       handleCalculate(personAId, personBId, 'central', customDict);
                     }
                   }}
-                  className={`px-3 py-1 rounded-md transition-all ${
-                    region === 'central'
-                      ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
+                  className={`px-3 py-1 rounded-md transition-all ${region === 'central'
+                    ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
                 >
                   Miền Trung
                 </button>
@@ -519,11 +516,10 @@ export default function KinshipPage() {
                       handleCalculate(personAId, personBId, 'south', customDict);
                     }
                   }}
-                  className={`px-3 py-1 rounded-md transition-all ${
-                    region === 'south'
-                      ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
+                  className={`px-3 py-1 rounded-md transition-all ${region === 'south'
+                    ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
                 >
                   Miền Nam
                 </button>
@@ -553,7 +549,7 @@ export default function KinshipPage() {
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  <span>Xác Định Vai Vế Xưng Hô</span>
+                  <span>Xác định quan hệ</span>
                 </>
               )}
             </button>
@@ -599,12 +595,12 @@ export default function KinshipPage() {
                     {result.relationshipType === 'sibling'
                       ? 'Anh Chị Em Ruột'
                       : result.relationshipType === 'cousin'
-                      ? 'Quan Hệ Họ Hàng (Cousin)'
-                      : result.relationshipType === 'parent_child'
-                      ? 'Quan Hệ Cha/Mẹ - Con'
-                      : result.relationshipType === 'direct_ancestor'
-                      ? 'Quan Hệ Trực Hệ'
-                      : 'Quan Hệ Dòng Tộc'}
+                        ? 'Quan Hệ Họ Hàng'
+                        : result.relationshipType === 'parent_child'
+                          ? 'Quan Hệ Cha/Mẹ - Con'
+                          : result.relationshipType === 'direct_ancestor'
+                            ? 'Quan Hệ Trực Hệ'
+                            : 'Quan Hệ Dòng Tộc'}
                   </span>
                 </div>
 
@@ -612,8 +608,8 @@ export default function KinshipPage() {
                   {result.generationDelta === 0
                     ? 'Cùng thế hệ (Ngang hàng)'
                     : result.generationDelta > 0
-                    ? `A ở trên B ${result.generationDelta} thế hệ`
-                    : `A ở dưới B ${Math.abs(result.generationDelta)} thế hệ`}
+                      ? `A ở trên B ${result.generationDelta} thế hệ`
+                      : `A ở dưới B ${Math.abs(result.generationDelta)} thế hệ`}
                 </div>
               </div>
 
@@ -656,7 +652,7 @@ export default function KinshipPage() {
                     <span>
                       {isDirectLineage
                         ? 'Sơ Đồ Dòng Trực Hệ Dọc (Vertical Direct Lineage)'
-                        : 'Sơ Đồ Cây Phả Hệ Trực Quan (Inverted-V Kinship Tree)'}
+                        : 'Sơ Đồ Cây Phả Hệ Trực Quan'}
                     </span>
                   </h2>
 
@@ -692,13 +688,12 @@ export default function KinshipPage() {
 
                             {/* Node thành viên trên dòng trực hệ */}
                             <div
-                              className={`w-full p-4 rounded-xl border transition-all ${
-                                isTop
-                                  ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-300/90 dark:border-amber-700 shadow-sm'
-                                  : isBottom
+                              className={`w-full p-4 rounded-xl border transition-all ${isTop
+                                ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-300/90 dark:border-amber-700 shadow-sm'
+                                : isBottom
                                   ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm'
                                   : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-2xs'
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
@@ -708,13 +703,12 @@ export default function KinshipPage() {
                                   </span>
                                 </div>
                                 <span
-                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                    isTop
-                                      ? 'bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
-                                      : isBottom
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isTop
+                                    ? 'bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
+                                    : isBottom
                                       ? 'bg-emerald-700/90 text-white'
                                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                                  }`}
+                                    }`}
                                 >
                                   Đời {node.generationNumber}
                                 </span>
@@ -763,7 +757,7 @@ export default function KinshipPage() {
                     id="inverted-v-tree"
                     className="p-5 sm:p-7 rounded-2xl bg-gradient-to-b from-slate-50/80 to-slate-100/50 dark:from-slate-950 dark:to-slate-900 border border-slate-200/70 dark:border-slate-800"
                   >
-                    {/* Đỉnh chóp: Tổ tiên chung gần nhất (LCA) */}
+                    {/* Đỉnh chóp: Tổ Tiên Chung Gần Nhất */}
                     <div className="flex flex-col items-center">
                       <div
                         id="lca-apex-node"
@@ -771,7 +765,7 @@ export default function KinshipPage() {
                       >
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-bold uppercase tracking-wider mb-1">
                           <Crown className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-                          <span>Tổ Tiên Chung Gần Nhất (LCA)</span>
+                          <span>Tổ Tiên Chung Gần Nhất</span>
                         </div>
                         <div className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                           {result.lcaNode?.name || result.lcaName}
@@ -894,10 +888,10 @@ export default function KinshipPage() {
               <Users className="w-6 h-6" />
             </div>
             <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">
-              Chọn 2 thành viên bất kỳ và bấm &quot;Xác Định Vai Vế Xưng Hô&quot;
+              Chọn 2 thành viên bất kỳ và bấm &quot;Xác định quan hệ&quot;
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-              Hệ thống sẽ tự động dò tìm Tổ tiên chung gần nhất (LCA), vẽ sơ đồ phân nhánh
+              Hệ thống sẽ tự động dò tìm Tổ Tiên Chung Gần Nhất, vẽ sơ đồ phân nhánh
               và quy chuẩn danh xưng theo phong tục vùng miền đã chọn.
             </p>
           </div>
@@ -949,21 +943,19 @@ function renderNodeItem(node: KinshipPathNode, isTarget: boolean) {
   return (
     <div
       key={node.id}
-      className={`p-3 rounded-xl border transition-all ${
-        isTarget
-          ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm font-semibold'
-          : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-2xs'
-      }`}
+      className={`p-3 rounded-xl border transition-all ${isTarget
+        ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm font-semibold'
+        : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-2xs'
+        }`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-bold tracking-tight">{node.name}</span>
         {node.relation && node.relation !== 'Bản thân' && (
           <span
-            className={`text-[10px] px-2 py-0.5 rounded-full ${
-              isTarget
-                ? 'bg-emerald-700/80 text-white'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-            }`}
+            className={`text-[10px] px-2 py-0.5 rounded-full ${isTarget
+              ? 'bg-emerald-700/80 text-white'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+              }`}
           >
             {node.relation}
           </span>

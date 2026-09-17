@@ -14,7 +14,7 @@ export const MOCK_CLAN_MEMBERS: Member[] = [
   // ==================== ĐỜI 1: KHỞI TỔ ====================
   {
     id: '10000000-0000-0000-0000-000000000001',
-    full_name: 'Nguyễn Văn Khởi (Cụ Khởi Tổ)',
+    full_name: 'Nguyễn Văn Khởi (Cụ Tổ)',
     alias_name: 'Khởi Tổ',
     gender: 'male',
     life_status: 'deceased',
@@ -32,7 +32,7 @@ export const MOCK_CLAN_MEMBERS: Member[] = [
     avatar_url: null,
     phone: null,
     address: 'Bắc Ninh',
-    biography: 'Cụ Khởi Tổ khai sơn phá thạch dòng họ Nguyễn',
+    biography: 'Cụ Tổ khai sơn phá thạch dòng họ Nguyễn',
     generation_number: 1,
     birth_order: 1,
     is_senior_branch: true,

@@ -143,7 +143,7 @@ describe('Kinship Engine Test Suite (Comprehensive 7-Generation Clan)', () => {
   });
 
   it('TC16 & TC19: Quan hệ Trực Hệ Cha-Con & Xưng Hô Ngữ Cảnh', () => {
-    const khoi = membersMap.get('10000000-0000-0000-0000-000000000001')!; // Cụ Khởi Tổ
+    const khoi = membersMap.get('10000000-0000-0000-0000-000000000001')!; // Cụ Tổ
     const binh = membersMap.get('20000000-0000-0000-0000-000000000001')!; // Cụ Bình Chi 1
 
     const lca = findLowestCommonAncestor(khoi.id, binh.id, membersMap);

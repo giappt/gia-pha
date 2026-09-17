@@ -195,6 +195,18 @@
   3. *Khử trùng số thứ tự đàn con trên giao diện (Children Order Deduplication):* Khi CSDL có nhiều con cùng mang `birth_order = 1` do nhập liệu cũ, biểu thức `{child.birth_order || cIdx + 1}` luôn in ra toàn số 1. Thuật toán mới kiểm tra nếu có duplicate `birth_order`, tự động fallback sang `cIdx + 1` để giao diện hiển thị tuần tự `1, 2, 3, 4, 5, 6, 7` theo thứ tự danh sách đã sắp xếp.
   4. *Đồng bộ sự kiện toàn cục `fat:members-reordered`:* Khi lưu thứ tự trong `ReorderChildrenModal`, component phát CustomEvent `fat:members-reordered` để `FamilyTreeCanvas` cập nhật `liveMembers` và Drawer re-render ngay tức thì mà không cần F5 trình duyệt.
 
+- **Chuẩn Hóa Nhãn UI & Thuần Việt Hóa Thuật Ngữ Phả Hệ (UI Label Normalization & De-jargonization):**
+  1. *Triệt tiêu thuật ngữ kỹ thuật thừa trên UI:* Loại bỏ hoàn toàn các từ viết tắt kỹ thuật hoặc nhãn tiếng Anh thừa thãi trên giao diện người dùng đại chúng:
+     - `Tổ Tiên Chung Gần Nhất (LCA)` $\rightarrow$ `Tổ Tiên Chung Gần Nhất` (loại bỏ `(LCA)`).
+     - `Quan Hệ Họ Hàng (Cousin)` $\rightarrow$ `Quan Hệ Họ Hàng` (loại bỏ `(Cousin)`).
+     - `Sơ Đồ Cây Phả Hệ Trực Quan (Inverted-V Kinship Tree)` $\rightarrow$ `Sơ Đồ Cây Phả Hệ Trực Quan`.
+     - Nhãn nút hành động tra cứu: Đổi từ `[Xác Định Vai Vế Xưng Hô]` $\rightarrow$ `[Xác định quan hệ]` ngắn gọn, trực diện, bao quát cả vai vế lẫn thế hệ và trực hệ.
+     - Tên Cụ Tổ Đời 1: Chuẩn hóa `Nguyễn Văn Khởi (Cụ Tổ)` thay vì `(Cụ Khởi Tổ)`.
+  2. *Tinh giản Subtitle & Icon Trang Chủ:*
+     - Lược bỏ cụm từ dài dòng ở phần giới thiệu trang chủ, tập trung vào cốt lõi: kết nối thế hệ và nhắc nhở ngày giỗ theo Âm lịch truyền thống.
+     - Đổi icon block "Ngày Giỗ Gần Nhất" từ `<Sparkles>` (mang tính tiếp thị) sang `<Calendar className="w-3.5 h-3.5" />` (trang nhã, tôn nghiêm).
+  3. *Nguyên tắc Reverse Sync (Đồng bộ ngược vào Spec):* Khi người dùng tinh chỉnh giao diện bằng tay trong mã nguồn, bắt buộc phải cập nhật ngược vào các tài liệu kiến trúc (`01`, `04`, `05`), Micro-Specs liên quan (`10`, `16`) và test matrix trước khi code tiếp, bảo đảm Specs luôn là Single Source of Truth phản ánh đúng 100% mã nguồn thực tế.
+
 - **Neo Cao Độ Avatar & Dòng Tên Bất Biến Giữa Các Thẻ Cạnh Nhau (Fixed Baseline Anchor & justify-between Elimination):**
   1. *Căn nguyên lỗi tụt Avatar:* Khi dùng `flex flex-col justify-between` với chiều cao cố định `h-[96px]`, Flexbox chia đều không gian thừa (free space) vào các khe hở giữa các khối con. Với thẻ có chân thẻ (như nút số con, ghi chú tái giá), chân thẻ cao ~20px $\rightarrow$ khoảng trống thừa ít. Với thẻ không có chân thẻ (người độc thân hoặc vợ không có nút con), chân thẻ sụp về 0px $\rightarrow$ sinh ra thêm ~20px khoảng trống thừa. `justify-between` chia đôi khoảng trống này khiến cụm [Avatar + Tên] bị tụt xuống dưới ~10px so với thẻ bên cạnh.
   2. *Giải pháp kiến trúc:* Loại bỏ triệt để `justify-between`. Chuyển sang `flex flex-col` tuần tự: Header cố định `h-[18px] shrink-0`, Body (Avatar + Tên) dùng khoảng cách cố định `mt-1.5 shrink-0`. Khi đó, đỉnh Y của Avatar của 100% thẻ trên toàn phả đồ luôn nằm chết tại tọa độ bất biến `Y = 34px`. Footer được đẩy xuống đáy bằng `mt-auto` với chiều cao cố định `h-[18px]`.

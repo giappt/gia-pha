@@ -58,7 +58,7 @@ flowchart TD
 ```
 
 - **Luồng A — Khám phá Cây & Nhảy Ghost Node:** `S-01` $\rightarrow$ Click Node Chị A mở `S-02` $\rightarrow$ Thấy Ghost Node Anh B (🔗) $\rightarrow$ Click "Xem nhánh gốc" $\rightarrow$ Camera trên `S-01` tự động lướt mượt mà sang vị trí gốc của Anh B ở Chi 2.
-- **Luồng B — Xác định Vai vế Xưng hô:** `S-01` $\rightarrow$ Chọn menu "Hỏi xưng hô" $\rightarrow$ Chuyển `S-03` $\rightarrow$ Chọn Người 1 (Tôi), Chọn Người 2 (Ông C) $\rightarrow$ Bấm "Xác định vai vế" $\rightarrow$ Hiển thị kết quả 2 chiều kèm chuỗi breadcrumbs huyết thống $\rightarrow$ Bấm "Xem trên cây" nhảy về `S-01`.
+- **Luồng B — Xác định quan hệ:** `S-01` $\rightarrow$ Chọn menu "Hỏi xưng hô" $\rightarrow$ Chuyển `S-03` $\rightarrow$ Chọn Người 1 (Tôi), Chọn Người 2 (Ông C) $\rightarrow$ Bấm "Xác định quan hệ" $\rightarrow$ Hiển thị kết quả 2 chiều kèm chuỗi breadcrumbs huyết thống $\rightarrow$ Bấm "Xem trên cây" nhảy về `S-01`.
 - **Luồng C — Đăng ký Nhận Node & Duyệt:** `S-01` $\rightarrow$ Bấm "Tôi là ai trên cây?" $\rightarrow$ Chuyển `S-05` $\rightarrow$ Đăng nhập Google $\rightarrow$ Chọn Node mình $\rightarrow$ Nhập ghi chú xác thực $\rightarrow$ Gửi $\rightarrow$ Super Admin nhận thông báo trên `S-06` $\rightarrow$ Bấm Duyệt (Approve) $\rightarrow$ Tài khoản của User kích hoạt quyền `claimed_member`.
 - **Luồng D — Nhập liệu Excel Nhanh:** Admin vào `S-07` $\rightarrow$ Chuyển sang `S-08` $\rightarrow$ Tải template Excel $\rightarrow$ Kéo thả file đã điền lên $\rightarrow$ Xem bảng preview phát hiện lỗi $\rightarrow$ Bấm "Xác nhận Nhập dữ liệu" $\rightarrow$ Hệ thống sinh 1.000 node $\rightarrow$ Chuyển về `S-01` xem kết quả toàn cảnh.
 - **Luồng E — Quản lý Node Độc lập & Nối cây tự nhiên:**
@@ -86,8 +86,8 @@ flowchart TD
   - Khối kết quả nổi bật 2 chiều: 
     - Chiều đi: **`A gọi B là: Bác họ (Xưng Cháu)`**
     - Chiều về: **`B gọi A là: Cháu họ (Xưng Bác)`**
-  - **Sơ đồ Cây Phả Hệ Mini Chữ V Ngược (Inverted-V Kinship Tree):** 
-    - Đỉnh chóp là Tổ tiên chung gần nhất (LCA), rẽ xuống 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ).
+  - **Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược):** 
+    - Đỉnh chóp là Tổ Tiên Chung Gần Nhất, rẽ xuống 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ).
     - Có cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời (nén các đời giữa thành nút bấm `[🔽 Nén N thế hệ - Bấm mở rộng]`).
     - Nút liên kết: `[🔍 Xem trên Cây Phả Hệ Lớn]` lướt camera trên `S-01` focus vào 2 node.
   - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:**
@@ -209,13 +209,13 @@ flowchart TD
 |  [ 🔍 Tôi: Nguyễn Văn Nam (Đời 6)  ▼ ]    [ 🔍 Bác: Nguyễn Văn Dực (Đời 5)   ▼ ]  |
 |                                                                                   |
 |                               [ ⇄ ĐỔI VAI XƯNG HÔ ]                               |
-|                               [ XÁC ĐỊNH VAI VẾ ]                                 |
+|                               [ XÁC ĐỊNH QUAN HỆ ]                                |
 +-----------------------------------------------------------------------------------+
 |  KẾT QUẢ XƯNG HÔ 2 CHIỀU:                                                         |
 |    👉 Bạn gọi Bác Dực là:  👑 BÁC HỌ (Xưng Cháu)                                  |
 |    👈 Bác Dực gọi bạn là:  🌱 CHÁU HỌ (Xưng Bác)                                  |
 +-----------------------------------------------------------------------------------+
-|  SƠ ĐỒ CÂY PHẢ HỆ MINI (INVERTED-V KINSHIP TREE - XUẤT PHÁT TỪ LCA):              |
+|  SƠ ĐỒ CÂY PHẢ HỆ TRỰC QUAN (XUẤT PHÁT TỪ TỔ TIÊN CHUNG GẦN NHẤT):                |
 |                                                                                   |
 |                       [ 👑 TỔ TIÊN CHUNG: CỤ AN (ĐỜI 4) ]                         |
 |                                 /             \                                   |

@@ -131,7 +131,7 @@ export default async function HomePage({
         </h1>
 
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-6 font-normal">
-          Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu, tự động xác định vai vế xưng hô chuẩn mực và nhắc nhở ngày giỗ theo Âm lịch truyền thống.
+          Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu và nhắc nhở ngày giỗ theo Âm lịch truyền thống.
         </p>
 
         {/* User Greeting if logged in */}
@@ -175,7 +175,7 @@ export default async function HomePage({
         <div className="max-w-3xl w-full mb-10 p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-emerald-500/10 dark:from-amber-950/40 dark:via-slate-900/60 dark:to-emerald-950/40 border border-amber-500/30 dark:border-amber-700/40 shadow-lg shadow-amber-500/[0.03]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-amber-500/20 dark:border-amber-700/30">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 animate-pulse" />
+              <Calendar className="w-3.5 h-3.5" />
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 Ngày Giỗ Gần Nhất
               </h2>

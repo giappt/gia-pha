@@ -446,6 +446,286 @@ sequenceDiagram
 
 ## 13. LỆNH THI CÔNG (Dành cho AI /feature-code)
 
-> "AI ơi, hãy đọc kỹ đặc tả `docs/16_Micro-Spec_Milestone_7_Admin_Portal_Reorganization.md` này (đặc biệt là Mục 12 Mở Rộng 7.3 và 7.4). Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/root-setting-and-generation.test.ts`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build → Automated Test Suite → Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+> "AI ơi, hãy đọc kỹ đặc tả `docs/16_Micro-Spec_Milestone_7_Admin_Portal_Reorganization.md` này (đặc biệt là Mục 12 Mở Rộng 7.3 và 7.4, và **Mục 14 Mở Rộng 7.5 — Enforce Public Tree Gate**). Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build → Automated Test Suite → Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+
+---
+
+## 14. MỞ RỘNG 7.5: ENFORCE CỜ `enable_public_tree` — MIDDLEWARE AUTH GATE & GUEST VISIBILITY MATRIX
+
+### 14.1. Bối Cảnh & Căn Nguyên
+
+Cờ `enable_public_tree` hiện chỉ có UI toggle (trang `/admin/features`) và DB persist, nhưng **không có enforcement nào** ở tầng route/middleware. Guest vẫn truy cập mọi trang bình thường dù Admin gạt TẮT. Phần mở rộng này biến cờ "chết" thành cơ chế chặn thực sự.
+
+### 14.2. Ma Trận Quyền Truy Cập (Chân Lý Tối Cao)
+
+| `enable_public_tree` | Khách (Guest - chưa đăng nhập) | Đã đăng nhập (mọi role) |
+|---|---|---|
+| **`true` (Công khai)** | ✅ Home (giản lược) + `/tree` **CHỈ VẬY**. ❌ Ẩn: Spotlight Giỗ, `/anniversaries`, `/kinship` | ✅ Full access |
+| **`false` (Riêng tư)** | 🔒 Chặn hoàn toàn → Redirect `/login-gate` | ✅ Full access |
+
+**Quy tắc cốt lõi cho Guest khi `enable_public_tree = true`:**
+- ✅ Được xem: Trang chủ `/` (hero + CTA "Xem Cây") và `/tree`
+- ❌ Ẩn hoàn toàn: Spotlight "Ngày Giỗ Gần Nhất" trên Home
+- ❌ Ẩn hoàn toàn: Link + Route `/anniversaries` (Lịch Giỗ)
+- ❌ Ẩn hoàn toàn: Link + Route `/kinship` (Xưng hô)
+- ❌ Ẩn trên Navbar Desktop và MobileBottomNav các link trên
+
+### 14.3. Sơ Đồ Luồng Logic (Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Guest as Guest / User
+    participant MW as Middleware
+    participant Cache as Cookie Cache
+    participant DB as Supabase DB
+    participant Gate as /login-gate
+    participant Home as Home Page
+    participant Tree as /tree
+
+    Guest->>MW: GET /anniversaries
+    MW->>MW: Bypass check? (/admin/*, /api/*, /auth/*, /login-gate, static)
+    Note right of MW: Không bypass → tiếp tục
+
+    MW->>Cache: Đọc cookie fat_feature_flags_cache
+    alt Cookie tồn tại và chưa hết hạn
+        Cache-->>MW: enable_public_tree: true/false
+    else Cookie không có
+        MW->>DB: SELECT feature_flags FROM clan_settings LIMIT 1
+        DB-->>MW: enable_public_tree: true
+        MW->>Cache: Set cookie TTL 5 phút
+    end
+
+    MW->>MW: Kiểm tra session supabase.auth.getUser
+
+    alt Đã đăng nhập
+        MW-->>Guest: NextResponse.next Pass-through
+    else Chưa đăng nhập Guest
+        alt enable_public_tree = false
+            MW-->>Guest: Redirect /login-gate?returnTo=/anniversaries
+        else enable_public_tree = true
+            alt Route = / hoặc /tree
+                MW-->>Guest: NextResponse.next Pass-through
+            else Route = /anniversaries, /kinship, v.v.
+                MW-->>Guest: Redirect /login-gate?returnTo=/anniversaries
+            end
+        end
+    end
+
+    Note over Gate: Guest thấy trang Login Gate trang trọng
+    Guest->>Gate: Bấm Đăng nhập Google
+    Gate->>Guest: OAuth flow → auth/callback → Redirect returnTo
+```
+
+### 14.4. Backend Logic & Middleware
+
+#### 14.4.1. File: `src/middleware.ts` [MODIFY]
+- **Mở rộng hàm `middleware(request)`** sau khi gọi `updateSession()`:
+  1. **Bypass routes:** Nếu pathname bắt đầu bằng `/admin`, `/api`, `/auth`, `/login-gate`, `/_next`, hoặc là file tĩnh → `return response` ngay, KHÔNG kiểm tra gì thêm.
+  2. **Đọc feature flags (Cookie-first Strategy):**
+     - Đọc cookie `fat_feature_flags_cache` từ request.
+     - Nếu có → parse JSON, dùng luôn.
+     - Nếu không có → tạo Supabase client từ request cookies, query `clan_settings.feature_flags` (1 query duy nhất), set cookie `fat_feature_flags_cache` vào response với `maxAge: 300` (5 phút).
+     - Nếu cả cookie lẫn DB đều không có → dùng `DEFAULT_FEATURE_FLAGS` (mặc định `enable_public_tree: true`).
+  3. **Kiểm tra session:**
+     - Sử dụng kết quả `user` từ `updateSession()` (đã gọi `supabase.auth.getUser()` bên trong).
+     - Nếu user tồn tại → `return response` (pass-through, full access).
+  4. **Phân luồng Guest:**
+     - `enable_public_tree = false` → Redirect `/login-gate?returnTo=<pathname>`.
+     - `enable_public_tree = true`:
+       - Pathname = `/` hoặc bắt đầu bằng `/tree` → `return response` (cho xem).
+       - Mọi pathname khác (`/anniversaries`, `/kinship`, v.v.) → Redirect `/login-gate?returnTo=<pathname>`.
+  5. **Dev mode bypass:** Nếu cookie `fat_dev_user` tồn tại → coi như đã đăng nhập, pass-through.
+
+#### 14.4.2. File: `src/lib/supabase/middleware.ts` [MODIFY]
+- **Mở rộng `updateSession()`** để trả về thêm `user` trong kết quả:
+  ```typescript
+  export async function updateSession(request: NextRequest): Promise<{
+    response: NextResponse;
+    user: User | null;
+  }>
+  ```
+  - Lý do: Middleware chính cần biết user để phân luồng mà không phải gọi `getUser()` lần thứ 2.
+
+### 14.5. Frontend UI
+
+#### 14.5.1. File: `src/app/login-gate/page.tsx` [NEW]
+- **Server Component** — SEO-friendly, dynamic (không ISR cache).
+- **Layout:** Fullscreen, dark background, centered content.
+- **Nội dung:**
+  - Logo chữ Hán "Phạm" (范) kích thước lớn (size 60-80px) ở trung tâm.
+  - Tên dòng họ đọc từ `clan_settings.clan_name`.
+  - Subtitle phân biệt 2 trường hợp (đọc từ query param hoặc feature flags):
+    - Khi `enable_public_tree = false`: *"Cây phả hệ dòng họ đang ở chế độ Nội bộ. Vui lòng đăng nhập để xem."*
+    - Khi `enable_public_tree = true` nhưng route bị chặn: *"Tính năng này yêu cầu đăng nhập tài khoản dòng họ."*
+  - Nút **"Đăng nhập bằng Google"** (tái sử dụng OAuth logic từ `AuthButton`, nhưng render lớn hơn, nổi bật hơn).
+  - Nút **"Dev Bypass"** (chỉ hiện ở `NODE_ENV === 'development'`).
+  - Link phụ: *"← Quay về Trang Chủ"* (trỏ về `/`).
+- **Smart Redirect:**
+  - Nhận `?returnTo=<path>` từ URL.
+  - Nếu user đã đăng nhập rồi → tự redirect về `returnTo` hoặc `/`.
+- **Metadata:**
+  ```typescript
+  export const metadata: Metadata = {
+    title: 'Đăng nhập - Gia Phả Dòng Họ',
+    description: 'Vui lòng đăng nhập tài khoản Google để truy cập hệ thống gia phả dòng họ.',
+  };
+  ```
+
+#### 14.5.2. File: `src/app/page.tsx` (Home) [MODIFY]
+- **Đọc thêm `feature_flags`** từ query `clan_settings` hiện có (thêm `feature_flags` vào `.select()`).
+- Xác định `isGuest = !user`.
+- **Khi `isGuest`:**
+  - **Ẩn hoàn toàn** block "Spotlight Ngày Giỗ Gần Nhất" (wrapped trong `{!isGuest && nearestGroup && nearestMember && (...)}`).
+  - **Ẩn** link "Lịch Giỗ" trong CTA section (nếu có).
+  - **Giữ** Hero header + CTA "Xem Cây Phả Hệ" (link `/tree`) + nút "Đăng nhập Google" trên Navbar.
+  - **(Tùy chọn) Thêm banner nhẹ:** *"Đăng nhập để xem Lịch Giỗ, Xưng hô và nhiều tính năng khác"* — chỉ hiện khi guest.
+- **Khi đã đăng nhập:** Hiển thị đầy đủ như hiện tại (không đổi).
+- **Tinh chỉnh thủ công đã cập nhật trong mã nguồn (Manual Polish Sync):**
+  - **Subtitle Trang Chủ:** Rút gọn thành *"Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu và nhắc nhở ngày giỗ theo Âm lịch truyền thống."* (lược bỏ mệnh đề xưng hô).
+  - **Icon Tiêu Đề Spotlight Giỗ:** Sử dụng `<Calendar className="w-3.5 h-3.5" />` (thay cho icon `<Sparkles>` cũ) để tăng tính trang nhã và đồng bộ thiết kế.
+
+
+#### 14.5.3. File: `src/components/navbar/Navbar.tsx` [MODIFY]
+- **Đọc thêm `feature_flags`** từ query `clan_settings` (thêm `feature_flags` vào `.select()`).
+- Xác định `isGuest = !user`.
+- **Khi `isGuest`:**
+  - **Ẩn** link "Lịch Giỗ" (`/anniversaries`).
+  - **Ẩn** link "Xưng hô" (`/kinship`).
+  - Khi `enable_public_tree = true`: **Giữ** link "Cây Phả Hệ" (`/tree`).
+  - Khi `enable_public_tree = false`: **Ẩn luôn** "Cây Phả Hệ" (nhất quán — guest bị redirect ở middleware rồi, nhưng Navbar trên `/login-gate` layout cũng cần sạch).
+- **Khi đã đăng nhập:** Hiển thị đầy đủ 3 link như hiện tại (không đổi).
+
+#### 14.5.4. File: `src/components/navigation/MobileBottomNav.tsx` [MODIFY]
+- Component hiện là **Client Component** (`'use client'`) với danh sách `NAV_ITEMS` tĩnh.
+- **Chiến lược:** Truyền `isGuest` và `enablePublicTree` từ `RootLayout` (đã là Server Component).
+- **Khi `isGuest`:**
+  - Ẩn "Lịch Giỗ" (`/anniversaries`).
+  - Ẩn "Xưng hô" (`/kinship`).
+  - Khi `enable_public_tree = false`: Ẩn luôn "Phả Hệ" (`/tree`), chỉ giữ "Trang Chủ".
+  - Khi `enable_public_tree = true`: Giữ "Trang Chủ" + "Phả Hệ".
+- **Khi đã đăng nhập:** Hiển thị đầy đủ 4 link.
+- **Đổi nhãn "Vai Vế" → "Xưng hô"** để khớp với Navbar Desktop (đồng bộ nhãn đã đổi ở commit `2e68dd5`).
+
+### 14.6. Xử Lý Lỗi & Trường Hợp Biên (Edge Cases)
+
+- **Edge Case 41 (Admin gạt TẮT → chính Admin bị chặn):** Middleware bypass `/admin/*` và kiểm tra session — Admin đã đăng nhập không bị ảnh hưởng. Cổng chặn CHỈ áp dụng cho guest chưa có session.
+- **Edge Case 42 (Guest truy cập API trực tiếp `/api/members`):** API routes (`/api/*`) được bypass khỏi gate. RLS Supabase bảo vệ tầng DB.
+- **Edge Case 43 (Cookie feature flags stale):** TTL 5 phút, chấp nhận eventual consistency. Admin thay đổi → hiệu lực tối đa sau 5 phút cho guest. User đã đăng nhập không bị ảnh hưởng.
+- **Edge Case 44 (Dev Bypass mode):** Cookie `fat_dev_user` tồn tại → middleware coi như đã đăng nhập → pass-through mọi route.
+- **Edge Case 45 (OAuth callback loop):** Route `/auth/callback` được whitelist, không bao giờ bị chặn.
+- **Edge Case 46 (Login Gate khi đã đăng nhập):** Server Component kiểm tra session, nếu có → auto-redirect về `returnTo` hoặc `/`. Không hiển thị form đăng nhập vô nghĩa.
+- **Edge Case 47 (MobileBottomNav flash khi guest):** Props từ Server Layout đảm bảo không có flash — items đã được lọc trước khi render.
+
+### 14.7. Bổ Sung Test Cases (Mục 7.1 — Automated Test Suite)
+
+> File test: `tests/auth-gate.test.ts` [NEW]
+
+- [ ] **TC_UT_MW_PRIVATE_GUEST_REDIRECT (Middleware chặn guest khi enable_public_tree=false):**
+  - **Given:** `featureFlags = { enable_public_tree: false }`, user = null (guest).
+  - **When:** Request GET `/tree`.
+  - **Then:** Middleware trả về redirect 307 tới `/login-gate?returnTo=%2Ftree`.
+
+- [ ] **TC_UT_MW_PRIVATE_LOGGEDIN_PASS (Middleware cho phép user đã đăng nhập khi enable_public_tree=false):**
+  - **Given:** `featureFlags = { enable_public_tree: false }`, user = authenticated.
+  - **When:** Request GET `/tree`.
+  - **Then:** Middleware trả về `NextResponse.next()` (pass-through).
+
+- [ ] **TC_UT_MW_PUBLIC_GUEST_TREE_PASS (Middleware cho guest xem /tree khi enable_public_tree=true):**
+  - **Given:** `featureFlags = { enable_public_tree: true }`, user = null.
+  - **When:** Request GET `/tree`.
+  - **Then:** Middleware trả về pass-through.
+
+- [ ] **TC_UT_MW_PUBLIC_GUEST_HOME_PASS (Middleware cho guest xem / khi enable_public_tree=true):**
+  - **Given:** `featureFlags = { enable_public_tree: true }`, user = null.
+  - **When:** Request GET `/`.
+  - **Then:** Middleware trả về pass-through.
+
+- [ ] **TC_UT_MW_PUBLIC_GUEST_KINSHIP_BLOCK (Middleware chặn guest /kinship khi enable_public_tree=true):**
+  - **Given:** `featureFlags = { enable_public_tree: true }`, user = null.
+  - **When:** Request GET `/kinship`.
+  - **Then:** Middleware trả về redirect 307 tới `/login-gate?returnTo=%2Fkinship`.
+
+- [ ] **TC_UT_MW_PUBLIC_GUEST_ANNIVERSARIES_BLOCK (Middleware chặn guest /anniversaries khi enable_public_tree=true):**
+  - **Given:** `featureFlags = { enable_public_tree: true }`, user = null.
+  - **When:** Request GET `/anniversaries`.
+  - **Then:** Middleware trả về redirect 307 tới `/login-gate?returnTo=%2Fanniversaries`.
+
+- [ ] **TC_UT_MW_BYPASS_ADMIN (Middleware KHÔNG chặn /admin/*):**
+  - **Given:** Bất kỳ `featureFlags`, user = null.
+  - **When:** Request GET `/admin/features`.
+  - **Then:** Middleware KHÔNG redirect (route admin có auth guard riêng).
+
+- [ ] **TC_UT_MW_BYPASS_API (Middleware KHÔNG chặn /api/*):**
+  - **Given:** Bất kỳ `featureFlags`, user = null.
+  - **When:** Request GET `/api/members`.
+  - **Then:** Middleware KHÔNG redirect.
+
+- [ ] **TC_UT_MW_BYPASS_LOGIN_GATE (Middleware KHÔNG chặn /login-gate):**
+  - **Given:** Bất kỳ `featureFlags`, user = null.
+  - **When:** Request GET `/login-gate`.
+  - **Then:** Middleware KHÔNG redirect (tránh infinite loop).
+
+- [ ] **TC_UT_MW_BYPASS_AUTH_CALLBACK (Middleware KHÔNG chặn /auth/callback):**
+  - **Given:** Bất kỳ `featureFlags`, user = null.
+  - **When:** Request GET `/auth/callback`.
+  - **Then:** Middleware KHÔNG redirect.
+
+- [ ] **TC_UT_MW_PUBLIC_LOGGEDIN_FULL_ACCESS (Middleware cho phép full access khi đã đăng nhập):**
+  - **Given:** `featureFlags = { enable_public_tree: true }`, user = authenticated.
+  - **When:** Request GET `/anniversaries`.
+  - **Then:** Middleware trả về pass-through.
+
+- [ ] **TC_UT_MW_DEFAULT_FLAGS_FALLBACK (Middleware dùng DEFAULT_FEATURE_FLAGS khi không có cookie/DB):**
+  - **Given:** Không có cookie `fat_feature_flags_cache`, DB query trả về null.
+  - **When:** Resolve feature flags.
+  - **Then:** `enable_public_tree = true` (default), guest xem được `/` và `/tree`.
+
+- [ ] **TC_UT_HOME_GUEST_NO_SPOTLIGHT (Home ẩn Spotlight Ngày Giỗ cho guest):**
+  - **Given:** Render Home page, user = null (guest).
+  - **When:** Server render `/`.
+  - **Then:** HTML output KHÔNG chứa text "Ngày Giỗ Gần Nhất".
+
+- [ ] **TC_UT_HOME_LOGGEDIN_HAS_SPOTLIGHT (Home hiện Spotlight Ngày Giỗ cho user đã đăng nhập):**
+  - **Given:** Render Home page, user = authenticated, có dữ liệu giỗ.
+  - **When:** Server render `/`.
+  - **Then:** HTML output CÓ chứa text "Ngày Giỗ Gần Nhất".
+
+- [ ] **TC_UT_NAVBAR_GUEST_HIDDEN_LINKS (Navbar ẩn Lịch Giỗ/Xưng hô cho guest):**
+  - **Given:** Source code `Navbar.tsx`.
+  - **When:** Kiểm tra logic render conditional.
+  - **Then:** Khi `isGuest = true`, các link `/anniversaries` và `/kinship` bị ẩn khỏi nav output.
+
+- [ ] **TC_UT_MOBILE_NAV_GUEST_FILTERED (MobileBottomNav lọc link cho guest):**
+  - **Given:** MobileBottomNav nhận `isGuest = true`, `enablePublicTree = true`.
+  - **When:** Render component.
+  - **Then:** Chỉ hiển thị 2 link: "Trang Chủ" (`/`) và "Phả Hệ" (`/tree`). Ẩn: "Lịch Giỗ", "Xưng hô".
+
+- [ ] **TC_UT_MOBILE_NAV_LABEL_SYNC (MobileBottomNav đổi nhãn "Vai Vế" → "Xưng hô"):**
+  - **Given:** Source code `MobileBottomNav.tsx`.
+  - **When:** Đọc `NAV_ITEMS`.
+  - **Then:** Item `/kinship` có label = "Xưng hô" (không còn "Vai Vế").
+
+### 14.8. Bổ Sung Tiêu Chí Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT)
+
+- [ ] **UAT_17 (Login Gate — Private Mode):** Gạt TẮT `enable_public_tree` trong `/admin/features` → Mở trình duyệt ẩn danh → Truy cập `/tree` → Expect redirect tới trang Login Gate trang trọng: logo chữ Hán, tên dòng họ, thông điệp "Chế độ Nội bộ", nút "Đăng nhập Google".
+- [ ] **UAT_18 (Login Gate — Feature-restricted):** Gạt BẬT `enable_public_tree` → Trình duyệt ẩn danh → Truy cập `/anniversaries` → Expect redirect tới Login Gate với thông điệp "Tính năng yêu cầu đăng nhập".
+- [ ] **UAT_19 (Guest Xem Cây Thành Công):** `enable_public_tree = true` → Trình duyệt ẩn danh → Truy cập `/tree` → Cây phả hệ hiển thị đầy đủ, pan/zoom hoạt động bình thường.
+- [ ] **UAT_20 (Home Giản Lược Cho Guest):** Trình duyệt ẩn danh → Truy cập `/` → Hero header hiển thị tên dòng họ, CTA "Xem Cây", nút "Đăng nhập Google". **KHÔNG** thấy spotlight "Ngày Giỗ Gần Nhất".
+- [ ] **UAT_21 (Navbar Desktop — Guest Mode):** Trình duyệt ẩn danh → Navbar chỉ hiển thị link "Cây Phả Hệ" (khi public). Link "Lịch Giỗ" và "Xưng hô" hoàn toàn vắng mặt.
+- [ ] **UAT_22 (MobileBottomNav — Guest Mode):** Trình duyệt ẩn danh, thu nhỏ dưới 768px → Bottom nav chỉ có 2 icon: "Trang Chủ" + "Phả Hệ". Ẩn icon "Lịch Giỗ" và "Xưng hô".
+- [ ] **UAT_23 (Đăng Nhập Thành Công → Full Access):** Từ Login Gate, đăng nhập Google → Redirect về trang yêu cầu ban đầu → Navbar hiện đủ 3 link, Home hiện Spotlight Giỗ, MobileBottomNav hiện đủ 4 icon.
+- [ ] **UAT_24 (Console Sạch Login Gate):** Trang `/login-gate` mở lên không có lỗi đỏ (0 Error, 0 Hydration Warning) trong Developer Console.
+
+### 14.9. Bổ Sung Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
+
+- [ ] **RG13 (Build & Typecheck Clean After Auth Gate):** `npm run typecheck` (0 errors) và `npm run build` thành công mọi route kể cả `/login-gate` mới.
+- [ ] **RG14 (Existing Test Suite Zero Regression):** `npm test` — toàn bộ 191 tests hiện có + tests mới đều pass, 0 failure mới so với baseline.
+- [ ] **RG15 (Admin Portal Unaffected):** Toàn bộ trang `/admin/*` truy cập bình thường cho Super Admin đã đăng nhập, không bị chặn bởi middleware mới.
+- [ ] **RG16 (OAuth Flow Integrity):** Luồng đăng nhập Google → `/auth/callback` → redirect Home hoạt động bình thường, không bị middleware can thiệp.
+- [ ] **RG17 (Feature Flags Toggle Still Works):** Trang `/admin/features` gạt bật/tắt `enable_public_tree` lưu thành công, flag mới có hiệu lực cho guest requests tiếp theo (trong vòng TTL cache 5 phút).
+- [ ] **RG18 (Dark Mode & Theme Toggle):** Login Gate page và Home page guest mode hiển thị đúng trong cả Light và Dark theme.
+- [ ] **RG19 (Tree Page Full Functionality):** Guest truy cập `/tree` khi public mode → pan, zoom, Ghost Node, Member Drawer hoạt động bình thường không bị giới hạn.
+
 
 

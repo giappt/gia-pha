@@ -15,7 +15,7 @@
 ## 🌟 Kiến trúc Hệ thống (System Architecture)
 
 - **Frontend & Visualization:** Next.js 14+ (App Router), TypeScript, TailwindCSS, Shadcn UI / Radix Primitives, và `@xyflow/react` (React Flow v12) hỗ trợ tương tác đồ thị cây mượt mà 60 FPS, thu gọn/mở rộng phân tầng, và hiển thị **Ghost Node 🔗** cho hôn nhân nội tộc.
-- **Lõi Nghiệp Vụ (Kinship & Lunar Engine):** Thuật toán tìm tổ tiên chung gần nhất (LCA) kết hợp bộ từ điển xưng hô cấu hình được; bộ quy đổi Âm - Dương chuẩn xác theo múi giờ Việt Nam (UTC+7).
+- **Lõi Nghiệp Vụ (Kinship & Lunar Engine):** Thuật toán tìm Tổ Tiên Chung Gần Nhất kết hợp bộ từ điển xưng hô cấu hình được; bộ quy đổi Âm - Dương chuẩn xác theo múi giờ Việt Nam (UTC+7).
 - **Backend & Database:** Next.js Serverless Route Handlers kết nối **Supabase PostgreSQL** tận dụng truy vấn đệ quy `WITH RECURSIVE`, Row Level Security (RLS) bảo vệ dữ liệu cá nhân của người còn sống (Living Person Privacy Guard).
 - **Vận hành & Tự động hóa:** Vercel Hosting + **Vercel Cron** tự động quét ngày giỗ lúc 7:00 AM mỗi sáng để gửi **Web Push Notification** đến thiết bị con cháu nhánh trực hệ.
 
