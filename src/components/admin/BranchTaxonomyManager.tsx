@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import {
-  GitBranch,
   Plus,
   Trash2,
   Save,
@@ -20,6 +19,7 @@ import {
   getNextTierName,
   findBranchesUsingTier,
 } from '@/lib/tree-layout/branch-engine';
+import FamilyTreeIcon from '../icons/FamilyTreeIcon';
 
 interface BranchTaxonomyManagerProps {
   initialBranches: BranchNode[];
@@ -245,11 +245,10 @@ export default function BranchTaxonomyManager({
       {/* Alert Banner */}
       {statusMessage && (
         <div
-          className={`p-4 rounded-xl border flex items-start gap-3 text-sm animate-in fade-in duration-150 ${
-            statusMessage.type === 'success'
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
-              : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200'
-          }`}
+          className={`p-4 rounded-xl border flex items-start gap-3 text-sm animate-in fade-in duration-150 ${statusMessage.type === 'success'
+            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+            : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200'
+            }`}
         >
           {statusMessage.type === 'success' ? (
             <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
@@ -265,7 +264,7 @@ export default function BranchTaxonomyManager({
         {/* Header (Title & Description only, no add button here) */}
         <div className="pb-4 border-b border-slate-100 dark:border-slate-800">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <GitBranch className="w-5 h-5 text-emerald-600" />
+            <FamilyTreeIcon className="w-5 h-5 text-emerald-600" />
             <span>Cấu Trúc Phân Cấp Ngành & Chi Tông Tộc</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -277,7 +276,7 @@ export default function BranchTaxonomyManager({
         <div className="py-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
-              <GitBranch className="w-3.5 h-3.5 text-emerald-600" />
+              <FamilyTreeIcon className="w-3.5 h-3.5 text-emerald-600" />
               <span>Thứ Bậc Tông Tộc (Thứ tự phân tầng từ cao xuống thấp):</span>
             </div>
             {tiers.length === 0 && (
@@ -362,7 +361,7 @@ export default function BranchTaxonomyManager({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <div>
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-emerald-600" />
+                <FamilyTreeIcon className="w-4 h-4 text-emerald-600" />
                 <span>Cây Phân Cấp Các Nhánh & Cụ Khởi Nguồn</span>
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -399,7 +398,7 @@ export default function BranchTaxonomyManager({
           <div className="mt-4 divide-y divide-slate-100 dark:divide-slate-800 border-y border-slate-100 dark:border-slate-800">
             {branches.length === 0 ? (
               <div className="py-12 text-center">
-                <GitBranch className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                <FamilyTreeIcon className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Chưa có cấu trúc Ngành/Chi nào được thiết lập
                 </p>
@@ -491,9 +490,8 @@ function FlatBranchRow({
     <div className="relative">
       {/* Flat Row Item (No nested border-box or heavy card background) */}
       <div
-        className={`group py-2.5 px-2 sm:px-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors flex flex-col md:flex-row md:items-center gap-3 ${
-          depth > 0 ? 'ml-6 sm:ml-10' : ''
-        }`}
+        className={`group py-2.5 px-2 sm:px-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors flex flex-col md:flex-row md:items-center gap-3 ${depth > 0 ? 'ml-6 sm:ml-10' : ''
+          }`}
       >
         {/* Tier Selector & Name Input */}
         <div className="flex items-center gap-2 flex-1">

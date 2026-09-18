@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Check, Bell, BellOff, GitBranch, Settings, CheckCircle2 } from 'lucide-react';
+import { X, Check, Bell, BellOff, Settings, CheckCircle2 } from 'lucide-react';
 import {
   getUserPreferences,
   saveUserPreferences,
@@ -10,6 +10,7 @@ import {
   FlattenedBranchItem,
 } from '@/lib/tree-layout/branch-engine';
 import type { BranchNode, ClanFeatureFlags } from '@/types/database';
+import FamilyTreeIcon from '../icons/FamilyTreeIcon';
 
 interface PersonalSettingsModalProps {
   isOpen: boolean;
@@ -149,7 +150,7 @@ export default function PersonalSettingsModal({
           {/* Section 1: Focus Branch */}
           <div>
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-              <GitBranch className="w-3.5 h-3.5 text-emerald-600" />
+              <FamilyTreeIcon className="w-3.5 h-3.5 text-emerald-600" />
               <span>Nhánh Theo Dõi Mặc Định</span>
             </label>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
@@ -159,11 +160,10 @@ export default function PersonalSettingsModal({
             <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 border border-slate-200 dark:border-slate-800 rounded-xl p-2 bg-slate-50/50 dark:bg-slate-950/40">
               {/* Option All */}
               <label
-                className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                  selectedBranchId === null
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
+                className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${selectedBranchId === null
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <input
@@ -183,11 +183,10 @@ export default function PersonalSettingsModal({
                 <label
                   key={b.id}
                   style={{ paddingLeft: `${b.depth * 12 + 12}px` }}
-                  className={`flex items-center justify-between py-2 pr-3 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                    selectedBranchId === b.id
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
+                  className={`flex items-center justify-between py-2 pr-3 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${selectedBranchId === b.id
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <input
@@ -226,11 +225,10 @@ export default function PersonalSettingsModal({
                 <button
                   type="button"
                   onClick={() => setEnablePush(!enablePush)}
-                  className={`p-2 rounded-xl transition-all ${
-                    enablePush
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                  }`}
+                  className={`p-2 rounded-xl transition-all ${enablePush
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                    }`}
                 >
                   {enablePush ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
                 </button>

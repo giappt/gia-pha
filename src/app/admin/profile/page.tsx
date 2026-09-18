@@ -121,7 +121,7 @@ export default function ClanProfilePage() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-              Căn Cước & Tôn Danh Dòng Họ
+              Căn Cước Dòng Họ
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               Cấu hình tên dòng họ toàn cục, hiển thị trang trọng tại biểu ngữ trang chủ và thanh tiêu đề.
@@ -133,8 +133,8 @@ export default function ClanProfilePage() {
       {statusMessage && (
         <div
           className={`p-4 rounded-xl border flex items-center gap-3 text-xs font-semibold ${statusMessage.type === 'success'
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
-              : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+            : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
             }`}
         >
           {statusMessage.type === 'success' ? (
@@ -157,10 +157,10 @@ export default function ClanProfilePage() {
               <span
                 id="char-counter"
                 className={`font-semibold text-xs transition-colors ${isTooLong
-                    ? 'text-rose-600'
-                    : isNearLimit
-                      ? 'text-amber-600'
-                      : 'text-slate-400 dark:text-slate-500'
+                  ? 'text-rose-600'
+                  : isNearLimit
+                    ? 'text-amber-600'
+                    : 'text-slate-400 dark:text-slate-500'
                   }`}
               >
                 {charCount} / 40 ký tự

@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Users,
-  GitBranch,
   ShieldCheck,
   AlertTriangle,
   UserCheck,
@@ -22,6 +21,7 @@ import {
   computeClanVitalityMetrics,
   type ClanVitalityMetrics,
 } from '@/lib/admin/admin-engine';
+import FamilyTreeIcon from '../icons/FamilyTreeIcon';
 
 export default function ClanDashboard() {
   const [metrics, setMetrics] = useState<ClanVitalityMetrics | null>(null);
@@ -195,7 +195,7 @@ export default function ClanDashboard() {
               Độ Sâu Phả Hệ
             </span>
             <div className="w-8 h-8 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
-              <GitBranch className="w-4 h-4" />
+              <FamilyTreeIcon className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
@@ -336,7 +336,7 @@ export default function ClanDashboard() {
                 href="/admin/branches"
                 className="p-3.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all text-center group"
               >
-                <GitBranch className="w-5 h-5 mx-auto text-emerald-600 group-hover:scale-110 transition-transform" />
+                <FamilyTreeIcon className="w-5 h-5 mx-auto text-emerald-600 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block mt-2">
                   Ngành & Chi
                 </span>

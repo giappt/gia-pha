@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { GitBranch, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import type { BranchNode } from '@/types/database';
 import type { MemberRecord } from '@/types/tree';
 import BranchTaxonomyManager from '@/components/admin/BranchTaxonomyManager';
+import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 
 export default function AdminBranchesPage() {
   const [branches, setBranches] = useState<BranchNode[]>([]);
@@ -56,7 +57,7 @@ export default function AdminBranchesPage() {
       <div className="border-b border-slate-200/80 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center border border-emerald-200/80 dark:border-emerald-800">
-            <GitBranch className="w-5 h-5" />
+            <FamilyTreeIcon className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">

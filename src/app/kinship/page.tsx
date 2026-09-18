@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Info,
   CheckCircle2,
-  GitBranch,
   Crown,
   ChevronDown,
   ChevronUp,
@@ -39,6 +38,7 @@ import { findLowestCommonAncestor } from '@/lib/kinship-engine/lca-finder';
 import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
 import type { Member } from '@/types/database';
 import type { CustomKinshipDictionary } from '@/types/kinship';
+import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 
 const INITIAL_MEMBERS: MemberOption[] = MOCK_CLAN_MEMBERS.map((m) => ({
   id: m.id,
@@ -725,7 +725,7 @@ export default function KinshipPage() {
               <div className="px-6 sm:px-8 space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                    <GitBranch className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <FamilyTreeIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>
                       {isDirectLineage
                         ? 'Sơ Đồ Dòng Trực Hệ Dọc (Vertical Direct Lineage)'

@@ -404,7 +404,7 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - Nền kính mờ Modern Vietnamese Heritage: `backdrop-blur-md bg-white/90 dark:bg-slate-950/90 border-t border-slate-200/80 dark:border-slate-800/80 shadow-lg`.
 - **4 Tab Điều Hướng Độc Lập:**
   1. 🏠 **Trang Chủ** (`/`) — Icon `Home`
-  2. 🌳 **Phả Hệ** (`/tree`) — Icon `GitBranch`
+  2. 🌳 **Phả Hệ** (`/tree`) — Icon `FamilyTreeIcon`
   3. 📅 **Lịch Giỗ** (`/anniversaries`) — Icon `Calendar`
   4. 🧭 **Vai Vế** (`/kinship`) — Icon `Compass`
 - **Cơ Chế Sáng Đèn (Active Highlight):**
@@ -424,7 +424,7 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - Khối huy hiệu: `bg-emerald-600 rounded-lg w-9 h-9 flex items-center justify-center shadow-sm shrink-0 border border-emerald-500/30`.
   - Giữ bên cạnh là tên thương hiệu "Gia Phả Họ Phạm" với typography trang nhã, kế thừa âm hưởng di sản người Việt.
 - **3. Biểu tượng Cây Phả Hệ Chuẩn 3 Ô Vuông (`FamilyTreeIcon.tsx`):**
-  - Thay thế toàn bộ icon `GitBranch` (biểu tượng phân nhánh git công nghệ) tại:
+  - Thay thế toàn bộ icon `FamilyTreeIcon` (biểu tượng phân nhánh git công nghệ) tại:
     - Tab `Phả Hệ` trên Navbar (`Navbar.tsx`).
     - Tab `Phả Hệ` trên Mobile Bottom Nav (`MobileBottomNav.tsx`).
     - Nút `[Xem trên Cây]` tại Tiêu điểm Ngày Giỗ Trang Chủ (`src/app/page.tsx`).
@@ -661,7 +661,7 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_10 (Thanh Điều Hướng Đáy Màn Hình - Mobile Bottom Nav):** Mở giao diện trên thiết bị di động (375px): Thanh Bottom Nav hiển thị cố định ở đáy với 4 tab (Trang Chủ, Phả Hệ, Lịch Giỗ, Vai Vế). Chạm thử từng tab $\rightarrow$ Chuyển trang mượt mà tức thì, tab tương ứng sáng màu ngọc bích.
 - [ ] **UAT_11 (Bảo Toàn 100% Giao Diện Desktop):** Mở trên màn hình Desktop ($\ge 768\text{px}$): Thanh Bottom Nav ẩn hoàn toàn 100%, Header Navbar giữ nguyên 3 menu ở giữa, footer và trang chủ không có bất kỳ xê dịch hay khoảng trắng thừa nào.
 - [ ] **UAT_12 (Nhận Diện Chữ Hán & Header Tinh Gọn):** Mở giao diện trên cả Mobile và PC $\rightarrow$ Logo góc trái hiển thị chữ Hán "Phạm" (`范`) màu trắng trên nền xanh ngọc bích sắc nét, trang nghiêm. Nút Quản Trị không còn xuất hiện trên Header, giúp thanh điều hướng thoáng đãng, tập trung vào trải nghiệm thành viên dòng họ.
-- [ ] **UAT_13 (Biểu Tượng Cây Phả Hệ Chuẩn 3 Ô Vuông):** Tab "Phả Hệ" trên Navbar, Mobile Bottom Nav và nút bấm trên Trang chủ hiển thị biểu tượng Cây Phả Hệ chuẩn (1 ô vuông trên, 2 ô vuông dưới nối nhánh), thay thế hoàn toàn biểu tượng GitBranch nhánh cây công nghệ.
+- [ ] **UAT_13 (Biểu Tượng Cây Phả Hệ Chuẩn 3 Ô Vuông):** Tab "Phả Hệ" trên Navbar, Mobile Bottom Nav và nút bấm trên Trang chủ hiển thị biểu tượng Cây Phả Hệ chuẩn (1 ô vuông trên, 2 ô vuông dưới nối nhánh), thay thế hoàn toàn biểu tượng FamilyTreeIcon nhánh cây công nghệ.
 - [ ] **UAT_14 (Avatar Tròn Chuẩn Tỷ Lệ & Đồng Bộ Tuyệt Đối):** Avatar trên nút đăng nhập góc phải Navbar và trên khối Lời Chào Mừng Trang Chủ hiển thị hình tròn chuẩn tỷ lệ 1:1 (`aspect-square`), không bị méo bầu dục trên mobile. Hiển thị ảnh đại diện Google thật sắc nét hoặc 2 chữ cái initials trang nhã, xóa bỏ hoàn toàn ô vuông xanh chữ cái đơn lẻ.
 - [ ] **UAT_15 (Thần Thái Thư Pháp Đích Thực Của Dòng Họ):** Quan sát chữ "范" trên Header Navbar và Trang Chủ $\rightarrow$ Đúng 100% nét chữ mẫu từ tác phẩm thư pháp người dùng cung cấp: nét bút lông trắng uyển chuyển, sắc nét, rãnh khoét lỗ rỗng chuẩn xác trên nền xanh ngọc bích.
 - [ ] **UAT_16 (Biểu Ngữ Căn Cước Dòng Họ `/admin/profile`):** Mở trang `/admin/profile` $\rightarrow$ Hộp mô phỏng biểu ngữ chính thức hiển thị trang trọng Huy hiệu Logo Thư Pháp kết hợp hài hòa cùng Tên Dòng Họ và Cụ Tổ.

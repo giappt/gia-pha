@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   Calendar as CalendarIcon,
   Search,
-  GitBranch,
   Clock,
   Sparkles,
   Flame,
@@ -28,6 +27,7 @@ import {
 } from '@/lib/tree-layout/branch-engine';
 import type { BranchNode } from '@/types/database';
 import type { MemberRecord } from '@/types/tree';
+import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 
 export default function AnniversariesPage() {
   const [dayGroups, setDayGroups] = useState<AnniversaryDayGroup[]>([]);
@@ -317,7 +317,7 @@ export default function AnniversariesPage() {
                   href="/tree"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors shadow-sm"
                 >
-                  <GitBranch className="w-3.5 h-3.5" />
+                  <FamilyTreeIcon className="w-3.5 h-3.5" />
                   <span>Quay về Cây Phả Hệ</span>
                 </Link>
               </div>
@@ -482,7 +482,7 @@ export default function AnniversariesPage() {
                                 href={`/tree?focus=${member.id}`}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:border-emerald-500/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all"
                               >
-                                <GitBranch className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                <FamilyTreeIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                                 <span>Xem trên Cây</span>
                                 <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                               </Link>

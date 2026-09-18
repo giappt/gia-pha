@@ -14,14 +14,14 @@ import {
   Sparkles,
   Search,
   X,
-  Filter,
-  GitBranch,
+  Filter
 } from 'lucide-react';
 import { getRegionalPresetDictionary } from '@/lib/kinship-engine/regional-dictionaries';
 import type { KinshipTermRule, CustomKinshipDictionary, KinshipRegion } from '@/types/kinship';
 import type { BranchNode } from '@/types/database';
 import type { MemberRecord } from '@/types/tree';
 import BranchTaxonomyManager from '@/components/admin/BranchTaxonomyManager';
+import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 
 const CATEGORY_GROUPS: {
   key: KinshipTermRule['category'];
@@ -294,16 +294,16 @@ export default function ClanSettingsPage() {
           id="tab-btn-branches"
           onClick={() => setActiveTab('branches')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${activeTab === 'branches'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+            ? 'bg-emerald-600 text-white shadow-xs'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
         >
-          <GitBranch className="w-4 h-4" />
+          <FamilyTreeIcon className="w-4 h-4" />
           <span>Cấu Trúc Ngành/Chi</span>
           <span
             className={`text-[10px] px-1.5 py-0.2 rounded-full ${activeTab === 'branches'
-                ? 'bg-emerald-700 text-white'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+              ? 'bg-emerald-700 text-white'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
               }`}
           >
             {branches.length}
@@ -315,8 +315,8 @@ export default function ClanSettingsPage() {
           id="tab-btn-info"
           onClick={() => setActiveTab('info_kinship')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${activeTab === 'info_kinship'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+            ? 'bg-emerald-600 text-white shadow-xs'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
         >
           <Settings className="w-4 h-4" />
@@ -355,10 +355,10 @@ export default function ClanSettingsPage() {
                 <span
                   id="char-counter"
                   className={`font-semibold text-xs transition-colors ${isTooLong
-                      ? 'text-rose-600'
-                      : isNearLimit
-                        ? 'text-amber-600'
-                        : 'text-slate-400 dark:text-slate-500'
+                    ? 'text-rose-600'
+                    : isNearLimit
+                      ? 'text-amber-600'
+                      : 'text-slate-400 dark:text-slate-500'
                     }`}
                 >
                   {charCount} / 40 ký tự
@@ -467,8 +467,8 @@ export default function ClanSettingsPage() {
                   <label
                     key={r}
                     className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${region === r
-                        ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/20'
-                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850'
+                      ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/20'
+                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850'
                       }`}
                   >
                     <div className="flex items-center justify-between">
@@ -516,8 +516,8 @@ export default function ClanSettingsPage() {
                     type="button"
                     onClick={() => setActiveCategoryFilter(chip.id)}
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${activeCategoryFilter === chip.id
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                       }`}
                   >
                     <span>{chip.icon}</span>

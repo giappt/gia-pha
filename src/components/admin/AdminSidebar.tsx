@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Landmark,
-  GitBranch,
   BookOpen,
   Users,
   SlidersHorizontal,
@@ -16,6 +15,7 @@ import {
   Shield,
   X,
 } from 'lucide-react';
+import FamilyTreeIcon from '../icons/FamilyTreeIcon';
 
 interface NavItem {
   href: string;
@@ -50,7 +50,7 @@ const NAV_GROUPS: NavGroup[] = [
       {
         href: '/admin/branches',
         label: 'Cấu Trúc Ngành/Chi',
-        icon: GitBranch,
+        icon: FamilyTreeIcon,
       },
       {
         href: '/admin/kinship',
@@ -162,18 +162,16 @@ export default function AdminSidebar({
                     href={item.href}
                     onClick={onCloseMobileDrawer}
                     id={`sidebar-link-${item.href.replace('/admin', '').replace('/', '') || 'dashboard'}`}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-semibold transition-all ${
-                      active
-                        ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 font-semibold border-l-2 border-emerald-600 rounded-l-none shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                    }`}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-semibold transition-all ${active
+                      ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 font-semibold border-l-2 border-emerald-600 rounded-l-none shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                      }`}
                   >
                     <Icon
-                      className={`w-4 h-4 ${
-                        active
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-slate-400 dark:text-slate-500'
-                      }`}
+                      className={`w-4 h-4 ${active
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-slate-400 dark:text-slate-500'
+                        }`}
                     />
                     <span>{item.label}</span>
                   </Link>
