@@ -35,7 +35,16 @@ export function evaluateAuthGate(
     return { action: 'pass' };
   }
 
-  // 3. Feature Flags Route Enforcement (Chặn truy cập trực tiếp các route bị tắt đối với non-admin)
+  // 3. Chế độ bảo trì hệ thống: Chặn mọi non-admin
+  if (featureFlags.maintenance_mode) {
+    return {
+      action: 'redirect',
+      redirectUrl: '/login-gate?maintenance=true',
+      statusCode: 307,
+    };
+  }
+
+  // 4. Feature Flags Route Enforcement (Chặn truy cập trực tiếp các route bị tắt đối với non-admin)
   if (
     (pathname === '/kinship' || pathname.startsWith('/kinship/')) &&
     !featureFlags.enable_kinship_lookup

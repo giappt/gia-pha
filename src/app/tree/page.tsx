@@ -4,8 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import { SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS } from '@/lib/tree-layout/sample-data';
 import { FamilyTreeCanvas } from '@/components/tree/FamilyTreeCanvas';
 import { MemberRecord, SpouseRelationRecord } from '@/types/tree';
-import type { BranchNode, UserRole } from '@/types/database';
+import type { BranchNode, UserRole, ClanFeatureFlags } from '@/types/database';
 import { canManageTree } from '@/lib/auth/permissions';
+import { resolveEffectiveRole, resolveFeatureFlags, type ImpersonatedRole } from '@/lib/admin/admin-engine';
 
 export const metadata: Metadata = {
   title: 'Cây Phả Hệ Tương Tác - FAT Family Tree',
@@ -13,16 +14,17 @@ export const metadata: Metadata = {
 };
 
 export default async function TreePage() {
+  const cookieStore = cookies();
   let members: MemberRecord[] = [];
   let spouseRelations: SpouseRelationRecord[] = [];
   let clanName = 'DÒNG HỌ NGUYỄN VĂN';
   let clanBranches: BranchNode[] = [];
   let rootAncestorId: string | null = null;
   let userRole: UserRole = 'viewer';
+  let featureFlags: ClanFeatureFlags = resolveFeatureFlags(undefined);
 
   try {
     const supabase = createClient();
-    const cookieStore = cookies();
 
     // 1. Trích xuất vai trò người dùng (Dev Cookie trước, Supabase Auth sau)
     const devUserCookie = cookieStore.get('fat_dev_user')?.value;
@@ -66,10 +68,10 @@ export default async function TreePage() {
       } catch {}
     }
 
-    // Lấy thông tin cài đặt dòng họ
+    // Lấy thông tin cài đặt dòng họ & feature flags
     const { data: clanSettings } = await supabase
       .from('clan_settings')
-      .select('clan_name, branches, root_ancestor_id')
+      .select('clan_name, branches, root_ancestor_id, feature_flags')
       .limit(1)
       .maybeSingle();
 
@@ -81,6 +83,20 @@ export default async function TreePage() {
     }
     if (clanSettings?.root_ancestor_id) {
       rootAncestorId = clanSettings.root_ancestor_id;
+    }
+
+    // Đọc feature flags (ưu tiên cookie cache nếu có)
+    const cacheCookie = cookieStore.get('fat_feature_flags_cache')?.value;
+    const devFlagsCookie = cookieStore.get('fat_dev_feature_flags')?.value;
+    const targetCookie = devFlagsCookie || cacheCookie;
+    if (targetCookie) {
+      try {
+        featureFlags = resolveFeatureFlags(JSON.parse(decodeURIComponent(targetCookie)));
+      } catch {
+        featureFlags = resolveFeatureFlags(clanSettings?.feature_flags);
+      }
+    } else if (clanSettings?.feature_flags) {
+      featureFlags = resolveFeatureFlags(clanSettings.feature_flags);
     }
 
     // Lấy danh sách thành viên
@@ -107,7 +123,10 @@ export default async function TreePage() {
     spouseRelations = SAMPLE_SPOUSE_RELATIONS;
   }
 
-  const canManage = canManageTree(userRole);
+  // Đọc chế độ Đóng Vai (Role Impersonation) để điều chỉnh quyền hạn và hiển thị thực tế
+  const impersonatedRole = cookieStore.get('fat_impersonated_role')?.value as ImpersonatedRole;
+  const effectiveRole = resolveEffectiveRole(userRole, impersonatedRole);
+  const canManage = canManageTree(effectiveRole === 'guest' ? 'viewer' : effectiveRole);
 
   return (
     <div className="relative w-full h-full flex-1 overflow-hidden flex flex-col">
@@ -117,8 +136,10 @@ export default async function TreePage() {
         clanName={clanName}
         clanBranches={clanBranches}
         rootAncestorId={rootAncestorId}
-        userRole={userRole}
+        userRole={effectiveRole === 'guest' ? 'viewer' : effectiveRole}
+        effectiveRole={effectiveRole}
         canManageTree={canManage}
+        featureFlags={featureFlags}
       />
     </div>
   );

@@ -74,7 +74,8 @@ export interface Member {
   phone: string | null;
   address: string | null;
   biography: string | null;
-  generation_number: number;
+  generation_level?: number;
+  generation_number?: number;
   birth_order: number;
   is_senior_branch?: boolean | null;
   is_adopted?: boolean | null;

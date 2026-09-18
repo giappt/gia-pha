@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { findLowestCommonAncestor } from '@/lib/kinship-engine/lca-finder';
 import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
 import { MOCK_CLAN_MEMBERS } from '@/lib/kinship-engine/mock-data';
@@ -17,14 +18,21 @@ export async function GET(request: NextRequest) {
     // 1. Lấy danh sách thành viên từ Supabase (hoặc fallback bộ mock dữ liệu)
     let members: Member[] = [];
     try {
-      const supabase = createClient();
+      const admin = createAdminClient();
+      const supabase = admin || createClient();
       const { data: dbMembers, error } = await supabase
         .from('members')
         .select('*')
-        .order('generation_number', { ascending: true });
+        .order('generation_level', { ascending: true })
+        .order('birth_order', { ascending: true });
 
       if (!error && dbMembers && dbMembers.length > 0) {
-        members = dbMembers;
+        members = dbMembers.map((m: any) => ({
+          ...m,
+          generation_level: m.generation_level ?? m.generation_number ?? 1,
+          generation_number: m.generation_level ?? m.generation_number ?? 1,
+          is_senior_branch: m.is_senior_branch ?? m.is_senior ?? false,
+        }));
       } else {
         members = MOCK_CLAN_MEMBERS;
       }
@@ -41,11 +49,15 @@ export async function GET(request: NextRequest) {
             id: m.id,
             full_name: m.full_name,
             gender: m.gender,
-            generation_number: m.generation_number,
+            generation_level: m.generation_level ?? m.generation_number ?? 1,
+            generation_number: m.generation_level ?? m.generation_number ?? 1,
             birth_year: m.birth_year,
             birth_order: m.birth_order,
-            is_senior_branch: m.is_senior_branch,
+            is_senior_branch: m.is_senior_branch ?? (m as any).is_senior ?? false,
             is_adopted: m.is_adopted,
+            father_id: m.father_id,
+            mother_id: m.mother_id,
+            is_root: (m as any).is_root ?? false,
             has_parents: Boolean(m.father_id || m.mother_id),
           })),
         },
@@ -86,8 +98,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Edge Case 2 (TC06): Thành viên chưa nối phả
-    const isMember1Unlinked = !member1.father_id && !member1.mother_id && member1.generation_number > 1;
-    const isMember2Unlinked = !member2.father_id && !member2.mother_id && member2.generation_number > 1;
+    const gen1 = member1.generation_level ?? member1.generation_number ?? 1;
+    const gen2 = member2.generation_level ?? member2.generation_number ?? 1;
+    const isMember1Unlinked = !member1.father_id && !member1.mother_id && gen1 > 1;
+    const isMember2Unlinked = !member2.father_id && !member2.mother_id && gen2 > 1;
 
     // 4. Tính toán Tổ Tiên Chung Gần Nhất
     const lcaResult = findLowestCommonAncestor(p1, p2, membersMap);

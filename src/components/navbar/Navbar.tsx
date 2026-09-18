@@ -5,7 +5,7 @@ import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 import ClanHanLogoNavbar from '@/components/navbar/ClanHanLogoNavbar';
 import { createClient } from '@/lib/supabase/server';
 import { Calendar, Users } from 'lucide-react';
-import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
+import { resolveFeatureFlags, type ImpersonatedRole } from '@/lib/admin/admin-engine';
 import type { UserProfile, ClanFeatureFlags } from '@/types/database';
 
 export default async function Navbar({
@@ -13,11 +13,13 @@ export default async function Navbar({
   enablePublicTree: propEnablePublicTree,
   featureFlags: propFeatureFlags,
   isSuperAdmin: propIsSuperAdmin,
+  impersonatedRole: propImpersonatedRole,
 }: {
   isGuest?: boolean;
   enablePublicTree?: boolean;
   featureFlags?: ClanFeatureFlags;
   isSuperAdmin?: boolean;
+  impersonatedRole?: ImpersonatedRole;
 } = {}) {
   const supabase = createClient();
   const {
@@ -135,7 +137,16 @@ export default async function Navbar({
         {/* Right: Theme Toggle & Auth Action (Đã tinh gọn, bỏ nút Quản Trị) */}
         <div className="flex items-center gap-2 sm:gap-3">
           <ThemeToggle />
-          <AuthButton initialUser={user} initialProfile={userProfile} featureFlags={flags} />
+          <AuthButton
+            initialUser={user}
+            initialProfile={
+              userProfile && propImpersonatedRole && propImpersonatedRole !== 'guest'
+                ? { ...userProfile, user_role: propImpersonatedRole as any }
+                : userProfile
+            }
+            featureFlags={flags}
+            isImpersonatingGuest={propImpersonatedRole === 'guest'}
+          />
         </div>
       </div>
     </header>

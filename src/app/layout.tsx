@@ -7,7 +7,7 @@ import MobileBottomNav from '@/components/navigation/MobileBottomNav';
 import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister';
 import RoleImpersonationBanner from '@/components/admin/RoleImpersonationBanner';
 import { createClient } from '@/lib/supabase/server';
-import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
+import { resolveFeatureFlags, resolveEffectiveRole, type ImpersonatedRole } from '@/lib/admin/admin-engine';
 import { cookies } from 'next/headers';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -108,6 +108,14 @@ export default async function RootLayout({
     // fallback defaults
   }
 
+  // Xử lý Chế độ Đóng Vai (Role Impersonation)
+  const impersonatedRole = cookieStore.get('fat_impersonated_role')?.value as ImpersonatedRole;
+  const realRole = isSuperAdmin ? 'super_admin' : (isGuest ? undefined : 'viewer');
+  const effectiveRole = resolveEffectiveRole(realRole, impersonatedRole);
+
+  const effectiveIsGuest = isGuest || effectiveRole === 'guest';
+  const effectiveIsSuperAdmin = isSuperAdmin && effectiveRole === 'super_admin';
+
   return (
     <html lang="vi" className={`h-full ${beVietnamPro.variable}`} suppressHydrationWarning>
       <head>
@@ -133,18 +141,19 @@ export default async function RootLayout({
         <ServiceWorkerRegister />
         <RoleImpersonationBanner />
         <Navbar
-          isGuest={isGuest}
+          isGuest={effectiveIsGuest}
           enablePublicTree={enablePublicTree}
           featureFlags={featureFlags}
-          isSuperAdmin={isSuperAdmin}
+          isSuperAdmin={effectiveIsSuperAdmin}
+          impersonatedRole={impersonatedRole}
         />
         <main className="flex-1 flex flex-col min-h-0 relative pb-16 md:pb-0">{children}</main>
         <AppFooter />
         <MobileBottomNav
-          isGuest={isGuest}
+          isGuest={effectiveIsGuest}
           enablePublicTree={enablePublicTree}
           featureFlags={featureFlags}
-          isSuperAdmin={isSuperAdmin}
+          isSuperAdmin={effectiveIsSuperAdmin}
         />
       </body>
     </html>

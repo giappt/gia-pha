@@ -11,7 +11,10 @@ import {
   DEFAULT_FEATURE_FLAGS,
   VALID_USER_ROLES,
   resolveEffectiveRole,
+  maskPhoneNumber,
+  canViewLivingPhone,
 } from '../src/lib/admin/admin-engine';
+import { evaluateAuthGate } from '../src/lib/auth/auth-gate';
 import type { ClanFeatureFlags, UserProfile } from '../src/types/database';
 
 describe('Admin Portal & Feature Governance Engine (Milestone 7)', () => {
@@ -492,6 +495,207 @@ describe('Admin Portal & Feature Governance Engine (Milestone 7)', () => {
         /handleExit/,
         'Banner must have handleExit to clear impersonation cookie'
       );
+    });
+
+    // TC_UT_PHONE_MASKING_LOGIC: Hàm maskPhoneNumber che mờ SĐT chuẩn xác theo vai trò
+    it('TC_UT_PHONE_MASKING_LOGIC: maskPhoneNumber properly obscures living phone numbers according to role permissions', () => {
+      const samplePhone = '0912345678';
+      assert.strictEqual(canViewLivingPhone('guest'), false);
+      assert.strictEqual(canViewLivingPhone('viewer'), false);
+      assert.strictEqual(canViewLivingPhone('claimed_member'), true);
+      assert.strictEqual(canViewLivingPhone('branch_editor'), true);
+      assert.strictEqual(canViewLivingPhone('super_admin'), true);
+
+      // Masking results
+      assert.strictEqual(maskPhoneNumber(samplePhone, canViewLivingPhone('guest')), '0912 *** ***');
+      assert.strictEqual(maskPhoneNumber(samplePhone, canViewLivingPhone('viewer')), '0912 *** ***');
+      assert.strictEqual(maskPhoneNumber(samplePhone, canViewLivingPhone('claimed_member')), '0912345678');
+      assert.strictEqual(maskPhoneNumber(samplePhone, canViewLivingPhone('branch_editor')), '0912345678');
+      assert.strictEqual(maskPhoneNumber(samplePhone, canViewLivingPhone('super_admin')), '0912345678');
+
+      // Edge cases
+      assert.strictEqual(maskPhoneNumber(null, true), null);
+      assert.strictEqual(maskPhoneNumber(undefined, false), null);
+      assert.strictEqual(maskPhoneNumber('123', false), '****');
+    });
+
+    // TC_UT_TREE_PAGE_EFFECTIVE_ROLE_READ: TreePage đọc cookie fat_impersonated_role và tính toán effectiveRole
+    it('TC_UT_TREE_PAGE_EFFECTIVE_ROLE_READ: TreePage must read fat_impersonated_role from cookieStore and resolve effectiveRole', () => {
+      const treePageContent = fs.readFileSync(
+        path.join(__dirname, '../src/app/tree/page.tsx'),
+        'utf-8'
+      );
+      assert.match(
+        treePageContent,
+        /fat_impersonated_role/,
+        'TreePage must inspect fat_impersonated_role cookie'
+      );
+      assert.match(
+        treePageContent,
+        /resolveEffectiveRole\(/,
+        'TreePage must call resolveEffectiveRole to compute effective permissions'
+      );
+      assert.match(
+        treePageContent,
+        /effectiveRole\s*===?\s*['"]guest['"]\s*\?\s*['"]viewer['"]\s*:\s*effectiveRole/,
+        'TreePage must map guest to viewer for canManageTree check'
+      );
+    });
+
+    // TC_UT_DRAWER_PRIVACY_MASKING: MemberDetailDrawer che SĐT và ẩn các nút edit khi role không có quyền
+    it('TC_UT_DRAWER_PRIVACY_MASKING: MemberDetailDrawer masks phone number and hides edit actions when canManageTree is false', () => {
+      const drawerContent = fs.readFileSync(
+        path.join(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'),
+        'utf-8'
+      );
+      assert.match(
+        drawerContent,
+        /maskPhoneNumber\(/,
+        'MemberDetailDrawer must call maskPhoneNumber'
+      );
+      assert.match(
+        drawerContent,
+        /canViewLivingPhone\(/,
+        'MemberDetailDrawer must use canViewLivingPhone helper'
+      );
+      assert.match(
+        drawerContent,
+        /canManageTree\s*&&/,
+        'MemberDetailDrawer must guard edit/add actions with canManageTree'
+      );
+    });
+
+    // TC_UT_DRAWER_CLAIM_BUTTON_FOR_VIEWER: MemberDetailDrawer hiển thị nút Claim node cho role viewer
+    it('TC_UT_DRAWER_CLAIM_BUTTON_FOR_VIEWER: MemberDetailDrawer renders claim node button for viewer on unlinked living nodes', () => {
+      const drawerContent = fs.readFileSync(
+        path.join(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'),
+        'utf-8'
+      );
+      assert.match(
+        drawerContent,
+        /effectiveRole\s*===?\s*['"]viewer['"]/,
+        'MemberDetailDrawer must check effectiveRole === "viewer"'
+      );
+      assert.match(
+        drawerContent,
+        /Tôi là người này \(Gửi yêu cầu nhận node\)/,
+        'MemberDetailDrawer must render claim button label'
+      );
+    });
+
+    // TC_UT_LAYOUT_EFFECTIVE_ROLE_PROPAGATION: RootLayout truyền trạng thái effective xuống Navbar
+    it('TC_UT_LAYOUT_EFFECTIVE_ROLE_PROPAGATION: RootLayout computes effectiveIsGuest and passes impersonation state to Navbar', () => {
+      const layoutContent = fs.readFileSync(
+        path.join(__dirname, '../src/app/layout.tsx'),
+        'utf-8'
+      );
+      assert.match(
+        layoutContent,
+        /fat_impersonated_role/,
+        'RootLayout must read fat_impersonated_role cookie'
+      );
+      assert.match(
+        layoutContent,
+        /effectiveIsGuest\s*=\s*isGuest\s*\|\|\s*effectiveRole\s*===?\s*['"]guest['"]/,
+        'RootLayout must compute effectiveIsGuest when effectiveRole is guest'
+      );
+      assert.match(
+        layoutContent,
+        /impersonatedRole=\{impersonatedRole\}/,
+        'RootLayout must pass impersonatedRole to Navbar'
+      );
+    });
+
+    // TC_UT_GATE_IMPERSONATION_GUEST_PRIVATE_TREE: Middleware chặn vai Guest vào /tree khi enable_public_tree=false
+    it('TC_UT_GATE_IMPERSONATION_GUEST_PRIVATE_TREE: evaluateAuthGate redirects guest to /login-gate when enable_public_tree is false', () => {
+      const privateFlags = { ...DEFAULT_FEATURE_FLAGS, enable_public_tree: false };
+      // Khi là Guest (gateUser = null, isSuperAdmin = false)
+      const decision = evaluateAuthGate('/tree', null, privateFlags, false);
+      assert.strictEqual(decision.action, 'redirect');
+      assert.strictEqual(decision.redirectUrl, '/login-gate?returnTo=%2Ftree');
+
+      // Khi public_tree = true -> Guest được pass vào /tree
+      const publicFlags = { ...DEFAULT_FEATURE_FLAGS, enable_public_tree: true };
+      const publicDecision = evaluateAuthGate('/tree', null, publicFlags, false);
+      assert.strictEqual(publicDecision.action, 'pass');
+    });
+
+    // TC_UT_GATE_IMPERSONATION_NON_ADMIN_FLAG_BLOCK: Middleware chặn vai Viewer/Member vào /kinship & /anniversaries khi cờ tắt
+    it('TC_UT_GATE_IMPERSONATION_NON_ADMIN_FLAG_BLOCK: non-admin roles are redirected when feature flags are disabled', () => {
+      const mockUser: any = { id: 'u1', email: 'member@example.com' };
+      const disabledKinship = { ...DEFAULT_FEATURE_FLAGS, enable_kinship_lookup: false };
+      const kinshipDecision = evaluateAuthGate('/kinship', mockUser, disabledKinship, false);
+      assert.strictEqual(kinshipDecision.action, 'redirect');
+      assert.strictEqual(kinshipDecision.redirectUrl, '/');
+
+      const disabledAnniv = { ...DEFAULT_FEATURE_FLAGS, enable_anniversaries: false };
+      const annivDecision = evaluateAuthGate('/anniversaries', mockUser, disabledAnniv, false);
+      assert.strictEqual(annivDecision.action, 'redirect');
+      assert.strictEqual(annivDecision.redirectUrl, '/');
+    });
+
+    // TC_UT_LOGIN_GATE_NO_LOOP_ON_GUEST_IMPERSONATION: Login Gate không tự động redirect khi đang đóng vai Guest
+    it('TC_UT_LOGIN_GATE_NO_LOOP_ON_GUEST_IMPERSONATION: LoginGatePage prevents auto-redirect when impersonating guest', () => {
+      const loginGateContent = fs.readFileSync(
+        path.join(__dirname, '../src/app/login-gate/page.tsx'),
+        'utf-8'
+      );
+      assert.match(
+        loginGateContent,
+        /fat_impersonated_role/,
+        'LoginGatePage must read fat_impersonated_role'
+      );
+      assert.match(
+        loginGateContent,
+        /impersonatedRole\s*!==\s*['"]guest['"]/,
+        'LoginGatePage must avoid redirecting when impersonating guest'
+      );
+    });
+
+    // TC_UT_PRIVACY_FLAG_DYNAMIC_MASKING: Tắt cờ mask_living_member_privacy cho phép xem SĐT đầy đủ
+    it('TC_UT_PRIVACY_FLAG_DYNAMIC_MASKING: when mask_living_member_privacy is false, all roles can view phone numbers', () => {
+      const drawerContent = fs.readFileSync(
+        path.join(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'),
+        'utf-8'
+      );
+      assert.match(
+        drawerContent,
+        /!featureFlags\.mask_living_member_privacy\s*\|\|\s*canViewLivingPhone\(/,
+        'MemberDetailDrawer must respect mask_living_member_privacy flag'
+      );
+    });
+
+    // TC_UT_CLAIM_FLAG_BUTTON_TOGGLE: Tắt cờ allow_member_claims ẩn nút nhận node của Viewer
+    it('TC_UT_CLAIM_FLAG_BUTTON_TOGGLE: MemberDetailDrawer guards claim node button with allow_member_claims flag', () => {
+      const drawerContent = fs.readFileSync(
+        path.join(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'),
+        'utf-8'
+      );
+      assert.match(
+        drawerContent,
+        /featureFlags\.allow_member_claims/,
+        'MemberDetailDrawer must check allow_member_claims'
+      );
+    });
+
+    // TC_UT_MAINTENANCE_MODE_GATE: Cờ maintenance_mode chặn toàn bộ non-admin vào /login-gate?maintenance=true
+    it('TC_UT_MAINTENANCE_MODE_GATE: maintenance_mode redirects all non-admins to /login-gate?maintenance=true', () => {
+      const maintFlags = { ...DEFAULT_FEATURE_FLAGS, maintenance_mode: true };
+      const mockUser: any = { id: 'u1', email: 'member@example.com' };
+
+      // Non-admin user
+      const userDecision = evaluateAuthGate('/tree', mockUser, maintFlags, false);
+      assert.strictEqual(userDecision.action, 'redirect');
+      assert.strictEqual(userDecision.redirectUrl, '/login-gate?maintenance=true');
+
+      // Guest
+      const guestDecision = evaluateAuthGate('/', null, maintFlags, false);
+      assert.strictEqual(guestDecision.action, 'redirect');
+      assert.strictEqual(guestDecision.redirectUrl, '/login-gate?maintenance=true');
+
+      // Super Admin bypasses maintenance
+      const adminDecision = evaluateAuthGate('/tree', mockUser, maintFlags, true);
+      assert.strictEqual(adminDecision.action, 'pass');
     });
   });
 });

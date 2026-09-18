@@ -25,7 +25,8 @@ interface MemberOption {
   id: string;
   full_name: string;
   gender: 'male' | 'female' | 'other';
-  generation_number: number;
+  generation_level: number;
+  generation_number?: number;
   birth_year: number | null;
   birth_order: number;
   is_senior_branch?: boolean;
@@ -43,7 +44,8 @@ const INITIAL_MEMBERS: MemberOption[] = MOCK_CLAN_MEMBERS.map((m) => ({
   id: m.id,
   full_name: m.full_name,
   gender: m.gender,
-  generation_number: m.generation_number,
+  generation_level: m.generation_level ?? m.generation_number ?? 1,
+  generation_number: m.generation_level ?? m.generation_number ?? 1,
   birth_year: m.birth_year,
   birth_order: m.birth_order,
   is_senior_branch: m.is_senior_branch ?? undefined,
@@ -51,7 +53,16 @@ const INITIAL_MEMBERS: MemberOption[] = MOCK_CLAN_MEMBERS.map((m) => ({
   has_parents: Boolean(m.father_id || m.mother_id),
 }));
 
-const MEMBERS_MAP = new Map<string, Member>(MOCK_CLAN_MEMBERS.map((m) => [m.id, m]));
+const MEMBERS_MAP = new Map<string, Member>(
+  MOCK_CLAN_MEMBERS.map((m) => [
+    m.id,
+    {
+      ...m,
+      generation_level: m.generation_level ?? m.generation_number ?? 1,
+      generation_number: m.generation_level ?? m.generation_number ?? 1,
+    },
+  ])
+);
 
 /**
  * Tính toán quan hệ xưng hô tức thì 0ms (In-Memory Zero-Latency)
@@ -61,18 +72,21 @@ function computeKinshipDirect(
   pA: string,
   pB: string,
   reg: KinshipRegion,
+  currentMembersMap: Map<string, Member>,
   customDict?: CustomKinshipDictionary | null
 ): KinshipResolution | null {
   if (!pA || !pB || pA === pB) return null;
-  const memberA = MEMBERS_MAP.get(pA);
-  const memberB = MEMBERS_MAP.get(pB);
+  const memberA = currentMembersMap.get(pA);
+  const memberB = currentMembersMap.get(pB);
   if (!memberA || !memberB) return null;
 
-  const lcaResult = findLowestCommonAncestor(pA, pB, MEMBERS_MAP);
+  const lcaResult = findLowestCommonAncestor(pA, pB, currentMembersMap);
   const resolution = resolveKinshipTerms(lcaResult, memberA, memberB, reg, customDict);
 
-  const isMember1Unlinked = !memberA.father_id && !memberA.mother_id && memberA.generation_number > 1;
-  const isMember2Unlinked = !memberB.father_id && !memberB.mother_id && memberB.generation_number > 1;
+  const genA = memberA.generation_level ?? memberA.generation_number ?? 1;
+  const genB = memberB.generation_level ?? memberB.generation_number ?? 1;
+  const isMember1Unlinked = !memberA.father_id && !memberA.mother_id && genA > 1;
+  const isMember2Unlinked = !memberB.father_id && !memberB.mother_id && genB > 1;
   if (lcaResult.relationshipType === 'unrelated' && (isMember1Unlinked || isMember2Unlinked)) {
     const unlinkedName = isMember1Unlinked ? memberA.full_name : memberB.full_name;
     resolution.explanation = `Thành viên "${unlinkedName}" chưa được liên kết cha/mẹ trong cây phả hệ, do đó chưa thể xác định quan hệ xưng hô.`;
@@ -85,7 +99,9 @@ const DEFAULT_A = '30000000-0000-0000-0000-000000000001'; // Hải (Chi 1)
 const DEFAULT_B = '30000000-0000-0000-0000-000000000003'; // Hùng (Chi 2)
 
 export default function KinshipPage() {
-  const [members] = useState<MemberOption[]>(INITIAL_MEMBERS);
+  const [members, setMembers] = useState<MemberOption[]>(INITIAL_MEMBERS);
+  const [membersMap, setMembersMap] = useState<Map<string, Member>>(MEMBERS_MAP);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Selection states: Mặc định chọn Hải (Chi 1) và Hùng (Chi 2)
   const [personAId, setPersonAId] = useState<string>(DEFAULT_A);
@@ -99,7 +115,7 @@ export default function KinshipPage() {
 
   // Resolution states: Khởi tạo kết quả NGAY LẬP TỨC 0ms trên client
   const [result, setResult] = useState<KinshipResolution | null>(() =>
-    computeKinshipDirect(DEFAULT_A, DEFAULT_B, 'north')
+    computeKinshipDirect(DEFAULT_A, DEFAULT_B, 'north', MEMBERS_MAP)
   );
   const [isCalculating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -112,7 +128,8 @@ export default function KinshipPage() {
     pA = personAId,
     pB = personBId,
     reg = region,
-    dict = customDict
+    dict = customDict,
+    currentMap = membersMap
   ) => {
     if (!pA || !pB) {
       setErrorMessage('Vui lòng chọn đầy đủ cả 2 thành viên để xác định vai vế.');
@@ -129,7 +146,7 @@ export default function KinshipPage() {
     setErrorMessage(null);
     setIsExpandedMiddle(false);
 
-    const directRes = computeKinshipDirect(pA, pB, reg, dict);
+    const directRes = computeKinshipDirect(pA, pB, reg, currentMap, dict);
     if (directRes) {
       setResult(directRes);
     } else {
@@ -138,44 +155,98 @@ export default function KinshipPage() {
     }
   };
 
-  // 1. Đồng bộ URL parameters nếu truy cập qua deep link & nạp quy ước vùng miền + từ điển tùy biến từ Cài đặt
+  // 1. Đồng bộ dữ liệu thành viên từ DB & URL parameters & nạp quy ước vùng miền + từ điển tùy biến từ Cài đặt
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const p1 = urlParams.get('p1');
     const p2 = urlParams.get('p2');
     const regParam = urlParams.get('region') as KinshipRegion | null;
 
-    fetch('/api/clan-settings')
-      .then((res) => res.json())
-      .then((json) => {
-        const loadedDict = json.data?.custom_kinship_dictionary || null;
+    Promise.all([
+      fetch('/api/clan-settings')
+        .then((res) => res.json())
+        .catch(() => null),
+      fetch('/api/members')
+        .then((res) => res.json())
+        .catch(() => null),
+    ])
+      .then(([settingsJson, membersJson]) => {
+        const loadedDict = settingsJson?.data?.custom_kinship_dictionary || null;
         if (loadedDict && Object.keys(loadedDict).length > 0) {
           setCustomDict(loadedDict);
         }
 
-        if (p1 && p2) {
-          setPersonAId(p1);
-          setPersonBId(p2);
-          const activeReg = regParam || (json.data?.default_kinship_region as KinshipRegion) || region;
-          setRegion(activeReg);
-          handleCalculate(p1, p2, activeReg, loadedDict);
-        } else {
-          const defaultReg = (!regParam && json.data?.default_kinship_region)
-            ? (json.data.default_kinship_region as KinshipRegion)
-            : (regParam || region);
-          setRegion(defaultReg);
-          handleCalculate(personAId, personBId, defaultReg, loadedDict);
+        const activeReg =
+          regParam ||
+          (settingsJson?.data?.default_kinship_region as KinshipRegion) ||
+          region;
+        setRegion(activeReg);
+
+        // Nạp danh sách thành viên thực tế từ DB
+        const rawList: any[] =
+          membersJson?.members ||
+          membersJson?.data?.members ||
+          (Array.isArray(membersJson) ? membersJson : MOCK_CLAN_MEMBERS);
+
+        if (rawList && rawList.length > 0) {
+          const normalizedMembers: Member[] = rawList.map((m: any) => ({
+            ...m,
+            generation_level: m.generation_level ?? m.generation_number ?? 1,
+            generation_number: m.generation_level ?? m.generation_number ?? 1,
+            is_senior_branch: m.is_senior_branch ?? m.is_senior ?? false,
+            is_adopted: m.is_adopted ?? false,
+          }));
+
+          const newMap = new Map<string, Member>(normalizedMembers.map((m) => [m.id, m]));
+          setMembersMap(newMap);
+
+          const options: MemberOption[] = normalizedMembers.map((m) => ({
+            id: m.id,
+            full_name: m.full_name,
+            gender: m.gender,
+            generation_level: m.generation_level ?? m.generation_number ?? 1,
+            generation_number: m.generation_level ?? m.generation_number ?? 1,
+            birth_year: m.birth_year,
+            birth_order: m.birth_order,
+            is_senior_branch: m.is_senior_branch ?? undefined,
+            is_adopted: m.is_adopted ?? undefined,
+            has_parents: Boolean(m.father_id || m.mother_id),
+          }));
+          setMembers(options);
+
+          // Xác định cặp thành viên A và B
+          let targetA = p1 || '';
+          let targetB = p2 || '';
+
+          // Nếu URL không cung cấp p1, p2 hoặc id không tồn tại trong map mới
+          if (!newMap.has(targetA) || !newMap.has(targetB) || targetA === targetB) {
+            if (newMap.has(DEFAULT_A) && newMap.has(DEFAULT_B)) {
+              targetA = DEFAULT_A;
+              targetB = DEFAULT_B;
+            } else if (normalizedMembers.length >= 2) {
+              const root = normalizedMembers.find((m: any) => m.is_root) || normalizedMembers[0];
+              const other = normalizedMembers.find((m) => m.id !== root.id) || normalizedMembers[1];
+              targetA = root.id;
+              targetB = other.id;
+            } else if (normalizedMembers.length === 1) {
+              targetA = normalizedMembers[0].id;
+              targetB = '';
+            }
+          }
+
+          if (targetA) setPersonAId(targetA);
+          if (targetB) setPersonBId(targetB);
+
+          if (targetA && targetB && targetA !== targetB) {
+            handleCalculate(targetA, targetB, activeReg, loadedDict, newMap);
+          }
         }
       })
       .catch((err) => {
-        console.error('Error fetching clan settings:', err);
-        if (p1 && p2) {
-          setPersonAId(p1);
-          setPersonBId(p2);
-          const activeReg = regParam || region;
-          setRegion(activeReg);
-          handleCalculate(p1, p2, activeReg);
-        }
+        console.error('Error loading kinship members from database:', err);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }, []);
 
@@ -187,7 +258,7 @@ export default function KinshipPage() {
     setPersonBId(tempA);
 
     if (tempB && tempA && tempB !== tempA) {
-      handleCalculate(tempB, tempA, region, customDict);
+      handleCalculate(tempB, tempA, region, customDict, membersMap);
     }
   };
 
@@ -250,6 +321,11 @@ export default function KinshipPage() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold tracking-wide">
             <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>KINSHIP ENGINE · ĐỒ THỊ PHẢ HỆ VIỆT NAM</span>
+            {isLoading && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-normal text-emerald-600 dark:text-emerald-400 pl-2 border-l border-emerald-300 dark:border-emerald-700">
+                <Sparkles className="w-3 h-3 animate-spin" /> Đang đồng bộ...
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight">
             Tra Cứu Mối Quan Hệ
@@ -272,7 +348,7 @@ export default function KinshipPage() {
                 <span>Người hỏi (A)</span>
                 {selectedPersonA && (
                   <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 normal-case">
-                    Đời thứ {selectedPersonA.generation_number}
+                    Đời thứ {selectedPersonA.generation_level ?? selectedPersonA.generation_number}
                   </span>
                 )}
               </label>
@@ -296,7 +372,7 @@ export default function KinshipPage() {
                     setPersonAId(newA);
                     setErrorMessage(null);
                     if (newA && personBId && newA !== personBId) {
-                      handleCalculate(newA, personBId, region);
+                      handleCalculate(newA, personBId, region, customDict, membersMap);
                     }
                   }}
                   className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
@@ -336,7 +412,7 @@ export default function KinshipPage() {
                 <span>Người được xưng hô (B)</span>
                 {selectedPersonB && (
                   <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 normal-case">
-                    Đời thứ {selectedPersonB.generation_number}
+                    Đời thứ {selectedPersonB.generation_level ?? selectedPersonB.generation_number}
                   </span>
                 )}
               </label>
@@ -360,7 +436,7 @@ export default function KinshipPage() {
                     setPersonBId(newB);
                     setErrorMessage(null);
                     if (personAId && newB && personAId !== newB) {
-                      handleCalculate(personAId, newB, region);
+                      handleCalculate(personAId, newB, region, customDict, membersMap);
                     }
                   }}
                   className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
@@ -379,93 +455,95 @@ export default function KinshipPage() {
             </div>
           </div>
 
-          {/* Quick Scenario Chips */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-              Kịch bản mẫu:
-            </span>
-            <button
-              type="button"
-              id="sample-direct-btn"
-              onClick={() => {
-                setSearchA('');
-                setSearchB('');
-                const idKhoi = '10000000-0000-0000-0000-000000000001';
-                const idBinh = '20000000-0000-0000-0000-000000000001';
-                setPersonAId(idKhoi);
-                setPersonBId(idBinh);
-                handleCalculate(idKhoi, idBinh, region);
-              }}
-              className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700/80 transition-all cursor-pointer shadow-xs"
-            >
-              🌱 Trực Hệ Bố - Con (Khởi & Bình)
-            </button>
-            <button
-              type="button"
-              id="sample-tc08-btn"
-              onClick={() => {
-                setSearchA('');
-                setSearchB('');
-                const idHai = '30000000-0000-0000-0000-000000000001';
-                const idMinh = '40000000-0000-0000-0000-000000000001';
-                setPersonAId(idHai);
-                setPersonBId(idMinh);
-                handleCalculate(idHai, idMinh, region);
-              }}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
-            >
-              👑 Cây Chữ V (Hải & Minh)
-            </button>
-            <button
-              type="button"
-              id="sample-tc10-btn"
-              onClick={() => {
-                setSearchA('');
-                setSearchB('');
-                const idHung = '30000000-0000-0000-0000-000000000003';
-                const idHai = '30000000-0000-0000-0000-000000000001';
-                setPersonAId(idHung);
-                setPersonBId(idHai);
-                setRegion('north');
-                handleCalculate(idHung, idHai, 'north');
-              }}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
-            >
-              📜 Tôn ti Miền Bắc (Hùng & Hải)
-            </button>
-            <button
-              type="button"
-              id="sample-tc09-btn"
-              onClick={() => {
-                setSearchA('');
-                setSearchB('');
-                const idKhoi = '10000000-0000-0000-0000-000000000001';
-                const idAn = '70000000-0000-0000-0000-000000000001';
-                setPersonAId(idKhoi);
-                setPersonBId(idAn);
-                handleCalculate(idKhoi, idAn, region);
-              }}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
-            >
-              🔽 Nén 6 Đời (Khởi & An)
-            </button>
-            <button
-              type="button"
-              id="sample-tc11-btn"
-              onClick={() => {
-                setSearchA('');
-                setSearchB('');
-                const idNam = '40000000-0000-0000-0000-000000000002';
-                const idTam = '40000000-0000-0000-0000-000000000003';
-                setPersonAId(idNam);
-                setPersonBId(idTam);
-                handleCalculate(idNam, idTam, region);
-              }}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
-            >
-              🤝 Con Nuôi (Nam & Tâm)
-            </button>
-          </div>
+          {/* Quick Scenario Chips (Chỉ hiển thị khi có bộ dữ liệu mẫu trong Map) */}
+          {membersMap.has('10000000-0000-0000-0000-000000000001') && (
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Kịch bản mẫu:
+              </span>
+              <button
+                type="button"
+                id="sample-direct-btn"
+                onClick={() => {
+                  setSearchA('');
+                  setSearchB('');
+                  const idKhoi = '10000000-0000-0000-0000-000000000001';
+                  const idBinh = '20000000-0000-0000-0000-000000000001';
+                  setPersonAId(idKhoi);
+                  setPersonBId(idBinh);
+                  handleCalculate(idKhoi, idBinh, region, customDict, membersMap);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700/80 transition-all cursor-pointer shadow-xs"
+              >
+                🌱 Trực Hệ Bố - Con (Khởi & Bình)
+              </button>
+              <button
+                type="button"
+                id="sample-tc08-btn"
+                onClick={() => {
+                  setSearchA('');
+                  setSearchB('');
+                  const idHai = '30000000-0000-0000-0000-000000000001';
+                  const idMinh = '40000000-0000-0000-0000-000000000001';
+                  setPersonAId(idHai);
+                  setPersonBId(idMinh);
+                  handleCalculate(idHai, idMinh, region, customDict, membersMap);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
+              >
+                👑 Cây Chữ V (Hải & Minh)
+              </button>
+              <button
+                type="button"
+                id="sample-tc10-btn"
+                onClick={() => {
+                  setSearchA('');
+                  setSearchB('');
+                  const idHung = '30000000-0000-0000-0000-000000000003';
+                  const idHai = '30000000-0000-0000-0000-000000000001';
+                  setPersonAId(idHung);
+                  setPersonBId(idHai);
+                  setRegion('north');
+                  handleCalculate(idHung, idHai, 'north', customDict, membersMap);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
+              >
+                📜 Tôn ti Miền Bắc (Hùng & Hải)
+              </button>
+              <button
+                type="button"
+                id="sample-tc09-btn"
+                onClick={() => {
+                  setSearchA('');
+                  setSearchB('');
+                  const idKhoi = '10000000-0000-0000-0000-000000000001';
+                  const idAn = '70000000-0000-0000-0000-000000000001';
+                  setPersonAId(idKhoi);
+                  setPersonBId(idAn);
+                  handleCalculate(idKhoi, idAn, region, customDict, membersMap);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
+              >
+                🔽 Nén 6 Đời (Khởi & An)
+              </button>
+              <button
+                type="button"
+                id="sample-tc11-btn"
+                onClick={() => {
+                  setSearchA('');
+                  setSearchB('');
+                  const idNam = '40000000-0000-0000-0000-000000000002';
+                  const idTam = '40000000-0000-0000-0000-000000000003';
+                  setPersonAId(idNam);
+                  setPersonBId(idTam);
+                  handleCalculate(idNam, idTam, region, customDict, membersMap);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
+              >
+                🤝 Con Nuôi (Nam & Tâm)
+              </button>
+            </div>
+          )}
 
           {/* Region Setting Controls & Calculate Button */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -480,7 +558,7 @@ export default function KinshipPage() {
                   onClick={() => {
                     setRegion('north');
                     if (personAId && personBId && personAId !== personBId) {
-                      handleCalculate(personAId, personBId, 'north', customDict);
+                      handleCalculate(personAId, personBId, 'north', customDict, membersMap);
                     }
                   }}
                   className={`px-3 py-1 rounded-md transition-all ${region === 'north'
@@ -496,7 +574,7 @@ export default function KinshipPage() {
                   onClick={() => {
                     setRegion('central');
                     if (personAId && personBId && personAId !== personBId) {
-                      handleCalculate(personAId, personBId, 'central', customDict);
+                      handleCalculate(personAId, personBId, 'central', customDict, membersMap);
                     }
                   }}
                   className={`px-3 py-1 rounded-md transition-all ${region === 'central'
@@ -512,7 +590,7 @@ export default function KinshipPage() {
                   onClick={() => {
                     setRegion('south');
                     if (personAId && personBId && personAId !== personBId) {
-                      handleCalculate(personAId, personBId, 'south', customDict);
+                      handleCalculate(personAId, personBId, 'south', customDict, membersMap);
                     }
                   }}
                   className={`px-3 py-1 rounded-md transition-all ${region === 'south'

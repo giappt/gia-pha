@@ -426,4 +426,23 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
   },
 ];
 
+/**
+ * Kiểm tra xem một vai trò có quyền xem số điện thoại của người còn sống hay không
+ */
+export function canViewLivingPhone(role: UserRole | 'guest' | undefined | null): boolean {
+  return role === 'claimed_member' || role === 'branch_editor' || role === 'super_admin';
+}
+
+/**
+ * Che mờ số điện thoại để bảo vệ quyền riêng tư nếu người xem không có quyền
+ */
+export function maskPhoneNumber(phone: string | null | undefined, canView: boolean): string | null {
+  if (!phone) return null;
+  const cleanPhone = phone.trim();
+  if (!cleanPhone) return null;
+  if (canView) return cleanPhone;
+  if (cleanPhone.length <= 4) return '****';
+  return cleanPhone.slice(0, 4) + ' *** ***';
+}
+
 

@@ -32,7 +32,7 @@ import { MemberRecord, SpouseRelationRecord, LayoutNode, TreeNodeData } from '@/
 import { getUnlinkedMembers } from '@/lib/tree-layout/graph-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { Keyboard } from 'lucide-react';
-import type { BranchNode, UserRole } from '@/types/database';
+import type { BranchNode, UserRole, ClanFeatureFlags } from '@/types/database';
 import { resolveMemberBranchHierarchy } from '@/lib/tree-layout/branch-engine';
 
 const nodeTypes: NodeTypes = {
@@ -51,7 +51,9 @@ interface FamilyTreeCanvasProps {
   clanBranches?: BranchNode[];
   rootAncestorId?: string | null;
   userRole?: UserRole;
+  effectiveRole?: UserRole | 'guest';
   canManageTree?: boolean;
+  featureFlags?: ClanFeatureFlags;
 }
 
 const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
@@ -61,7 +63,9 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   clanBranches,
   rootAncestorId,
   userRole = 'viewer',
+  effectiveRole = 'viewer',
   canManageTree = false,
+  featureFlags,
 }) => {
   const { getNode, setCenter, fitView } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
@@ -567,6 +571,8 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
           setIsDrawerOpen(false);
         }}
         canManageTree={canManageTree}
+        effectiveRole={effectiveRole}
+        featureFlags={featureFlags}
         onEditMember={canManageTree ? handleEditMemberFromDrawer : undefined}
         onAddChild={canManageTree ? handleAddChildFromDrawer : undefined}
         onAddSpouse={canManageTree ? handleAddSpouseFromDrawer : undefined}

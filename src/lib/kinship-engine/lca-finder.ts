@@ -127,7 +127,7 @@ export function findLowestCommonAncestor(
     name: lcaMember.full_name,
     relation: 'Tổ tiên chung (LCA)',
     birthYear: lcaMember.birth_year,
-    generationNumber: lcaMember.generation_number,
+    generationNumber: lcaMember.generation_level ?? lcaMember.generation_number ?? 1,
     isSeniorBranch: lcaMember.is_senior_branch ?? undefined,
     gender: lcaMember.gender,
   };
@@ -216,7 +216,7 @@ function buildKinshipPath(lineage: Member[]): KinshipPathNode[] {
       name: m.full_name,
       relation,
       birthYear: m.birth_year,
-      generationNumber: m.generation_number,
+      generationNumber: m.generation_level ?? m.generation_number ?? 1,
       isSeniorBranch: m.is_senior_branch ?? undefined,
       isAdopted: m.is_adopted ?? undefined,
       gender: m.gender,

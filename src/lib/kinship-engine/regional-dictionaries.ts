@@ -974,10 +974,10 @@ function attachStructuredMetadata(
   const comparisonFacts = {
     labelA: a.full_name,
     labelB: b.full_name,
-    detailA: `Đời ${a.generation_number} · Sinh ${a.birth_year || '---'}${
+    detailA: `Đời ${a.generation_level ?? a.generation_number ?? 1} · Sinh ${a.birth_year || '---'}${
       a.is_senior_branch ? ' · Chi Trưởng' : ' · Chi Thứ'
     }${a.is_adopted ? ' · Con Nuôi' : ''}`,
-    detailB: `Đời ${b.generation_number} · Sinh ${b.birth_year || '---'}${
+    detailB: `Đời ${b.generation_level ?? b.generation_number ?? 1} · Sinh ${b.birth_year || '---'}${
       b.is_senior_branch ? ' · Chi Trưởng' : ' · Chi Thứ'
     }${b.is_adopted ? ' · Con Nuôi' : ''}`,
     summary,

@@ -25,10 +25,12 @@ export default function AuthButton({
   initialUser = null,
   initialProfile = null,
   featureFlags = null,
+  isImpersonatingGuest = false,
 }: {
   initialUser?: User | null;
   initialProfile?: UserProfile | null;
   featureFlags?: ClanFeatureFlags | null;
+  isImpersonatingGuest?: boolean;
 }) {
   const [user, setUser] = useState<User | null>(initialUser);
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile);
@@ -252,7 +254,7 @@ export default function AuthButton({
     );
   }
 
-  if (!user) {
+  if (!user || isImpersonatingGuest) {
     // Khi đang ở màn Login Gate, không hiển thị nút đăng nhập trên Header Navbar để tránh trùng lặp với Card chính giữa
     if (pathname === '/login-gate') return null;
 

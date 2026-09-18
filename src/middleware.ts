@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import { evaluateAuthGate } from '@/lib/auth/auth-gate';
-import { resolveFeatureFlags, DEFAULT_FEATURE_FLAGS } from '@/lib/admin/admin-engine';
+import {
+  resolveFeatureFlags,
+  DEFAULT_FEATURE_FLAGS,
+  resolveEffectiveRole,
+  type ImpersonatedRole,
+} from '@/lib/admin/admin-engine';
 import type { ClanFeatureFlags } from '@/types/database';
 
 export async function middleware(request: NextRequest) {
@@ -77,7 +82,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const decision = evaluateAuthGate(pathname, user, featureFlags, isSuperAdmin);
+  // 5. Đọc Chế Độ Đóng Vai (Role Impersonation) để phân luồng đúng trải nghiệm nghiệm thu
+  const impersonatedRole = request.cookies.get('fat_impersonated_role')?.value as ImpersonatedRole;
+  const realRole = isSuperAdmin ? 'super_admin' : (user ? 'viewer' : undefined);
+  const effectiveRole = resolveEffectiveRole(realRole, impersonatedRole);
+
+  // Danh tính hiệu dụng cho Auth Gate:
+  const gateUser = effectiveRole === 'guest' ? null : user;
+  const gateIsSuperAdmin = effectiveRole === 'super_admin';
+
+  const decision = evaluateAuthGate(pathname, gateUser, featureFlags, gateIsSuperAdmin);
 
   if (decision.action === 'redirect' && decision.redirectUrl) {
     const redirectUrl = new URL(decision.redirectUrl, request.url);

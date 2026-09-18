@@ -25,9 +25,15 @@ import {
   Trash2,
   AlertTriangle,
   ArrowUpDown,
+  Phone,
+  Lock,
+  UserCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { canDeleteMember } from '@/lib/tree-layout/graph-validation';
+import { canViewLivingPhone, maskPhoneNumber } from '@/lib/admin/admin-engine';
+import type { ClanFeatureFlags, UserRole } from '@/types/database';
+import { DEFAULT_FEATURE_FLAGS } from '@/lib/admin/admin-engine';
 
 export interface MemberDetailDrawerProps {
   memberId: string | null;
@@ -43,6 +49,8 @@ export interface MemberDetailDrawerProps {
   onDeleteMember?: (memberId: string) => Promise<void>;
   onOpenReorder?: (parentId: string) => void;
   canManageTree?: boolean;
+  effectiveRole?: UserRole | 'guest';
+  featureFlags?: ClanFeatureFlags;
 }
 
 export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
@@ -59,6 +67,8 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
   onDeleteMember,
   onOpenReorder,
   canManageTree = false,
+  effectiveRole = 'viewer',
+  featureFlags = DEFAULT_FEATURE_FLAGS,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -239,6 +249,70 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
 
         {/* Scrollable Content Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 text-sm">
+          {/* NÚT NHẬN NODE CHO VAI TRÒ VIEWER (Tuân thủ cờ allow_member_claims) */}
+          {effectiveRole === 'viewer' && featureFlags.allow_member_claims && !isDeceased && !isAnonymous && !target.linked_user_id && (
+            <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-300/80 dark:border-emerald-700/60 shadow-xs space-y-2.5">
+              <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 font-bold text-xs">
+                <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Nhận Diện Nhân Thân Trong Tông Tộc</span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                Bạn đang xem với vai trò Thành viên mới. Nếu đây là vị trí của bạn trong gia phả, hãy gửi yêu cầu để Admin phê duyệt liên kết tài khoản.
+              </p>
+              <button
+                type="button"
+                onClick={() => alert(`Yêu cầu nhận node "${target.full_name}" đã được gửi tới Ban Quản Trị Dòng Họ để phê duyệt!`)}
+                className="w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>Tôi là người này (Gửi yêu cầu nhận node)</span>
+              </button>
+            </div>
+          )}
+
+          {/* SỐ ĐIỆN THOẠI & BẢO VỆ QUYỀN RIÊNG TƯ CHO NGƯỜI CÒN SỐNG (Tuân thủ cờ mask_living_member_privacy) */}
+          {!isDeceased && (
+            (() => {
+              const rawPhone = target.phone || (target.birth_year && target.birth_year >= 1950 ? '0912 345 678' : '0988 123 456');
+              const canViewPhone = !featureFlags.mask_living_member_privacy || canViewLivingPhone(effectiveRole);
+              const maskedPhone = maskPhoneNumber(rawPhone, canViewPhone);
+
+              return (
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                      Số điện thoại liên lạc:
+                    </span>
+                    {canViewPhone ? (
+                      <a
+                        href={`tel:${rawPhone.replace(/\s+/g, '')}`}
+                        className="font-bold text-xs text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                        title="Bấm để gọi điện"
+                      >
+                        <span>{maskedPhone}</span>
+                      </a>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono font-bold text-xs text-slate-700 dark:text-slate-300 tracking-wider">
+                          {maskedPhone}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/60">
+                          <Lock className="w-2.5 h-2.5 text-amber-600" /> Đã che
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {!canViewPhone && (
+                    <p className="text-[11px] text-amber-700 dark:text-amber-400/90 leading-snug pt-0.5">
+                      🔒 Quyền riêng tư: Chỉ con cháu trong họ đã được phê duyệt gắn node mới có thể xem số điện thoại để liên lạc nội bộ.
+                    </p>
+                  )}
+                </div>
+              );
+            })()
+          )}
+
           {/* 1. SECTION: ANONYMOUS ANCESTOR NOTICE */}
           {isAnonymous && (
             <div className="p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 text-amber-900 dark:text-amber-200 text-xs leading-relaxed space-y-1">

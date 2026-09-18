@@ -63,7 +63,7 @@ const ROLES_META = [
   {
     id: 'super_admin',
     title: 'Quản Trị Tối Cao',
-    subtitle: 'Trưởng Tộc / God Mode',
+    subtitle: 'Trưởng Tộc',
     badge: 'Super Admin',
     badgeColor: 'bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200 border-purple-300 dark:border-purple-800',
     description: 'Toàn quyền tối cao với toàn bộ cây phả hệ, bàn điều hành, phân quyền và dữ liệu dòng tộc.',
@@ -169,7 +169,9 @@ export default function AdminRolesPage() {
             Phân Quyền & Ma Trận Vai Trò Tông Tộc
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
-            Tổng hợp đặc quyền của 5 cấp bậc vai trò trong hệ thống Gia Phả Số. Super Admin có toàn quyền tối thượng (God Mode) và có thể kích hoạt Chế độ Đóng Vai để nghiệm thu trải nghiệm thực tế.
+            Tổng hợp quyền của 5 cấp bậc vai trò trong hệ thống Gia Phả Số.
+            <br />
+            Super Admin có thể kích hoạt Chế độ Đóng Vai để nghiệm thu trải nghiệm thực tế.
           </p>
         </div>
 
@@ -242,11 +244,10 @@ export default function AdminRolesPage() {
               {ROLES_META.map((role) => (
                 <th
                   key={role.id}
-                  className={`p-3.5 text-center transition-colors border-l border-slate-200/70 dark:border-slate-800/70 ${
-                    activeImpersonation === role.id
-                      ? 'bg-amber-50/60 dark:bg-amber-950/20 ring-2 ring-amber-500/50 inset-0'
-                      : ''
-                  }`}
+                  className={`p-3.5 text-center transition-colors border-l border-slate-200/70 dark:border-slate-800/70 ${activeImpersonation === role.id
+                    ? 'bg-amber-50/60 dark:bg-amber-950/20 ring-2 ring-amber-500/50 inset-0'
+                    : ''
+                    }`}
                 >
                   <div className="flex flex-col items-center">
                     <span
@@ -313,9 +314,8 @@ export default function AdminRolesPage() {
                         return (
                           <td
                             key={role.id}
-                            className={`p-3 text-center border-l border-slate-200/50 dark:border-slate-800/50 ${
-                              isCurrentActive ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''
-                            }`}
+                            className={`p-3 text-center border-l border-slate-200/50 dark:border-slate-800/50 ${isCurrentActive ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''
+                              }`}
                           >
                             <div className="flex items-center justify-center">
                               {hasPerm ? (
@@ -359,9 +359,8 @@ export default function AdminRolesPage() {
                 return (
                   <td
                     key={role.id}
-                    className={`p-3 text-center border-l border-slate-200 dark:border-slate-800 ${
-                      isCurrentActive ? 'bg-amber-50/60 dark:bg-amber-950/20' : ''
-                    }`}
+                    className={`p-3 text-center border-l border-slate-200 dark:border-slate-800 ${isCurrentActive ? 'bg-amber-50/60 dark:bg-amber-950/20' : ''
+                      }`}
                   >
                     {role.canImpersonate ? (
                       isCurrentActive ? (
@@ -384,13 +383,13 @@ export default function AdminRolesPage() {
                           className="w-full px-2 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 border border-slate-300 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-600 text-slate-700 dark:text-slate-200 rounded-md shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                           title={`Kích hoạt chế độ xem với vai trò ${role.title}`}
                         >
-                          <span>🎭 Thử đóng vai</span>
+                          <span>Thử đóng vai</span>
                         </button>
                       )
                     ) : (
                       <div className="flex flex-col items-center">
                         <span className="px-2 py-1 text-[11px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 rounded-md">
-                          👑 Vai Trò Gốc
+                          Vai Trò Gốc
                         </span>
                       </div>
                     )}
@@ -406,7 +405,6 @@ export default function AdminRolesPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
         <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 shadow-xs">
           <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mb-1.5">
-            <Info className="w-4 h-4 text-blue-500" />
             <span>Quy Trình Nâng Cấp Tự Động</span>
           </h4>
           <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -416,8 +414,7 @@ export default function AdminRolesPage() {
 
         <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 shadow-xs">
           <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mb-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>Bảo Vệ Quyền Riêng Tư (Privacy Masking)</span>
+            <span>Bảo Vệ Quyền Riêng Tư </span>
           </h4>
           <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
             Số điện thoại của người còn sống bị che mờ bằng dấu sao (<code>0912***789</code>) đối với Khách vãng lai và Thành viên mới. Chỉ con cháu trong họ đã được phê duyệt mới xem được đầy đủ để liên lạc nội bộ.
@@ -426,7 +423,6 @@ export default function AdminRolesPage() {
 
         <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 shadow-xs">
           <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mb-1.5">
-            <Sparkles className="w-4 h-4 text-purple-500" />
             <span>Không Giới Hạn Cho Quản Trị Viên</span>
           </h4>
           <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">

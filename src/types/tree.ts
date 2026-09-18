@@ -28,6 +28,8 @@ export interface MemberRecord {
   notes?: string | null;
   death_lunar_year_name?: string | null;
   claimed_by?: string | null;
+  phone?: string | null;
+  linked_user_id?: string | null;
   avatar_url?: string | null;
   marital_status?: MaritalStatus | null;
   marital_event_year?: number | null;

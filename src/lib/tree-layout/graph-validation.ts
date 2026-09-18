@@ -243,6 +243,7 @@ export function detectConsanguinity(
       phone: null,
       address: null,
       biography: m.notes || null,
+      generation_level: m.generation_level,
       generation_number: m.generation_level,
       birth_order: m.birth_order || 1,
       is_senior_branch: !!m.is_senior,

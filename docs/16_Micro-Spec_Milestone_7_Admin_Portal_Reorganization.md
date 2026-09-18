@@ -1635,6 +1635,278 @@ sequenceDiagram
 - [x] **RG39 (Clan Features Flags Persistence):** Các cờ tính năng trong `/admin/features` vẫn lưu trữ và kích hoạt đồng bộ.
 - [x] **RG40 (Existing Admin Tests Pass 100%):** Toàn bộ 22 test cases trong `tests/admin-portal.test.ts` tiếp tục PASS 100%.
 
+---
+
+### 19.9.6. Giai Đoạn 1: Hiệu Lực Hóa Chế Độ Đóng Vai Trên Toàn Bộ Giao Diện (Runtime Role Impersonation Enforcement)
+
+#### 1. Bối Cảnh & Mục Tiêu Kỹ Thuật
+Khi Super Admin chọn đóng vai tại `/admin/roles`, cookie `fat_impersonated_role` được thiết lập trên trình duyệt. Để chế độ này phát huy tác dụng thực tế 100%, toàn bộ chuỗi mắt xích giao diện phải tiêu thụ cookie này thông qua hàm thuần túy `resolveEffectiveRole(realRole, impersonatedRole)`:
+1. **Navbar & AuthButton:** Khi đóng vai `guest`, Navbar nhận diện `isGuest = true`, chuyển `AuthButton` sang nút *"Đăng nhập Google"* và ẩn các liên kết bị khóa theo cờ tính năng.
+2. **Cây Phả Hệ (`/tree`):** Trang `TreePage` đọc cookie và tính `effectiveRole`. Khi đóng vai `guest`, `viewer` hoặc `claimed_member`, `canManageTree` tự động chuyển thành `false`, ẩn các nút thêm/sửa thành viên trên Toolbar.
+3. **Thẻ Chi Tiết Thành Viên (`MemberDetailDrawer`):**
+   - **Bảo Vệ Quyền Riêng Tư :** Số điện thoại của người còn sống bị che mờ thành `0912 *** ***` đối với vai `guest` và `viewer`. Chỉ vai `claimed_member`, `branch_editor` và `super_admin` mới thấy số đầy đủ.
+   - **Nút Nhận Node (Claim Node):** Khi đóng vai `viewer`, trên các thẻ thành viên còn sống chưa ai liên kết (`!linked_user_id`), hiển thị nút to màu xanh ngọc bích: `[🙋 Tôi là người này (Gửi yêu cầu nhận node)]`.
+   - **Ẩn Nút Chỉnh Sửa:** Ẩn hoàn toàn các nút `[✏️ Sửa]`, `[➕ Thêm con]`, `[➕ Thêm vợ/chồng]`, `[🗑️ Xóa]` khi không có quyền quản lý (`canManageTree = false`).
+4. **Nguyên Tắc Bất Biến "Never Locked Out":** Thanh Banner nổi `RoleImpersonationBanner` luôn hiện diện trên đỉnh màn hình với nút `[⚙️ Vào Quản Trị]` (href=`/admin/roles`) và nút `[✕ Thoát]`.
+
+#### 2. Thiết Kế Chi Tiết & Tệp Bị Ảnh Hưởng
+
+##### A. File: `src/lib/admin/admin-engine.ts` [MODIFY]
+- Cung cấp các hàm thuần túy:
+  ```typescript
+  export function maskPhoneNumber(phone: string | null | undefined, canView: boolean): string | null {
+    if (!phone) return null;
+    if (canView) return phone;
+    if (phone.length <= 4) return '****';
+    return phone.slice(0, 4) + ' *** ***';
+  }
+
+  export function canViewLivingPhone(role: UserRole | 'guest'): boolean {
+    return role === 'claimed_member' || role === 'branch_editor' || role === 'super_admin';
+  }
+  ```
+
+##### B. File: `src/app/layout.tsx` [MODIFY]
+- Đọc `fat_impersonated_role` từ `cookieStore`.
+- Gọi `resolveEffectiveRole(realRole, impersonatedRole)`.
+- Truyền `isGuest={effectiveIsGuest}` và `isSuperAdmin={effectiveIsSuperAdmin}` vào `Navbar` và `MobileBottomNav`.
+
+##### C. File: `src/components/navbar/Navbar.tsx` & `src/components/auth/AuthButton.tsx` [MODIFY]
+- Khi `isGuest = true`, `AuthButton` render nút "Đăng nhập Google" (mô phỏng trạng thái khách vãng lai).
+
+##### D. File: `src/app/tree/page.tsx` & `src/components/tree/FamilyTreeCanvas.tsx` [MODIFY]
+- `TreePage` đọc cookie `fat_impersonated_role`:
+  ```typescript
+  const impersonatedRole = cookieStore.get('fat_impersonated_role')?.value as ImpersonatedRole;
+  const effectiveRole = resolveEffectiveRole(userRole, impersonatedRole);
+  const canManage = canManageTree(effectiveRole === 'guest' ? 'viewer' : effectiveRole);
+  ```
+- Truyền `effectiveRole` và `canManageTree` vào `FamilyTreeCanvas`, sau đó chuyển tiếp xuống `MemberDetailDrawer`.
+
+##### E. File: `src/components/tree/MemberDetailDrawer.tsx` [MODIFY]
+- Thêm hàng hiển thị SĐT với biểu tượng `Phone` trong Thông tin liên lạc:
+  - Gọi `maskPhoneNumber(target.phone, canViewLivingPhone(effectiveRole))`.
+  - Nếu bị che: hiển thị `0912 *** ***` kèm badge khóa `[🔒 Riêng tư: Cần gắn node để xem]`.
+- Thêm nút `[🙋 Tôi là người này (Gửi yêu cầu nhận node)]` khi `effectiveRole === 'viewer'` và `!target.linked_user_id`.
+- Ẩn các nút chỉnh sửa/thêm/xóa khi `canManageTree = false`.
+
+#### 3. Bổ Sung Ma Trận Test Cases Tự Động (Mục 7.1 — Automated Test Suite)
+
+> File test: `tests/admin-portal.test.ts`
+
+- [x] **TC_UT_PHONE_MASKING_LOGIC (Hàm maskPhoneNumber che mờ SĐT chuẩn xác theo vai trò):**
+  - **Given:** SĐT `0912345678`.
+  - **When:** Gọi `maskPhoneNumber(phone, canViewLivingPhone(role))`.
+  - **Then:** Đối với `guest` và `viewer` $\rightarrow$ Trả về `'0912 *** ***'`. Đối với `claimed_member`, `branch_editor`, `super_admin` $\rightarrow$ Trả về `'0912345678'`.
+
+- [x] **TC_UT_TREE_PAGE_EFFECTIVE_ROLE_READ (TreePage đọc cookie fat_impersonated_role và tính toán effectiveRole):**
+  - **Given:** Source code `src/app/tree/page.tsx`.
+  - **When:** Phân tích logic khởi tạo vai trò người dùng.
+  - **Then:** Bắt buộc đọc `fat_impersonated_role` từ cookieStore và gọi `resolveEffectiveRole`.
+
+- [x] **TC_UT_DRAWER_PRIVACY_MASKING (MemberDetailDrawer che SĐT và ẩn các nút edit khi role không có quyền):**
+  - **Given:** Source code `src/components/tree/MemberDetailDrawer.tsx`.
+  - **When:** Kiểm tra hiển thị thông tin SĐT và các action buttons.
+  - **Then:** Chứa lời gọi `canViewLivingPhone` hoặc `maskPhoneNumber` và ràng buộc `canManageTree` trên các nút edit.
+
+- [x] **TC_UT_DRAWER_CLAIM_BUTTON_FOR_VIEWER (MemberDetailDrawer hiển thị nút Claim node cho role viewer):**
+  - **Given:** Source code `src/components/tree/MemberDetailDrawer.tsx`.
+  - **When:** Kiểm tra điều kiện render nút nhận node.
+  - **Then:** Chứa nút với nhãn "Tôi là người này" hiển thị khi `effectiveRole === 'viewer'`.
+
+- [x] **TC_UT_LAYOUT_EFFECTIVE_ROLE_PROPAGATION (RootLayout truyền trạng thái effective xuống Navbar):**
+  - **Given:** Source code `src/app/layout.tsx`.
+  - **When:** Phân tích logic chuẩn bị props cho Navbar.
+  - **Then:** Tính toán `effectiveIsGuest` dựa trên `effectiveRole === 'guest'` và truyền vào `Navbar`.
+
+#### 4. Bổ Sung Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
+
+- [ ] **UAT_47 (Đóng Vai Khách Vãng Lai — Hiệu Lực Toàn Diện):**
+  - Vào `/admin/roles` $\rightarrow$ Bấm `[🎭 Thử đóng vai]` tại cột "Khách vãng lai".
+  - Navbar: Nút AuthButton biến thành nút *"Đăng nhập Google"*.
+  - Vào `/tree`: Bấm vào một thành viên còn sống $\rightarrow$ SĐT bị che dạng `0912 *** ***`, không thấy bất kỳ nút Sửa/Thêm/Xóa nào.
+- [ ] **UAT_48 (Đóng Vai Viewer — Hiển Thị Nút Claim Node):**
+  - Đổi vai sang `viewer` trên thanh Banner.
+  - Vào `/tree`: Bấm vào một thành viên còn sống chưa được gán tài khoản $\rightarrow$ Xuất hiện nút to màu xanh ngọc bích **`[🙋 Tôi là người này (Gửi yêu cầu nhận node)]`**. SĐT vẫn được bảo vệ che mờ.
+- [ ] **UAT_49 (Đóng Vai Con Cháu Gắn Node — Xem SĐT Đầy Đủ):**
+  - Đổi vai sang `claimed_member` trên thanh Banner.
+  - Vào `/tree`: Bấm vào thành viên còn sống $\rightarrow$ SĐT hiển thị đầy đủ `0912 345 678` có link gọi điện, không thấy nút Sửa/Thêm/Xóa của ban biên tập.
+- [ ] **UAT_50 (Nguyên Tắc Never Locked Out — Thoát Vai Dễ Dàng):**
+  - Trong bất kỳ vai trò đóng vai nào, bấm nút `[⚙️ Vào Quản Trị]` trên Banner nổi $\rightarrow$ Lập tức quay lại `/admin/roles` an toàn mà không bị chặn 403. Bấm `[✕ Thoát]` $\rightarrow$ Hệ thống hoàn nguyên 100% về Super Admin gốc.
+
+#### 5. Bổ Sung Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
+
+- [x] **RG41 (Build & Typecheck Clean):** `npm run typecheck` đạt 0 errors, `npm run build` thành công 31/31 routes.
+- [x] **RG42 (Full Test Suite 277/277 Pass):** Toàn bộ 272 tests hiện có và 5 tests mới đạt 277/277 PASS.
+- [x] **RG43 (Never Locked Out Admin Access Unbroken):** Tuyến đường `/admin/*` tiếp tục hoạt động trơn tru cho Super Admin trong mọi tình huống.
+
+---
+
+### 19.9.7. Giai Đoạn 2: Đồng Bộ Toàn Diện 7 Cờ Tính Năng (Feature Flags) Với Ma Trận 5 Vai Trò (Roles Matrix) & Chế Độ Đóng Vai (Comprehensive Governance Enforcement)
+
+#### 1. Bối Cảnh & Mục Tiêu Kỹ Thuật
+
+Sau khi hoàn thành Giai Đoạn 1, hệ thống đã hiệu lực hóa vai trò cơ bản trên UI. Tuy nhiên, qua quá trình thẩm định kỹ thuật sâu (Deep Brainstorm), phát hiện sự ngắt quãng giữa **7 Cờ Tính Năng (`/admin/features`)** và **Chế độ Đóng Vai (`/admin/roles`)**:
+1. **Middleware Auth Gate:** Hiện tại chỉ đọc danh tính thật của Super Admin (`giap.pt.90@gmail.com`), kích hoạt God Mode bypass vô điều kiện cho mọi route dân cư. Khi Super Admin đóng vai `guest` hoặc `viewer`, Middleware không áp dụng các bộ lọc của cờ tính năng (`enable_public_tree`, `enable_kinship_lookup`, `enable_anniversaries`, `maintenance_mode`).
+2. **Cổng Đăng Nhập (`/login-gate`):** Tự động redirect về `returnTo` nếu session thật tồn tại, khiến Super Admin khi đóng vai `guest` không thể quan sát được màn hình cổng bảo vệ nội bộ.
+3. **Thẻ Chi Tiết (`MemberDetailDrawer`):** Logic che mờ SĐT và nút nhận node mới chỉ xét `role` mà chưa kết nối với cờ `mask_living_member_privacy` và `allow_member_claims`.
+
+Mục tiêu của Giai Đoạn 2 là **kết nối khép kín toàn diện 100% giữa 7 Cờ Tính Năng và 5 Vai Trò**, đảm bảo khi Admin cấu hình bất kỳ cờ nào và đóng vai bất kỳ role nào, trải nghiệm thị giác và phân luồng định tuyến đều phản ánh chính xác 100% như người dùng thực tế.
+
+#### 2. Ma Trận Tác Động Chi Tiết Giữa 7 Cờ Tính Năng & 5 Vai Trò
+
+```mermaid
+graph TD
+    UserRequest[Request Vào Tuyến Đường Hệ Thống] --> AdminCheck{Tuyến Đường /admin/*?}
+    AdminCheck -->|ĐÚNG| PassAdmin[Bypass Tuyệt Đối - Nguyên Tắc Never Locked Out]
+    AdminCheck -->|SAI| ReadImpersonation[Đọc fat_impersonated_role Cookie]
+    
+    ReadImpersonation --> ResolveEffective[Hàm resolveEffectiveRole]
+    ResolveEffective --> EvalGate[evaluateAuthGate với Danh Tính Hiệu Dụng]
+    
+    EvalGate --> MaintCheck{maintenance_mode = true?}
+    MaintCheck -->|ĐÚNG & Không Phải SuperAdmin Gốc| RedirectMaint[Chuyển Hướng /login-gate?maintenance=true]
+    MaintCheck -->|SAI| FlagCheck{Kiểm Tra Cờ Tính Năng Theo Role}
+    
+    FlagCheck -->|Role Guest & enable_public_tree = false| BlockTree[Chặn /tree -> Chuyển Hướng /login-gate]
+    FlagCheck -->|Role Thường & enable_kinship_lookup = false| BlockKinship[Chặn /kinship -> Chuyển Hướng /]
+    FlagCheck -->|Role Thường & enable_anniversaries = false| BlockAnniv[Chặn /anniversaries -> Chuyển Hướng /]
+    FlagCheck -->|Hợp Lệ| PassPublic[Cho Phép Vào Route & Áp Dụng UI Governance]
+    
+    PassPublic --> DrawerUI[MemberDetailDrawer]
+    DrawerUI --> PrivacyCheck{mask_living_member_privacy = false?}
+    PrivacyCheck -->|ĐÚNG| ShowAllPhone[Hiển Thị SĐT Đầy Đủ Mọi Role]
+    PrivacyCheck -->|SAI| MaskByRole[Che Mờ Với Guest & Viewer]
+    
+    DrawerUI --> ClaimCheck{allow_member_claims = true & Role = Viewer?}
+    ClaimCheck -->|ĐÚNG| ShowClaimBtn[Hiện Nút Tôi Là Người Này]
+    ClaimCheck -->|SAI| HideClaimBtn[Ẩn Hoàn Toàn Nút Nhận Node]
+```
+
+#### 3. Thiết Kế Chi Tiết Từng Phân Hệ
+
+##### A. File: `src/lib/auth/auth-gate.ts` [MODIFY]
+- Tích hợp cờ `maintenance_mode`:
+  ```typescript
+  // 0. Chế độ bảo trì hệ thống: Chặn mọi non-admin
+  if (featureFlags.maintenance_mode && !isSuperAdmin) {
+    return {
+      action: 'redirect',
+      redirectUrl: '/login-gate?maintenance=true',
+      statusCode: 307,
+    };
+  }
+  ```
+
+##### B. File: `src/middleware.ts` [MODIFY]
+- Tiêu thụ `fat_impersonated_role` để tính toán `gateUser` và `gateIsSuperAdmin`:
+  ```typescript
+  const impersonatedRole = request.cookies.get('fat_impersonated_role')?.value as ImpersonatedRole;
+  const effectiveRole = resolveEffectiveRole(
+    isSuperAdmin ? 'super_admin' : (user ? 'viewer' : undefined),
+    impersonatedRole
+  );
+
+  // Danh tính hiệu dụng cho Auth Gate:
+  const gateUser = effectiveRole === 'guest' ? null : user;
+  const gateIsSuperAdmin = effectiveRole === 'super_admin';
+
+  const decision = evaluateAuthGate(pathname, gateUser, featureFlags, gateIsSuperAdmin);
+  ```
+- Tuyến `/admin/*` vẫn được bypass trước bước này, bảo đảm Super Admin luôn truy cập được Bàn Điều Hành và thoát vai.
+
+##### C. File: `src/app/login-gate/page.tsx` [MODIFY]
+- Bỏ qua tự động chuyển hướng khi Super Admin đang đóng vai `guest`:
+  ```typescript
+  const impersonatedRole = cookieStore.get('fat_impersonated_role')?.value;
+  if ((user || (process.env.NODE_ENV === 'development' && devUser)) && impersonatedRole !== 'guest') {
+    redirect(returnTo);
+  }
+  ```
+- Hiển thị thông báo thân thiện khi hệ thống ở chế độ bảo trì (`searchParams.maintenance === 'true'`).
+
+##### D. File: `src/components/tree/MemberDetailDrawer.tsx` & `FamilyTreeCanvas.tsx` [MODIFY]
+- Nhận prop `featureFlags?: ClanFeatureFlags`.
+- **Cờ Che Mờ Quyền Riêng Tư (`mask_living_member_privacy`):**
+  ```typescript
+  const canViewPhone = !featureFlags.mask_living_member_privacy || canViewLivingPhone(effectiveRole);
+  ```
+  Nếu Admin gạt TẮT cờ này $\rightarrow$ Cho phép xem số điện thoại đầy đủ cho mọi vai trò.
+- **Cờ Nhận Node (`allow_member_claims`):**
+  ```typescript
+  {effectiveRole === 'viewer' && featureFlags.allow_member_claims && !isDeceased && !isAnonymous && !target.linked_user_id && (
+    // Render nút Tôi là người này
+  )}
+  ```
+  Nếu Admin gạt TẮT cờ này $\rightarrow$ Nút nhận node tự động biến mất.
+
+#### 4. Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
+
+> File test: `tests/admin-portal.test.ts` & `tests/auth-gate.test.ts`
+
+- [x] **TC_UT_GATE_IMPERSONATION_GUEST_PRIVATE_TREE (Middleware chặn vai Guest vào /tree khi enable_public_tree=false):**
+  - **Given:** Request vào `/tree` với cookie `fat_impersonated_role = 'guest'` và cờ `enable_public_tree = false`.
+  - **When:** Chạy qua `evaluateAuthGate` với danh tính hiệu dụng của Guest.
+  - **Then:** Trả về `{ action: 'redirect', redirectUrl: '/login-gate?returnTo=%2Ftree' }`.
+
+- [x] **TC_UT_GATE_IMPERSONATION_NON_ADMIN_FLAG_BLOCK (Middleware chặn vai Viewer/Member vào /kinship & /anniversaries khi cờ tắt):**
+  - **Given:** Super Admin đóng vai `viewer` hoặc `claimed_member`, cờ `enable_kinship_lookup = false` hoặc `enable_anniversaries = false`.
+  - **When:** Đánh giá Auth Gate.
+  - **Then:** Trả về redirect về `/`, không bị bypass bởi đặc quyền Super Admin thật.
+
+- [x] **TC_UT_LOGIN_GATE_NO_LOOP_ON_GUEST_IMPERSONATION (Login Gate không tự động redirect khi đang đóng vai Guest):**
+  - **Given:** Source code `src/app/login-gate/page.tsx`.
+  - **When:** Phân tích điều kiện `redirect(returnTo)`.
+  - **Then:** Chứa ràng buộc `impersonatedRole !== 'guest'`.
+
+- [x] **TC_UT_PRIVACY_FLAG_DYNAMIC_MASKING (Tắt cờ mask_living_member_privacy cho phép xem SĐT đầy đủ):**
+  - **Given:** Cờ `mask_living_member_privacy = false`.
+  - **When:** Đánh giá khả năng xem SĐT của vai `guest` hoặc `viewer`.
+  - **Then:** Cho phép xem SĐT đầy đủ (không bị che `***`).
+
+- [x] **TC_UT_CLAIM_FLAG_BUTTON_TOGGLE (Tắt cờ allow_member_claims ẩn nút nhận node của Viewer):**
+  - **Given:** Source code `src/components/tree/MemberDetailDrawer.tsx`.
+  - **When:** Kiểm tra điều kiện render nút claim node.
+  - **Then:** Bắt buộc có điều kiện `featureFlags.allow_member_claims`.
+
+- [x] **TC_UT_MAINTENANCE_MODE_GATE (Cờ maintenance_mode chặn toàn bộ non-admin vào /login-gate?maintenance=true):**
+  - **Given:** Cờ `maintenance_mode = true`.
+  - **When:** `evaluateAuthGate` cho `guest`, `viewer`, `claimed_member`.
+  - **Then:** Trả về redirect đến `/login-gate?maintenance=true`.
+
+#### 5. Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
+
+- [ ] **UAT_51 (Cờ Public Tree TẮT $\rightarrow$ Đóng vai Guest bị chặn sang Login Gate):**
+  - Vào `/admin/features`, gạt TẮT "Công Khai Cây Phả Hệ Cho Khách Vãng Lai".
+  - Sang `/admin/roles`, bấm `[🎭 Thử đóng vai]` tại cột "Khách vãng lai".
+  - Bấm vào link `/tree` $\rightarrow$ Lập tức bị chuyển hướng sang `/login-gate?returnTo=%2Ftree`.
+  - Màn hình Login Gate hiển thị ổn định, không bị văng ngược lại. Banner nổi ở đỉnh màn hình vẫn có nút `[⚙️ Vào Quản Trị]`.
+- [ ] **UAT_52 (Cờ Che Mờ SĐT TẮT $\rightarrow$ Đóng vai Guest/Viewer thấy SĐT đầy đủ):**
+  - Vào `/admin/features`, gạt TẮT "Bảo Vệ Quyền Riêng Tư Người Còn Sống".
+  - Đóng vai `guest` hoặc `viewer` $\rightarrow$ Vào `/tree` bấm vào người sống $\rightarrow$ SĐT hiển thị rõ ràng đầy đủ `0912 345 678` (không bị che mờ).
+- [ ] **UAT_53 (Cờ Nhận Node TẮT $\rightarrow$ Đóng vai Viewer không thấy nút Nhận node):**
+  - Vào `/admin/features`, gạt TẮT "Cho Phép Gửi Yêu Cầu Nhận Node".
+  - Đóng vai `viewer` $\rightarrow$ Vào `/tree` bấm vào node chưa liên kết $\rightarrow$ Nút màu xanh ngọc bích `[🙋 Tôi là người này]` biến mất hoàn toàn.
+- [ ] **UAT_54 (Cờ Xưng Hô TẮT $\rightarrow$ Đóng vai Viewer bị chặn vào /kinship):**
+  - Gạt TẮT "Công Cụ Tra Cứu Vai Vế Xưng Hô".
+  - Đóng vai `viewer` $\rightarrow$ Gõ URL `/kinship` $\rightarrow$ Bị đẩy về Trang Chủ `/`.
+- [ ] **UAT_55 (Cờ Lịch Giỗ TẮT $\rightarrow$ Đóng vai Viewer bị chặn vào /anniversaries):**
+  - Gạt TẮT "Phân Hệ Lịch Giỗ 30 Ngày".
+  - Đóng vai `viewer` $\rightarrow$ Gõ URL `/anniversaries` $\rightarrow$ Bị đẩy về Trang Chủ `/`.
+- [ ] **UAT_56 (Chế Độ Bảo Trì BẬT $\rightarrow$ Đóng vai Guest/Viewer thấy màn hình bảo trì):**
+  - Gạt BẬT "Chế Độ Bảo Trì Hệ Thống".
+  - Đóng vai `guest` hoặc `viewer` $\rightarrow$ Truy cập bất kỳ trang dân cư nào $\rightarrow$ Bị chuyển hướng sang `/login-gate?maintenance=true` kèm thông điệp bảo trì trang trọng.
+- [ ] **UAT_57 (Never Locked Out Admin Access):**
+  - Dù bất kỳ cờ nào bật/tắt hay đang đóng vai vai trò nào, nút `[⚙️ Vào Quản Trị]` và `[✕ Thoát]` trên thanh Banner nổi luôn đưa Admin về `/admin/roles` an toàn.
+
+#### 6. Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
+
+- [x] **RG44 (Build & Typecheck Clean):** `npm run typecheck` 0 lỗi và `npm run build` thành công 31/31 routes.
+- [x] **RG45 (Full Test Suite 283/283 Pass):** Toàn bộ 277 tests hiện có và 6 tests mới đạt 283/283 PASS.
+- [x] **RG46 (Real Super Admin God Mode Unbroken):** Khi không ở chế độ đóng vai (`impersonatedRole === null`), Super Admin thật giữ 100% quyền truy cập mọi nơi.
+
+
+
 
 
 

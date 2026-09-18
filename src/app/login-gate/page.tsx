@@ -17,19 +17,21 @@ export const metadata: Metadata = {
 export default async function LoginGatePage({
   searchParams,
 }: {
-  searchParams: { returnTo?: string };
+  searchParams: { returnTo?: string; maintenance?: string };
 }) {
   const returnTo = searchParams?.returnTo || '/';
+  const isMaintenanceMode = searchParams?.maintenance === 'true';
   const supabase = createClient();
   const cookieStore = cookies();
 
-  // 1. Kiểm tra session hiện tại - nếu đã đăng nhập thì tự động chuyển tiếp
+  // 1. Kiểm tra session hiện tại - nếu đã đăng nhập và KHÔNG đang đóng vai khách thì tự động chuyển tiếp
+  const impersonatedRole = cookieStore.get('fat_impersonated_role')?.value;
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const devUser = cookieStore.get('fat_dev_user')?.value;
-  if (user || (process.env.NODE_ENV === 'development' && devUser)) {
+  if ((user || (process.env.NODE_ENV === 'development' && devUser)) && impersonatedRole !== 'guest') {
     redirect(returnTo);
   }
 
@@ -65,7 +67,12 @@ export default async function LoginGatePage({
 
         {/* Tên Dòng Họ & Huy Hiệu Chế Độ */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider mb-2.5 border border-emerald-500/20 dark:border-emerald-800/40">
-          {isTreePrivateMode ? (
+          {isMaintenanceMode ? (
+            <>
+              <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Hệ Thống Đang Bảo Trì</span>
+            </>
+          ) : isTreePrivateMode ? (
             <>
               <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Chế Độ Nội Bộ</span>
@@ -84,7 +91,9 @@ export default async function LoginGatePage({
 
         {/* Thông Điệp Ngữ Cảnh */}
         <p className="text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto mb-6 leading-relaxed">
-          {isTreePrivateMode
+          {isMaintenanceMode
+            ? 'Hệ thống phả hệ hiện đang tạm thời bảo trì để nâng cấp và bảo toàn dữ liệu di sản. Xin quý bà con vui lòng quay lại sau.'
+            : isTreePrivateMode
             ? 'Cây phả hệ dòng họ hiện đang ở chế độ Nội bộ. Vui lòng đăng nhập bằng tài khoản Google để truy cập.'
             : 'Tính năng này yêu cầu đăng nhập tài khoản dòng họ để bảo mật thông tin gia tộc.'}
         </p>
