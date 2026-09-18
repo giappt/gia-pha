@@ -676,7 +676,7 @@ sequenceDiagram
 - **Các Vị Trí Cập Nhật Biểu Tượng `Users` Thay Thế Cho `Compass`:**
   - **Desktop Header Navbar (`src/components/navbar/Navbar.tsx`):** Mục liên kết `Xưng hô` (`/kinship`) hiển thị `<Users className="w-4 h-4 text-emerald-600" />`.
   - **Mobile Bottom Navigation (`src/components/navigation/MobileBottomNav.tsx`):** Tab `Xưng hô` (`/kinship`) trong danh sách `NAV_ITEMS` sử dụng `icon: Users`.
-  - **Trang Tra Cứu Quan Hệ (`src/app/kinship/page.tsx`):** Badge hero đầu trang `KINSHIP ENGINE · ĐỒ THỊ PHẢ HỆ VIỆT NAM` hiển thị `<Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />`.
+  - **Trang Tra Cứu Quan Hệ (`src/app/kinship/page.tsx`):** Badge hero đầu trang `ĐỒ THỊ PHẢ HỆ VIỆT NAM` hiển thị `<Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />`.
   - **Trang Cấu Hình Tính Năng Admin (`src/app/admin/features/page.tsx`):** Mục `enable_kinship_lookup` ("Công Cụ Tra Cứu Vai Vế Xưng Hô") đồng bộ icon `Users`.
 
 ---

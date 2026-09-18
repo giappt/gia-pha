@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
     const isMember1Unlinked = !member1.father_id && !member1.mother_id && gen1 > 1;
     const isMember2Unlinked = !member2.father_id && !member2.mother_id && gen2 > 1;
 
-    // 4. Tính toán Tổ Tiên Chung Gần Nhất
+    // 4. Tính toán Gốc Gần Nhất
     const lcaResult = findLowestCommonAncestor(p1, p2, membersMap);
 
     // 5. Ánh xạ từ điển xưng hô 3 miền

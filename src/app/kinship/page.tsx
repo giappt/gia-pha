@@ -320,7 +320,7 @@ export default function KinshipPage() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold tracking-wide">
             <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>KINSHIP ENGINE · ĐỒ THỊ PHẢ HỆ VIỆT NAM</span>
+            <span>ĐỒ THỊ PHẢ HỆ VIỆT NAM</span>
             {isLoading && (
               <span className="inline-flex items-center gap-1 text-[11px] font-normal text-emerald-600 dark:text-emerald-400 pl-2 border-l border-emerald-300 dark:border-emerald-700">
                 <Sparkles className="w-3 h-3 animate-spin" /> Đang đồng bộ...
@@ -331,7 +331,7 @@ export default function KinshipPage() {
             Tra Cứu Mối Quan Hệ
           </h1>
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Tìm Tổ tiên chung gần nhất.
+            Tìm Gốc Gần Nhất.
           </p>
         </div>
 
@@ -834,7 +834,7 @@ export default function KinshipPage() {
                     id="inverted-v-tree"
                     className="p-5 sm:p-7 rounded-2xl bg-gradient-to-b from-slate-50/80 to-slate-100/50 dark:from-slate-950 dark:to-slate-900 border border-slate-200/70 dark:border-slate-800"
                   >
-                    {/* Đỉnh chóp: Tổ Tiên Chung Gần Nhất */}
+                    {/* Đỉnh chóp: Gốc Gần Nhất */}
                     <div className="flex flex-col items-center">
                       <div
                         id="lca-apex-node"
@@ -842,7 +842,7 @@ export default function KinshipPage() {
                       >
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-bold uppercase tracking-wider mb-1">
                           <Crown className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-                          <span>Tổ Tiên Chung Gần Nhất</span>
+                          <span>Gốc Gần Nhất</span>
                         </div>
                         <div className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                           {result.lcaNode?.name || result.lcaName}
@@ -968,7 +968,7 @@ export default function KinshipPage() {
               Chọn 2 thành viên bất kỳ và bấm &quot;Xác định quan hệ&quot;
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-              Hệ thống sẽ tự động dò tìm Tổ Tiên Chung Gần Nhất, vẽ sơ đồ phân nhánh
+              Hệ thống sẽ tự động dò tìm Gốc Gần Nhất, vẽ sơ đồ phân nhánh
               và quy chuẩn danh xưng theo phong tục vùng miền đã chọn.
             </p>
           </div>

@@ -43,7 +43,7 @@ describe('Kinship Engine Test Suite (Comprehensive 7-Generation Clan)', () => {
   it('TC02: Xưng Hô Con Chú Con Bác (Miền Bắc) - Hùng (Chi 2, 1945) & Hải (Chi 1, 1938)', () => {
     const lca = findLowestCommonAncestor(ID_HUNG, ID_HAI, membersMap);
 
-    assert.strictEqual(lca.lcaNodeId, ID_KHOI, 'Tổ tiên chung gần nhất là cụ Khởi Đời 1');
+    assert.strictEqual(lca.lcaNodeId, ID_KHOI, 'Gốc Gần Nhất là cụ Khởi Đời 1');
     assert.strictEqual(lca.distanceA, 2, 'Hùng cách cụ Khởi 2 thế hệ');
     assert.strictEqual(lca.distanceB, 2, 'Hải cách cụ Khởi 2 thế hệ');
     assert.strictEqual(lca.generationDelta, 0, 'Cùng đời 3 nên delta = 0');

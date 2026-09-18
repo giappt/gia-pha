@@ -87,7 +87,7 @@ flowchart TD
     - Chiều đi: **`A gọi B là: Bác họ (Xưng Cháu)`**
     - Chiều về: **`B gọi A là: Cháu họ (Xưng Bác)`**
   - **Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược):** 
-    - Đỉnh chóp là Tổ Tiên Chung Gần Nhất, rẽ xuống 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ).
+    - Đỉnh chóp là Gốc Gần Nhất, rẽ xuống 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ).
     - Có cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời (nén các đời giữa thành nút bấm `[🔽 Nén N thế hệ - Bấm mở rộng]`).
     - Nút liên kết: `[🔍 Xem trên Cây Phả Hệ Lớn]` lướt camera trên `S-01` focus vào 2 node.
   - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:**
@@ -215,7 +215,7 @@ flowchart TD
 |    👉 Bạn gọi Bác Dực là:  👑 BÁC HỌ (Xưng Cháu)                                  |
 |    👈 Bác Dực gọi bạn là:  🌱 CHÁU HỌ (Xưng Bác)                                  |
 +-----------------------------------------------------------------------------------+
-|  SƠ ĐỒ CÂY PHẢ HỆ TRỰC QUAN (XUẤT PHÁT TỪ TỔ TIÊN CHUNG GẦN NHẤT):                |
+|  SƠ ĐỒ CÂY PHẢ HỆ TRỰC QUAN (XUẤT PHÁT TỪ Gốc Gần Nhất):                |
 |                                                                                   |
 |                       [ 👑 TỔ TIÊN CHUNG: CỤ AN (ĐỜI 4) ]                         |
 |                                 /             \                                   |

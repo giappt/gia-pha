@@ -9,7 +9,7 @@ interface AncestorPath {
 }
 
 /**
- * Thuật toán tìm Tổ Tiên Chung Gần Nhất và phân tích quan hệ huyết thống
+ * Thuật toán tìm Gốc Gần Nhất và phân tích quan hệ huyết thống
  * Pure Function - Không phụ thuộc DB hay state ngoài
  */
 export function findLowestCommonAncestor(
@@ -63,7 +63,7 @@ export function findLowestCommonAncestor(
     return createUnrelatedResult(personA, personB);
   }
 
-  // 4. Chọn Tổ Tiên Chung Gần Nhất có tổng khoảng cách (distanceA + distanceB) nhỏ nhất
+  // 4. Chọn Gốc Gần Nhất có tổng khoảng cách (distanceA + distanceB) nhỏ nhất
   let bestLcaId = commonAncestorIds[0];
   let minTotalDist = Infinity;
 

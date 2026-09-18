@@ -12,7 +12,7 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
   - Không cài thêm dependencies đồ họa nặng; giữ logic tính toán hoàn toàn tách biệt (Pure Functions) để chạy được cả ở Client, Server và CLI/Unit Test.
 - **Quy tắc Kiến trúc cốt lõi (Theo AGENTS.md Rule 3):**
   - **Tách rời 2 tầng độc lập:**
-    1. **Tầng 1 (Lõi đồ thị DAG):** Thuần toán học cây gia phả: Tìm Tổ Tiên Chung Gần Nhất, tính độ lệch thế hệ $\Delta G$, thứ bậc chi trưởng/thứ, và xuất chuỗi breadcrumbs huyết thống.
+    1. **Tầng 1 (Lõi đồ thị DAG):** Thuần toán học cây gia phả: Tìm Gốc Gần Nhất, tính độ lệch thế hệ $\Delta G$, thứ bậc chi trưởng/thứ, và xuất chuỗi breadcrumbs huyết thống.
     2. **Tầng 2 (Từ điển xưng hô vùng miền):** Ánh xạ kết quả toán học sang danh xưng 2 chiều (Miền Bắc, Miền Trung, Miền Nam). Có thể cấu hình tùy biến.
 - **Language & Naming:** Code, biến, types bằng Tiếng Anh. Tên file `kebab-case`. Component `PascalCase`. Giao diện và kết quả xưng hô hiển thị bằng Tiếng Việt chuẩn mực.
 
@@ -30,9 +30,25 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
   - `birth_order`: `INTEGER` (Thứ tự sinh trong gia đình: 1 là con cả, 2 là con thứ...)
   - `is_senior_branch`: `BOOLEAN` (Thuộc chi trưởng hay chi thứ)
   - `birth_date_solar`, `death_date_lunar_day`, `death_date_lunar_month`, `is_death_date_lunar_leap`
+- **Dữ liệu tham gia từ bảng `spouse_relations`:**
+  - `member_a_id`: `UUID` (ID người phối ngẫu thứ nhất)
+  - `member_b_id`: `UUID` (ID người phối ngẫu thứ hai)
+  - `marriage_order`: `SMALLINT` (Thứ tự kết hôn: Vợ cả = 1, Vợ hai = 2...)
+  - `marriage_status`: `'married' | 'divorced' | 'widowed'`
 - **Data Models mới (`src/types/kinship.ts`):**
   ```ts
   export type KinshipRegion = 'north' | 'central' | 'south';
+
+  export type RelationshipType =
+    | 'same_person'
+    | 'parent_child'
+    | 'direct_ancestor'
+    | 'sibling'
+    | 'cousin'
+    | 'spouse'
+    | 'in_law'
+    | 'co_in_law'
+    | 'unrelated';
 
   export interface LcaResult {
     lcaNodeId: string | null;
@@ -43,21 +59,27 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
     isSeniorBranchA: boolean; // Nhánh của A có phải trưởng so với B tại điểm rẽ từ LCA?
     pathA: Array<{ id: string; name: string; relation: string }>;
     pathB: Array<{ id: string; name: string; relation: string }>;
-    relationshipType: 'same_person' | 'parent_child' | 'direct_ancestor' | 'sibling' | 'cousin' | 'in_law' | 'unrelated';
+    relationshipType: RelationshipType;
+    inLawBridge?: {
+      bridgeType: 'direct_spouse' | 'one_in_law' | 'both_in_law';
+      spouseA?: { id: string; name: string };
+      spouseB?: { id: string; name: string };
+      bloodRelation?: RelationshipType;
+    };
   }
 
   export interface KinshipResolution {
-    termAtoB: string; // A gọi B là gì (VD: "Bác họ", "Chú họ", "Anh họ")
-    termBtoA: string; // B gọi A là gì (VD: "Cháu họ", "Em họ")
-    explanation: string; // Diễn giải phong tục (VD: "B là con bác trưởng, A là con chú thứ")
+    termAtoB: string; // A gọi B là gì (VD: "Bác họ", "Chú họ", "Chị dâu", "Con dâu")
+    termBtoA: string; // B gọi A là gì (VD: "Cháu họ", "Em họ", "Chú", "Bố chồng")
+    explanation: string; // Diễn giải phong tục và gốc tích phả hệ
     region: KinshipRegion;
     breadcrumbs: string[]; // Chuỗi mắt xích
     generationDelta: number;
     relationshipType: RelationshipType;
     lcaName?: string | null;
     lcaNode?: KinshipPathNode | null;
-    pathA: KinshipPathNode[]; // Nhánh thế hệ từ A lên LCA
-    pathB: KinshipPathNode[]; // Nhánh thế hệ từ B lên LCA
+    pathA: KinshipPathNode[]; // Nhánh thế hệ từ A lên LCA (hoặc cầu hôn phối)
+    pathB: KinshipPathNode[]; // Nhánh thế hệ từ B lên LCA (hoặc cầu hôn phối)
   }
   ```
 
@@ -73,21 +95,21 @@ sequenceDiagram
     participant API as API Route (/api/kinship)
     participant LCA as Kinship Engine (lca-finder.ts)
     participant Dict as Regional Dictionary (regional-dictionaries.ts)
-    participant DB as Supabase DB (members)
+    participant DB as Supabase DB (members, spouse_relations)
 
     U->>KView: Chọn Người A & Người B + Chọn Vùng Miền (Bắc/Trung/Nam)
-    U->>KView: Bấm [Tra Cứu Vai Vế]
-    KView->>API: GET /api/kinship?person1=UUID_A&person2=UUID_B&region=north
-    API->>DB: Truy vấn dữ liệu phả hệ của dòng họ (Members & Spouses)
-    DB-->>API: Trả về danh sách Node thành viên
-    API->>LCA: findLowestCommonAncestor(nodeA, nodeB, allMembers)
-    Note over LCA: 1. Truy vết cây gia phả lên tổ tiên<br/>2. Tìm điểm giao nhau đầu tiên (LCA)<br/>3. Tính khoảng cách thế hệ và nhánh Trưởng/Thứ
-    LCA-->>API: Trả về LcaResult (Toán học đồ thị)
-    API->>Dict: mapKinshipTerms(LcaResult, personA, personB, region)
-    Note over Dict: Ánh xạ danh xưng 2 chiều theo từ điển vùng miền
-    Dict-->>API: Trả về KinshipResolution (Xưng hô + Diễn giải)
+    Note over KView: Tính toán tức thì in-memory 0ms trên Client (hoặc gọi API)
+    KView->>API: GET /api/kinship?p1=UUID_A&p2=UUID_B&region=north
+    API->>DB: Truy vấn dữ liệu phả hệ (members & spouse_relations)
+    DB-->>API: Trả về danh sách thành viên và liên kết hôn phối
+    API->>LCA: findLowestCommonAncestor(nodeA, nodeB, membersMap, spousesMap)
+    Note over LCA: 1. Kiểm tra quan hệ Vợ - Chồng trực tiếp<br/>2. Tìm LCA Huyết thống ruột<br/>3. Nếu không có LCA, tìm Cầu nối Hôn nhân (Spouse Bridge)<br/>4. Xác định độ lệch thế hệ & vai dâu/rể
+    LCA-->>API: Trả về LcaResult (kèm thông tin cầu nối hôn nhân)
+    API->>Dict: resolveKinshipTerms(LcaResult, personA, personB, region)
+    Note over Dict: Ánh xạ danh xưng 2 chiều (Huyết thống, Dâu/Rể, Vợ/Chồng)
+    Dict-->>API: Trả về KinshipResolution (Xưng hô + Cây trực quan + Diễn giải)
     API-->>KView: Response JSON { success: true, data: KinshipResolution }
-    KView-->>U: Hiển thị Thẻ Kết Quả Xưng Hô + Sơ Đồ Breadcrumbs Huyết Thống
+    KView-->>U: Hiển thị Thẻ Danh Xưng + Sơ Đồ Cây Nối Cầu Hôn Nhân Trực Quan
 ```
 
 ---
@@ -172,7 +194,7 @@ sequenceDiagram
      - Khung xưng hô 2 chiều lớn: *"A gọi B là: **Bác Họ**"* & *"B gọi A là: **Cháu Họ**"*.
      - Huy hiệu thế hệ: *"Cùng thế hệ"* hoặc *"Cách nhau N thế hệ"*.
      - **Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược):**
-       - Bắt đầu từ **Tổ Tiên Chung Gần Nhất** (không lấy thừa từ Root).
+       - Bắt đầu từ **Gốc Gần Nhất** (không lấy thừa từ Root).
        - Phân làm 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ) với đường line cong SVG bezier mềm mại.
        - Tích hợp cơ chế **Nén Tầng Trung Gian (Smart Folding)**: Nếu khoảng cách $\ge 4$ đời, mặc định nén các thế hệ giữa thành nút `[🔽 Nén N thế hệ - Bấm để mở rộng]`.
        - Thanh Cầu nối quan hệ dưới chân nối giữa A và B kèm nút bấm `[🔍 Xem trên Cây Phả Hệ Tổng]`.
@@ -225,6 +247,54 @@ sequenceDiagram
   - Lưu cấu hình 32 quan hệ vào `clan_settings.custom_kinship_dictionary` (`JSONB`).
   - Lõi `resolveKinshipTerms` tự động nạp cấu hình tùy biến của gia tộc.
 
+### 5.4. Lõi Thân Tộc Mở Rộng Qua Hôn Nhân (Affinal Kinship Engine - Dâu / Rể & Vợ / Chồng)
+
+- **5.4.1. Bản Thể Học Thân Tộc (4 Kịch Bản Phân Giải Toàn Diện):**
+  1. **Quan hệ Vợ - Chồng Trực Tiếp (`spouse`):**
+     - $A$ và $B$ có liên kết trong bảng `spouse_relations` (hoặc có con chung).
+     - $A$ (Nam) gọi $B$ (Nữ) là **"Vợ"** (hoặc Nhà tôi), $B$ gọi $A$ là **"Chồng"** (hoặc Nhà tôi).
+     - Biểu diễn đồ thị: Hai thẻ node kết nối bằng thanh ngang hôn phối màu ngọc bích `═(Hôn phối)═`.
+  2. **Quan hệ Huyết Thống Nội Tộc (`consanguineal`):**
+     - Cả $A$ và $B$ đều có tổ tiên chung trong họ (LCA). Xử lý qua thuật toán LCA huyết thống truyền thống (Mục 4.1).
+  3. **Quan hệ Một Bên Dâu / Rể (`in_law` - Cầu Nối Hôn Nhân Đơn):**
+     - Người $A$ là Dâu/Rể, kết hôn với thành viên ruột $S_A$.
+     - Tìm quan hệ huyết thống giữa $S_A$ và $B$ qua $\text{LCA}(S_A, B)$:
+       - **Bố/Mẹ chồng - Con dâu (Bố/Mẹ vợ - Con rể):** $B$ là cha mẹ ruột của $S_A$.
+         - Con dâu gọi Bố/Mẹ chồng là **"Bố"** / **"Mẹ"**. Bố/Mẹ gọi con dâu là **"Con"** (Con dâu).
+         - Con rể gọi Bố/Mẹ vợ là **"Bố"** / **"Mẹ"**. Bố/Mẹ gọi con rể là **"Con"** (Con rể).
+       - **Chị dâu - Em chồng:** $S_A$ là anh trai của $B$.
+         - Em chồng gọi vợ anh là **"Chị dâu"** (hoặc **"Chị"**).
+         - Chị dâu gọi em chồng là **"Chú"** (nếu $B$ là nam) / **"Cô"** (nếu $B$ là nữ) theo phong tục miền Bắc, hoặc **"Em"**.
+       - **Em dâu - Anh/Chị chồng:** $S_A$ là em trai của $B$.
+         - Anh/chị chồng gọi vợ em là **"Em dâu"** (hoặc **"Thím"**).
+         - Em dâu gọi anh chồng là **"Bác"** / **"Anh"**, gọi chị chồng là **"Cô"** / **"Chị"**.
+       - **Anh rể / Em rể - Em vợ / Anh vợ:** $S_A$ là chị/em gái của $B$.
+         - Chồng chị gái là **"Anh rể"**, chồng em gái là **"Em rể"**.
+       - **Bác dâu, Thím, Mợ, Dượng:** $S_A$ là Bác/Chú/Cậu/Dì của $B$.
+         - Vợ Bác trai = **"Bác dâu"** (Bác gái) $\rightarrow$ gọi tắt **"Bác"**.
+         - Vợ Chú = **"Thím"**.
+         - Vợ Cậu = **"Mợ"**.
+         - Chồng Cô = **"Chú rể / Dượng"**.
+         - Chồng Dì = **"Dượng"**.
+       - **Cháu dâu / Cháu rể:** $S_A$ là cháu của $B$.
+         - Vợ/chồng của cháu $\rightarrow$ **"Cháu dâu"** / **"Cháu rể"**.
+  4. **Quan hệ Hai Bên Đều Là Dâu / Rể (`co_in_law` - Cầu Nối Hôn Nhân Đôi):**
+     - $A$ kết hôn với $S_A$, $B$ kết hôn với $S_B$.
+     - Tìm quan hệ huyết thống giữa $S_A$ và $S_B$:
+       - Nếu $S_A$ và $S_B$ là anh em trai $\rightarrow$ $A$ và $B$ là **Chị em dâu** (vợ anh là chị dâu, vợ em là em dâu).
+       - Nếu $S_A$ và $S_B$ là chị em gái $\rightarrow$ $A$ và $B$ là **Anh em đồng hao (cọc chèo)**.
+       - Nếu $S_A$ và $S_B$ là anh em họ $\rightarrow$ Chị em dâu họ / Đồng hao họ.
+
+- **5.4.2. Cây Phả Hệ Trực Quan Nối Cầu Hôn Nhân (Visual In-Law Path):**
+  - Khi quan hệ có liên quan đến Dâu/Rể, sơ đồ phả hệ hiển thị rõ ràng chuỗi liên kết:
+    - Nhịp huyết thống biểu diễn bằng mũi tên nét liền $\rightarrow$ (Cha con, Anh em).
+    - Nhịp hôn nhân biểu diễn bằng đường đôi $\xlongequal{\text{Vợ Chồng}}$.
+    - Giúp người xem nắm bắt ngay tức thì lý do vì sao có cách xưng hô này (VD: `[Bố] ──(Cha)──> [Chồng] ══(Vợ Chồng)══ [Con dâu]`).
+
+- **5.4.3. Đồng Bộ Dữ Liệu Hôn Phối Trong UI & API:**
+  - API `/api/kinship` truy vấn đồng thời bảng `members` và `spouse_relations`.
+  - Client `/kinship` nạp `spouse_relations` vào bộ nhớ in-memory để duy trì tốc độ tra cứu tức thì < 1ms.
+
 ---
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
@@ -273,15 +343,23 @@ sequenceDiagram
 | **TC26** | Master Presets 32 Mối Quan Hệ Thân Tộc Cốt Lõi | Unit Test | Gọi `getRegionalPresetDictionary(region)` cho Bắc, Trung, Nam | Kiểm tra danh mục trả về | Đạt đủ 32 quan hệ, chứa đầy đủ Cậu, Mợ, Dì, Dượng, Thím, Bác dâu, Bác rể, Chị dâu, Anh rể, Con dâu, Con rể | Happy Path |
 | **TC27** | Lọc Phân Nhóm & Tìm Kiếm Trên Bảng Cài Đặt | UI / Visual | Admin truy cập `/admin/settings` | Chọn chip lọc nhóm (VD: Cậu/Dì Ngoại) hoặc gõ ô tìm kiếm "Thím" | Bảng từ điển lọc chính xác các quan hệ tương ứng tức thì 0ms | Happy Path |
 | **TC28** | Lưu & Áp Dụng Danh Xưng Thím / Mợ / Dượng / Dâu / Rể | Integration / UI | Sửa quan hệ Vợ chú thành "Thím ruột" hoặc Cậu thành "Cậu quý" | Bấm "Lưu Thay Đổi" | Lưu thành công và áp dụng đúng vào Kinship Engine | Happy Path |
+| **TC29** | Quan Hệ Vợ - Chồng Trực Tiếp | Unit / API | Chọn Chiến (Nam) & Liễu (Nữ) có liên kết trong spouse_relations | Chạy `findLowestCommonAncestor` & `resolveKinshipTerms` | Nhận diện `relationshipType = 'spouse'`, Chiến gọi Liễu là "Vợ", Liễu gọi Chiến là "Chồng" | Happy Path |
+| **TC30** | Quan Hệ Bố Chồng - Con Dâu | Unit / API | Chọn Uyên (Bố) & Hà (Vợ của con trai Uyên) | Chạy tra cứu vai vế | Uyên gọi Hà là "Con" (Con dâu), Hà gọi Uyên là "Bố" (Bố chồng), không còn "Người ngoài họ" | Happy Path |
+| **TC31** | Quan Hệ Chị Dâu - Em Chồng | Unit / API | Chọn Hà (Vợ của anh trai Bẩy) & Bẩy (Em trai) | Chạy tra cứu vai vế | Bẩy gọi Hà là "Chị dâu" (hoặc "Chị"), Hà gọi Bẩy là "Chú" (hoặc "Em") | Happy Path |
+| **TC32** | Quan Hệ Em Dâu - Anh/Chị Chồng | Unit / API | Chọn vợ của em trai & anh trai chồng | Chạy tra cứu vai vế | Anh chồng gọi "Em dâu", em dâu gọi anh chồng là "Bác" / "Anh" | Happy Path |
+| **TC33** | Quan Hệ Anh Rể - Em Vợ & Em Rể | Unit / API | Chọn chồng của chị gái & em trai vợ | Chạy tra cứu vai vế | Em vợ gọi "Anh rể", anh rể gọi em vợ là "Cậu" / "Em" | Happy Path |
+| **TC34** | Quan Hệ Bác Dâu, Thím, Dượng, Mợ | Unit / API | Chọn vợ của Bác trai, vợ của Chú, chồng của Cô/Dì | Chạy tra cứu vai vế | Trả về chuẩn xác "Bác dâu" (Bác), "Thím", "Dượng", "Mợ" | Happy Path |
+| **TC35** | Quan Hệ Chị Em Dâu & Đồng Hao | Unit / API | Chọn vợ của 2 anh em trai ruột | Chạy tra cứu vai vế | Nhận diện `relationshipType = 'co_in_law'`, xưng "Chị dâu" - "Em dâu" | Happy Path |
+| **TC36** | Cây Phả Hệ Trực Quan Nối Cầu Hôn Nhân | UI / Visual | Tra cứu cặp có quan hệ Dâu/Rể (Hà & Uyên) | Quan sát sơ đồ chuỗi phả hệ | Hiển thị đường nối huyết thống $\rightarrow$ và đường nối đôi hôn nhân $\xlongequal{\text{Vợ Chồng}}$ mạch lạc | Happy Path |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu (Acceptance Criteria)
-- [x] **AC1:** Thuật toán `findLowestCommonAncestor` tìm chính xác Tổ tiên chung gần nhất và khoảng cách thế hệ giữa 2 người bất kỳ trên đồ thị phả hệ.
+- [x] **AC1:** Thuật toán `findLowestCommonAncestor` tìm chính xác Gốc Gần Nhất và khoảng cách thế hệ giữa 2 người bất kỳ trên đồ thị phả hệ.
 - [x] **AC2:** Bộ từ điển xưng hô `resolveKinshipTerms` ánh xạ đúng danh xưng 2 chiều cho anh em ruột, con chú con bác, chú-cháu, ông-cháu theo 3 miền Bắc/Trung/Nam.
 - [x] **AC3:** Bộ chuyển đổi `vietnamese-lunar.ts` quy đổi chính xác Âm - Dương theo múi giờ UTC+7 và xuất đúng tên Năm Can Chi (Thập Can + Thập Nhị Chi).
 - [x] **AC4:** API `GET /api/kinship` trả về dữ liệu cấu trúc chuẩn, có breadcrumbs đường đi huyết thống và lý giải phong tục.
 - [x] **AC5:** Giao diện `/kinship` cho phép tìm kiếm, chọn 2 thành viên, đổi vai A $\leftrightarrow$ B và xem kết quả trực quan mượt mà.
 - [x] **AC6:** Bộ Unit Test (`tests/kinship.test.ts` & `tests/lunar.test.ts`) đạt tỷ lệ Pass 100%.
-- [x] **AC7:** Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược) hiển thị trực quan bắt đầu từ Tổ Tiên Chung Gần Nhất, phân 2 cột nhánh (Trưởng vs Thứ), có đường nối và thanh cầu nối xưng hô ở chân.
+- [x] **AC7:** Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược) hiển thị trực quan bắt đầu từ Gốc Gần Nhất, phân 2 cột nhánh (Trưởng vs Thứ), có đường nối và thanh cầu nối xưng hô ở chân.
 - [x] **AC8:** Cơ chế Smart Folding tự động nén thế hệ trung gian khi khoảng cách $\ge 4$ đời, hỗ trợ toggle mở rộng/thu gọn mượt mà.
 - [x] **AC9:** Thẻ Diễn Giải Phong Tục cấu trúc hóa thay thế đoạn văn bản cũ.
 - [x] **AC10:** Mở rộng bộ dữ liệu mẫu `MOCK_CLAN_MEMBERS` lên 25–30 người bao phủ đa chi, vợ cả/vợ hai, con nuôi, 6-7 đời và hôn nhân nội tộc.
@@ -302,6 +380,23 @@ sequenceDiagram
 - [x] **AC26:** Mở rộng bộ từ điển danh xưng chuẩn lên 32 mối quan hệ thân tộc toàn diện bao gồm đầy đủ bên Nội, bên Ngoại, Bác dâu, Bác rể, Thím, Cậu, Mợ, Dì, Dượng và Dâu / Rể các thế hệ.
 - [x] **AC27:** Màn hình `/admin/settings` bổ sung thanh chip lọc phân nhóm (Tabs/Filter Chips) và ô tìm kiếm nhanh giúp quản trị viên tra cứu và chỉnh sửa tức thì trong danh mục 32 quan hệ.
 - [x] **AC28:** Tích hợp đầy đủ các quy ước Dâu / Rể / Thím / Mợ / Dượng vào `custom_kinship_dictionary` và đồng bộ với lõi Kinship Engine.
+- [ ] **AC29:** Thuật toán tự động nhận diện quan hệ Vợ - Chồng từ dữ liệu `spouse_relations` và trả về danh xưng "Vợ" - "Chồng" chính xác, triệt tiêu lỗi "Người ngoài họ".
+- [ ] **AC30:** Thuật toán phân giải chuẩn xác quan hệ Bố/Mẹ chồng - Con dâu và Bố/Mẹ vợ - Con rể thông qua cầu nối phối ngẫu.
+- [ ] **AC31:** Thuật toán phân giải chuẩn xác quan hệ Chị dâu - Em chồng và Em dâu - Anh/Chị chồng.
+- [ ] **AC32:** Thuật toán phân giải chuẩn xác quan hệ Anh rể - Em vợ và Em rể - Anh/Chị vợ.
+- [ ] **AC33:** Thuật toán phân giải chuẩn xác quan hệ Bác dâu, Thím, Dượng, Mợ cho các thế hệ trên.
+- [ ] **AC34:** Thuật toán phân giải chuẩn xác quan hệ Chị em dâu và Anh em đồng hao (cọc chèo) giữa 2 người dâu/rể.
+- [ ] **AC35:** Sơ đồ phả hệ trực quan hiển thị đường nối cầu hôn nhân nét đôi `═(Hôn phối)═` nối nhịp giữa các mắt xích.
+- [ ] **AC36:** Trang `/kinship` và API `/api/kinship` nạp đồng bộ `spouse_relations`, đảm bảo tính toán in-memory tức thì 0ms trên Client.
+
+### 7.3. Human Visual UAT Matrix (Nghiệm Thu Thị Giác Dành Cho User)
+
+| UAT ID | Kịch Bản Nghiệm Thu | Thao Tác Thực Hiện | Kết Quả Mong Đợi |
+| :--- | :--- | :--- | :--- |
+| **UAT_INLAW_01** | Nghiệm thu cặp Vợ - Chồng | Chọn `Phạm Văn Chiến` & `Đào Thị Liễu` | Thẻ danh xưng hiện: Chiến gọi Liễu là **"Vợ"**, Liễu gọi Chiến là **"Chồng"**. Không còn nhãn "Người ngoài họ". |
+| **UAT_INLAW_02** | Nghiệm thu Bố chồng - Con dâu | Chọn `Chu Thị Hà` & `Phạm Văn Uyên` | Thẻ danh xưng hiện: Hà gọi Uyên là **"Bố"** (Bố chồng), Uyên gọi Hà là **"Con"** (Con dâu). Sơ đồ chuỗi phả hệ hiển thị rõ đường đi qua người chồng. |
+| **UAT_INLAW_03** | Nghiệm thu Chị dâu - Em chồng | Chọn `Chu Thị Hà` & `Phạm Văn Bẩy` | Thẻ danh xưng hiện: Bẩy gọi Hà là **"Chị dâu"** (Chị), Hà gọi Bẩy là **"Chú"** (hoặc Em). |
+| **UAT_INLAW_04** | Nghiệm thu Đảo vai dâu rể | Bấm nút tròn Đảo vai ⇄ | Các danh xưng dâu rể hoán đổi vị trí chuẩn xác tức thì. |
 
 ---
 
@@ -320,6 +415,9 @@ sequenceDiagram
 - [x] **RG11 (Toàn vẹn trục trực hệ và cây chữ V):** Cả Sơ đồ Trực hệ dọc và Cây Chữ V hiển thị mạch lạc, không vỡ layout và không phát sinh lỗi console runtime.
 - [x] **RG12 (Toàn vẹn Cài đặt Dòng họ & Tra cứu Vai vế):** Đổi tên dòng họ, lưu từ điển tùy biến, và tra cứu vai vế đồng bộ trơn tru, không lỗi TypeScript/build.
 - [x] **RG13 (Toàn vẹn 16 quan hệ ban đầu & Hệ thống lọc mới):** Giữ vững các kết quả kiểm thử hiện có của TC01–TC25, không vỡ layout và đạt 0 lỗi build.
+- [ ] **RG14 (Chống thoái lui 286 tests hiện có):** Toàn bộ 286 automated tests hiện có tiếp tục pass 100%, không bị ảnh hưởng bởi việc mở rộng quan hệ hôn phối.
+- [ ] **RG15 (Hiệu năng tính toán in-memory 0ms):** Thao tác đổi dropdown và tính toán vai vế giữ vững tốc độ < 1ms trên Client, không gây giật lag UI khi nạp thêm dữ liệu `spouse_relations`.
+- [ ] **RG16 (Compile & Typecheck sạch sẽ):** Lệnh `npm run typecheck` và `npm run build` đạt 0 lỗi.
 
 ---
 

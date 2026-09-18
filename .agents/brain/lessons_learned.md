@@ -198,7 +198,7 @@
 
 - **Chuẩn Hóa Nhãn UI & Thuần Việt Hóa Thuật Ngữ Phả Hệ (UI Label Normalization & De-jargonization):**
   1. *Triệt tiêu thuật ngữ kỹ thuật thừa trên UI:* Loại bỏ hoàn toàn các từ viết tắt kỹ thuật hoặc nhãn tiếng Anh thừa thãi trên giao diện người dùng đại chúng:
-     - `Tổ Tiên Chung Gần Nhất (LCA)` $\rightarrow$ `Tổ Tiên Chung Gần Nhất` (loại bỏ `(LCA)`).
+     - `Gốc Gần Nhất (LCA)` $\rightarrow$ `Gốc Gần Nhất` (loại bỏ `(LCA)`).
      - `Quan Hệ Họ Hàng (Cousin)` $\rightarrow$ `Quan Hệ Họ Hàng` (loại bỏ `(Cousin)`).
      - `Sơ Đồ Cây Phả Hệ Trực Quan (Inverted-V Kinship Tree)` $\rightarrow$ `Sơ Đồ Cây Phả Hệ Trực Quan`.
      - Nhãn nút hành động tra cứu: Đổi từ `[Xác Định Vai Vế Xưng Hô]` $\rightarrow$ `[Xác định quan hệ]` ngắn gọn, trực diện, bao quát cả vai vế lẫn thế hệ và trực hệ.
@@ -317,7 +317,7 @@
        - $k \in \{2, 3\}$ (Đời thứ 3 và thứ 2 từ dưới lên): Phân định theo giới tính: Nam $\rightarrow$ **"Ông"**, Nữ $\rightarrow$ **"Bà"** (VD: *Ông Phạm Văn Bảy*, *Bà Lê Thị Nhân*).
        - $k = 1$ (Đời đáy): Tiền tố rỗng `""` (hiển thị nguyên tên con cháu để tránh xưng hô nghịch lý).
   3. *Zero-Latency Kinship Integration khi ĐÃ liên kết node (`viewerMemberId`):*
-     - Việc tính toán xưng hô theo node người xem **hoàn toàn không làm phức tạp hệ thống** và không gây trễ giao diện: Thuật toán tìm tổ tiên chung gần nhất (LCA) duyệt ngược cây gia phả ($h \le 15$) hoàn toàn trong bộ nhớ RAM ($O(h)$), tốn ít hơn $0.02\text{ms}$ cho mỗi người mất. Với $1 \sim 10$ người giỗ trong 30 ngày, tổng thời gian tính toán $< 0.2\text{ms}$ CPU, $0\text{ms}$ độ trễ mạng.
+     - Việc tính toán xưng hô theo node người xem **hoàn toàn không làm phức tạp hệ thống** và không gây trễ giao diện: Thuật toán tìm Gốc Gần Nhất (LCA) duyệt ngược cây gia phả ($h \le 15$) hoàn toàn trong bộ nhớ RAM ($O(h)$), tốn ít hơn $0.02\text{ms}$ cho mỗi người mất. Với $1 \sim 10$ người giỗ trong 30 ngày, tổng thời gian tính toán $< 0.2\text{ms}$ CPU, $0\text{ms}$ độ trễ mạng.
      - Khi có `viewerMemberId`: Hệ thống ưu tiên trích xuất danh xưng thân tộc theo ngôi của người xem (VD: `Bà nội`, `Ông nội`, `Cụ`) để ghép thẳng vào tên (`Bà nội Lê Thị Nhân`, `Cụ Phạm Kim Đức`), kết hợp huy hiệu quan hệ thân mật (`Bà nội của bạn`, `Cụ tổ của bạn`), mang lại trải nghiệm cảm xúc ấm cúng và cá nhân hóa sâu sắc cho từng con cháu trong dòng tộc.
 
 
