@@ -244,9 +244,7 @@ export async function PATCH(request: Request) {
     // 3. Update Database with safety timeout (using Admin Client to bypass RLS)
     try {
       const adminClient = createAdminClient() || supabase;
-      const updatePromise = adminClient
-        .from('clan_settings')
-        .update(updatePayload)
+      const updatePromise = adminClient.from('clan_settings').update(updatePayload)
         .neq('id', '00000000-0000-0000-0000-000000000000');
 
       const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 1500));

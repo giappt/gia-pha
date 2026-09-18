@@ -25,8 +25,8 @@ interface EnrichedUser extends UserProfile {
     id: string;
     full_name: string;
     gender: string;
-    generation_number: number;
-    branch_code?: string;
+    generation_level: number;
+    branch_name?: string;
   } | null;
 }
 
@@ -81,18 +81,32 @@ export default function AdminUsersPage() {
     setIsLoading(true);
     try {
       const [usersRes, membersRes] = await Promise.all([
-        fetch('/api/users').then((r) => (r.ok ? r.json() : { data: [] })),
+        fetch('/api/users').then(async (r) => {
+          const json = await r.json().catch(() => ({}));
+          return { ok: r.ok, status: r.status, ...json };
+        }),
         fetch('/api/members').then((r) => (r.ok ? r.json() : { members: [] })),
       ]);
 
-      if (Array.isArray(usersRes.data)) {
+      if (!usersRes.ok) {
+        setStatusMessage({
+          type: 'error',
+          text: usersRes.error || `Lỗi tải danh sách người dùng (Mã HTTP: ${usersRes.status})`,
+        });
+        setUsers([]);
+      } else if (Array.isArray(usersRes.data)) {
         setUsers(usersRes.data);
       }
+
       if (Array.isArray(membersRes.members)) {
         setAllMembers(membersRes.members);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load users data:', err);
+      setStatusMessage({
+        type: 'error',
+        text: err?.message || 'Lỗi kết nối mạng khi tải danh sách người dùng',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -156,24 +170,27 @@ export default function AdminUsersPage() {
       if (res.ok && json.success) {
         const linkedMem = memberId ? allMembers.find((m) => m.id === memberId) || null : null;
         setUsers((prev) =>
-          prev.map((u) =>
-            u.id === userId
-              ? {
-                  ...u,
-                  linked_member_id: memberId,
-                  user_role: memberId && u.user_role === 'viewer' ? 'claimed_member' : u.user_role,
-                  linked_member: linkedMem
-                    ? {
-                        id: linkedMem.id,
-                        full_name: linkedMem.full_name,
-                        gender: linkedMem.gender,
-                        generation_number: Number(linkedMem.generation_level || 1),
-                        branch_code: linkedMem.branch_name || undefined,
-                      }
-                    : null,
-                }
-              : u
-          )
+          prev.map((u) => {
+            if (u.id !== userId) return u;
+            const newRole = memberId
+              ? (u.user_role === 'viewer' ? 'claimed_member' : u.user_role)
+              : (u.user_role === 'claimed_member' ? 'viewer' : u.user_role);
+
+            return {
+              ...u,
+              linked_member_id: memberId,
+              user_role: newRole,
+              linked_member: linkedMem
+                ? {
+                    id: linkedMem.id,
+                    full_name: linkedMem.full_name,
+                    gender: linkedMem.gender,
+                    generation_level: Number(linkedMem.generation_level || 1),
+                    branch_name: linkedMem.branch_name || undefined,
+                  }
+                : null,
+            };
+          })
         );
         setStatusMessage({
           type: 'success',
@@ -411,11 +428,11 @@ export default function AdminUsersPage() {
                               {u.linked_member.full_name}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-semibold">
-                              Đời {u.linked_member.generation_number}
+                              Đời {u.linked_member.generation_level || 1}
                             </span>
-                            {u.linked_member.branch_code && (
+                            {u.linked_member.branch_name && (
                               <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold">
-                                {u.linked_member.branch_code}
+                                {u.linked_member.branch_name}
                               </span>
                             )}
                           </div>

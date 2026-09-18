@@ -13,6 +13,7 @@ import {
   FileSpreadsheet,
   ArrowLeft,
   ShieldCheck,
+  Shield,
   X,
 } from 'lucide-react';
 
@@ -65,6 +66,11 @@ const NAV_GROUPS: NavGroup[] = [
         href: '/admin/users',
         label: 'Quản Lý Tài Khoản',
         icon: Users,
+      },
+      {
+        href: '/admin/roles',
+        label: 'Phân Quyền & Vai Trò',
+        icon: Shield,
       },
     ],
   },

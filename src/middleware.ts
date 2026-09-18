@@ -55,10 +55,12 @@ export async function middleware(request: NextRequest) {
   // 4. Đánh giá quyết định phân luồng qua Auth Gate Pure Function
   let isSuperAdmin = false;
   if (user) {
-    if (user.id === '00000000-0000-0000-0000-000000000001') {
+    if (
+      user.id === '00000000-0000-0000-0000-000000000001' ||
+      user.email?.toLowerCase() === 'giap.pt.90@gmail.com' ||
+      user.user_metadata?.user_role === 'super_admin'
+    ) {
       isSuperAdmin = true;
-    } else {
-      isSuperAdmin = user.user_metadata?.user_role === 'super_admin';
     }
   }
   if (!isSuperAdmin) {

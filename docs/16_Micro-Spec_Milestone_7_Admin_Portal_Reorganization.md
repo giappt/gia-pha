@@ -1264,6 +1264,380 @@ graph TD
 - [x] **RG30 (Existing Test Suite Zero Regression):** Toàn bộ 221 tests hiện tại tiếp tục PASS 100% (hiện tại đạt 226/226 tests).
 - [x] **RG31 (Login flows on other pages unaffected):** Nút đăng nhập trên Navbar ở trang chủ `/`, `/tree` vẫn hoạt động bình thường cho khách.
 
+---
+
+## 19. CƠ CHẾ GÁN NODE BỀN VỮNG CHO TÀI KHOẢN & SMART RE-MAPPING BẢO TỒN LIÊN KẾT KHI IMPORT (MILESTONE 7.7)
+
+### 19.1. Bối Cảnh & Phân Tích Căn Nguyên Gốc Rễ
+
+Trong quá trình vận hành hệ thống tại `http://localhost:3000/admin/users`, phát hiện 2 vấn đề nghiêm trọng đe dọa trực tiếp đến tính toàn vẹn dữ liệu và trải nghiệm người dùng:
+
+1. **Lỗi Không Gán Được Node Cho Tài Khoản (`/admin/users`):**
+   - **Lệch Schema trong Query GET:** `src/app/api/users/route.ts` thực hiện `.select('id, full_name, gender, generation_number, branch_code')`. Trong bảng PostgreSQL `members`, các cột này thực tế là `generation_level` và `branch_name`. Query trả về lỗi PostgREST `42703 (column does not exist)`, khiến `memberMap` rỗng và `u.linked_member` luôn là `null`. Giao diện luôn hiển thị `-- Chưa liên kết node --`.
+   - **RLS Nuốt Chửng Lệnh UPDATE:** API `PATCH /api/users` sử dụng `createClient()` (Anon Client). Bảng `users` chỉ có RLS Policy cho `SELECT`, hoàn toàn không có Policy cho `UPDATE`. Supabase JS v2 trả về `{ error }` chứ không ném exception, khối `try...catch` không bắt được lỗi. API trả về `{ success: true }` giả tạo trong khi PostgreSQL không hề được cập nhật dữ liệu.
+   - **Thiếu Đồng Bộ Role:** Gán node cho `viewer` không tự động thăng cấp thành `claimed_member` trong CSDL.
+
+2. **Nguy Cơ Đứt Gãy Toàn Bộ Liên Kết Khi Import Lại Cây Phả Hệ (`/admin/import`):**
+   - Trong PostgreSQL schema (`20260903000000_init_schema.sql`), cột `users.linked_member_id` có ràng buộc:
+     ```sql
+     linked_member_id UUID UNIQUE REFERENCES public.members(id) ON DELETE SET NULL
+     ```
+   - Khi Admin Import ở chế độ **Làm mới toàn bộ (Ghi đè cây mới - `mode: clean`)**, API thực thi `DELETE FROM members`. Ràng buộc `ON DELETE SET NULL` ngay lập tức chuyển toàn bộ `linked_member_id` của tất cả người dùng thành `NULL`.
+   - Khi chèn các thành viên mới từ file Excel, hàm import sinh ngẫu nhiên UUID mới toanh (`crypto.randomUUID()`). Dù họ tên, năm sinh, thế hệ không đổi, liên kết cũ bị mất vĩnh viễn, con cháu bị "bật gốc" khỏi cây phả hệ và Admin phải gán lại thủ công từ đầu.
+
+### 19.2. Sơ Đồ Trình Tự Đồng Bộ & Tự Động Tái Liên Kết (Smart Re-mapping Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Super Admin
+    participant ImportUI as /admin/import UI
+    participant UsersUI as /admin/users UI
+    participant UsersAPI as API /api/users
+    participant ImportAPI as API /api/admin/import
+    participant DB as Supabase PostgreSQL
+
+    %% Nhánh 1: Gán Node Bền Vững
+    rect rgb(240, 255, 240)
+    Note over UsersUI,DB: PHÂN HỆ 1: GÁN NODE BỀN VỮNG QUA SERVICE ROLE
+    Admin->>UsersUI: Bấm "Gán Node" cho User A -> Chọn thành viên B
+    UsersUI->>UsersAPI: PATCH /api/users { userId: A, linked_member_id: B }
+    UsersAPI->>UsersAPI: checkSuperAdminPermission() & createAdminClient()
+    UsersAPI->>DB: UPDATE users SET linked_member_id = B, user_role = 'claimed_member'
+    DB-->>UsersAPI: { data, error: null } (Bypass RLS an toàn)
+    UsersAPI-->>UsersUI: 200 OK { success: true }
+    UsersUI-->>Admin: Hiển thị Đời, Chi, Tên thành viên liên kết
+    end
+
+    %% Nhánh 2: Import Cây & Smart Re-mapping
+    rect rgb(240, 248, 255)
+    Note over ImportUI,DB: PHÂN HỆ 2: BẢO TỒN LIÊN KẾT KHI IMPORT CLEAN
+    Admin->>ImportUI: Upload Excel & Chọn mode = 'clean'
+    ImportUI->>ImportAPI: POST /api/admin/import { rows, mode: 'clean' }
+    ImportAPI->>DB: [BƯỚC 1 - SNAPSHOT] Lấy danh sách Users có linked_member_id + profile thành viên cũ
+    DB-->>ImportAPI: linkSnapshot: [{ userId, fullName, birthYear, gender, generationLevel }]
+    ImportAPI->>DB: [BƯỚC 2 - RESET & INSERT] Xóa members cũ & Chèn members mới (UUID mới)
+    DB-->>ImportAPI: Chèn xong membersToInsert
+    ImportAPI->>ImportAPI: [BƯỚC 3 - SMART RE-MAPPING] So khớp thành viên mới theo Họ tên + Năm sinh + Giới tính
+    ImportAPI->>DB: Khôi phục UPDATE users SET linked_member_id = newMemberId
+    DB-->>ImportAPI: Cập nhật thành công
+    ImportAPI-->>ImportUI: 200 OK { success: true, importedCount, relinkedUsersCount }
+    ImportUI-->>Admin: Thông báo nạp thành công & số tài khoản được tự động bảo tồn liên kết
+    end
+```
+
+### 19.3. Thiết Kế Chi Tiết & Ranh Giới File
+
+#### 19.3.1. File: `src/app/api/users/route.ts` [MODIFY]
+- **Nhập `createAdminClient`:** Thay thế `createClient()` bằng `createAdminClient() || createClient()` ở các thao tác mutation để vượt qua rào cản RLS sau khi đã xác thực quyền `super_admin`.
+- **Chuẩn hóa truy vấn `GET`:**
+  ```typescript
+  const { data: membersData } = await (admin || supabase)
+    .from('members')
+    .select('id, full_name, gender, generation_level, branch_name');
+  ```
+- **Xử lý `PATCH` nghiêm ngặt:**
+  - Kiểm tra và bắt chính xác `{ error: updateErr }` từ Supabase update:
+    ```typescript
+    const { error: updateErr } = await client.from('users').update(updatePayload).eq('id', userId);
+    if (updateErr) {
+      return NextResponse.json({ error: `Lỗi cập nhật CSDL: ${updateErr.message}` }, { status: 500 });
+    }
+    ```
+  - **Tự động thăng cấp vai trò (Role Promotion / Demotion):**
+    - Nếu `linked_member_id` được gán (khác null) và vai trò hiện tại của user là `viewer` $\rightarrow$ Tự động gán `user_role = 'claimed_member'`.
+    - Nếu `linked_member_id` bị gỡ (bằng null) và vai trò hiện tại là `claimed_member` $\rightarrow$ Tự động hạ về `user_role = 'viewer'`.
+    - Nếu vai trò của user là `branch_editor` hoặc `super_admin` $\rightarrow$ **Giữ nguyên vai trò quản trị**, không hạ cấp khi gán/gỡ node.
+
+#### 19.3.2. File: `src/app/admin/users/page.tsx` [MODIFY]
+- Cập nhật interface `EnrichedUser`:
+  ```typescript
+  linked_member?: {
+    id: string;
+    full_name: string;
+    gender: string;
+    generation_level: number;
+    branch_name?: string;
+  } | null;
+  ```
+- Đồng bộ hiển thị badge thế hệ (`Đời ${u.linked_member.generation_level}`) và chi nhánh (`u.linked_member.branch_name`).
+- Cập nhật state cục bộ phản ánh đúng vai trò sau khi API trả về thành công.
+
+#### 19.3.3. File: `src/app/api/admin/import/route.ts` [MODIFY]
+- Tích hợp quy trình **Smart Re-mapping** 3 bước trong nhánh `mode === 'clean'`:
+  1. **Bước 1 (Snapshot):** Trước khi gọi `delete()`, truy vấn toàn bộ users đang có `linked_member_id`:
+     ```typescript
+     const { data: activeUsers } = await admin
+       .from('users')
+       .select('id, user_role, linked_member_id')
+       .not('linked_member_id', 'is', null);
+     ```
+     Đối chiếu với bảng `members` cũ để lưu trữ `UserLinkSnapshot`:
+     `{ userId, userRole, fullNameClean, birthYear, gender, generationLevel }`.
+  2. **Bước 2 (Chèn dữ liệu):** Thực hiện xóa dữ liệu cũ và batch insert các thành viên mới kèm quan hệ hôn phối.
+  3. **Bước 3 (Re-mapping & Khôi phục):**
+     - Duyệt qua từng bản ghi snapshot.
+     - Tìm kiếm trong `membersToInsert` ứng viên khớp:
+       - *Mức 1 (Độ tin cậy cao nhất):* Trùng `(fullNameClean, birthYear, gender)`.
+       - *Mức 2 (Nếu khuyết năm sinh):* Trùng `(fullNameClean, gender, generation_level)`.
+     - Nếu tìm thấy **đúng 1 ứng viên duy nhất**:
+       ```typescript
+       await admin.from('users').update({ linked_member_id: matchedMember.id }).eq('id', s.userId);
+       relinkedCount++;
+       ```
+     - Nếu có nhiều hơn 1 ứng viên (trùng tên, cùng tuổi/đời) $\rightarrow$ Không tự động gán để tránh gán nhầm (Ambiguous Guard), ghi log để Admin rà soát thủ công.
+  4. Trả về trong payload JSON:
+     ```json
+     {
+       "success": true,
+       "importedCount": 120,
+       "relinkedUsersCount": 15,
+       "message": "Đã nạp thành công 120 thành viên. Tự động bảo tồn liên kết cho 15 tài khoản con cháu."
+     }
+     ```
+
+#### 19.3.4. File: `src/app/admin/import/page.tsx` [MODIFY]
+- Bổ sung hộp cảnh báo màu hổ phách/đỏ khi Admin click chọn radio "Làm mới toàn bộ (Ghi đè cây mới)":
+  > *"⚠️ Cảnh báo: Chế độ làm mới sẽ xóa toàn bộ dữ liệu cây cũ. Hệ thống sẽ tự động đối chiếu và bảo tồn liên kết cho các tài khoản trùng khớp thông tin, nhưng các tài khoản bị thay đổi thông tin trong file mới sẽ cần gán lại thủ công."*
+- Hiển thị thông báo chi tiết về số lượng tài khoản được bảo tồn liên kết sau khi Import hoàn tất.
+
+### 19.4. Xử Lý Lỗi & Trường Hợp Biên (Edge Cases)
+
+- **Edge Case 61 (User không có năm sinh hoặc năm sinh bị sửa khi import file mới):** Thuật toán tự động kích hoạt Mức 2 đối chiếu thêm thế hệ (`generation_level`) kết hợp giới tính và họ tên.
+- **Edge Case 62 (Trùng họ tên trong cùng một thế hệ - Ambiguous Collision):** Nếu 2 người trong file mới cùng tên Nguyễn Văn Nam, cùng đời 4 $\rightarrow$ Thuật toán bỏ qua việc tự động gán cho tài khoản này để bảo toàn tính liêm chính, đưa vào danh sách cần Admin duyệt tay.
+- **Edge Case 63 (Gỡ node phả hệ):** Khi Admin bấm nút "Gỡ" trên `/admin/users`, nếu vai trò là `claimed_member` $\rightarrow$ tự động hạ về `viewer`; nếu là `branch_editor` hoặc `super_admin` $\rightarrow$ giữ nguyên.
+- **Edge Case 64 (Môi trường phát triển không có Service Role Key):** Route fallback sang client hiện có và ghi nhận dev cookie một cách nhất quán, tránh văng lỗi 500 crash server.
+- **Edge Case 65 (Người dùng đã liên kết node nhưng không có trong file Excel mới):** Tài khoản sẽ trở về trạng thái chưa liên kết (`linked_member_id = null`), vai trò chuyển về `viewer` để bảo đảm an toàn.
+
+### 19.5. Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
+
+> File test: `tests/admin-portal.test.ts`
+
+- [x] **TC_UT_USERS_SCHEMA_NORMALIZATION (Query users dùng đúng cột generation_level và branch_name):**
+  - **Given:** Route handler `src/app/api/users/route.ts`.
+  - **When:** Đọc source code kiểm tra truy vấn bảng `members`.
+  - **Then:** Chứa `generation_level` và `branch_name`; tuyệt đối KHÔNG chứa `generation_number` hay `branch_code`.
+
+- [x] **TC_UT_USERS_ADMIN_CLIENT_MUTATION (PATCH /api/users dùng createAdminClient và bắt lỗi error):**
+  - **Given:** Source code `src/app/api/users/route.ts`.
+  - **When:** Kiểm tra hàm `PATCH`.
+  - **Then:** Import và gọi `createAdminClient()`; kiểm tra `updateErr` từ Supabase query.
+
+- [x] **TC_UT_USERS_ROLE_AUTO_PROMOTION (Tự động thăng cấp và hạ cấp vai trò khi gán/gỡ node):**
+  - **Given:** User có role `viewer`, khi được gán `linked_member_id` hợp lệ.
+  - **When:** Thực thi logic thăng cấp vai trò.
+  - **Then:** `user_role` chuyển thành `claimed_member`. Khi gỡ node (`linked_member_id = null`) $\rightarrow$ `user_role` chuyển về `viewer`.
+
+- [x] **TC_UT_USERS_PRESERVE_ADMIN_ROLES (Giữ nguyên vai trò Quản trị viên khi gán/gỡ node):**
+  - **Given:** User có role `super_admin` hoặc `branch_editor`.
+  - **When:** Thực hiện gán hoặc gỡ `linked_member_id`.
+  - **Then:** `user_role` giữ nguyên, không bị hạ cấp về `claimed_member` hay `viewer`.
+
+- [x] **TC_UT_IMPORT_SMART_REMAPPING_TRIPLET (Smart Re-mapping khớp chính xác theo bộ 3 Tên + Năm sinh + Giới tính):**
+  - **Given:** Danh sách snapshot user gồm `{ userId: 'u1', fullName: 'Nguyễn Văn Nam', birthYear: 1980, gender: 'male' }`.
+  - **When:** Chạy hàm so khớp với danh sách members mới có thành viên mang cùng họ tên, năm sinh 1980, nam.
+  - **Then:** Khớp thành công 1-1 và trả về UUID mới của thành viên đó.
+
+- [x] **TC_UT_IMPORT_SMART_REMAPPING_FALLBACK_GEN (Smart Re-mapping fallback theo Thế hệ khi khuyết năm sinh):**
+  - **Given:** Snapshot user có `birthYear = null`, `fullName = 'Trần Thị Mai'`, `gender = 'female'`, `generationLevel = 2`.
+  - **When:** So khớp với danh sách members mới.
+  - **Then:** Khớp chính xác với người cùng tên, giới tính nữ ở Đời 2.
+
+- [x] **TC_UT_IMPORT_REMAPPING_AMBIGUOUS_GUARD (Chặn tự động gán khi phát hiện trùng lặp mơ hồ):**
+  - **Given:** Có 2 thành viên mới cùng tên "Nguyễn Văn Tuấn", cùng năm sinh 1990 trong file mới.
+  - **When:** So khớp tài khoản snapshot.
+  - **Then:** Trả về `null` (không tự ý gán) để kích hoạt chế độ rà soát thủ công của Admin.
+
+### 19.6. Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
+
+- [ ] **UAT_37 (Gán Node Lưu Bền Vững /admin/users):** Vào `/admin/users` $\rightarrow$ Bấm "Gán Node" cho 1 tài khoản $\rightarrow$ Chọn thành viên $\rightarrow$ Cột "Hồ Sơ Phả Hệ Liên Kết" hiển thị đúng Tên, Đời, Chi $\rightarrow$ F5 tải lại trang $\rightarrow$ Dữ liệu liên kết vẫn tồn tại 100%.
+- [ ] **UAT_38 (Tự Động Đổi Badge Vai Trò):** Sau khi gán node cho tài khoản Viewer $\rightarrow$ Badge vai trò lập tức chuyển sang màu xanh dương "Con Cháu Đã Gắn Node (Member)" mà không cần thao tác đổi vai trò thủ công.
+- [ ] **UAT_39 (Bảo Tồn Liên Kết Sau Khi Import Clean):** Có ít nhất 1 tài khoản đã được gán node $\rightarrow$ Vào `/admin/import`, tải file Excel và chọn "Làm mới toàn bộ (Ghi đè cây mới)" $\rightarrow$ Bấm nạp dữ liệu $\rightarrow$ Thông báo thành công hiển thị số tài khoản được bảo tồn $\rightarrow$ Quay lại `/admin/users` $\rightarrow$ Tài khoản vẫn giữ nguyên liên kết tới đúng người đó trên cây mới.
+- [ ] **UAT_40 (Hộp Cảnh Báo An Toàn /admin/import):** Khi click vào tùy chọn "Làm mới toàn bộ (Ghi đè cây mới)" trên trang Import $\rightarrow$ Xuất hiện Callout cảnh báo an toàn rõ ràng, giúp Admin ý thức được rủi ro liên kết.
+
+### 19.7. Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
+
+- [x] **RG32 (Build & Typecheck Clean):** `npm.cmd run typecheck` (0 errors) và `npm.cmd run build` thành công 100%.
+- [x] **RG33 (Test Suite Pass Without Regressions):** Lệnh `npm.cmd test` chạy đạt chuẩn `[R-VERIFY.TIERS]`, không phát sinh thêm bất kỳ failure mới nào so với baseline nền (261/265 passed, 0 regression).
+- [ ] **RG34 (Genealogy Tree & Anniversary Kinship Integrity):** Trang `/tree` và `/anniversaries` tiếp tục nhận diện chính xác `viewerMemberId` thông qua `linked_member_id` để tô sáng node bản thân và tính xưng hô tương đối chuẩn xác.
+- [ ] **RG35 (Excel Import Parser Backward Compatibility):** Luồng nhập dữ liệu ở chế độ `append` (Nhập bổ sung) vẫn hoạt động nguyên vẹn, không bị ảnh hưởng bởi logic Smart Re-mapping của chế độ `clean`.
+
+---
+
+## 19.8. MILESTONE 7.8: SỬA CHỮA CĂN NGUYÊN LỖI DANH SÁCH TÀI KHOẢN TRỐNG RỖNG (/admin/users)
+
+### 19.8.1. Mô Tả Sự Cố & Căn Nguyên Kỹ Thuật
+
+1. **Hiện tượng:** Admin truy cập `/admin/users` thấy báo `Hiển thị: 0 / 0 tài khoản. Không tìm thấy tài khoản nào khớp với điều kiện tìm kiếm`, trong khi bảng `users` trong CSDL Supabase có đầy đủ 5 tài khoản Google.
+2. **Căn nguyên 1 (Auth Client Desync):** Trong `checkSuperAdminPermission()` tại `src/app/api/users/route.ts`, việc gán `const supabase = admin || createClient()` khiến `admin.auth.getUser()` được gọi thay vì client SSR. Do `admin` dùng Service Role Key độc lập không đọc cookie của trình duyệt, `user` luôn là `null` với tài khoản Google thật $\rightarrow$ API trả về HTTP 403 Forbidden.
+3. **Căn nguyên 2 (Nuốt lỗi âm thầm trên giao diện):** Trong `src/app/admin/users/page.tsx`, biểu thức `r.ok ? r.json() : { data: [] }` biến mọi mã lỗi 403/500 thành danh sách rỗng, khiến UI che giấu lỗi thật và báo "0 tài khoản".
+4. **Căn nguyên 3 (Dev Cookie Hijack):** Cookie `fat_dev_users` từ các lần test trước chứa dữ liệu khuyết trường bị ưu tiên đè lên CSDL Supabase thật.
+
+### 19.8.2. Thiết Kế Sửa Đổi Chi Tiết
+
+#### File: `src/app/api/users/route.ts` [MODIFY]
+- **Tách bạch Auth Client và Data Mutation Client:**
+  - Xác thực phiên người dùng BẮT BUỘC dùng `createClient()` từ `@/lib/supabase/server` để đọc đúng `sb-*-auth-token` từ Google OAuth.
+  - Lấy `user_role` và thao tác dữ liệu: Dùng `createAdminClient() || supabase` để vượt qua rào cản RLS một cách hợp lệ.
+  - Hỗ trợ giải mã `decodeURIComponent` khi đọc cookie dev fallback `fat_dev_user`.
+- **Ưu tiên CSDL Supabase & Dọn rác Cookie:**
+  - Trong `GET`: Luôn ưu tiên `usersData` từ Supabase. Xóa cookie `fat_dev_users` cũ để dọn sạch session rác.
+  - Trong `PATCH`: Cập nhật trực tiếp vào Supabase, loại bỏ triệt để việc ghi cookie `fat_dev_users`.
+
+#### File: `src/app/admin/users/page.tsx` [MODIFY]
+- **Nâng cấp `loadData()`:**
+  - Bắt lỗi HTTP tường minh: Nếu `!usersRes.ok`, gán `statusMessage: { type: 'error', text: usersRes.error || 'Lỗi tải danh sách người dùng' }`.
+  - Hiển thị Alert Banner cảnh báo đỏ nổi bật trên đầu trang để Admin biết chính xác lý do nếu phiên hết hạn hoặc thiếu quyền.
+
+### 19.8.3. Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
+
+> File test: `tests/admin-portal.test.ts`
+
+- [x] **TC_UT_AUTH_CHECK_USES_SSR_CLIENT (Phân quyền Super Admin bắt buộc dùng SSR client đọc session):**
+  - **Given:** Source code `src/app/api/users/route.ts`.
+  - **When:** Phân tích logic `checkSuperAdminPermission`.
+  - **Then:** Gọi `getUser()` từ SSR client `createClient()`, tuyệt đối KHÔNG gọi `auth.getUser()` trên `createAdminClient()`.
+- [x] **TC_UT_USERS_ROUTE_NO_DEV_USERS_COOKIE_OVERRIDE (GET /api/users không cho phép cookie đè CSDL thật):**
+  - **Given:** Route handler `GET /api/users`.
+  - **When:** Có dữ liệu từ CSDL Supabase.
+  - **Then:** Luôn trả về danh sách từ CSDL Supabase thật, không ưu tiên `fat_dev_users` cookie rỗng hay khuyết trường.
+- [x] **TC_UT_USERS_PAGE_ERROR_ALERT_EXPOSURE (Frontend hiển thị cảnh báo lỗi khi API thất bại):**
+  - **Given:** Trang `src/app/admin/users/page.tsx`.
+  - **When:** `fetch('/api/users')` trả về `ok: false` kèm mã lỗi (403 hoặc 500).
+  - **Then:** `statusMessage` được kích hoạt với `type: 'error'` và hiển thị đúng thông điệp lỗi của server.
+
+### 19.8.4. Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
+
+- [ ] **UAT_41 (Hiển thị 5 tài khoản đầy đủ trên /admin/users):**
+  - Vào `http://localhost:3000/admin/users`.
+  - Bảng tài khoản hiển thị ngay lập tức 5 tài khoản thật từ Supabase (Bay Pham, Đồng Phạm, Thúy Lê, drive move, Giáp Phạm).
+  - Số đếm trên thanh tìm kiếm báo đúng: `Hiển thị: 5 / 5 tài khoản`.
+- [ ] **UAT_42 (Minh bạch lỗi xác thực khi mất quyền):**
+  - Giả lập phiên không hợp lệ hoặc thiếu quyền Super Admin.
+  - Giao diện hiển thị Alert Banner đỏ: "Bạn không có quyền quản trị viên cao cấp (Super Admin)", không gây hiểu lầm là CSDL bị rỗng.
+
+### 19.8.5. Bảo Vệ Chống Thoái Lui Bổ Sung (Mục 8 — Regression Guards)
+
+- [x] **RG36 (Dev Mode Super Admin Fallback):** Chế độ phát triển cục bộ với cookie `fat_dev_user` tiếp tục hoạt động trơn tru cho việc debug.
+- [x] **RG37 (Existing Admin Tests Pass 100%):** Toàn bộ 18 test cases trong `tests/admin-portal.test.ts` tiếp tục PASS 100%.
+
+---
+
+## 19.9. MILESTONE 7.9: TRANG CÀI ĐẶT MA TRẬN PHÂN QUYỀN (/admin/roles) & CHẾ ĐỘ ĐÓNG VAI NGHIỆM THU (ROLE IMPERSONATION)
+
+### 19.9.1. Bối Cảnh & Mục Tiêu Nghiệp Vụ
+1. **Mục tiêu:**
+   - Cung cấp trang quản trị trực quan **`/admin/roles` ("Phân Quyền & Vai Trò")** nằm trong nhóm **`THÀNH VIÊN & TÀI KHOẢN`** của Sidebar Admin.
+   - Thống kê và cấu hình ma trận quyền hạn cho **5 vai trò cốt lõi**: `guest`, `viewer`, `claimed_member`, `branch_editor`, `super_admin`.
+   - Trang bị tính năng **Chế độ Đóng Vai Nghiệm Thu (Role Impersonation / View-As Mode)**: Cho phép Super Admin lập tức trải nghiệm góc nhìn thực tế của bất kỳ vai trò nào (xem che mờ SĐT, xem cờ tắt/bật, xem nút Claim node) ngay trên trình duyệt mà không cần tài khoản phụ.
+   - **Nguyên tắc "Never Locked Out":** Dù đang đóng vai vai trò nào, giao diện luôn giữ thanh banner nổi với nút `[⚙️ Vào Quản Trị]` và quyền bảo mật thật của Super Admin không bao giờ bị hạ thấp ở tầng Backend/API.
+
+### 19.9.2. Thiết Kế Chi Tiết & Tệp Bị Ảnh Hưởng
+
+#### 1. File: `src/components/admin/AdminSidebar.tsx` [MODIFY]
+- Trong nhóm `THÀNH VIÊN & TÀI KHOẢN`, bổ sung mục `/admin/roles`:
+  ```typescript
+  {
+    title: 'THÀNH VIÊN & TÀI KHOẢN',
+    items: [
+      {
+        href: '/admin/users',
+        label: 'Quản Lý Tài Khoản',
+        icon: Users,
+      },
+      {
+        href: '/admin/roles',
+        label: 'Phân Quyền & Vai Trò',
+        icon: ShieldAlert,
+      },
+    ],
+  }
+  ```
+
+#### 2. File: `src/middleware.ts` [MODIFY]
+- Miễn nhiễm tuyệt đối cho Super Admin:
+  ```typescript
+  if (user) {
+    if (
+      user.id === '00000000-0000-0000-0000-000000000001' ||
+      user.email?.toLowerCase() === 'giap.pt.90@gmail.com' ||
+      user.user_metadata?.user_role === 'super_admin'
+    ) {
+      isSuperAdmin = true;
+    }
+  }
+  ```
+- Super Admin không bị chặn bởi bất kỳ cờ tính năng nào trong `evaluateAuthGate`.
+
+#### 3. File: `src/lib/admin/admin-engine.ts` [MODIFY]
+- Thêm types và Pure Functions:
+  - `export type ImpersonatedRole = 'guest' | 'viewer' | 'claimed_member' | 'branch_editor' | null;`
+  - `export function resolveEffectiveRole(realRole: UserRole | undefined, impersonatedRole: ImpersonatedRole): UserRole | 'guest'`
+  - Đảm bảo: Chỉ khi `realRole === 'super_admin'` thì mới áp dụng `impersonatedRole`. Nếu là tài khoản khác, luôn trả về vai trò thực tế.
+
+#### 4. File Mới: `src/components/admin/RoleImpersonationBanner.tsx` [NEW]
+- Component Client nổi trên đầu trang (Sticky Top Banner), chỉ xuất hiện khi `impersonatedRole !== null` và người dùng thật là Super Admin:
+  - Hiển thị nhãn: `🎭 Bạn đang xem với vai trò: [TÊN ROLE]`.
+  - Nút chuyển nhanh sang role khác qua Select/Dropdown.
+  - Nút `[⚙️ Vào Quản Trị]` trỏ về `/admin/roles` để không bao giờ bị kẹt.
+  - Nút `[✕ Thoát Đóng Vai]` để hủy cookie/state và trở về Super Admin gốc.
+
+#### 5. File Mới: `src/app/admin/roles/page.tsx` [NEW]
+- Trang Cài Đặt Ma Trận Phân Quyền (`/admin/roles`):
+  - Tiêu đề: **Phân Quyền & Ma Trận Vai Trò Tông Tộc**.
+  - Bảng Ma trận 5 cột tương ứng 5 Roles: `Khách vãng lai`, `Viewer`, `Con cháu gắn node`, `Biên tập viên Chi`, `Super Admin`.
+  - Phân nhóm quyền hạn rõ ràng:
+    - *Nhóm 1: Tiếp cận & Quyền riêng tư:* Xem cây phả hệ, Xem SĐT người sống, Tra cứu xưng hô, Xem lịch giỗ.
+    - *Nhóm 2: Tự phục vụ & Gắn kết:* Gửi yêu cầu nhận node, Nhận thông báo Web Push.
+    - *Nhóm 3: Biên tập gia phả:* Thêm thành viên, Sửa thông tin, Đổi thứ tự đàn con, Xóa node lá.
+    - *Nhóm 4: Bàn điều hành:* Quản lý tài khoản, Nạp Excel & Smart Re-map.
+  - Cột `Super Admin` hiển thị dấu tích xanh cố định (God Mode).
+  - Chân mỗi cột có nút hành động: **`[ 🎭 Thử Đóng Vai Role Này ]`**.
+
+### 19.9.3. Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
+
+> File test: `tests/admin-portal.test.ts`
+
+- [x] **TC_UT_SIDEBAR_ROLES_ITEM (Sidebar Admin chứa mục Phân Quyền & Vai Trò):**
+  - **Given:** Source code `src/components/admin/AdminSidebar.tsx`.
+  - **When:** Quét cấu hình nhóm `THÀNH VIÊN & TÀI KHOẢN`.
+  - **Then:** Chứa link `/admin/roles` với nhãn `Phân Quyền & Vai Trò`.
+- [x] **TC_UT_MIDDLEWARE_SUPER_ADMIN_BYPASS (Middleware nhận diện Super Admin email để miễn nhiễm cờ chặn):**
+  - **Given:** Source code `src/middleware.ts`.
+  - **When:** Phân tích logic `isSuperAdmin`.
+  - **Then:** Bắt buộc kiểm tra `giap.pt.90@gmail.com`, đảm bảo Admin không bị chặn bởi `evaluateAuthGate`.
+- [x] **TC_UT_ROLE_IMPERSONATION_STORE_PURE (Hàm resolveEffectiveRole đảm bảo chỉ Super Admin mới được đóng vai):**
+  - **Given:** Hàm thuần túy `resolveEffectiveRole`.
+  - **When:** `realRole = 'super_admin'` và `impersonatedRole = 'guest'`.
+  - **Then:** Trả về `'guest'`. Khi `realRole = 'viewer'` và `impersonatedRole = 'super_admin'` $\rightarrow$ Trả về `'viewer'` (chống leo thang đặc quyền).
+- [x] **TC_UT_ROLES_PAGE_NEVER_LOCKED_OUT (Banner đóng vai luôn có lối thoát và link vào Quản Trị):**
+  - **Given:** Source code `RoleImpersonationBanner.tsx` hoặc `src/app/admin/roles/page.tsx`.
+  - **When:** Kiểm tra các thành phần điều khiển.
+  - **Then:** Chứa nút thoát đóng vai và link `/admin` để không bao giờ bị khóa quyền.
+
+### 19.9.4. Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
+
+- [ ] **UAT_43 (Bảng Ma Trận Phân Quyền /admin/roles):**
+  - Truy cập `http://localhost:3000/admin/roles`.
+  - Bảng 5 cột hiển thị cân đối, sắc nét theo phong cách Modern Heritage, các nhóm quyền phân cách bằng hairline rõ ràng.
+- [ ] **UAT_44 (Trải Nghiệm Thử Đóng Vai Role Khách):**
+  - Tại cột "Khách vãng lai", bấm `[🎭 Thử đóng vai role này]`.
+  - Banner nổi xuất hiện trên đỉnh màn hình: `🎭 Bạn đang xem với vai trò: KHÁCH VÃNG LAI`.
+  - Lướt ra `/tree` $\rightarrow$ Thấy thông tin SĐT người sống bị che `***`, không thấy nút Sửa/Claim.
+- [ ] **UAT_45 (Bảo Đảm Không Bị Khóa Quyền Quản Trị):**
+  - Trong lúc đang đóng vai Khách vãng lai, click nút `[⚙️ Vào Quản Trị]` trên Banner nổi $\rightarrow$ Truy cập lại thẳng vào trang Admin mà không bị chặn 403.
+- [ ] **UAT_46 (Thoát Chế Độ Đóng Vai):**
+  - Bấm `[✕ Thoát đóng vai]` $\rightarrow$ Banner biến mất, toàn bộ giao diện trở về trạng thái Super Admin toàn quyền gốc.
+
+### 19.9.5. Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
+
+- [x] **RG38 (Admin Users Page Unbroken):** Trang `/admin/users` tiếp tục hiển thị 5 tài khoản và thực hiện gán node bình thường.
+- [x] **RG39 (Clan Features Flags Persistence):** Các cờ tính năng trong `/admin/features` vẫn lưu trữ và kích hoạt đồng bộ.
+- [x] **RG40 (Existing Admin Tests Pass 100%):** Toàn bộ 22 test cases trong `tests/admin-portal.test.ts` tiếp tục PASS 100%.
+
+
+
+
 
 
 

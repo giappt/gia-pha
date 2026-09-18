@@ -32,8 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Xưng hô',
-    href: '/kinship',
-    icon: Users,
+    href: '/kinship', icon: Users,
   },
 ];
 
@@ -53,9 +52,7 @@ export default function MobileBottomNav({
   const pathname = usePathname();
 
   // Màn hình Login Gate là cổng đăng nhập tập trung, không hiển thị thanh điều hướng đáy
-  if (pathname === '/login-gate') {
-    return null;
-  }
+  if (pathname === '/login-gate') return null;
 
   const flags = featureFlags ?? resolveFeatureFlags(undefined);
 

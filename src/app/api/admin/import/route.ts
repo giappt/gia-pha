@@ -174,8 +174,50 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = createAdminClient();
+    let relinkedCount = 0;
+
     if (admin) {
+      // BƯỚC 1: Snapshot liên kết người dùng hiện tại trước khi xóa (chỉ chạy ở mode 'clean')
+      const linkSnapshots: any[] = [];
       if (mode === 'clean') {
+        try {
+          const { data: linkedUsers } = await admin
+            .from('users')
+            .select('id, user_role, linked_member_id')
+            .not('linked_member_id', 'is', null);
+
+          if (Array.isArray(linkedUsers) && linkedUsers.length > 0) {
+            const linkedMemberIds = linkedUsers.map((u) => u.linked_member_id).filter(Boolean);
+            const { data: oldMembers } = await admin
+              .from('members')
+              .select('id, full_name, birth_year, gender, generation_level')
+              .in('id', linkedMemberIds);
+
+            if (Array.isArray(oldMembers)) {
+              const oldMemberMap = new Map<string, any>();
+              for (const om of oldMembers) {
+                oldMemberMap.set(om.id, om);
+              }
+
+              for (const u of linkedUsers) {
+                const om = oldMemberMap.get(u.linked_member_id);
+                if (om) {
+                  linkSnapshots.push({
+                    userId: u.id,
+                    userRole: u.user_role,
+                    fullName: om.full_name,
+                    birthYear: om.birth_year,
+                    gender: om.gender,
+                    generationLevel: om.generation_level,
+                  });
+                }
+              }
+            }
+          }
+        } catch (snapErr) {
+          console.warn('Không thể chụp snapshot liên kết người dùng trước khi xóa:', snapErr);
+        }
+
         const { error: delSpouseErr } = await admin.from('spouse_relations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         if (delSpouseErr) {
           throw new Error(`Lỗi xóa dữ liệu hôn phối cũ: ${delSpouseErr.message}`);
@@ -218,13 +260,41 @@ export async function POST(request: NextRequest) {
           throw new Error(`Lỗi lưu quan hệ hôn phối vào CSDL: ${insertSpouseErr.message}`);
         }
       }
+
+      // BƯỚC 3: Smart Re-mapping - Tự động khôi phục liên kết cho tài khoản con cháu
+      if (mode === 'clean' && linkSnapshots.length > 0) {
+        try {
+          const { smartRemapUserLinks } = await import('@/lib/admin/admin-engine');
+          const remapResult = smartRemapUserLinks(linkSnapshots, membersToInsert);
+          for (const m of remapResult.matches) {
+            const { error: relinkErr } = await admin
+              .from('users')
+              .update({
+                linked_member_id: m.matchedMemberId,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', m.userId);
+
+            if (!relinkErr) {
+              relinkedCount++;
+            }
+          }
+        } catch (remapErr) {
+          console.error('Lỗi khi thực hiện Smart Re-mapping:', remapErr);
+        }
+      }
     }
+
+    const relinkMsg = relinkedCount > 0
+      ? ` Tự động bảo tồn liên kết cho ${relinkedCount} tài khoản con cháu.`
+      : '';
 
     return NextResponse.json({
       success: true,
       importedCount: membersToInsert.length,
       spouseCount: spousesToInsert.length,
-      message: `Đã nhập thành công ${membersToInsert.length} thành viên vào CSDL gia phả.`,
+      relinkedUsersCount: relinkedCount,
+      message: `Đã nhập thành công ${membersToInsert.length} thành viên vào CSDL gia phả.${relinkMsg}`,
     });
   } catch (err: any) {
     return NextResponse.json(

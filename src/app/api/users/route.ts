@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { isValidUserRole } from '@/lib/admin/admin-engine';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { isValidUserRole, resolveUserRoleOnNodeLink } from '@/lib/admin/admin-engine';
 
 async function checkSuperAdminPermission(): Promise<boolean> {
   const supabase = createClient();
@@ -14,11 +15,13 @@ async function checkSuperAdminPermission(): Promise<boolean> {
     if (user.id === '00000000-0000-0000-0000-000000000001') {
       return true;
     }
-    const { data: profile } = await supabase
+    const admin = createAdminClient();
+    const db = admin || supabase;
+    const { data: profile } = await db
       .from('users')
       .select('user_role')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
     return profile?.user_role === 'super_admin';
   }
 
@@ -27,7 +30,7 @@ async function checkSuperAdminPermission(): Promise<boolean> {
     const devUserCookie = cookieStore.get('fat_dev_user');
     if (devUserCookie?.value) {
       try {
-        const parsed = JSON.parse(devUserCookie.value);
+        const parsed = JSON.parse(decodeURIComponent(devUserCookie.value));
         if (parsed.user_role === 'super_admin' || parsed.id === '00000000-0000-0000-0000-000000000001') {
           return true;
         }
@@ -50,8 +53,9 @@ export async function GET() {
       );
     }
 
-    const supabase = createClient();
-    const { data: usersData, error: usersErr } = await supabase
+    const admin = createAdminClient();
+    const supabase = admin || createClient();
+    const { data: usersData } = await supabase
       .from('users')
       .select('*')
       .order('created_at', { ascending: false });
@@ -59,7 +63,7 @@ export async function GET() {
     // Fetch members to attach linked member info
     const { data: membersData } = await supabase
       .from('members')
-      .select('id, full_name, gender, generation_number, branch_code');
+      .select('id, full_name, gender, generation_level, branch_name');
 
     const memberMap = new Map<string, any>();
     if (Array.isArray(membersData)) {
@@ -69,17 +73,12 @@ export async function GET() {
     }
 
     const cookieStore = cookies();
-    const devUsersStr = cookieStore.get('fat_dev_users')?.value;
-    let devUsers: any[] | null = null;
-    if (devUsersStr) {
-      try {
-        devUsers = JSON.parse(devUsersStr);
-      } catch {
-        // ignore
-      }
+    // Dọn sạch cookie rác fat_dev_users nếu còn lưu trên trình duyệt
+    if (cookieStore.has('fat_dev_users')) {
+      cookieStore.delete('fat_dev_users');
     }
 
-    let finalUsers = devUsers || (Array.isArray(usersData) && usersData.length > 0 ? usersData : []);
+    let finalUsers = Array.isArray(usersData) && usersData.length > 0 ? usersData : [];
 
     // If still empty in dev, provide seed admin user so UI is always interactive
     if (finalUsers.length === 0) {
@@ -140,7 +139,8 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const supabase = createClient();
+    const admin = createAdminClient();
+    const supabase = admin || createClient();
 
     // Check conflict if linking to a member node
     if (linked_member_id) {
@@ -161,43 +161,46 @@ export async function PATCH(request: Request) {
       }
     }
 
+    // Lấy thông tin user hiện tại để tự động chuyển vai trò nếu chưa truyền vai trò rõ ràng
+    const { data: targetUser } = await supabase
+      .from('users')
+      .select('id, user_role, linked_member_id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    const currentRole = (targetUser?.user_role || 'viewer') as any;
+
     const updatePayload: Record<string, any> = {
       updated_at: new Date().toISOString(),
     };
-    if (user_role !== undefined) updatePayload.user_role = user_role;
-    if (linked_member_id !== undefined) updatePayload.linked_member_id = linked_member_id;
-
-    try {
-      await supabase.from('users').update(updatePayload).eq('id', userId);
-    } catch (dbErr) {
-      console.warn('DB update failed, using cookie fallback:', dbErr);
+    if (user_role !== undefined) {
+      updatePayload.user_role = user_role;
+    } else if (linked_member_id !== undefined) {
+      updatePayload.user_role = resolveUserRoleOnNodeLink(currentRole, linked_member_id);
     }
 
-    // Persist dev cookie
+    if (linked_member_id !== undefined) {
+      updatePayload.linked_member_id = linked_member_id;
+    }
+
+    const { error: updateErr } = await supabase
+      .from('users')
+      .update(updatePayload)
+      .eq('id', userId);
+
+    if (updateErr) {
+      console.error('DB update failed:', updateErr);
+      return NextResponse.json(
+        { error: `Lỗi cập nhật CSDL: ${updateErr.message}` },
+        { status: 500 }
+      );
+    }
+
+    // Dọn dẹp cookie rác fat_dev_users nếu còn tồn tại
     const cookieStore = cookies();
-    const devUsersStr = cookieStore.get('fat_dev_users')?.value;
-    let devUsers: any[] = [];
-    if (devUsersStr) {
-      try {
-        devUsers = JSON.parse(devUsersStr);
-      } catch {
-        // ignore
-      }
+    if (cookieStore.has('fat_dev_users')) {
+      cookieStore.delete('fat_dev_users');
     }
-
-    const userIndex = devUsers.findIndex((u) => u.id === userId);
-    if (userIndex >= 0) {
-      devUsers[userIndex] = { ...devUsers[userIndex], ...updatePayload };
-    } else {
-      devUsers.push({ id: userId, ...updatePayload });
-    }
-
-    cookieStore.set('fat_dev_users', JSON.stringify(devUsers), {
-      path: '/',
-      sameSite: 'lax',
-      httpOnly: false,
-      maxAge: 60 * 60 * 24 * 30,
-    });
 
     return NextResponse.json({
       success: true,

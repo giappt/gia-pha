@@ -281,6 +281,18 @@ export default function ExcelImportPage() {
                 </label>
               </div>
 
+            {importMode === 'clean' && (
+              <div
+                id="clean-mode-warning-callout"
+                className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs flex items-start gap-2.5"
+              >
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <strong className="font-bold">Lưu ý an toàn:</strong> Chế độ làm mới sẽ xóa trắng dữ liệu cây cũ. Hệ thống sẽ tự động đối chiếu thông tin (Họ tên + Năm sinh) để bảo tồn liên kết cho tài khoản người dùng. Tài khoản bị thay đổi thông tin trong file mới sẽ cần gán lại tại <em>Quản Lý Tài Khoản</em>.
+                </div>
+              </div>
+            )}
+
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
                   type="button"

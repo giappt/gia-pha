@@ -5,6 +5,7 @@ import Navbar from '@/components/navbar/Navbar';
 import AppFooter from '@/components/layout/AppFooter';
 import MobileBottomNav from '@/components/navigation/MobileBottomNav';
 import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister';
+import RoleImpersonationBanner from '@/components/admin/RoleImpersonationBanner';
 import { createClient } from '@/lib/supabase/server';
 import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 import { cookies } from 'next/headers';
@@ -130,6 +131,7 @@ export default async function RootLayout({
       </head>
       <body className="antialiased min-h-screen flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900">
         <ServiceWorkerRegister />
+        <RoleImpersonationBanner />
         <Navbar
           isGuest={isGuest}
           enablePublicTree={enablePublicTree}

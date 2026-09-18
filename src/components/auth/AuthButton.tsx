@@ -254,9 +254,7 @@ export default function AuthButton({
 
   if (!user) {
     // Khi đang ở màn Login Gate, không hiển thị nút đăng nhập trên Header Navbar để tránh trùng lặp với Card chính giữa
-    if (pathname === '/login-gate') {
-      return null;
-    }
+    if (pathname === '/login-gate') return null;
 
     return (
       <div className="flex items-center gap-2">
