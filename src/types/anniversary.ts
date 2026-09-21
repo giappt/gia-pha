@@ -37,11 +37,16 @@ export interface AnniversaryDayGroup {
   members: AnniversaryMemberItem[];
 }
 
+import { KinshipRegion, CustomKinshipDictionary } from './kinship';
+
 export interface AnniversaryOptions {
   daysAhead?: number;
   referenceDate?: Date;
   viewerMemberId?: string;
   branchFilter?: string;
+  region?: KinshipRegion;
+  customDictionary?: CustomKinshipDictionary | null;
+  spouseMap?: Map<string, string[]>;
 }
 
 export interface PushSubscribePayload {

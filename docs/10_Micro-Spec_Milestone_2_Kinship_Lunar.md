@@ -295,7 +295,71 @@ sequenceDiagram
   - API `/api/kinship` truy vấn đồng thời bảng `members` và `spouse_relations`.
   - Client `/kinship` nạp `spouse_relations` vào bộ nhớ in-memory để duy trì tốc độ tra cứu tức thì < 1ms.
 
+### 5.5. Kiến Trúc Chuẩn Single Source of Truth (SSOT) & Đồng Bộ Quy Ước Xưng Hô Tuyệt Đối
+
+- **5.5.1. Quy Chuẩn Hóa Preset Dictionary (Làm Sạch Dấu Ngoặc & Gạch Chéo):**
+  - Toàn bộ 32 quy tắc mẫu trong `regional-dictionaries.ts` (`DEFAULT_NORTH_RULES`, `DEFAULT_CENTRAL_RULES`, `DEFAULT_SOUTH_RULES`) bắt buộc phải được làm sạch $100\%$:
+    - Các trường `termSenior` và `termJunior` **chỉ chứa duy nhất từ xưng hô nguyên bản (Pure Term)** dùng để xưng hô trực tiếp (ví dụ: `"Chị dâu"`, `"Chú"`, `"Bác rể"`, `"Em"`).
+    - Tuyệt đối loại bỏ các dấu ngoặc đơn giải thích hoặc gạch chéo phân vân khỏi giá trị dữ liệu (như `'Chị dâu (Chị)'`, `'Em (Chú / Cô)'`, `'Bác rể (Bác trai)'`). Toàn bộ thông tin giải nghĩa này được chuyển sang trường `note` và `context`.
+- **5.5.2. Cơ Chế Tra Cứu SSOT Phân Tầng Tập Trung (`getTermFromSSOT`):**
+  - Thay thế toàn bộ các nhánh chuỗi tiếng Việt hardcode phân tán trong các hàm phân giải (`resolveInLawPair`, `resolveSameGeneration`, `resolveSeniorGeneration`, `resolveJuniorGeneration`) bằng một hàm tra cứu SSOT duy nhất:
+    ```typescript
+    getTermFromSSOT(ruleId: string, field: 'termSenior' | 'termJunior', region: KinshipRegion, customDict?: CustomKinshipDictionary | null): string
+    ```
+  - **Thứ tự ưu tiên bất biến:**
+    1. *Ưu tiên 1:* Nếu có cấu hình tùy biến từ Admin tại `customDict[ruleId][field]` $\rightarrow$ Lấy giá trị tùy biến.
+    2. *Ưu tiên 2:* Nếu chưa tùy biến $\rightarrow$ Lấy trực tiếp từ bộ Preset của miền tương ứng `getRegionalPresetDictionary(region).find(r => r.id === ruleId)[field]`.
+    3. Triệt tiêu $100\%$ mọi chuỗi hardcode fallback tự chế trong mã nguồn.
+- **5.5.3. Tái Cấu Trúc Logic So Sánh Thứ Bậc Anh Chị Em Ruột (`compareSeniority`):**
+  - Phân định rạch ròi 2 phạm vi:
+    1. *Anh chị em ruột (cùng `father_id` hoặc cùng `mother_id`):* Thứ bậc để xác định Bác gái vs Cô **100% căn cứ vào thứ tự sinh `birth_order` và năm sinh**. Cờ Trưởng nam (`is_senior: true`) của con trai lớn nhất chỉ có ý nghĩa phụng sự gia đình, tuyệt đối không được làm đảo lộn thứ bậc chị gái sinh trước thành "em gái".
+    2. *Họ hàng phân nhánh (con chú con bác):* Cờ `is_senior_branch` (Chi Trưởng) chỉ phát huy tác dụng khi so sánh giữa 2 nhánh con dưới LCA.
+  - Trên giao diện `src/app/kinship/page.tsx`: Xóa bỏ dòng gán nhầm `is_senior` (con trưởng) sang `is_senior_branch` (chi trưởng) tại dòng 211.
+  - Nhận diện chuẩn xác: Bà Phạm Thị Chỉ (`birth_order: 2`) là **Chị ruột / Bác gái**, do đó chồng là Tạ Duy Hưng được phân giải chính xác thành **Bác rể** của Phạm Tiến Giáp.
+- **5.5.4. Hợp Nhất Màn Hình Quản Trị Cài Đặt (Admin Consolidation):**
+  - Xóa bỏ/chuyển hướng hoàn toàn route `http://localhost:3000/admin/settings` sang `http://localhost:3000/admin/kinship` để triệt tiêu tình trạng 2 màn hình cài đặt song song gây nhầm lẫn.
+  - Nút liên kết `(Cài đặt ⚙)` tại trang tra cứu `/kinship` chuyển liên kết trỏ thẳng tới `/admin/kinship`.
+  - Cập nhật test suite liên quan (`tests/branch-engine.test.ts`) để bảo đảm kiểm chứng Tầng 2 luôn xanh.
+
+- **5.6. Đồng Bộ SSOT Cho Lịch Giỗ & Khắc Phục Đồ Thị Trực Hệ Dọc:**
+  - **5.6.1. Đồng Bộ SSOT Toàn Diện Cho Lịch Giỗ (`/anniversaries`):**
+    - `getUpcomingAnniversaries` trong `anniversary-engine.ts` mở rộng `AnniversaryOptions` nhận `region: KinshipRegion` và `customDictionary?: CustomKinshipDictionary | null`.
+    - Khi tính toán `resolveKinshipTerms(lca, viewerMember, targetMember, region, customDictionary)`, bắt buộc truyền đầy đủ `region` và `customDictionary` đã cấu hình từ `clan_settings`.
+    - Đảm bảo khi Admin tùy biến danh xưng tại `/admin/kinship` (hoặc chuyển đổi vùng miền sang Miền Trung / Miền Nam), trang Lịch Giỗ `/anniversaries` phản ánh tức thì $100\%$ danh xưng tùy biến cho người dùng đã liên kết.
+  - **5.6.2. Sửa Triệt Để Cờ `isSpouse` & Nhịp Nối Đồ Thị Trực Hệ Dọc (`/kinship`):**
+    - Trong `src/lib/kinship-engine/lca-finder.ts`:
+      - Khi B là Dâu/Rể (`in_law` qua B): `nodeB` (người phối ngẫu ngoài họ) được gán `isSpouse: true`. Người có huyết thống trong họ (`bridgeMember` / `nodeSB`) bắt buộc giữ `isSpouse: false`, bổ sung cờ `isSpouseBridge: true` nếu cần.
+      - Khi A là Dâu/Rể (`in_law` qua A): `nodeA` (người phối ngẫu ngoài họ) được gán `isSpouse: true`. Người có huyết thống trong họ (`bridgeMember` / `nodeSA`) bắt buộc giữ `isSpouse: false`, bổ sung cờ `isSpouseBridge: true`.
+    - Trong `src/app/kinship/page.tsx`:
+      - Logic nhịp nối trong `directLineageNodes`: Cạnh nối dọc chỉ hiển thị `═(Hôn phối)═` khi nối trực tiếp giữa thành viên trong họ (`isSpouse: false`) và người phối ngẫu của họ (`isSpouse: true`). Cạnh nối giữa Cha/Mẹ và Con luôn luôn là trục huyết thống thẳng đứng nét liền màu xanh ngọc bích `w-0.5 h-7 bg-emerald-600`.
+      - Huy hiệu `💍 Hôn phối` chỉ hiển thị duy nhất trên thẻ của người phối ngẫu ngoài họ (`isSpouse: true`), tuyệt đối không hiển thị trên thẻ của con cháu mang họ nội.
+
+- **5.7. Chuẩn Hóa Thứ Bậc Sinh (Birth Order) & Loại Bỏ Nhãn Chi Thứ Thừa Thãi Trên Sơ Đồ Cây:**
+  - **5.7.1. Bổ sung trường `birthOrder` vào `KinshipPathNode`:**
+    - Trong `src/types/kinship.ts`: Mở rộng interface `KinshipPathNode` bổ sung `birthOrder?: number | null;`.
+    - Trong `src/lib/kinship-engine/lca-finder.ts`:
+      - Hàm `buildPathNodes(lineage: Member[])`: Truyền `birthOrder: m.birth_order ?? null`.
+      - Các khối cầu nối hôn phối (`bridgeA`, `bridgeB`, `coInLaw`): Truyền `birthOrder: member.birth_order ?? null` cho các node tương ứng (`nodeA`, `nodeB`, `nodeSA`, `nodeSB`).
+  - **5.7.2. Quy tắc định dạng thứ bậc sinh chuẩn văn hóa Việt Nam:**
+    - Thứ tự sinh trong gia đình được định dạng bằng helper chuẩn:
+      - `birth_order === 1`: `"Con cả"` (hoặc `"Trưởng nam"` nếu kết hợp giới tính nam, hoặc thống nhất dùng `"Con cả"`).
+      - `birth_order === 2`: `"Con thứ 2"`.
+      - `birth_order === 3`: `"Con thứ 3"`.
+      - `birth_order === n` ($n > 1$): `"Con thứ " + n`.
+      - `birth_order === null | undefined | 0`: Không hiển thị.
+    - **Loại trừ Dâu / Rể ngoại tộc:** Người phối ngẫu ngoài họ (`isSpouse: true`) kết hôn vào dòng họ tuyệt đối KHÔNG hiển thị thứ tự sinh của nhánh gia đình đối tác (chỉ giữ nguyên badge `💍 Hôn phối`).
+  - **5.7.3. Loại bỏ hoàn toàn nhãn `Chi Trưởng` / `Chi Thứ` trên thẻ sơ đồ cây:**
+    - Xóa bỏ triệt để đoạn text `· {node.isSeniorBranch ? 'Chi Trưởng' : 'Chi Thứ'}` trên cả Sơ đồ Dòng Trực Hệ Dọc (`#direct-lineage-tree`) và Sơ đồ Cây Chữ V (`LineageNodeCard` - `#inverted-v-tree`).
+    - Thay thế bằng thông tin thứ bậc sinh:
+      ```tsx
+      {!node.isSpouse && node.birthOrder && node.birthOrder > 0 && (
+        <span>· {node.birthOrder === 1 ? 'Con cả' : `Con thứ ${node.birthOrder}`}</span>
+      )}
+      ```
+    - Ý nghĩa gia phả: Khi nhìn vào sơ đồ cây phân nhánh, người xem nhận biết ngay lập tức cha/mẹ của hai bên đứng thứ mấy trong gia đình (`Con cả` vs `Con thứ 2` vs `Con thứ 3`...), giải thích trực quan và rõ ràng tại sao nhánh này là cành Bác (trên) và nhánh kia là cành Chú (dưới) khi so sánh cùng thế hệ.
+
 ---
+
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
 
@@ -351,6 +415,20 @@ sequenceDiagram
 | **TC34** | Quan Hệ Bác Dâu, Thím, Dượng, Mợ | Unit / API | Chọn vợ của Bác trai, vợ của Chú, chồng của Cô/Dì | Chạy tra cứu vai vế | Trả về chuẩn xác "Bác dâu" (Bác), "Thím", "Dượng", "Mợ" | Happy Path |
 | **TC35** | Quan Hệ Chị Em Dâu & Đồng Hao | Unit / API | Chọn vợ của 2 anh em trai ruột | Chạy tra cứu vai vế | Nhận diện `relationshipType = 'co_in_law'`, xưng "Chị dâu" - "Em dâu" | Happy Path |
 | **TC36** | Cây Phả Hệ Trực Quan Nối Cầu Hôn Nhân | UI / Visual | Tra cứu cặp có quan hệ Dâu/Rể (Hà & Uyên) | Quan sát sơ đồ chuỗi phả hệ | Hiển thị đường nối huyết thống $\rightarrow$ và đường nối đôi hôn nhân $\xlongequal{\text{Vợ Chồng}}$ mạch lạc | Happy Path |
+| **TC37** | Dọn Sạch 100% Ký Tự Ngoặc Đơn Khỏi Preset Dictionary | Unit Test | Quét 100% quy tắc trong `getRegionalPresetDictionary` (Bắc, Trung, Nam) | Kiểm tra `termSenior` và `termJunior` | Không chứa bất kỳ dấu ngoặc đơn `(`, `)` hoặc gạch chéo `/` nào; 100% là danh xưng nguyên bản | Happy Path |
+| **TC38** | Tra Cứu SSOT Tùy Biến Đè Chuẩn Xác Từng Ký Tự | Unit Test | Mock `customDictionary['uncle_senior_husband'] = { termSenior: 'Bác rể quý', termJunior: 'Cháu ngoan' }` | Chạy `resolveKinshipTerms` | Trả về chính xác `termAtoB = 'Bác rể quý'`, `termBtoA = 'Cháu ngoan'`, không còn hardcode | Happy Path |
+| **TC39** | So Sánh Thứ Bậc Anh Em Ruột Ưu Tiên Thứ Tự Sinh (Chị Gái vs Trưởng Nam) | Unit Test | Chọn Phạm Thị Chỉ (`birth_order: 2`, `is_senior: false`) và Phạm Văn Khương (`birth_order: 3`, `is_senior: true`) | Chạy `compareSeniority(Chỉ, Khương)` | Trả về `true` (Chỉ sinh trước là Chị ruột / vai Bác), cờ `is_senior` không làm đảo ngược | Happy Path |
+| **TC40** | Phán Định Chuẩn Xác Bác Rể Cho Cặp Tạ Duy Hưng & Phạm Tiến Giáp | Unit / Integration | Tra cứu cặp Tạ Duy Hưng (chồng Phạm Thị Chỉ) và Phạm Tiến Giáp (con trai Phạm Văn Khương) | Chạy `findLowestCommonAncestor` & `resolveKinshipTerms` | Hưng gọi Giáp là "Cháu", Giáp gọi Hưng là **"Bác rể"**, loại bỏ hoàn toàn lỗi "Chú dượng" | Happy Path |
+| **TC41** | Phán Định Chuẩn Xác Chị Dâu Gọi Em Trai Chồng Là Chú Theo SSOT | Unit / Integration | Tra cứu cặp Chu Thị Hà (vợ anh Khương) và Phạm Văn Bẩy (em trai chồng, Nam) | Chạy `resolveKinshipTerms` | Hà gọi Bẩy là **"Chú"**, Bẩy gọi Hà là **"Chị dâu"**, khớp 100% với định nghĩa SSOT | Happy Path |
+| **TC42** | Hợp Nhất Màn Hình Cài Đặt & Chuyển Hướng /admin/settings | Integration / UI | Kiểm tra liên kết nút `(Cài đặt ⚙)` tại `/kinship` và điều hướng `/admin/settings` | Bấm nút hoặc truy cập URL | Nút mở đúng `/admin/kinship`; route `/admin/settings` tự động redirect sang `/admin/kinship` | Happy Path |
+| **TC43** | Sửa Cờ isSpouse Cho Người Phối Ngẫu Ngoài Dòng Họ Trong LCA | Unit Test | Tra cứu cặp Uyên (A) & Liễu (B - Vợ Chiến) hoặc Chiến (A) & Hiến (B - Vợ Tường) | Chạy `findLowestCommonAncestor` | `nodeB` (Hiến/Liễu) có `isSpouse: true`; người mang huyết thống trong họ (`bridgeMember` Tường/Chiến) có `isSpouse: false` | Happy Path |
+| **TC44** | Sơ Đồ Trực Hệ Dọc Không Chèn Hôn Phối Giữa Cha Và Con Ruột | UI / E2E | Tra cứu Chiến (Đời 1) và Hiến (Đời 4 - Vợ Tường) | Quan sát trục dọc `#direct-lineage-tree` | Nhịp nối giữa Chức (Đời 3) và Tường (Đời 4) là trục huyết thống màu xanh ngọc bích; chỉ có nhịp giữa Tường và Hiến là `═(Hôn phối)═` | Happy Path |
+| **TC45** | Badge Hôn Phối Chỉ Hiển Thị Trên Người Phối Ngẫu Ngoài Họ | UI / E2E | Tra cứu Chiến và Hiến | Quan sát thẻ thành viên trên sơ đồ | Chỉ thẻ Nguyễn Thị Hiến có badge `💍 Hôn phối`; thẻ Phạm Khắc Tường không có badge này | Happy Path |
+| **TC46** | Lịch Giỗ Đồng Bộ Vùng Miền & Custom Dictionary Từ Clan Settings | Unit / Integration | Cấu hình `clan_settings` là Miền Trung và tùy biến danh xưng `uncle_junior = { termSenior: 'Chú quý' }` | Chạy `getUpcomingAnniversaries` với user đã liên kết | Hiển thị đúng danh xưng theo vùng miền và phản ánh tức thì `Chú quý của bạn` | Happy Path |
+| **TC47** | KinshipPathNode Chứa Thuộc Tính birthOrder Từ Member | Unit Test | Tạo 2 thành viên A (`birth_order: 1`) và B (`birth_order: 3`) dưới LCA | Chạy `findLowestCommonAncestor(A, B)` | Các node trong `pathA` và `pathB` mang đúng `birthOrder: 1` và `birthOrder: 3` | Happy Path |
+| **TC48** | Định Dạng Thứ Bậc Sinh Chuẩn Văn Hóa Việt Nam | Unit Test | Kiểm tra hàm format thứ bậc sinh với các giá trị 1, 2, 3, 5, null/0 | Gọi hàm format | Trả về `"Con cả"` (cho 1), `"Con thứ 2"` (cho 2), `"Con thứ 3"` (cho 3), `"Con thứ 5"` (cho 5), `null` (cho null/0) | Happy Path |
+| **TC49** | Người Phối Ngẫu Ngoại Tộc Không Hiển Thị Thứ Bậc Sinh Nhánh Họ | Unit Test | Tra cứu cặp Dâu/Rể ngoại tộc (như Đào Thị Liễu `isSpouse: true` hoặc Bùi Trường Minh) | Kiểm tra node Dâu/Rể trong path | Node có `isSpouse: true` không được format hiển thị danh vị Con cả/Con thứ của nhánh đối tác | Happy Path |
+| **TC50** | Loại Bỏ Hoàn Toàn Nhãn Chi Thứ / Chi Trưởng Khỏi Thẻ Sơ Đồ Cây | UI / E2E | Tra cứu quan hệ giữa 2 người bất kỳ | Kiểm tra DOM thẻ node trên `#direct-lineage-tree` và `#inverted-v-tree` | Không còn bất kỳ đoạn text `· Chi Thứ` hay `· Chi Trưởng` nào xuất hiện trên giao diện thẻ | Happy Path |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu (Acceptance Criteria)
 - [x] **AC1:** Thuật toán `findLowestCommonAncestor` tìm chính xác Gốc Gần Nhất và khoảng cách thế hệ giữa 2 người bất kỳ trên đồ thị phả hệ.
@@ -380,14 +458,28 @@ sequenceDiagram
 - [x] **AC26:** Mở rộng bộ từ điển danh xưng chuẩn lên 32 mối quan hệ thân tộc toàn diện bao gồm đầy đủ bên Nội, bên Ngoại, Bác dâu, Bác rể, Thím, Cậu, Mợ, Dì, Dượng và Dâu / Rể các thế hệ.
 - [x] **AC27:** Màn hình `/admin/settings` bổ sung thanh chip lọc phân nhóm (Tabs/Filter Chips) và ô tìm kiếm nhanh giúp quản trị viên tra cứu và chỉnh sửa tức thì trong danh mục 32 quan hệ.
 - [x] **AC28:** Tích hợp đầy đủ các quy ước Dâu / Rể / Thím / Mợ / Dượng vào `custom_kinship_dictionary` và đồng bộ với lõi Kinship Engine.
-- [ ] **AC29:** Thuật toán tự động nhận diện quan hệ Vợ - Chồng từ dữ liệu `spouse_relations` và trả về danh xưng "Vợ" - "Chồng" chính xác, triệt tiêu lỗi "Người ngoài họ".
-- [ ] **AC30:** Thuật toán phân giải chuẩn xác quan hệ Bố/Mẹ chồng - Con dâu và Bố/Mẹ vợ - Con rể thông qua cầu nối phối ngẫu.
-- [ ] **AC31:** Thuật toán phân giải chuẩn xác quan hệ Chị dâu - Em chồng và Em dâu - Anh/Chị chồng.
-- [ ] **AC32:** Thuật toán phân giải chuẩn xác quan hệ Anh rể - Em vợ và Em rể - Anh/Chị vợ.
-- [ ] **AC33:** Thuật toán phân giải chuẩn xác quan hệ Bác dâu, Thím, Dượng, Mợ cho các thế hệ trên.
-- [ ] **AC34:** Thuật toán phân giải chuẩn xác quan hệ Chị em dâu và Anh em đồng hao (cọc chèo) giữa 2 người dâu/rể.
-- [ ] **AC35:** Sơ đồ phả hệ trực quan hiển thị đường nối cầu hôn nhân nét đôi `═(Hôn phối)═` nối nhịp giữa các mắt xích.
-- [ ] **AC36:** Trang `/kinship` và API `/api/kinship` nạp đồng bộ `spouse_relations`, đảm bảo tính toán in-memory tức thì 0ms trên Client.
+- [x] **AC29:** Thuật toán tự động nhận diện quan hệ Vợ - Chồng từ dữ liệu `spouse_relations` và trả về danh xưng "Vợ" - "Chồng" chính xác, triệt tiêu lỗi "Người ngoài họ".
+- [x] **AC30:** Thuật toán phân giải chuẩn xác quan hệ Bố/Mẹ chồng - Con dâu và Bố/Mẹ vợ - Con rể thông qua cầu nối phối ngẫu.
+- [x] **AC31:** Thuật toán phân giải chuẩn xác quan hệ Chị dâu - Em chồng và Em dâu - Anh/Chị chồng.
+- [x] **AC32:** Thuật toán phân giải chuẩn xác quan hệ Anh rể - Em vợ và Em rể - Anh/Chị vợ.
+- [x] **AC33:** Thuật toán phân giải chuẩn xác quan hệ Bác dâu, Thím, Dượng, Mợ cho các thế hệ trên.
+- [x] **AC34:** Thuật toán phân giải chuẩn xác quan hệ Chị em dâu và Anh em đồng hao (cọc chèo) giữa 2 người dâu/rể.
+- [x] **AC35:** Sơ đồ phả hệ trực quan hiển thị đường nối cầu hôn nhân nét đôi `═(Hôn phối)═` nối nhịp giữa các mắt xích.
+- [x] **AC36:** Trang `/kinship` và API `/api/kinship` nạp đồng bộ `spouse_relations`, đảm bảo tính toán in-memory tức thì 0ms trên Client.
+- [x] **AC37:** 100% các giá trị `termSenior` và `termJunior` trong các bộ Presets (Bắc, Trung, Nam) được dọn sạch, không chứa dấu ngoặc đơn hoặc gạch chéo.
+- [x] **AC38:** Cơ chế tra cứu SSOT `getTermFromSSOT` được áp dụng cho toàn bộ các hàm phân giải, loại bỏ hoàn toàn các chuỗi hardcode fallback rải rác.
+- [x] **AC39:** Thuật toán `compareSeniority` phân định đúng thứ bậc giữa anh chị em ruột theo `birth_order` và năm sinh, không để cờ `is_senior` làm đảo lộn vai vế chị gái thành em gái.
+- [x] **AC40:** Phán định chuẩn xác Tạ Duy Hưng là **Bác rể** của Phạm Tiến Giáp (thay vì Chú dượng).
+- [x] **AC41:** Phán định chuẩn xác Chu Thị Hà gọi Phạm Văn Bẩy (em trai chồng) là **Chú** và Bẩy gọi Hà là **Chị dâu** theo đúng quy chuẩn SSOT.
+- [x] **AC42:** Màn hình `/admin/settings` được chuyển hướng hoàn toàn về `/admin/kinship`, nút `(Cài đặt ⚙)` tại `/kinship` liên kết chính xác tới `/admin/kinship`.
+- [x] **AC43:** Thuật toán `findLowestCommonAncestor` gán đúng cờ `isSpouse: true` cho người phối ngẫu ngoài họ (`nodeB` hoặc `nodeA`), bảo toàn `isSpouse: false` cho thành viên huyết thống trong họ (`bridgeMember`).
+- [x] **AC44:** Sơ đồ Dòng Trực Hệ Dọc `#direct-lineage-tree` chỉ vẽ nhịp `═(Hôn phối)═` giữa người trong họ và người phối ngẫu của họ; cạnh nối giữa Cha/Mẹ và Con luôn là trục đứng nét liền huyết thống màu xanh ngọc bích.
+- [x] **AC45:** Badge `💍 Hôn phối` chỉ hiển thị trên thẻ của người phối ngẫu ngoài họ (`isSpouse: true`), không hiển thị trên thẻ của con cháu mang họ nội.
+- [x] **AC46:** Lịch Giỗ `/anniversaries` nạp và áp dụng đúng 100% `region` và `customDictionary` từ cấu hình dòng họ (`clan_settings`), phản ánh chuẩn xác danh xưng tùy biến SSOT khi user đã liên kết.
+- [x] **AC47:** Interface `KinshipPathNode` được bổ sung thuộc tính `birthOrder?: number | null;` và được `buildPathNodes` / LCA nạp đầy đủ từ dữ liệu thành viên.
+- [x] **AC48:** Thẻ thành viên trên cả Sơ đồ Dòng Trực Hệ Dọc (`#direct-lineage-tree`) và Sơ đồ Cây Chữ V (`LineageNodeCard`) hiển thị chuẩn xác `Con cả`, `Con thứ 2`, `Con thứ 3`... dựa trên thứ tự sinh `birth_order`.
+- [x] **AC49:** Loại bỏ hoàn toàn nhãn `· Chi Thứ` và `· Chi Trưởng` trên tất cả các thẻ node của sơ đồ cây trực quan, trả lại giao diện thanh thoát và sạch sẽ.
+- [x] **AC50:** Thẻ người phối ngẫu ngoài tộc (`isSpouse: true`, mang badge `💍 Hôn phối`) không hiển thị nhãn "Con cả / Con thứ N" của nhánh gia đình đối tác.
 
 ### 7.3. Human Visual UAT Matrix (Nghiệm Thu Thị Giác Dành Cho User)
 
@@ -395,8 +487,15 @@ sequenceDiagram
 | :--- | :--- | :--- | :--- |
 | **UAT_INLAW_01** | Nghiệm thu cặp Vợ - Chồng | Chọn `Phạm Văn Chiến` & `Đào Thị Liễu` | Thẻ danh xưng hiện: Chiến gọi Liễu là **"Vợ"**, Liễu gọi Chiến là **"Chồng"**. Không còn nhãn "Người ngoài họ". |
 | **UAT_INLAW_02** | Nghiệm thu Bố chồng - Con dâu | Chọn `Chu Thị Hà` & `Phạm Văn Uyên` | Thẻ danh xưng hiện: Hà gọi Uyên là **"Bố"** (Bố chồng), Uyên gọi Hà là **"Con"** (Con dâu). Sơ đồ chuỗi phả hệ hiển thị rõ đường đi qua người chồng. |
-| **UAT_INLAW_03** | Nghiệm thu Chị dâu - Em chồng | Chọn `Chu Thị Hà` & `Phạm Văn Bẩy` | Thẻ danh xưng hiện: Bẩy gọi Hà là **"Chị dâu"** (Chị), Hà gọi Bẩy là **"Chú"** (hoặc Em). |
+| **UAT_INLAW_03** | Nghiệm thu Chị dâu - Em chồng | Chọn `Chu Thị Hà` & `Phạm Văn Bẩy` | Thẻ danh xưng hiện: Bẩy gọi Hà là **"Chị dâu"**, Hà gọi Bẩy là **"Chú"**. Khớp 100% với SSOT. |
 | **UAT_INLAW_04** | Nghiệm thu Đảo vai dâu rể | Bấm nút tròn Đảo vai ⇄ | Các danh xưng dâu rể hoán đổi vị trí chuẩn xác tức thì. |
+| **UAT_SSOT_01** | Nghiệm thu Bác rể (Hưng & Giáp) | Chọn `Tạ Duy Hưng` & `Phạm Tiến Giáp` | Thẻ danh xưng hiện: Giáp gọi Hưng là **"Bác rể"**, Hưng gọi Giáp là **"Cháu"**. Explanation giải thích rõ Chỉ là bác gái của Giáp. |
+| **UAT_SSOT_02** | Nghiệm thu Tùy biến từ `/admin/kinship` | Vào `/admin/kinship`, sửa quan hệ Bác rể thành "Bác rể quý" $\rightarrow$ Lưu | Mở lại `/kinship`, tra cứu Hưng & Giáp $\rightarrow$ Thẻ hiển thị ngay lập tức "Bác rể quý". |
+| **UAT_SSOT_03** | Nghiệm thu Nút Cài Đặt trên `/kinship` | Bấm nút `(Cài đặt ⚙)` cạnh tab vùng miền | Trình duyệt chuyển hướng thẳng tới `http://localhost:3000/admin/kinship`. |
+| **UAT_SSOT_04** | Nghiệm thu Chuyển hướng `/admin/settings` | Gõ trực tiếp `/admin/settings` vào thanh địa chỉ | Tự động chuyển hướng ngay sang `/admin/kinship`, không còn 2 màn hình cài đặt song song. |
+| **UAT_SSOT_05** | Nghiệm thu Sơ đồ Trực hệ dọc Chiến $\leftrightarrow$ Hiến | Chọn `Phạm Văn Chiến` & `Nguyễn Thị Hiến` | Trục nối giữa Chức (Đời 3) và Tường (Đời 4) là đường xanh ngọc bích nét liền. Chỉ có trục giữa Tường và Hiến là `═(Hôn phối)═`. Thẻ của Tường không có badge `💍 Hôn phối`, chỉ thẻ của Hiến có badge. |
+| **UAT_SSOT_06** | Nghiệm thu Lịch Giỗ SSOT Vùng miền & Tùy biến | Đổi vùng miền sang Miền Trung hoặc sửa tùy biến xưng hô tại `/admin/kinship` | Mở `/anniversaries` khi đã liên kết tài khoản $\rightarrow$ Danh xưng người mất phản ánh chuẩn xác danh xưng vùng miền/tùy biến. |
+| **UAT_SSOT_07** | Nghiệm thu Thứ bậc sinh "Con cả / Con thứ N" trên Cây Chữ V | Chọn `Bùi Trường Minh` & `Phạm Tiến Giáp` | Thẻ Khương và Cường hiển thị rõ thứ bậc sinh (`Con thứ ...`); thẻ Dung và Giáp hiển thị `Con cả`; thẻ Minh chỉ có badge `💍 Hôn phối` và năm sinh, KHÔNG CÒN chữ "Chi Thứ" hay "Chi Trưởng" nào. |
 
 ---
 
@@ -415,14 +514,26 @@ sequenceDiagram
 - [x] **RG11 (Toàn vẹn trục trực hệ và cây chữ V):** Cả Sơ đồ Trực hệ dọc và Cây Chữ V hiển thị mạch lạc, không vỡ layout và không phát sinh lỗi console runtime.
 - [x] **RG12 (Toàn vẹn Cài đặt Dòng họ & Tra cứu Vai vế):** Đổi tên dòng họ, lưu từ điển tùy biến, và tra cứu vai vế đồng bộ trơn tru, không lỗi TypeScript/build.
 - [x] **RG13 (Toàn vẹn 16 quan hệ ban đầu & Hệ thống lọc mới):** Giữ vững các kết quả kiểm thử hiện có của TC01–TC25, không vỡ layout và đạt 0 lỗi build.
-- [ ] **RG14 (Chống thoái lui 286 tests hiện có):** Toàn bộ 286 automated tests hiện có tiếp tục pass 100%, không bị ảnh hưởng bởi việc mở rộng quan hệ hôn phối.
-- [ ] **RG15 (Hiệu năng tính toán in-memory 0ms):** Thao tác đổi dropdown và tính toán vai vế giữ vững tốc độ < 1ms trên Client, không gây giật lag UI khi nạp thêm dữ liệu `spouse_relations`.
-- [ ] **RG16 (Compile & Typecheck sạch sẽ):** Lệnh `npm run typecheck` và `npm run build` đạt 0 lỗi.
+- [x] **RG14 (Chống thoái lui 286 tests hiện có):** Toàn bộ 286 automated tests hiện có tiếp tục pass 100%, không bị ảnh hưởng bởi việc mở rộng quan hệ hôn phối.
+- [x] **RG15 (Hiệu năng tính toán in-memory 0ms):** Thao tác đổi dropdown và tính toán vai vế giữ vững tốc độ < 1ms trên Client, không gây giật lag UI khi nạp thêm dữ liệu `spouse_relations`.
+- [x] **RG16 (Compile & Typecheck sạch sẽ):** Lệnh `npm run typecheck` và `npm run build` đạt 0 lỗi.
+- [x] **RG17 (Toàn vẹn 294 automated tests):** Toàn bộ 294 automated tests hiện có tiếp tục pass 100%, không bị ảnh hưởng bởi việc chuẩn hóa SSOT.
+- [x] **RG18 (Toàn vẹn cấu hình dòng họ):** Dữ liệu lưu tại `clan_settings.custom_kinship_dictionary` tiếp tục được nạp và lưu trơn tru qua API.
+- [x] **RG19 (Toàn vẹn phong tục 3 miền):** Danh xưng miền Trung và miền Nam tiếp tục được phân giải chính xác theo đúng preset sạch của từng miền.
+- [x] **RG20 (Compile & Build sạch sẽ):** `npm run typecheck` và `npm run build` tiếp tục đạt 0 lỗi sau khi chuyển hướng `/admin/settings`.
+- [x] **RG21 (Toàn vẹn 303 automated tests):** Toàn bộ 303 automated tests hiện có tiếp tục pass 100%, không bị ảnh hưởng bởi việc sửa cờ `isSpouse`.
+- [x] **RG22 (Cây Chữ V dâu rể):** Tính năng Cây Chữ V Ngược tiếp tục hiển thị chính xác các cặp quan hệ dâu rể và đồng hao.
+- [x] **RG23 (Danh xưng Default lịch giỗ):** Khách vãng lai chưa liên kết node tiếp tục nhận danh xưng trang trọng theo thế hệ (Cụ / Ông / Bà).
+- [x] **RG24 (Compile & Build sạch sẽ):** Lệnh `npm run typecheck` và `npm run build` tiếp tục đạt 0 lỗi.
+- [x] **RG25 (Toàn vẹn 303 tests hiện có):** 100% 303 tests hiện có tiếp tục pass, không phát sinh bất kỳ regression nào.
+- [x] **RG26 (Tính đúng đắn thuật toán LCA):** Các hàm `compareSeniority`, `determineSeniorBranch`, `findLowestCommonAncestor` giữ nguyên logic phân định vai vế ngầm.
+- [x] **RG27 (Compile & Build sạch sẽ):** `npm.cmd run typecheck` và `npm.cmd run build` đạt 0 lỗi.
 
 ---
 
 ## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
 
 > "AI ơi, hãy đọc kỹ đặc tả `docs/10_Micro-Spec_Milestone_2_Kinship_Lunar.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn lõi thuật toán Kinship Engine, Lịch Âm, API Route và trang Tra Cứu Vai Vế `/kinship`. Thực thi Vòng lặp Kiểm thử 3 Tầng (Build, Unit Test, Browser Test) và chỉ được tick `[x]` khi có bằng chứng test Pass 100%."
+
 
 

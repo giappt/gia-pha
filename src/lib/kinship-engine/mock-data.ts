@@ -1,4 +1,4 @@
-import type { Member } from '@/types/database';
+import type { Member, SpouseRelation } from '@/types/database';
 
 /**
  * Bộ dữ liệu mẫu gia phả toàn diện 7 thế hệ (Đại Gia Tộc Họ Nguyễn)
@@ -617,3 +617,29 @@ export const MOCK_CLAN_MEMBERS: Member[] = [
     updated_at: new Date().toISOString(),
   },
 ];
+
+export const MOCK_SPOUSE_RELATIONS: SpouseRelation[] = [
+  // Cụ Bình & Bà Cả Huệ
+  {
+    id: 'sp-00000000-0000-0000-0000-000000000001',
+    member_a_id: '20000000-0000-0000-0000-000000000001', // Cụ Bình
+    member_b_id: '20000000-0000-0000-0000-000000000002', // Bà Huệ
+    marriage_order: 1,
+    marriage_status: 'married',
+    notes: 'Chính thất (Bà Cả)',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  // Cụ Bình & Bà Hai Cúc
+  {
+    id: 'sp-00000000-0000-0000-0000-000000000002',
+    member_a_id: '20000000-0000-0000-0000-000000000001', // Cụ Bình
+    member_b_id: '20000000-0000-0000-0000-000000000003', // Bà Cúc
+    marriage_order: 2,
+    marriage_status: 'married',
+    notes: 'Kế thất (Bà Hai)',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+

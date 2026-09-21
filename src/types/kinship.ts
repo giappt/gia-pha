@@ -8,7 +8,9 @@ export type RelationshipType =
   | 'direct_ancestor'
   | 'sibling'
   | 'cousin'
+  | 'spouse'
   | 'in_law'
+  | 'co_in_law'
   | 'unrelated';
 
 export type KinshipCategory =
@@ -43,10 +45,24 @@ export interface KinshipPathNode {
   name: string;
   relation: string;
   birthYear?: number | null;
+  birthOrder?: number | null;
   generationNumber?: number;
   isSeniorBranch?: boolean;
   isAdopted?: boolean;
   gender?: 'male' | 'female' | 'other';
+  isSpouse?: boolean;
+  isSpouseBridge?: boolean;
+}
+
+export interface SpouseBridge {
+  type: 'spouse' | 'in_law' | 'co_in_law';
+  spouseAId?: string; // Người phối ngẫu của A
+  spouseBId?: string; // Người phối ngẫu của B
+  bridgeMemberA?: KinshipPathNode;
+  bridgeMemberB?: KinshipPathNode;
+  bloodRelation?: RelationshipType;
+  inLawRoleA?: 'self' | 'spouse';
+  inLawRoleB?: 'self' | 'spouse';
 }
 
 export interface LcaResult {
@@ -60,6 +76,7 @@ export interface LcaResult {
   pathA: KinshipPathNode[];
   pathB: KinshipPathNode[];
   relationshipType: RelationshipType;
+  spouseBridge?: SpouseBridge;
 }
 
 export interface ComparisonFacts {
@@ -95,6 +112,7 @@ export interface KinshipResolution {
   proverbQuote?: string; // Lời tục ngữ / danh ngôn cổ phong
   comparisonFacts?: ComparisonFacts; // Bảng so sánh trực diện tương quan
   contextual?: KinshipContextualTerms; // Gợi ý xưng hô theo ngữ cảnh họ tộc vs đời thường
+  spouseBridge?: SpouseBridge;
 }
 
 export interface LunarDate {

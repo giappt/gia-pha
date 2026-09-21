@@ -206,6 +206,9 @@ export function getUpcomingAnniversaries(
     referenceDate = new Date(),
     viewerMemberId,
     branchFilter,
+    region = 'north',
+    customDictionary,
+    spouseMap,
   } = options;
 
   const maxGen = members.reduce((max, m) => Math.max(max, getMemberGen(m)), 1);
@@ -267,10 +270,10 @@ export function getUpcomingAnniversaries(
 
       if (viewerMember && viewerMember.id !== m.id) {
         try {
-          const lca = findLowestCommonAncestor(viewerMember.id, m.id, membersMap);
+          const lca = findLowestCommonAncestor(viewerMember.id, m.id, membersMap, spouseMap);
           if (lca.lcaNodeId) {
             const targetMember = membersMap.get(m.id)!;
-            const kinshipRes = resolveKinshipTerms(lca, viewerMember, targetMember, 'north');
+            const kinshipRes = resolveKinshipTerms(lca, viewerMember, targetMember, region, customDictionary);
             if (kinshipRes?.termAtoB) {
               relativeKinship = `${kinshipRes.termAtoB} của bạn`;
             }

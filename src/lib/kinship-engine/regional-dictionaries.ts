@@ -77,7 +77,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'I. Trực Hệ (Nội & Ngoại)',
     name: 'Cụ - Chắt',
     context: 'Trực hệ cách 3 thế hệ',
-    termSenior: 'Cụ ông / Cụ bà',
+    termSenior: 'Cụ',
     termJunior: 'Chắt',
     note: 'Bậc Cụ gọi Chắt, Chắt gọi Cụ',
   },
@@ -87,8 +87,8 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'I. Trực Hệ (Nội & Ngoại)',
     name: 'Kỵ tổ / Tiên tổ - Chút',
     context: 'Trực hệ cách ≥ 4 thế hệ',
-    termSenior: 'Kỵ tổ / Cụ tổ họ',
-    termJunior: 'Chút / Hậu duệ',
+    termSenior: 'Cụ tổ',
+    termJunior: 'Hậu duệ',
     note: 'Tổ tiên dòng họ gọi Hậu duệ',
   },
 
@@ -119,7 +119,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'II. Cùng Thế Hệ & Dâu / Rể',
     name: 'Anh/Chị họ (Nhánh Trưởng / Vai Bác)',
     context: 'Con nhánh Bác (Ưu tiên vai nhánh)',
-    termSenior: 'Anh họ (Chị họ)',
+    termSenior: 'Anh họ',
     termJunior: 'Em họ',
     note: 'Vai Bác luôn là Anh/Chị dù ít tuổi hơn',
   },
@@ -130,7 +130,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     name: 'Em họ (Nhánh Thứ / Vai Chú)',
     context: 'Con nhánh Chú',
     termSenior: 'Em họ',
-    termJunior: 'Anh họ (Chị họ)',
+    termJunior: 'Anh họ',
     note: 'Nhánh Chú gọi nhánh Bác là Anh/Chị',
   },
   {
@@ -139,9 +139,9 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'II. Cùng Thế Hệ & Dâu / Rể',
     name: 'Chị dâu (Vợ anh trai)',
     context: 'Vợ của anh trai trong gia đình',
-    termSenior: 'Chị dâu (Chị)',
-    termJunior: 'Em (Chú / Cô)',
-    note: 'Em chồng gọi Chị dâu, Chị dâu gọi Em/Chú/Cô',
+    termSenior: 'Chị dâu',
+    termJunior: 'Em',
+    note: 'Em chồng gọi Chị dâu, Chị dâu gọi Em',
   },
   {
     id: 'brother_in_law',
@@ -149,9 +149,9 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'II. Cùng Thế Hệ & Dâu / Rể',
     name: 'Anh rể (Chồng chị gái)',
     context: 'Chồng của chị gái trong gia đình',
-    termSenior: 'Anh rể (Anh)',
-    termJunior: 'Em (Dì / Cậu)',
-    note: 'Em vợ gọi Anh rể, Anh rể gọi Em/Dì/Cậu',
+    termSenior: 'Anh rể',
+    termJunior: 'Em',
+    note: 'Em vợ gọi Anh rể, Anh rể gọi Em',
   },
   {
     id: 'younger_sister_in_law',
@@ -160,7 +160,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     name: 'Em dâu (Vợ em trai)',
     context: 'Vợ của em trai trong gia đình',
     termSenior: 'Em dâu',
-    termJunior: 'Anh / Chị',
+    termJunior: 'Anh',
     note: 'Anh/Chị chồng gọi Em dâu',
   },
   {
@@ -170,7 +170,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     name: 'Em rể (Chồng em gái)',
     context: 'Chồng của em gái trong gia đình',
     termSenior: 'Em rể',
-    termJunior: 'Anh / Chị',
+    termJunior: 'Anh',
     note: 'Anh/Chị vợ gọi Em rể',
   },
 
@@ -189,9 +189,9 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     id: 'aunt_senior_wife',
     category: 'paternal_uncle_aunt',
     categoryLabel: 'III. Bác / Chú / Cô & Phu Thê (Bên Nội)',
-    name: 'Vợ của Bác trai (Bác gái / Bác dâu)',
+    name: 'Vợ của Bác trai (Bác dâu)',
     context: 'Vợ của bác trai bên nội',
-    termSenior: 'Bác gái (Bác dâu)',
+    termSenior: 'Bác dâu',
     termJunior: 'Cháu',
     note: 'Cháu gọi Bác dâu, Bác gọi Cháu',
   },
@@ -201,7 +201,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'III. Bác / Chú / Cô & Phu Thê (Bên Nội)',
     name: 'Bác gái (Chị của cha / Bên Nội)',
     context: 'Chị gái của cha / Nhánh trưởng',
-    termSenior: 'Bác (Bác gái)',
+    termSenior: 'Bác gái',
     termJunior: 'Cháu',
     note: 'Cháu gọi Bác gái, Bác gọi Cháu',
   },
@@ -211,7 +211,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'III. Bác / Chú / Cô & Phu Thê (Bên Nội)',
     name: 'Chồng của Bác gái (Bác rể)',
     context: 'Chồng của bác gái bên nội',
-    termSenior: 'Bác rể (Bác trai)',
+    termSenior: 'Bác rể',
     termJunior: 'Cháu',
     note: 'Cháu gọi Bác rể, Bác gọi Cháu',
   },
@@ -239,7 +239,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     id: 'aunt_junior',
     category: 'paternal_uncle_aunt',
     categoryLabel: 'III. Bác / Chú / Cô & Phu Thê (Bên Nội)',
-    name: 'Cô / O (Em gái của cha)',
+    name: 'Cô (Em gái của cha)',
     context: 'Em gái của cha / Nhánh thứ',
     termSenior: 'Cô',
     termJunior: 'Cháu',
@@ -249,9 +249,9 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     id: 'uncle_junior_husband',
     category: 'paternal_uncle_aunt',
     categoryLabel: 'III. Bác / Chú / Cô & Phu Thê (Bên Nội)',
-    name: 'Chồng của Cô (Chú dượng / Dượng)',
+    name: 'Chồng của Cô (Chú dượng)',
     context: 'Chồng của em gái cha',
-    termSenior: 'Chú dượng (Chú rể)',
+    termSenior: 'Chú dượng',
     termJunior: 'Cháu',
     note: 'Cháu gọi Chú dượng, Dượng gọi Cháu',
   },
@@ -273,7 +273,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'IV. Bác / Cậu / Dì & Phu Thê (Bên Ngoại)',
     name: 'Vợ của Bác trai ngoại (Bác dâu ngoại)',
     context: 'Vợ của anh trai mẹ',
-    termSenior: 'Bác dâu (Bác gái)',
+    termSenior: 'Bác dâu',
     termJunior: 'Cháu ngoại',
     note: 'Cháu gọi Bác dâu, Bác gọi Cháu',
   },
@@ -311,9 +311,9 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     id: 'uncle_maternal_junior_husband',
     category: 'maternal_uncle_aunt',
     categoryLabel: 'IV. Bác / Cậu / Dì & Phu Thê (Bên Ngoại)',
-    name: 'Chồng của Dì (Chú dượng / Dượng)',
+    name: 'Chồng của Dì (Chú dượng)',
     context: 'Chồng của em gái mẹ',
-    termSenior: 'Chú dượng (Dượng)',
+    termSenior: 'Chú dượng',
     termJunior: 'Cháu ngoại',
     note: 'Cháu gọi Chú dượng, Dượng gọi Cháu',
   },
@@ -325,8 +325,8 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'V. Dâu / Rể Thế Hệ Con & Cháu',
     name: 'Con dâu (Vợ của con trai)',
     context: 'Vợ của con trai trong gia tộc',
-    termSenior: 'Con dâu (Con)',
-    termJunior: 'Bố / Mẹ',
+    termSenior: 'Con dâu',
+    termJunior: 'Bố mẹ',
     note: 'Bố mẹ chồng gọi Con dâu, Con dâu gọi Bố/Mẹ',
   },
   {
@@ -335,8 +335,8 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     categoryLabel: 'V. Dâu / Rể Thế Hệ Con & Cháu',
     name: 'Con rể (Chồng của con gái)',
     context: 'Chồng của con gái trong gia tộc',
-    termSenior: 'Con rể (Con)',
-    termJunior: 'Bố / Mẹ',
+    termSenior: 'Con rể',
+    termJunior: 'Bố mẹ',
     note: 'Bố mẹ vợ gọi Con rể, Con rể gọi Bố/Mẹ',
   },
   {
@@ -346,7 +346,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     name: 'Cháu dâu (Vợ của cháu trai)',
     context: 'Vợ của cháu trai trong họ',
     termSenior: 'Cháu dâu',
-    termJunior: 'Ông / Bà / Bác / Chú',
+    termJunior: 'Bề trên',
     note: 'Bề trên gọi Cháu dâu',
   },
   {
@@ -356,7 +356,7 @@ export const DEFAULT_NORTH_RULES: KinshipTermRule[] = [
     name: 'Cháu rể (Chồng của cháu gái)',
     context: 'Chồng của cháu gái trong họ',
     termSenior: 'Cháu rể',
-    termJunior: 'Ông / Bà / Bác / Chú',
+    termJunior: 'Bề trên',
     note: 'Bề trên gọi Cháu rể',
   },
 
@@ -388,10 +388,10 @@ export const DEFAULT_CENTRAL_RULES: KinshipTermRule[] = DEFAULT_NORTH_RULES.map(
     return { ...rule, termSenior: 'Ba', note: 'Người cha gọi Con, Con gọi Ba' };
   }
   if (rule.id === 'parent_mother') {
-    return { ...rule, termSenior: 'Mẹ (Mạ)', note: 'Người mẹ gọi Con, Con gọi Mẹ (Mạ)' };
+    return { ...rule, termSenior: 'Mạ', note: 'Người mẹ gọi Con, Con gọi Mạ' };
   }
   if (rule.id === 'aunt_junior') {
-    return { ...rule, termSenior: 'O (Cô)', note: 'Cháu gọi O, O gọi Cháu' };
+    return { ...rule, termSenior: 'O', note: 'Cháu gọi O, O gọi Cháu' };
   }
   if (rule.id === 'uncle_junior_husband') {
     return { ...rule, termSenior: 'Dượng', note: 'Cháu gọi Dượng, Dượng gọi Cháu' };
@@ -400,47 +400,47 @@ export const DEFAULT_CENTRAL_RULES: KinshipTermRule[] = DEFAULT_NORTH_RULES.map(
     return { ...rule, termSenior: 'Dượng', note: 'Cháu gọi Dượng, Dượng gọi Cháu' };
   }
   if (rule.id === 'daughter_in_law') {
-    return { ...rule, termJunior: 'Ba / Mạ' };
+    return { ...rule, termJunior: 'Ba mạ' };
   }
   if (rule.id === 'son_in_law') {
-    return { ...rule, termJunior: 'Ba / Mạ' };
+    return { ...rule, termJunior: 'Ba mạ' };
   }
   if (rule.id === 'ancestor_4plus') {
-    return { ...rule, termSenior: 'Kỵ tổ (Mệ tổ)', note: 'Tổ tiên dòng họ gọi Hậu duệ' };
+    return { ...rule, termSenior: 'Mệ tổ', note: 'Tổ tiên dòng họ gọi Hậu duệ' };
   }
   return rule;
 });
 
 export const DEFAULT_SOUTH_RULES: KinshipTermRule[] = DEFAULT_NORTH_RULES.map((rule) => {
   if (rule.id === 'parent_father') {
-    return { ...rule, termSenior: 'Ba (Tía)', note: 'Người cha gọi Con, Con gọi Ba' };
+    return { ...rule, termSenior: 'Ba', note: 'Người cha gọi Con, Con gọi Ba' };
   }
   if (rule.id === 'parent_mother') {
     return { ...rule, termSenior: 'Má', note: 'Người mẹ gọi Con, Con gọi Má' };
   }
   if (rule.id === 'sibling_brother') {
-    return { ...rule, termSenior: 'Anh Hai (Anh)', note: 'Người lớn tuổi hơn là Anh Hai' };
+    return { ...rule, termSenior: 'Anh Hai', note: 'Người lớn tuổi hơn là Anh Hai' };
   }
   if (rule.id === 'sibling_sister') {
-    return { ...rule, termSenior: 'Chị Ba (Chị)', note: 'Người lớn tuổi hơn là Chị' };
+    return { ...rule, termSenior: 'Chị Ba', note: 'Người lớn tuổi hơn là Chị Ba' };
   }
   if (rule.id === 'cousin_senior') {
     return { ...rule, context: 'Ưu tiên theo tuổi đời thực tế', note: 'Lớn tuổi hơn là Anh họ (Chị họ)' };
   }
   if (rule.id === 'uncle_senior') {
-    return { ...rule, termSenior: 'Bác (Bác lớn)', note: 'Cháu gọi Bác lớn' };
+    return { ...rule, termSenior: 'Bác', note: 'Cháu gọi Bác' };
   }
   if (rule.id === 'aunt_senior') {
     return { ...rule, termSenior: 'Cô họ', note: 'Cháu gọi Cô họ' };
   }
   if (rule.id === 'uncle_junior') {
-    return { ...rule, termSenior: 'Chú (Chú út)', note: 'Cháu gọi Chú út' };
+    return { ...rule, termSenior: 'Chú', note: 'Cháu gọi Chú' };
   }
   if (rule.id === 'aunt_junior_wife') {
-    return { ...rule, termSenior: 'Thím (Thiếm)', note: 'Cháu gọi Thím' };
+    return { ...rule, termSenior: 'Thím', note: 'Cháu gọi Thím' };
   }
   if (rule.id === 'aunt_junior') {
-    return { ...rule, termSenior: 'Cô (Út)', note: 'Cháu gọi Cô út' };
+    return { ...rule, termSenior: 'Cô', note: 'Cháu gọi Cô' };
   }
   if (rule.id === 'uncle_junior_husband') {
     return { ...rule, termSenior: 'Dượng', note: 'Cháu gọi Dượng' };
@@ -449,13 +449,13 @@ export const DEFAULT_SOUTH_RULES: KinshipTermRule[] = DEFAULT_NORTH_RULES.map((r
     return { ...rule, termSenior: 'Dượng', note: 'Cháu gọi Dượng' };
   }
   if (rule.id === 'daughter_in_law') {
-    return { ...rule, termJunior: 'Ba / Má' };
+    return { ...rule, termJunior: 'Ba má' };
   }
   if (rule.id === 'son_in_law') {
-    return { ...rule, termJunior: 'Ba / Má' };
+    return { ...rule, termJunior: 'Ba má' };
   }
   if (rule.id === 'ancestor_4plus') {
-    return { ...rule, termSenior: 'Sơ / Cố tổ', note: 'Tổ tiên dòng họ gọi Hậu duệ' };
+    return { ...rule, termSenior: 'Cố tổ', note: 'Tổ tiên dòng họ gọi Hậu duệ' };
   }
   return rule;
 });
@@ -470,6 +470,39 @@ export function getRegionalPresetDictionary(region: KinshipRegion): KinshipTermR
     default:
       return DEFAULT_NORTH_RULES;
   }
+}
+
+/**
+ * Helper tra cứu danh xưng từ Single Source of Truth (SSOT)
+ * 1. Ưu tiên customDictionary (nếu dòng họ có ghi đè cấu hình)
+ * 2. Fallback về preset vùng miền tương ứng (regional preset)
+ * 3. Fallback về mặc định nếu không tìm thấy
+ */
+export function getTermFromSSOT(
+  relationshipKey: string,
+  side: 'senior' | 'junior',
+  region: KinshipRegion = 'north',
+  customDictionary?: CustomKinshipDictionary | null,
+  fallbackDefault?: string
+): string {
+  if (customDictionary && customDictionary[relationshipKey]) {
+    const customRule = customDictionary[relationshipKey];
+    const val = side === 'senior' ? customRule.termSenior : customRule.termJunior;
+    if (val && val.trim() !== '') {
+      return val.trim();
+    }
+  }
+
+  const presetRules = getRegionalPresetDictionary(region);
+  const rule = presetRules.find((r) => r.id === relationshipKey);
+  if (rule) {
+    const val = side === 'senior' ? rule.termSenior : rule.termJunior;
+    if (val && val.trim() !== '') {
+      return val.trim();
+    }
+  }
+
+  return fallbackDefault || '';
 }
 
 /**
@@ -499,7 +532,25 @@ export function resolveKinshipTerms(
     };
   }
 
-  // 2. Không có quan hệ huyết thống tìm thấy
+  // 2. Quan hệ Vợ - Chồng trực tiếp
+  if (lca.relationshipType === 'spouse') {
+    const res = resolveSpouse(lca, personA, personB, region, breadcrumbs);
+    return attachStructuredMetadata(res, lca, personA, personB, region);
+  }
+
+  // 3. Quan hệ Dâu / Rể một bên (In-Law: 1 bên là dâu/rể)
+  if (lca.relationshipType === 'in_law') {
+    const res = resolveInLaw(lca, personA, personB, region, breadcrumbs, customDictionary);
+    return attachStructuredMetadata(res, lca, personA, personB, region);
+  }
+
+  // 4. Quan hệ Dâu / Rể hai bên (Co-In-Law: cả 2 bên đều là dâu/rể)
+  if (lca.relationshipType === 'co_in_law') {
+    const res = resolveCoInLaw(lca, personA, personB, region, breadcrumbs, customDictionary);
+    return attachStructuredMetadata(res, lca, personA, personB, region);
+  }
+
+  // 5. Không có quan hệ huyết thống tìm thấy
   if (lca.relationshipType === 'unrelated' || !lca.lcaNodeId) {
     return {
       termAtoB: 'Người ngoài họ',
@@ -517,19 +568,423 @@ export function resolveKinshipTerms(
   const delta = lca.generationDelta;
   let resolution: KinshipResolution;
 
-  // 3. CÙNG THẾ HỆ (delta === 0)
+  // 6. CÙNG THẾ HỆ (delta === 0)
   if (delta === 0) {
     resolution = resolveSameGeneration(lca, personA, personB, region, breadcrumbs, customDictionary);
   } else if (delta > 0) {
-    // 4. A Ở TRÊN B (delta > 0: A là bậc trên của B)
+    // 7. A Ở TRÊN B (delta > 0: A là bậc trên của B)
     resolution = resolveSeniorGeneration(lca, personA, personB, delta, region, breadcrumbs, customDictionary);
   } else {
-    // 5. A Ở DƯỚI B (delta < 0: A là bậc dưới của B)
+    // 8. A Ở DƯỚI B (delta < 0: A là bậc dưới của B)
     resolution = resolveJuniorGeneration(lca, personA, personB, Math.abs(delta), region, breadcrumbs, customDictionary);
   }
 
   // Đính kèm cấu trúc đồ thị và so sánh phong tục
   return attachStructuredMetadata(resolution, lca, personA, personB, region);
+}
+
+/**
+ * Xử lý quan hệ Vợ - Chồng trực tiếp
+ */
+function resolveSpouse(
+  lca: LcaResult,
+  a: Member,
+  b: Member,
+  region: KinshipRegion,
+  breadcrumbs: string[]
+): KinshipResolution {
+  const isAMale = a.gender === 'male';
+  const termAtoB = isAMale ? 'Vợ' : 'Chồng';
+  const termBtoA = isAMale ? 'Chồng' : 'Vợ';
+  const explanation = `${a.full_name} và ${b.full_name} là vợ chồng.`;
+
+  return {
+    termAtoB,
+    termBtoA,
+    explanation,
+    region,
+    breadcrumbs,
+    generationDelta: 0,
+    relationshipType: 'spouse',
+    lcaName: null,
+    spouseBridge: lca.spouseBridge,
+  };
+}
+
+/**
+ * Xử lý quan hệ Dâu / Rể một bên (In-Law)
+ */
+function resolveInLaw(
+  lca: LcaResult,
+  a: Member,
+  b: Member,
+  region: KinshipRegion,
+  breadcrumbs: string[],
+  customDictionary?: CustomKinshipDictionary | null
+): KinshipResolution {
+  const bridge = lca.spouseBridge;
+  const isAInLaw = bridge?.inLawRoleA === 'spouse';
+
+  if (isAInLaw && bridge?.bridgeMemberA) {
+    // A là Dâu/Rể, kết hôn với bridgeMemberA (S_A). B là người trong họ.
+    const { inLawCallsBlood, bloodCallsInLaw, explanation } = resolveInLawPair(
+      a,
+      b,
+      bridge.bridgeMemberA,
+      lca.generationDelta,
+      lca.isSeniorBranchA,
+      bridge.bloodRelation,
+      region,
+      customDictionary
+    );
+
+    return {
+      termAtoB: inLawCallsBlood,
+      termBtoA: bloodCallsInLaw,
+      explanation,
+      region,
+      breadcrumbs,
+      generationDelta: lca.generationDelta,
+      relationshipType: 'in_law',
+      lcaName: lca.lcaNodeName,
+      spouseBridge: bridge,
+    };
+  } else if (!isAInLaw && bridge?.bridgeMemberB) {
+    // B là Dâu/Rể, kết hôn với bridgeMemberB (S_B). A là người trong họ.
+    // Lật góc nhìn: B là in-law, A là blood.
+    const { inLawCallsBlood, bloodCallsInLaw, explanation } = resolveInLawPair(
+      b,
+      a,
+      bridge.bridgeMemberB,
+      -lca.generationDelta,
+      !lca.isSeniorBranchA,
+      bridge.bloodRelation,
+      region,
+      customDictionary
+    );
+
+    return {
+      termAtoB: bloodCallsInLaw,
+      termBtoA: inLawCallsBlood,
+      explanation,
+      region,
+      breadcrumbs,
+      generationDelta: lca.generationDelta,
+      relationshipType: 'in_law',
+      lcaName: lca.lcaNodeName,
+      spouseBridge: bridge,
+    };
+  }
+
+  return {
+    termAtoB: 'Người họ hàng',
+    termBtoA: 'Người họ hàng',
+    explanation: `${a.full_name} và ${b.full_name} có liên kết dâu/rể trong họ.`,
+    region,
+    breadcrumbs,
+    generationDelta: lca.generationDelta,
+    relationshipType: 'in_law',
+    lcaName: lca.lcaNodeName,
+    spouseBridge: bridge,
+  };
+}
+
+/**
+ * Phân giải danh xưng dâu/rể cặp đơn: inLaw vs blood
+ */
+function resolveInLawPair(
+  inLaw: Member,
+  blood: Member,
+  inLawSpouse: any,
+  delta: number,
+  isSeniorInLawSpouse: boolean,
+  bloodRelation: RelationshipType | undefined,
+  region: KinshipRegion,
+  customDictionary?: CustomKinshipDictionary | null
+): { inLawCallsBlood: string; bloodCallsInLaw: string; explanation: string } {
+  const isInLawFemale = inLaw.gender === 'female';
+  const isBloodMale = blood.gender === 'male';
+
+  // 1. CÙNG THẾ HỆ (delta === 0)
+  if (delta === 0) {
+    if (isInLawFemale) {
+      // inLaw là Nữ (Vợ của inLawSpouse)
+      if (isSeniorInLawSpouse) {
+        // inLawSpouse là anh/vai trên của blood -> inLaw là Chị dâu
+        const bloodCallsInLaw = getTermFromSSOT('sister_in_law', 'senior', region, customDictionary, 'Chị dâu');
+        const inLawCallsBlood =
+          customDictionary?.['sister_in_law']?.termJunior ||
+          (isBloodMale
+            ? region === 'south'
+              ? 'Em'
+              : 'Chú'
+            : region === 'south'
+            ? 'Em'
+            : 'Cô');
+        return {
+          inLawCallsBlood,
+          bloodCallsInLaw,
+          explanation: `${inLaw.full_name} là ${bloodCallsInLaw} của ${blood.full_name} (${inLawSpouse.name} là anh trai của ${blood.full_name}).`,
+        };
+      } else {
+        // inLawSpouse là em của blood -> inLaw là Em dâu
+        const bloodCallsInLaw = getTermFromSSOT('younger_sister_in_law', 'senior', region, customDictionary, 'Em dâu');
+        const inLawCallsBlood =
+          customDictionary?.['younger_sister_in_law']?.termJunior ||
+          (isBloodMale
+            ? region === 'north'
+              ? 'Bác'
+              : 'Anh'
+            : region === 'north'
+            ? 'Cô'
+            : 'Chị');
+        return {
+          inLawCallsBlood,
+          bloodCallsInLaw,
+          explanation: `${inLaw.full_name} là ${bloodCallsInLaw} của ${blood.full_name} (${inLawSpouse.name} là em trai của ${blood.full_name}).`,
+        };
+      }
+    } else {
+      // inLaw là Nam (Chồng của inLawSpouse)
+      if (isSeniorInLawSpouse) {
+        // inLawSpouse là chị của blood -> inLaw là Anh rể
+        const bloodCallsInLaw = getTermFromSSOT('brother_in_law', 'senior', region, customDictionary, 'Anh rể');
+        const inLawCallsBlood =
+          customDictionary?.['brother_in_law']?.termJunior ||
+          (isBloodMale
+            ? region === 'south'
+              ? 'Em'
+              : 'Cậu'
+            : region === 'south'
+              ? 'Em'
+              : 'Dì');
+        return {
+          inLawCallsBlood,
+          bloodCallsInLaw,
+          explanation: `${inLaw.full_name} là ${bloodCallsInLaw} của ${blood.full_name} (${inLawSpouse.name} là chị gái của ${blood.full_name}).`,
+        };
+      } else {
+        // inLawSpouse là em gái của blood -> inLaw là Em rể
+        const bloodCallsInLaw = getTermFromSSOT('younger_brother_in_law', 'senior', region, customDictionary, 'Em rể');
+        const inLawCallsBlood =
+          customDictionary?.['younger_brother_in_law']?.termJunior || (isBloodMale ? 'Anh' : 'Chị');
+        return {
+          inLawCallsBlood,
+          bloodCallsInLaw,
+          explanation: `${inLaw.full_name} là ${bloodCallsInLaw} của ${blood.full_name} (${inLawSpouse.name} là em gái của ${blood.full_name}).`,
+        };
+      }
+    }
+  }
+
+  // 2. IN-LAW Ở DƯỚI BLOOD 1 ĐỜI (delta === -1: blood là bậc cha/mẹ/chú/bác của inLawSpouse)
+  if (delta === -1) {
+    if (bloodRelation === 'parent_child') {
+      // Bố/Mẹ chồng - Con dâu HOẶC Bố/Mẹ vợ - Con rể
+      if (isInLawFemale) {
+        // Con dâu: Bố/mẹ gọi là "Con"
+        const bloodCallsInLaw = customDictionary?.['daughter_in_law']?.termSenior || 'Con';
+        const parentRuleId = isBloodMale ? 'parent_father' : 'parent_mother';
+        const defaultParent = isBloodMale ? 'Bố' : (region === 'south' ? 'Má' : 'Mẹ');
+        const inLawCallsBlood = getTermFromSSOT(parentRuleId, 'senior', region, customDictionary, defaultParent);
+        const roleLabel = isBloodMale ? 'bố chồng' : 'mẹ chồng';
+        return {
+          inLawCallsBlood,
+          bloodCallsInLaw,
+          explanation: `${blood.full_name} là ${roleLabel} của ${inLaw.full_name} (${inLawSpouse.name} là con đẻ của ${blood.full_name}).`,
+        };
+      } else {
+        // Con rể: Bố/mẹ gọi là "Con"
+        const bloodCallsInLaw = customDictionary?.['son_in_law']?.termSenior || 'Con';
+        const parentRuleId = isBloodMale ? 'parent_father' : 'parent_mother';
+        const defaultParent = isBloodMale ? 'Bố' : (region === 'south' ? 'Má' : 'Mẹ');
+        const inLawCallsBlood = getTermFromSSOT(parentRuleId, 'senior', region, customDictionary, defaultParent);
+        const roleLabel = isBloodMale ? 'bố vợ' : 'mẹ vợ';
+        return {
+          inLawCallsBlood,
+          bloodCallsInLaw,
+          explanation: `${blood.full_name} là ${roleLabel} của ${inLaw.full_name} (${inLawSpouse.name} là con gái của ${blood.full_name}).`,
+        };
+      }
+    } else {
+      // Bác / Chú / Cô của người phối ngẫu -> Cháu dâu / Cháu rể
+      const ruleKey = isInLawFemale ? 'grand_daughter_in_law' : 'grand_son_in_law';
+      const bloodCallsInLaw = getTermFromSSOT(ruleKey, 'senior', region, customDictionary, isInLawFemale ? 'Cháu dâu' : 'Cháu rể');
+      let inLawCallsBlood: string;
+      if (isBloodMale) {
+        const uncleKey = isSeniorInLawSpouse ? 'uncle_senior' : 'uncle_junior';
+        inLawCallsBlood = getTermFromSSOT(uncleKey, 'senior', region, customDictionary, isSeniorInLawSpouse ? 'Bác' : 'Chú');
+      } else {
+        const auntKey = isSeniorInLawSpouse ? 'aunt_senior' : 'aunt_junior';
+        inLawCallsBlood = getTermFromSSOT(auntKey, 'senior', region, customDictionary, region === 'central' ? 'O' : 'Cô');
+      }
+      return {
+        inLawCallsBlood,
+        bloodCallsInLaw,
+        explanation: `${inLaw.full_name} là ${bloodCallsInLaw} (${inLawSpouse.name} là cháu của ${blood.full_name}).`,
+      };
+    }
+  }
+
+  // 3. IN-LAW Ở TRÊN BLOOD 1 ĐỜI (delta === 1: inLawSpouse là Bác/Chú/Cô/Cậu/Dì của blood)
+  if (delta === 1) {
+    if (isInLawFemale) {
+      // Vợ của Bác/Chú/Cậu
+      if (inLawSpouse.gender === 'male') {
+        if (isSeniorInLawSpouse) {
+          // Vợ Bác trai -> Bác dâu
+          const bloodCallsInLaw = getTermFromSSOT('aunt_senior_wife', 'senior', region, customDictionary, 'Bác dâu');
+          const inLawCallsBlood = getTermFromSSOT('aunt_senior_wife', 'junior', region, customDictionary, 'Cháu');
+          return {
+            inLawCallsBlood,
+            bloodCallsInLaw,
+            explanation: `${inLaw.full_name} là ${bloodCallsInLaw} (${inLawSpouse.name} là bác trai của ${blood.full_name}).`,
+          };
+        } else {
+          // Vợ Chú -> Thím
+          const bloodCallsInLaw = getTermFromSSOT('aunt_junior_wife', 'senior', region, customDictionary, 'Thím');
+          const inLawCallsBlood = getTermFromSSOT('aunt_junior_wife', 'junior', region, customDictionary, 'Cháu');
+          return {
+            inLawCallsBlood,
+            bloodCallsInLaw,
+            explanation: `${inLaw.full_name} là ${bloodCallsInLaw} (${inLawSpouse.name} là chú của ${blood.full_name}).`,
+          };
+        }
+      } else {
+        // Vợ Cậu -> Mợ
+        const bloodCallsInLaw = getTermFromSSOT('aunt_maternal_junior_wife', 'senior', region, customDictionary, 'Mợ');
+        const inLawCallsBlood = getTermFromSSOT('aunt_maternal_junior_wife', 'junior', region, customDictionary, 'Cháu');
+        return {
+          inLawCallsBlood,
+          bloodCallsInLaw,
+          explanation: `${inLaw.full_name} là ${bloodCallsInLaw} (${inLawSpouse.name} là cậu của ${blood.full_name}).`,
+        };
+      }
+    } else {
+      // Chồng của Bác gái / Cô / Dì
+      if (isSeniorInLawSpouse) {
+        // Chồng Bác gái -> Bác rể (Trường hợp Tạ Duy Hưng)
+        const bloodCallsInLaw = getTermFromSSOT('uncle_senior_husband', 'senior', region, customDictionary, 'Bác rể');
+        const inLawCallsBlood = getTermFromSSOT('uncle_senior_husband', 'junior', region, customDictionary, 'Cháu');
+        return {
+          inLawCallsBlood,
+          bloodCallsInLaw,
+          explanation: `${inLaw.full_name} là ${bloodCallsInLaw} (${inLawSpouse.name} là bác gái của ${blood.full_name}).`,
+        };
+      } else {
+        // Chồng Cô/Dì -> Dượng / Chú dượng
+        const defaultSenior = region === 'south' ? 'Dượng' : 'Chú dượng';
+        const bloodCallsInLaw = getTermFromSSOT('uncle_junior_husband', 'senior', region, customDictionary, defaultSenior);
+        const inLawCallsBlood = getTermFromSSOT('uncle_junior_husband', 'junior', region, customDictionary, 'Cháu');
+        return {
+          inLawCallsBlood,
+          bloodCallsInLaw,
+          explanation: `${inLaw.full_name} là ${bloodCallsInLaw} (${inLawSpouse.name} là cô/dì của ${blood.full_name}).`,
+        };
+      }
+    }
+  }
+
+  // 4. LỆCH 2 THẾ HỆ TRỞ LÊN
+  if (delta <= -2) {
+    const bloodCallsInLaw = isInLawFemale
+      ? delta === -2
+        ? getTermFromSSOT('grand_daughter_in_law', 'senior', region, customDictionary, 'Cháu dâu')
+        : 'Chắt dâu'
+      : delta === -2
+      ? getTermFromSSOT('grand_son_in_law', 'senior', region, customDictionary, 'Cháu rể')
+      : 'Chắt rể';
+    const inLawCallsBlood = isBloodMale
+      ? delta === -2
+        ? getTermFromSSOT('grandparent_direct_male', 'senior', region, customDictionary, region === 'south' ? 'Ông' : 'Ông nội')
+        : getTermFromSSOT('great_grandparent', 'senior', region, customDictionary, 'Cụ ông')
+      : delta === -2
+      ? getTermFromSSOT('grandparent_direct_female', 'senior', region, customDictionary, region === 'south' ? 'Bà' : 'Bà nội')
+      : getTermFromSSOT('great_grandparent', 'senior', region, customDictionary, 'Cụ bà');
+    return {
+      inLawCallsBlood,
+      bloodCallsInLaw,
+      explanation: `${inLaw.full_name} là dâu/rể hậu bối cách ${Math.abs(delta)} thế hệ của ${blood.full_name}.`,
+    };
+  }
+
+  // delta >= 2
+  const bloodCallsInLaw = isInLawFemale
+    ? delta === 2
+      ? getTermFromSSOT('grandparent_collateral_female', 'senior', region, customDictionary, 'Bà họ')
+      : 'Cụ bà họ'
+    : delta === 2
+    ? getTermFromSSOT('grandparent_collateral_male', 'senior', region, customDictionary, 'Ông họ')
+    : 'Cụ ông họ';
+  const inLawCallsBlood = delta === 2 ? 'Cháu' : 'Chắt';
+  return {
+    inLawCallsBlood,
+    bloodCallsInLaw,
+    explanation: `${inLaw.full_name} là tiền bối hôn phối cách ${delta} thế hệ của ${blood.full_name}.`,
+  };
+}
+
+/**
+ * Xử lý quan hệ Dâu / Rể hai bên (Co-In-Law)
+ */
+function resolveCoInLaw(
+  lca: LcaResult,
+  a: Member,
+  b: Member,
+  region: KinshipRegion,
+  breadcrumbs: string[],
+  customDictionary?: CustomKinshipDictionary | null
+): KinshipResolution {
+  const bridge = lca.spouseBridge;
+  let termAtoB = 'Chị em dâu';
+  let termBtoA = 'Chị em dâu';
+  let explanation = '';
+
+  const isMaleA = a.gender === 'male';
+  const isMaleB = b.gender === 'male';
+
+  if (!isMaleA && !isMaleB) {
+    // Cả 2 đều là nữ -> Chị em dâu
+    const sisterInLawTerm = getTermFromSSOT('sister_in_law', 'senior', region, customDictionary, 'Chị dâu');
+    const youngerSisterInLawTerm = getTermFromSSOT('younger_sister_in_law', 'senior', region, customDictionary, 'Em dâu');
+
+    if (lca.isSeniorBranchA) {
+      termAtoB = youngerSisterInLawTerm;
+      termBtoA = sisterInLawTerm;
+      explanation = `${a.full_name} và ${b.full_name} là chị em dâu (${a.full_name} là vợ anh, ${b.full_name} là vợ em).`;
+    } else {
+      termAtoB = sisterInLawTerm;
+      termBtoA = youngerSisterInLawTerm;
+      explanation = `${a.full_name} và ${b.full_name} là chị em dâu (${b.full_name} là vợ anh, ${a.full_name} là vợ em).`;
+    }
+  } else if (isMaleA && isMaleB) {
+    // Cả 2 đều là nam -> Anh em đồng hao (cọc chèo)
+    if (lca.isSeniorBranchA) {
+      termAtoB = 'Em đồng hao';
+      termBtoA = 'Anh đồng hao';
+      explanation = `${a.full_name} và ${b.full_name} là anh em đồng hao / cọc chèo (${a.full_name} là chồng chị, ${b.full_name} là chồng em).`;
+    } else {
+      termAtoB = 'Anh đồng hao';
+      termBtoA = 'Em đồng hao';
+      explanation = `${a.full_name} và ${b.full_name} là anh em đồng hao / cọc chèo (${b.full_name} là chồng chị, ${a.full_name} là chồng em).`;
+    }
+  } else {
+    termAtoB = 'Dâu - Rể';
+    termBtoA = 'Dâu - Rể';
+    explanation = `${a.full_name} và ${b.full_name} là dâu/rể trong cùng gia tộc.`;
+  }
+
+  return {
+    termAtoB,
+    termBtoA,
+    explanation,
+    region,
+    breadcrumbs,
+    generationDelta: lca.generationDelta,
+    relationshipType: 'co_in_law',
+    lcaName: lca.lcaNodeName,
+    spouseBridge: bridge,
+  };
 }
 
 /**
@@ -547,10 +1002,9 @@ function resolveSameGeneration(
   if (lca.relationshipType === 'sibling') {
     const isASenior = compareSeniority(a, b);
     const ruleId = (isASenior ? a.gender : b.gender) === 'female' ? 'sibling_sister' : 'sibling_brother';
-    const customRule = customDictionary?.[ruleId];
     const defaultOlder = (isASenior ? a.gender : b.gender) === 'female' ? 'Chị' : 'Anh';
-    const termOlder = customRule?.termSenior || defaultOlder;
-    const termYounger = customRule?.termJunior || 'Em';
+    const termOlder = getTermFromSSOT(ruleId, 'senior', region, customDictionary, defaultOlder);
+    const termYounger = getTermFromSSOT(ruleId, 'junior', region, customDictionary, 'Em');
 
     if (isASenior) {
       return {
@@ -582,10 +1036,9 @@ function resolveSameGeneration(
   if (region === 'north' || region === 'central') {
     // Miền Bắc / Trung: Trọng thứ bậc nhánh (Vai Bác xưng Anh/Chị dù ít tuổi hơn)
     if (lca.isSeniorBranchA) {
-      const customSenior = customDictionary?.['cousin_senior'];
       const defaultA = a.gender === 'female' ? 'Chị họ' : 'Anh họ';
-      const termA = customSenior?.termSenior || defaultA;
-      const termB = customSenior?.termJunior || 'Em họ';
+      const termA = getTermFromSSOT('cousin_senior', 'senior', region, customDictionary, defaultA);
+      const termB = getTermFromSSOT('cousin_senior', 'junior', region, customDictionary, 'Em họ');
 
       return {
         termAtoB: termB,
@@ -598,10 +1051,9 @@ function resolveSameGeneration(
         lcaName: lca.lcaNodeName,
       };
     } else {
-      const customJunior = customDictionary?.['cousin_junior'];
       const defaultB = b.gender === 'female' ? 'Chị họ' : 'Anh họ';
-      const termB = customJunior?.termJunior || defaultB;
-      const termA = customJunior?.termSenior || 'Em họ';
+      const termB = getTermFromSSOT('cousin_junior', 'junior', region, customDictionary, defaultB);
+      const termA = getTermFromSSOT('cousin_junior', 'senior', region, customDictionary, 'Em họ');
 
       return {
         termAtoB: termB,
@@ -617,12 +1069,11 @@ function resolveSameGeneration(
   } else {
     // Miền Nam: Xưng anh/chị theo tuổi đời thực tế kèm danh xưng "họ"
     const isAOlder = compareAge(a, b);
-    const custom = customDictionary?.['cousin_senior'];
     const defaultA = a.gender === 'female' ? 'Chị họ' : 'Anh họ';
     const defaultB = b.gender === 'female' ? 'Chị họ' : 'Anh họ';
-    const termA = custom?.termSenior || defaultA;
-    const termB = custom?.termSenior || defaultB;
-    const termYounger = custom?.termJunior || 'Em họ';
+    const termA = getTermFromSSOT('cousin_senior', 'senior', region, customDictionary, defaultA);
+    const termB = getTermFromSSOT('cousin_senior', 'senior', region, customDictionary, defaultB);
+    const termYounger = getTermFromSSOT('cousin_senior', 'junior', region, customDictionary, 'Em họ');
 
     if (isAOlder) {
       return {
@@ -682,16 +1133,16 @@ function resolveSeniorGeneration(
   if (delta === 1) {
     if (lca.relationshipType === 'parent_child') {
       const isMother = a.gender === 'female';
-      const customParent = customDictionary?.[isMother ? 'parent_mother' : 'parent_father'];
+      const parentRuleId = isMother ? 'parent_mother' : 'parent_father';
       const defaultParentLabel = isMother
         ? region === 'south'
           ? 'Má'
-          : 'Mẹ'
+          : (region === 'central' ? 'Mạ' : 'Mẹ')
         : region === 'south'
         ? 'Ba'
-        : 'Bố';
-      const parentLabel = customParent?.termSenior || defaultParentLabel;
-      const childLabel = customParent?.termJunior || 'Con';
+        : (region === 'central' ? 'Ba' : 'Bố');
+      const parentLabel = getTermFromSSOT(parentRuleId, 'senior', region, customDictionary, defaultParentLabel);
+      const childLabel = getTermFromSSOT(parentRuleId, 'junior', region, customDictionary, 'Con');
 
       return {
         termAtoB: childLabel,
@@ -709,9 +1160,8 @@ function resolveSeniorGeneration(
     if (a.gender === 'male') {
       if (lca.isSeniorBranchA) {
         // A là vai anh của cha B (hoặc nhánh trên) -> Bác
-        const customUncle = customDictionary?.['uncle_senior'];
-        const seniorLabel = customUncle?.termSenior || 'Bác';
-        const juniorLabel = customUncle?.termJunior || 'Cháu';
+        const seniorLabel = getTermFromSSOT('uncle_senior', 'senior', region, customDictionary, 'Bác');
+        const juniorLabel = getTermFromSSOT('uncle_senior', 'junior', region, customDictionary, 'Cháu');
         return {
           termAtoB: juniorLabel,
           termBtoA: seniorLabel,
@@ -724,9 +1174,8 @@ function resolveSeniorGeneration(
         };
       } else {
         // A là vai em của cha B -> Chú
-        const customUncle = customDictionary?.['uncle_junior'];
-        const seniorLabel = customUncle?.termSenior || 'Chú';
-        const juniorLabel = customUncle?.termJunior || 'Cháu';
+        const seniorLabel = getTermFromSSOT('uncle_junior', 'senior', region, customDictionary, 'Chú');
+        const juniorLabel = getTermFromSSOT('uncle_junior', 'junior', region, customDictionary, 'Cháu');
         return {
           termAtoB: juniorLabel,
           termBtoA: seniorLabel,
@@ -741,16 +1190,16 @@ function resolveSeniorGeneration(
     } else {
       // A là nữ
       const isSenior = lca.isSeniorBranchA;
-      const customAunt = customDictionary?.[isSenior ? 'aunt_senior' : 'aunt_junior'];
+      const auntRuleId = isSenior ? 'aunt_senior' : 'aunt_junior';
       const defaultAuntLabel = isSenior
         ? region === 'south'
           ? 'Cô họ'
-          : 'Bác họ (Bác gái)'
+          : 'Bác gái'
         : region === 'central'
         ? 'O'
         : 'Cô';
-      const auntLabel = customAunt?.termSenior || defaultAuntLabel;
-      const juniorLabel = customAunt?.termJunior || 'Cháu';
+      const auntLabel = getTermFromSSOT(auntRuleId, 'senior', region, customDictionary, defaultAuntLabel);
+      const juniorLabel = getTermFromSSOT(auntRuleId, 'junior', region, customDictionary, 'Cháu');
       return {
         termAtoB: juniorLabel,
         termBtoA: auntLabel,
@@ -768,10 +1217,10 @@ function resolveSeniorGeneration(
   if (delta === 2) {
     if (lca.relationshipType === 'direct_ancestor') {
       const isFemale = a.gender === 'female';
-      const customGrand = customDictionary?.[isFemale ? 'grandparent_direct_female' : 'grandparent_direct_male'];
+      const grandRuleId = isFemale ? 'grandparent_direct_female' : 'grandparent_direct_male';
       const defaultGrandLabel = isFemale ? 'Bà nội' : 'Ông nội';
-      const grandLabel = customGrand?.termSenior || defaultGrandLabel;
-      const childLabel = customGrand?.termJunior || 'Cháu';
+      const grandLabel = getTermFromSSOT(grandRuleId, 'senior', region, customDictionary, defaultGrandLabel);
+      const childLabel = getTermFromSSOT(grandRuleId, 'junior', region, customDictionary, 'Cháu');
       return {
         termAtoB: childLabel,
         termBtoA: grandLabel,
@@ -785,10 +1234,10 @@ function resolveSeniorGeneration(
     }
 
     const isFemale = a.gender === 'female';
-    const customGrand = customDictionary?.[isFemale ? 'grandparent_collateral_female' : 'grandparent_collateral_male'];
+    const collateralRuleId = isFemale ? 'grandparent_collateral_female' : 'grandparent_collateral_male';
     const defaultCollateral = isFemale ? 'Bà họ' : 'Ông họ';
-    const grandCollateral = customGrand?.termSenior || defaultCollateral;
-    const juniorLabel = customGrand?.termJunior || 'Cháu họ';
+    const grandCollateral = getTermFromSSOT(collateralRuleId, 'senior', region, customDictionary, defaultCollateral);
+    const juniorLabel = getTermFromSSOT(collateralRuleId, 'junior', region, customDictionary, 'Cháu họ');
     return {
       termAtoB: juniorLabel,
       termBtoA: grandCollateral,
@@ -803,10 +1252,9 @@ function resolveSeniorGeneration(
 
   // Delta = 3: Bậc Cụ
   if (delta === 3) {
-    const customGreat = customDictionary?.['great_grandparent'];
-    const defaultLabel = a.gender === 'female' ? 'Cụ bà họ' : 'Cụ ông họ';
-    const greatLabel = customGreat?.termSenior || defaultLabel;
-    const juniorLabel = customGreat?.termJunior || 'Chắt';
+    const defaultLabel = a.gender === 'female' ? 'Cụ bà' : 'Cụ ông';
+    const greatLabel = getTermFromSSOT('great_grandparent', 'senior', region, customDictionary, defaultLabel);
+    const juniorLabel = getTermFromSSOT('great_grandparent', 'junior', region, customDictionary, 'Chắt');
     return {
       termAtoB: juniorLabel,
       termBtoA: greatLabel,
@@ -820,9 +1268,8 @@ function resolveSeniorGeneration(
   }
 
   // Delta >= 4: Kỵ / Tiên tổ
-  const customAncestor = customDictionary?.['ancestor_4plus'];
-  const ancestorLabel = customAncestor?.termSenior || 'Kỵ tổ / Cụ tổ họ';
-  const descLabel = customAncestor?.termJunior || 'Chút / Hậu duệ';
+  const ancestorLabel = getTermFromSSOT('ancestor_4plus', 'senior', region, customDictionary, 'Cụ tổ');
+  const descLabel = getTermFromSSOT('ancestor_4plus', 'junior', region, customDictionary, 'Hậu duệ');
   return {
     termAtoB: descLabel,
     termBtoA: ancestorLabel,
@@ -888,7 +1335,11 @@ function generateBreadcrumbs(lca: LcaResult, a: Member, b: Member): string[] {
     return [a.full_name];
   }
 
-  if (lca.relationshipType === 'unrelated' || !lca.lcaNodeId) {
+  if (lca.relationshipType === 'spouse') {
+    return [a.full_name, '═(Hôn phối)═', b.full_name];
+  }
+
+  if (lca.relationshipType === 'unrelated' || (!lca.lcaNodeId && lca.relationshipType !== 'in_law' && lca.relationshipType !== 'co_in_law')) {
     return [a.full_name, b.full_name];
   }
 
@@ -899,6 +1350,8 @@ function generateBreadcrumbs(lca: LcaResult, a: Member, b: Member): string[] {
     const node = lca.pathA[i];
     if (i === 0) {
       crumbs.push(node.name);
+    } else if (node.isSpouse || node.isSpouseBridge) {
+      crumbs.push(`═(Hôn phối)═ ${node.relation}: ${node.name}`);
     } else if (i === lca.pathA.length - 1) {
       crumbs.push(`Tổ tiên chung (LCA): ${node.name}`);
     } else {
@@ -907,11 +1360,12 @@ function generateBreadcrumbs(lca: LcaResult, a: Member, b: Member): string[] {
   }
 
   // Nhánh của B đi từ ngay dưới LCA xuống B: pathB là [B, parent, ..., LCA]
-  // Ta cần đi từ LCA -> con của LCA -> ... -> B (đảo ngược trừ LCA)
   if (lca.pathB.length > 1) {
     for (let i = lca.pathB.length - 2; i >= 0; i--) {
       const node = lca.pathB[i];
-      if (i === 0) {
+      if (node.isSpouse) {
+        crumbs.push(`═(Hôn phối)═ ${node.relation === 'Bản thân' ? 'Phối ngẫu' : node.relation}: ${node.name}`);
+      } else if (i === 0) {
         crumbs.push(node.name);
       } else {
         crumbs.push(`${node.relation}: ${node.name}`);
@@ -935,7 +1389,16 @@ function attachStructuredMetadata(
   let customsBadge = 'Phong tục Miền Bắc: Chuẩn Mực Tôn Ti Gia Tộc';
   let proverbQuote = 'Cây có gốc mới nở cành xanh ngọn, nước có nguồn mới biển rộng sông sâu';
 
-  if (region === 'north') {
+  if (lca.relationshipType === 'spouse') {
+    customsBadge = 'Phong tục Hôn Nhân: Trăm Năm Hòa Hợp';
+    proverbQuote = 'Thuận vợ thuận chồng tát biển Đông cũng cạn';
+  } else if (lca.relationshipType === 'in_law') {
+    customsBadge = 'Phong tục Thân Tộc: Dâu Hiền Rể Thảo';
+    proverbQuote = 'Dâu là con, rể là khách; trọn vẹn nghĩa tình gia tộc';
+  } else if (lca.relationshipType === 'co_in_law') {
+    customsBadge = 'Phong tục Gia Đình: Hòa Mục Dâu Rể';
+    proverbQuote = 'Chị em dâu một nhà, cọc chèo chung một gốc';
+  } else if (region === 'north') {
     if (lca.relationshipType === 'cousin') {
       customsBadge = 'Phong tục Miền Bắc: Tôn Ti Nhánh Họ Chi Trưởng';
       proverbQuote = 'Bé bằng củ khoai, cứ vai Bác là gọi Anh';
@@ -955,6 +1418,12 @@ function attachStructuredMetadata(
   if (a.is_adopted || b.is_adopted) {
     summary =
       'Thành viên con nuôi được ghi danh trọn vẹn trong gia phả, hưởng đầy đủ vai vế và tôn ti theo thứ bậc gia đình.';
+  } else if (lca.relationshipType === 'spouse') {
+    summary = 'Quan hệ vợ chồng gắn kết trọn đời trong gia đình và dòng tộc.';
+  } else if (lca.relationshipType === 'in_law') {
+    summary = 'Quan hệ thân tộc kết nối qua hôn phối (Dâu/Rể), xưng hô tôn kính theo thứ bậc gia đình.';
+  } else if (lca.relationshipType === 'co_in_law') {
+    summary = 'Quan hệ liên kết hôn nhân hai chiều giữa các người phối ngẫu trong dòng họ.';
   } else if (lca.generationDelta === 0 && lca.relationshipType === 'cousin') {
     if (region === 'north' || region === 'central') {
       summary =
@@ -975,10 +1444,10 @@ function attachStructuredMetadata(
     labelA: a.full_name,
     labelB: b.full_name,
     detailA: `Đời ${a.generation_level ?? a.generation_number ?? 1} · Sinh ${a.birth_year || '---'}${
-      a.is_senior_branch ? ' · Chi Trưởng' : ' · Chi Thứ'
+      formatBirthOrder(a.birth_order) ? ' · ' + formatBirthOrder(a.birth_order) : ''
     }${a.is_adopted ? ' · Con Nuôi' : ''}`,
     detailB: `Đời ${b.generation_level ?? b.generation_number ?? 1} · Sinh ${b.birth_year || '---'}${
-      b.is_senior_branch ? ' · Chi Trưởng' : ' · Chi Thứ'
+      formatBirthOrder(b.birth_order) ? ' · ' + formatBirthOrder(b.birth_order) : ''
     }${b.is_adopted ? ' · Con Nuôi' : ''}`,
     summary,
   };
@@ -1030,6 +1499,8 @@ function buildContextualAddressing(
   }
 
   const getPronoun = (otherTitle: string, ownTitle: string) => {
+    if (ownTitle.includes('Vợ')) return 'Tôi / Em';
+    if (ownTitle.includes('Chồng')) return 'Tôi / Anh';
     if (ownTitle.includes('Cháu')) return 'Cháu';
     if (ownTitle.includes('Con')) return 'Con';
     if (ownTitle.includes('Em')) return 'Em';
@@ -1040,6 +1511,8 @@ function buildContextualAddressing(
     if (otherTitle.includes('Bố') || otherTitle.includes('Mẹ')) return 'Con';
     if (otherTitle.includes('Anh') || otherTitle.includes('Chị')) return 'Em';
     if (otherTitle.includes('Em')) return 'Anh/Chị';
+    if (otherTitle.includes('Vợ')) return 'Chồng';
+    if (otherTitle.includes('Chồng')) return 'Vợ';
     return ownTitle || 'Tôi';
   };
 
@@ -1056,3 +1529,13 @@ function buildContextualAddressing(
   };
 }
 
+/**
+ * Định dạng thứ bậc sinh trong gia đình:
+ * 1 -> "Con cả", 2 -> "Con thứ 2", 3 -> "Con thứ 3", ...
+ * Không có hoặc <= 0 -> null
+ */
+export function formatBirthOrder(birthOrder?: number | null): string | null {
+  if (!birthOrder || birthOrder <= 0) return null;
+  if (birthOrder === 1) return 'Con cả';
+  return `Con thứ ${birthOrder}`;
+}

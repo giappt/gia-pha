@@ -9,42 +9,54 @@ interface AncestorPath {
 }
 
 /**
- * Thuật toán tìm Gốc Gần Nhất và phân tích quan hệ huyết thống
- * Pure Function - Không phụ thuộc DB hay state ngoài
+ * Xây dựng danh sách liên kết hôn phối 2 chiều: Map<memberId, spouseIds[]>
  */
-export function findLowestCommonAncestor(
-  personAId: string,
-  personBId: string,
+export function buildSpouseMap(
+  spouseRelations?: Array<{ member_a_id: string; member_b_id: string }> | null,
+  membersMap?: Map<string, Member>
+): Map<string, string[]> {
+  const map = new Map<string, Set<string>>();
+
+  const addPair = (a: string, b: string) => {
+    if (!a || !b || a === b) return;
+    if (!map.has(a)) map.set(a, new Set());
+    if (!map.has(b)) map.set(b, new Set());
+    map.get(a)!.add(b);
+    map.get(b)!.add(a);
+  };
+
+  if (spouseRelations && Array.isArray(spouseRelations)) {
+    for (const rel of spouseRelations) {
+      addPair(rel.member_a_id, rel.member_b_id);
+    }
+  }
+
+  if (membersMap) {
+    membersMap.forEach((m, id) => {
+      if (m.spouse_ids && Array.isArray(m.spouse_ids)) {
+        for (const spId of m.spouse_ids) {
+          addPair(id, spId);
+        }
+      }
+    });
+  }
+
+  const result = new Map<string, string[]>();
+  map.forEach((set, id) => {
+    result.set(id, Array.from(set));
+  });
+  return result;
+}
+
+/**
+ * Thuật toán tìm Gốc Gần Nhất và phân tích quan hệ huyết thống thuần
+ * (Chỉ duyệt các thế hệ cha mẹ trực hệ)
+ */
+export function findConsanguinealLca(
+  personA: Member,
+  personB: Member,
   membersMap: Map<string, Member>
 ): LcaResult {
-  const personA = membersMap.get(personAId);
-  const personB = membersMap.get(personBId);
-
-  // Trường hợp không tìm thấy thành viên
-  if (!personA || !personB) {
-    return createUnrelatedResult(personA, personB);
-  }
-
-  // Trường hợp chọn chính mình
-  if (personAId === personBId) {
-    const node: KinshipPathNode = {
-      id: personA.id,
-      name: personA.full_name,
-      relation: 'Bản thân',
-    };
-    return {
-      lcaNodeId: personA.id,
-      lcaNodeName: personA.full_name,
-      distanceA: 0,
-      distanceB: 0,
-      generationDelta: 0,
-      isSeniorBranchA: true,
-      pathA: [node],
-      pathB: [node],
-      relationshipType: 'same_person',
-    };
-  }
-
   // 1. Thu thập toàn bộ tổ tiên của A kèm chuỗi thế hệ từ A lên
   const ancestorsA = collectAncestors(personA, membersMap);
 
@@ -147,6 +159,363 @@ export function findLowestCommonAncestor(
 }
 
 /**
+ * Thuật toán tìm Gốc Gần Nhất và phân tích quan hệ thân tộc toàn diện:
+ * - Huyết thống (Consanguineal)
+ * - Vợ - Chồng (Spouse)
+ * - Cầu nối hôn nhân đơn (In-Law)
+ * - Cầu nối hôn nhân đôi (Co-In-Law)
+ * Pure Function - Không phụ thuộc DB hay state ngoài
+ */
+export function findLowestCommonAncestor(
+  personAId: string,
+  personBId: string,
+  membersMap: Map<string, Member>,
+  spouseMapInput?: Map<string, string[]>
+): LcaResult {
+  const personA = membersMap.get(personAId);
+  const personB = membersMap.get(personBId);
+
+  // Trường hợp không tìm thấy thành viên
+  if (!personA || !personB) {
+    return createUnrelatedResult(personA, personB);
+  }
+
+  // Trường hợp chọn chính mình
+  if (personAId === personBId) {
+    const node: KinshipPathNode = {
+      id: personA.id,
+      name: personA.full_name,
+      relation: 'Bản thân',
+      birthYear: personA.birth_year,
+      birthOrder: personA.birth_order ?? null,
+      generationNumber: personA.generation_level ?? personA.generation_number ?? 1,
+      isSeniorBranch: personA.is_senior_branch ?? undefined,
+      gender: personA.gender,
+    };
+    return {
+      lcaNodeId: personA.id,
+      lcaNodeName: personA.full_name,
+      distanceA: 0,
+      distanceB: 0,
+      generationDelta: 0,
+      isSeniorBranchA: true,
+      pathA: [node],
+      pathB: [node],
+      relationshipType: 'same_person',
+    };
+  }
+
+  // Xây dựng hoặc nạp bảng hôn phối
+  const spouseMap = spouseMapInput ?? buildSpouseMap(null, membersMap);
+  const spousesA = spouseMap.get(personAId) || [];
+  const spousesB = spouseMap.get(personBId) || [];
+
+  // 1. Kiểm tra quan hệ VỢ - CHỒNG trực tiếp (Direct Spouse)
+  const isDirectSpouse = spousesA.includes(personBId) || spousesB.includes(personAId);
+  if (isDirectSpouse) {
+    const isAMale = personA.gender === 'male';
+    const nodeA: KinshipPathNode = {
+      id: personA.id,
+      name: personA.full_name,
+      relation: isAMale ? 'Chồng' : 'Vợ',
+      birthYear: personA.birth_year,
+      birthOrder: personA.birth_order ?? null,
+      generationNumber: personA.generation_level ?? personA.generation_number ?? 1,
+      isSeniorBranch: personA.is_senior_branch ?? undefined,
+      gender: personA.gender,
+    };
+    const nodeB: KinshipPathNode = {
+      id: personB.id,
+      name: personB.full_name,
+      relation: personB.gender === 'male' ? 'Chồng' : 'Vợ',
+      birthYear: personB.birth_year,
+      birthOrder: personB.birth_order ?? null,
+      generationNumber: personB.generation_level ?? personB.generation_number ?? 1,
+      isSeniorBranch: personB.is_senior_branch ?? undefined,
+      gender: personB.gender,
+    };
+
+    return {
+      lcaNodeId: null,
+      lcaNodeName: null,
+      distanceA: 0,
+      distanceB: 0,
+      generationDelta: 0,
+      isSeniorBranchA: isAMale,
+      pathA: [nodeA],
+      pathB: [nodeB],
+      relationshipType: 'spouse',
+      spouseBridge: {
+        type: 'spouse',
+        spouseAId: personB.id,
+        spouseBId: personA.id,
+        inLawRoleA: 'self',
+        inLawRoleB: 'self',
+      },
+    };
+  }
+
+  // 2. Kiểm tra quan hệ HUYẾT THỐNG trực tiếp qua LCA
+  const directBloodLca = findConsanguinealLca(personA, personB, membersMap);
+  if (directBloodLca.relationshipType !== 'unrelated') {
+    return directBloodLca;
+  }
+
+  // 3. Kiểm tra CẦU NỐI HÔN NHÂN ĐƠN (In-Law: 1 bên là Dâu/Rể)
+  interface InLawCandidate {
+    type: 'bridgeA' | 'bridgeB';
+    bridgeMember: Member;
+    bloodLca: LcaResult;
+    totalDist: number;
+  }
+  const inLawCandidates: InLawCandidate[] = [];
+
+  // 3a. A là Dâu/Rể -> Tìm cầu nối qua người phối ngẫu S_A của A
+  for (const sAId of spousesA) {
+    const sAMember = membersMap.get(sAId);
+    if (!sAMember) continue;
+    const bridgeLca = findConsanguinealLca(sAMember, personB, membersMap);
+    if (bridgeLca.relationshipType !== 'unrelated') {
+      inLawCandidates.push({
+        type: 'bridgeA',
+        bridgeMember: sAMember,
+        bloodLca: bridgeLca,
+        totalDist: bridgeLca.distanceA + bridgeLca.distanceB,
+      });
+    }
+  }
+
+  // 3b. B là Dâu/Rể -> Tìm cầu nối qua người phối ngẫu S_B của B
+  for (const sBId of spousesB) {
+    const sBMember = membersMap.get(sBId);
+    if (!sBMember) continue;
+    const bridgeLca = findConsanguinealLca(personA, sBMember, membersMap);
+    if (bridgeLca.relationshipType !== 'unrelated') {
+      inLawCandidates.push({
+        type: 'bridgeB',
+        bridgeMember: sBMember,
+        bloodLca: bridgeLca,
+        totalDist: bridgeLca.distanceA + bridgeLca.distanceB,
+      });
+    }
+  }
+
+  if (inLawCandidates.length > 0) {
+    // Ưu tiên cầu nối có tổng khoảng cách huyết thống nhỏ nhất
+    inLawCandidates.sort((c1, c2) => c1.totalDist - c2.totalDist);
+    const bestInLaw = inLawCandidates[0];
+    const { bridgeMember, bloodLca } = bestInLaw;
+
+    if (bestInLaw.type === 'bridgeA') {
+      // A là Dâu/Rể, bridgeMember là S_A (chồng/vợ của A có huyết thống với B)
+      const nodeA: KinshipPathNode = {
+        id: personA.id,
+        name: personA.full_name,
+        relation: 'Bản thân',
+        birthYear: personA.birth_year,
+        birthOrder: personA.birth_order ?? null,
+        generationNumber: personA.generation_level ?? personA.generation_number ?? 1,
+        isSeniorBranch: personA.is_senior_branch ?? undefined,
+        gender: personA.gender,
+        isSpouse: true,
+      };
+      const nodeSA: KinshipPathNode = {
+        id: bridgeMember.id,
+        name: bridgeMember.full_name,
+        relation: bridgeMember.gender === 'male' ? 'Chồng' : 'Vợ',
+        birthYear: bridgeMember.birth_year,
+        birthOrder: bridgeMember.birth_order ?? null,
+        generationNumber: bridgeMember.generation_level ?? bridgeMember.generation_number ?? 1,
+        isSeniorBranch: bridgeMember.is_senior_branch ?? undefined,
+        gender: bridgeMember.gender,
+        isSpouse: false,
+        isSpouseBridge: true,
+      };
+
+      const pathA = [nodeA, nodeSA, ...bloodLca.pathA.slice(1)];
+
+      return {
+        lcaNodeId: bloodLca.lcaNodeId,
+        lcaNodeName: bloodLca.lcaNodeName,
+        lcaNode: bloodLca.lcaNode,
+        distanceA: bloodLca.distanceA,
+        distanceB: bloodLca.distanceB,
+        generationDelta: bloodLca.generationDelta,
+        isSeniorBranchA: bloodLca.isSeniorBranchA,
+        pathA,
+        pathB: bloodLca.pathB,
+        relationshipType: 'in_law',
+        spouseBridge: {
+          type: 'in_law',
+          spouseAId: bridgeMember.id,
+          bridgeMemberA: nodeSA,
+          bloodRelation: bloodLca.relationshipType,
+          inLawRoleA: 'spouse',
+          inLawRoleB: 'self',
+        },
+      };
+    } else {
+      // B là Dâu/Rể, bridgeMember là S_B (chồng/vợ của B có huyết thống với A)
+      const nodeB: KinshipPathNode = {
+        id: personB.id,
+        name: personB.full_name,
+        relation: 'Bản thân',
+        birthYear: personB.birth_year,
+        birthOrder: personB.birth_order ?? null,
+        generationNumber: personB.generation_level ?? personB.generation_number ?? 1,
+        isSeniorBranch: personB.is_senior_branch ?? undefined,
+        gender: personB.gender,
+        isSpouse: true,
+      };
+      const nodeSB: KinshipPathNode = {
+        id: bridgeMember.id,
+        name: bridgeMember.full_name,
+        relation: bridgeMember.gender === 'male' ? 'Chồng' : 'Vợ',
+        birthYear: bridgeMember.birth_year,
+        birthOrder: bridgeMember.birth_order ?? null,
+        generationNumber: bridgeMember.generation_level ?? bridgeMember.generation_number ?? 1,
+        isSeniorBranch: bridgeMember.is_senior_branch ?? undefined,
+        gender: bridgeMember.gender,
+        isSpouse: false,
+        isSpouseBridge: true,
+      };
+
+      const pathB = [nodeB, nodeSB, ...bloodLca.pathB.slice(1)];
+
+      return {
+        lcaNodeId: bloodLca.lcaNodeId,
+        lcaNodeName: bloodLca.lcaNodeName,
+        lcaNode: bloodLca.lcaNode,
+        distanceA: bloodLca.distanceA,
+        distanceB: bloodLca.distanceB,
+        generationDelta: bloodLca.generationDelta,
+        isSeniorBranchA: bloodLca.isSeniorBranchA,
+        pathA: bloodLca.pathA,
+        pathB,
+        relationshipType: 'in_law',
+        spouseBridge: {
+          type: 'in_law',
+          spouseBId: bridgeMember.id,
+          bridgeMemberB: nodeSB,
+          bloodRelation: bloodLca.relationshipType,
+          inLawRoleA: 'self',
+          inLawRoleB: 'spouse',
+        },
+      };
+    }
+  }
+
+  // 4. Kiểm tra CẦU NỐI HÔN NHÂN ĐÔI (Co-In-Law: cả 2 bên đều là Dâu/Rể)
+  interface CoInLawCandidate {
+    memberSA: Member;
+    memberSB: Member;
+    bloodLca: LcaResult;
+    totalDist: number;
+  }
+  const coInLawCandidates: CoInLawCandidate[] = [];
+
+  for (const sAId of spousesA) {
+    const sAMember = membersMap.get(sAId);
+    if (!sAMember) continue;
+    for (const sBId of spousesB) {
+      const sBMember = membersMap.get(sBId);
+      if (!sBMember) continue;
+
+      const bloodLca = findConsanguinealLca(sAMember, sBMember, membersMap);
+      if (bloodLca.relationshipType !== 'unrelated') {
+        coInLawCandidates.push({
+          memberSA: sAMember,
+          memberSB: sBMember,
+          bloodLca,
+          totalDist: bloodLca.distanceA + bloodLca.distanceB,
+        });
+      }
+    }
+  }
+
+  if (coInLawCandidates.length > 0) {
+    coInLawCandidates.sort((c1, c2) => c1.totalDist - c2.totalDist);
+    const { memberSA, memberSB, bloodLca } = coInLawCandidates[0];
+
+    const nodeA: KinshipPathNode = {
+      id: personA.id,
+      name: personA.full_name,
+      relation: 'Bản thân',
+      birthYear: personA.birth_year,
+      birthOrder: personA.birth_order ?? null,
+      generationNumber: personA.generation_level ?? personA.generation_number ?? 1,
+      isSeniorBranch: personA.is_senior_branch ?? undefined,
+      gender: personA.gender,
+      isSpouse: true,
+    };
+    const nodeSA: KinshipPathNode = {
+      id: memberSA.id,
+      name: memberSA.full_name,
+      relation: memberSA.gender === 'male' ? 'Chồng' : 'Vợ',
+      birthYear: memberSA.birth_year,
+      birthOrder: memberSA.birth_order ?? null,
+      generationNumber: memberSA.generation_level ?? memberSA.generation_number ?? 1,
+      isSeniorBranch: memberSA.is_senior_branch ?? undefined,
+      gender: memberSA.gender,
+      isSpouse: false,
+      isSpouseBridge: true,
+    };
+    const nodeB: KinshipPathNode = {
+      id: personB.id,
+      name: personB.full_name,
+      relation: 'Bản thân',
+      birthYear: personB.birth_year,
+      birthOrder: personB.birth_order ?? null,
+      generationNumber: personB.generation_level ?? personB.generation_number ?? 1,
+      isSeniorBranch: personB.is_senior_branch ?? undefined,
+      gender: personB.gender,
+      isSpouse: true,
+    };
+    const nodeSB: KinshipPathNode = {
+      id: memberSB.id,
+      name: memberSB.full_name,
+      relation: memberSB.gender === 'male' ? 'Chồng' : 'Vợ',
+      birthYear: memberSB.birth_year,
+      birthOrder: memberSB.birth_order ?? null,
+      generationNumber: memberSB.generation_level ?? memberSB.generation_number ?? 1,
+      isSeniorBranch: memberSB.is_senior_branch ?? undefined,
+      gender: memberSB.gender,
+      isSpouse: false,
+      isSpouseBridge: true,
+    };
+
+    const pathA = [nodeA, nodeSA, ...bloodLca.pathA.slice(1)];
+    const pathB = [nodeB, nodeSB, ...bloodLca.pathB.slice(1)];
+
+    return {
+      lcaNodeId: bloodLca.lcaNodeId,
+      lcaNodeName: bloodLca.lcaNodeName,
+      lcaNode: bloodLca.lcaNode,
+      distanceA: bloodLca.distanceA,
+      distanceB: bloodLca.distanceB,
+      generationDelta: bloodLca.generationDelta,
+      isSeniorBranchA: bloodLca.isSeniorBranchA,
+      pathA,
+      pathB,
+      relationshipType: 'co_in_law',
+      spouseBridge: {
+        type: 'co_in_law',
+        spouseAId: memberSA.id,
+        spouseBId: memberSB.id,
+        bridgeMemberA: nodeSA,
+        bridgeMemberB: nodeSB,
+        bloodRelation: bloodLca.relationshipType,
+        inLawRoleA: 'spouse',
+        inLawRoleB: 'spouse',
+      },
+    };
+  }
+
+  // 5. Không tìm thấy liên kết
+  return createUnrelatedResult(personA, personB);
+}
+
+/**
  * Thu thập danh sách tổ tiên bằng BFS để lấy khoảng cách ngắn nhất tới mỗi tổ tiên
  */
 function collectAncestors(
@@ -216,6 +585,7 @@ function buildKinshipPath(lineage: Member[]): KinshipPathNode[] {
       name: m.full_name,
       relation,
       birthYear: m.birth_year,
+      birthOrder: m.birth_order ?? null,
       generationNumber: m.generation_level ?? m.generation_number ?? 1,
       isSeniorBranch: m.is_senior_branch ?? undefined,
       isAdopted: m.is_adopted ?? undefined,
@@ -255,13 +625,22 @@ function determineSeniorBranch(
 
 /**
  * So sánh tính Trưởng/Thứ giữa 2 thành viên cùng thế hệ:
- * 1. Thuộc tính `is_senior_branch` (nếu có)
- * 2. Thứ tự sinh `birth_order` (1: con trưởng, 2: con thứ...)
- * 3. Năm sinh / ngày sinh (ai sinh trước là anh/chị)
+ * 1. Nếu là anh chị em ruột (cùng cha hoặc cùng mẹ):
+ *    - Thứ bậc hoàn toàn do birth_order (1: con trưởng, 2: con thứ...) và năm sinh/ngày sinh quyết định.
+ *    - Thuộc tính is_senior_branch không được làm đảo lộn thứ bậc chị gái sinh trước thành em gái!
+ * 2. Nếu không phải anh chị em ruột (anh em họ):
+ *    - Thuộc tính `is_senior_branch` (nếu có: chi trưởng / chi thứ)
+ *    - Sau đó đến thứ tự sinh `birth_order` và năm sinh / ngày sinh
  */
 export function compareSeniority(a: Member, b: Member): boolean {
-  if (a.is_senior_branch && !b.is_senior_branch) return true;
-  if (!a.is_senior_branch && b.is_senior_branch) return false;
+  const isSibling =
+    (!!a.father_id && !!b.father_id && a.father_id === b.father_id) ||
+    (!!a.mother_id && !!b.mother_id && a.mother_id === b.mother_id);
+
+  if (!isSibling) {
+    if (a.is_senior_branch && !b.is_senior_branch) return true;
+    if (!a.is_senior_branch && b.is_senior_branch) return false;
+  }
 
   const orderA = a.birth_order || 999;
   const orderB = b.birth_order || 999;
@@ -278,6 +657,12 @@ export function compareSeniority(a: Member, b: Member): boolean {
   // So sánh ngày sinh
   if (a.birth_date && b.birth_date && a.birth_date !== b.birth_date) {
     return new Date(a.birth_date).getTime() < new Date(b.birth_date).getTime();
+  }
+
+  // Fallback nếu anh em ruột không có thứ tự sinh và năm sinh nhưng có cờ chi trưởng:
+  if (isSibling) {
+    if (a.is_senior_branch && !b.is_senior_branch) return true;
+    if (!a.is_senior_branch && b.is_senior_branch) return false;
   }
 
   return true;

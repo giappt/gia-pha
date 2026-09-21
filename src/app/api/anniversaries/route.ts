@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { SAMPLE_MEMBERS_28 } from '@/lib/tree-layout/sample-data';
 import { MemberRecord } from '@/types/tree';
 import { getUpcomingAnniversaries } from '@/lib/anniversaries/anniversary-engine';
+import { buildSpouseMap } from '@/lib/kinship-engine/lca-finder';
+import { KinshipRegion, CustomKinshipDictionary } from '@/types/kinship';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +25,9 @@ export async function GET(request: NextRequest) {
 
     let effectiveViewerId = viewerMemberId;
     let members: MemberRecord[] = [];
+    let region: KinshipRegion = 'north';
+    let customDictionary: CustomKinshipDictionary | null = null;
+    let spouseMap: Map<string, string[]> | undefined;
 
     try {
       const supabase = createClient();
@@ -46,6 +51,36 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Nạp cấu hình từ điển và vùng miền SSOT từ clan_settings
+      try {
+        const { data: clanSettings } = await supabase
+          .from('clan_settings')
+          .select('default_kinship_region, custom_kinship_dictionary')
+          .limit(1)
+          .maybeSingle();
+
+        if (clanSettings?.default_kinship_region) {
+          region = clanSettings.default_kinship_region as KinshipRegion;
+        }
+        if (clanSettings?.custom_kinship_dictionary) {
+          customDictionary = clanSettings.custom_kinship_dictionary as CustomKinshipDictionary;
+        }
+      } catch {
+        // Bỏ qua lỗi cấu hình settings
+      }
+
+      // Nạp danh sách liên kết hôn phối từ database
+      try {
+        const { data: dbSpouses } = await supabase
+          .from('spouse_relations')
+          .select('member_a_id, member_b_id');
+        if (dbSpouses && dbSpouses.length > 0) {
+          spouseMap = buildSpouseMap(dbSpouses, undefined);
+        }
+      } catch {
+        // Bỏ qua lỗi quan hệ hôn phối
+      }
+
       const { data: dbMembers, error } = await supabase
         .from('members')
         .select('*')
@@ -64,6 +99,9 @@ export async function GET(request: NextRequest) {
       daysAhead,
       viewerMemberId: effectiveViewerId,
       branchFilter: branch,
+      region,
+      customDictionary,
+      spouseMap,
     });
 
     const totalCount = data.reduce((acc, g) => acc + g.members.length, 0);

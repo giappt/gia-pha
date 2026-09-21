@@ -109,6 +109,17 @@ export interface PushSubscriptionRecord {
   updated_at: string;
 }
 
+export interface SpouseRelation {
+  id: string;
+  member_a_id: string;
+  member_b_id: string;
+  marriage_order?: number;
+  marriage_status?: string;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -122,6 +133,12 @@ export type Database = {
         Row: Member;
         Insert: Partial<Member>;
         Update: Partial<Member>;
+        Relationships: [];
+      };
+      spouse_relations: {
+        Row: SpouseRelation;
+        Insert: Partial<SpouseRelation>;
+        Update: Partial<SpouseRelation>;
         Relationships: [];
       };
       users: {

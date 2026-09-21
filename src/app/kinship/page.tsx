@@ -33,10 +33,10 @@ interface MemberOption {
   has_parents: boolean;
 }
 
-import { MOCK_CLAN_MEMBERS } from '@/lib/kinship-engine/mock-data';
-import { findLowestCommonAncestor } from '@/lib/kinship-engine/lca-finder';
-import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
-import type { Member } from '@/types/database';
+import { MOCK_CLAN_MEMBERS, MOCK_SPOUSE_RELATIONS } from '@/lib/kinship-engine/mock-data';
+import { findLowestCommonAncestor, buildSpouseMap } from '@/lib/kinship-engine/lca-finder';
+import { resolveKinshipTerms, formatBirthOrder } from '@/lib/kinship-engine/regional-dictionaries';
+import type { Member, SpouseRelation } from '@/types/database';
 import type { CustomKinshipDictionary } from '@/types/kinship';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 
@@ -64,6 +64,8 @@ const MEMBERS_MAP = new Map<string, Member>(
   ])
 );
 
+const INITIAL_SPOUSE_MAP = buildSpouseMap(MOCK_SPOUSE_RELATIONS, MEMBERS_MAP);
+
 /**
  * Tính toán quan hệ xưng hô tức thì 0ms (In-Memory Zero-Latency)
  * Hoạt động 100% offline, không bị ảnh hưởng bởi nghẽn mạng hay middleware auth
@@ -73,6 +75,7 @@ function computeKinshipDirect(
   pB: string,
   reg: KinshipRegion,
   currentMembersMap: Map<string, Member>,
+  currentSpouseMap?: Map<string, string[]>,
   customDict?: CustomKinshipDictionary | null
 ): KinshipResolution | null {
   if (!pA || !pB || pA === pB) return null;
@@ -80,7 +83,8 @@ function computeKinshipDirect(
   const memberB = currentMembersMap.get(pB);
   if (!memberA || !memberB) return null;
 
-  const lcaResult = findLowestCommonAncestor(pA, pB, currentMembersMap);
+  const spMap = currentSpouseMap ?? buildSpouseMap(null, currentMembersMap);
+  const lcaResult = findLowestCommonAncestor(pA, pB, currentMembersMap, spMap);
   const resolution = resolveKinshipTerms(lcaResult, memberA, memberB, reg, customDict);
 
   const genA = memberA.generation_level ?? memberA.generation_number ?? 1;
@@ -101,6 +105,7 @@ const DEFAULT_B = '30000000-0000-0000-0000-000000000003'; // Hùng (Chi 2)
 export default function KinshipPage() {
   const [members, setMembers] = useState<MemberOption[]>(INITIAL_MEMBERS);
   const [membersMap, setMembersMap] = useState<Map<string, Member>>(MEMBERS_MAP);
+  const [spouseMap, setSpouseMap] = useState<Map<string, string[]>>(INITIAL_SPOUSE_MAP);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Selection states: Mặc định chọn Hải (Chi 1) và Hùng (Chi 2)
@@ -115,7 +120,7 @@ export default function KinshipPage() {
 
   // Resolution states: Khởi tạo kết quả NGAY LẬP TỨC 0ms trên client
   const [result, setResult] = useState<KinshipResolution | null>(() =>
-    computeKinshipDirect(DEFAULT_A, DEFAULT_B, 'north', MEMBERS_MAP)
+    computeKinshipDirect(DEFAULT_A, DEFAULT_B, 'north', MEMBERS_MAP, INITIAL_SPOUSE_MAP)
   );
   const [isCalculating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -129,7 +134,8 @@ export default function KinshipPage() {
     pB = personBId,
     reg = region,
     dict = customDict,
-    currentMap = membersMap
+    currentMap = membersMap,
+    currentSpouseMap = spouseMap
   ) => {
     if (!pA || !pB) {
       setErrorMessage('Vui lòng chọn đầy đủ cả 2 thành viên để xác định vai vế.');
@@ -146,7 +152,7 @@ export default function KinshipPage() {
     setErrorMessage(null);
     setIsExpandedMiddle(false);
 
-    const directRes = computeKinshipDirect(pA, pB, reg, currentMap, dict);
+    const directRes = computeKinshipDirect(pA, pB, reg, currentMap, currentSpouseMap, dict);
     if (directRes) {
       setResult(directRes);
     } else {
@@ -166,11 +172,15 @@ export default function KinshipPage() {
       fetch('/api/clan-settings')
         .then((res) => res.json())
         .catch(() => null),
-      fetch('/api/members')
+      fetch('/api/kinship?action=members')
         .then((res) => res.json())
-        .catch(() => null),
+        .catch(() =>
+          fetch('/api/members')
+            .then((r) => r.json())
+            .catch(() => null)
+        ),
     ])
-      .then(([settingsJson, membersJson]) => {
+      .then(([settingsJson, kinshipDataJson]) => {
         const loadedDict = settingsJson?.data?.custom_kinship_dictionary || null;
         if (loadedDict && Object.keys(loadedDict).length > 0) {
           setCustomDict(loadedDict);
@@ -182,23 +192,31 @@ export default function KinshipPage() {
           region;
         setRegion(activeReg);
 
-        // Nạp danh sách thành viên thực tế từ DB
+        // Nạp danh sách thành viên và liên kết hôn phối thực tế từ DB
         const rawList: any[] =
-          membersJson?.members ||
-          membersJson?.data?.members ||
-          (Array.isArray(membersJson) ? membersJson : MOCK_CLAN_MEMBERS);
+          kinshipDataJson?.data?.members ||
+          kinshipDataJson?.members ||
+          (Array.isArray(kinshipDataJson) ? kinshipDataJson : MOCK_CLAN_MEMBERS);
+
+        const rawSpouses: any[] =
+          kinshipDataJson?.data?.spouseRelations ||
+          kinshipDataJson?.spouseRelations ||
+          MOCK_SPOUSE_RELATIONS;
 
         if (rawList && rawList.length > 0) {
           const normalizedMembers: Member[] = rawList.map((m: any) => ({
             ...m,
             generation_level: m.generation_level ?? m.generation_number ?? 1,
             generation_number: m.generation_level ?? m.generation_number ?? 1,
-            is_senior_branch: m.is_senior_branch ?? m.is_senior ?? false,
+            is_senior_branch: m.is_senior_branch ?? false,
             is_adopted: m.is_adopted ?? false,
           }));
 
           const newMap = new Map<string, Member>(normalizedMembers.map((m) => [m.id, m]));
           setMembersMap(newMap);
+
+          const newSpouseMap = buildSpouseMap(rawSpouses, newMap);
+          setSpouseMap(newSpouseMap);
 
           const options: MemberOption[] = normalizedMembers.map((m) => ({
             id: m.id,
@@ -238,7 +256,7 @@ export default function KinshipPage() {
           if (targetB) setPersonBId(targetB);
 
           if (targetA && targetB && targetA !== targetB) {
-            handleCalculate(targetA, targetB, activeReg, loadedDict, newMap);
+            handleCalculate(targetA, targetB, activeReg, loadedDict, newMap, newSpouseMap);
           }
         }
       })
@@ -275,12 +293,16 @@ export default function KinshipPage() {
 
   const isSamePerson = Boolean(personAId && personBId && personAId === personBId);
 
-  // Nhận diện Quan Hệ Trực Hệ (Cha - Con, Ông - Cháu, Cụ - Chắt)
+  // Nhận diện Quan Hệ Trực Hệ (Cha - Con, Ông - Cháu, Cụ - Chắt hoặc Bố/Mẹ chồng - Con dâu, Bố/Mẹ vợ - Con rể)
   // Khi 1 trong 2 người chính là Tổ Tiên / LCA của người kia (khoảng cách thế hệ 1 chiều)
   const isDirectLineage = Boolean(
     result &&
+    result.relationshipType !== 'spouse' &&
     (result.relationshipType === 'parent_child' ||
       result.relationshipType === 'direct_ancestor' ||
+      (result.relationshipType === 'in_law' &&
+        (result.spouseBridge?.bloodRelation === 'parent_child' ||
+          result.spouseBridge?.bloodRelation === 'direct_ancestor')) ||
       (result.lcaNode &&
         (result.lcaNode.id === selectedPersonA?.id ||
           result.lcaNode.id === selectedPersonB?.id)))
@@ -536,11 +558,59 @@ export default function KinshipPage() {
                   const idTam = '40000000-0000-0000-0000-000000000003';
                   setPersonAId(idNam);
                   setPersonBId(idTam);
-                  handleCalculate(idNam, idTam, region, customDict, membersMap);
+                  handleCalculate(idNam, idTam, region, customDict, membersMap, spouseMap);
                 }}
                 className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-emerald-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
               >
                 🤝 Con Nuôi (Nam & Tâm)
+              </button>
+              <button
+                type="button"
+                id="sample-spouse-btn"
+                onClick={() => {
+                  setSearchA('');
+                  setSearchB('');
+                  const idBinh = '20000000-0000-0000-0000-000000000001';
+                  const idHue = '20000000-0000-0000-0000-000000000002';
+                  setPersonAId(idBinh);
+                  setPersonBId(idHue);
+                  handleCalculate(idBinh, idHue, region, customDict, membersMap, spouseMap);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 dark:hover:bg-pink-900/50 text-[11px] font-semibold text-pink-800 dark:text-pink-300 border border-pink-300/80 dark:border-pink-700/80 transition-all cursor-pointer shadow-xs"
+              >
+                💍 Vợ - Chồng (Cụ Bình & Cụ Bà Huệ)
+              </button>
+              <button
+                type="button"
+                id="sample-inlaw-parent-btn"
+                onClick={() => {
+                  setSearchA('');
+                  setSearchB('');
+                  const idKhoi = '10000000-0000-0000-0000-000000000001';
+                  const idHue = '20000000-0000-0000-0000-000000000002';
+                  setPersonAId(idKhoi);
+                  setPersonBId(idHue);
+                  handleCalculate(idKhoi, idHue, region, customDict, membersMap, spouseMap);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-pink-50 dark:hover:bg-pink-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-pink-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
+              >
+                👰 Bố Chồng - Con Dâu (Cụ Khởi & Cụ Bà Huệ)
+              </button>
+              <button
+                type="button"
+                id="sample-inlaw-sibling-btn"
+                onClick={() => {
+                  setSearchA('');
+                  setSearchB('');
+                  const idHue = '20000000-0000-0000-0000-000000000002';
+                  const idCuong = '20000000-0000-0000-0000-000000000004';
+                  setPersonAId(idHue);
+                  setPersonBId(idCuong);
+                  handleCalculate(idHue, idCuong, region, customDict, membersMap, spouseMap);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-pink-50 dark:hover:bg-pink-950/40 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:text-pink-700 border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer"
+              >
+                🤝 Chị Dâu - Em Chồng (Cụ Bà Huệ & Cụ Cường)
               </button>
             </div>
           )}
@@ -602,7 +672,7 @@ export default function KinshipPage() {
                 </button>
               </div>
               <Link
-                href="/admin/settings"
+                href="/admin/kinship"
                 title="Thay đổi mặc định trong Cài đặt Dòng họ"
                 className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5 ml-1"
               >
@@ -677,7 +747,13 @@ export default function KinshipPage() {
                           ? 'Quan Hệ Cha/Mẹ - Con'
                           : result.relationshipType === 'direct_ancestor'
                             ? 'Quan Hệ Trực Hệ'
-                            : 'Quan Hệ Dòng Tộc'}
+                            : result.relationshipType === 'spouse'
+                              ? 'Quan Hệ Vợ - Chồng'
+                              : result.relationshipType === 'in_law'
+                                ? 'Quan Hệ Dâu Rể (Hôn Nhân)'
+                                : result.relationshipType === 'co_in_law'
+                                  ? 'Quan Hệ Chị Em Dâu / Cọc Chèo'
+                                  : 'Quan Hệ Dòng Tộc'}
                   </span>
                 </div>
 
@@ -727,9 +803,11 @@ export default function KinshipPage() {
                   <h2 className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     <FamilyTreeIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>
-                      {isDirectLineage
-                        ? 'Sơ Đồ Dòng Trực Hệ Dọc (Vertical Direct Lineage)'
-                        : 'Sơ Đồ Cây Phả Hệ Trực Quan'}
+                      {result.relationshipType === 'spouse'
+                        ? 'Sơ Đồ Hôn Phối Trực Tiếp (Spouse)'
+                        : isDirectLineage
+                          ? 'Sơ Đồ Dòng Trực Hệ Dọc (Vertical Direct Lineage)'
+                          : 'Sơ Đồ Cây Phả Hệ Trực Quan'}
                     </span>
                   </h2>
 
@@ -743,8 +821,75 @@ export default function KinshipPage() {
                   </Link>
                 </div>
 
-                {isDirectLineage ? (
-                  /* 1. SƠ ĐỒ DÒNG TRỰC HỆ DỌC (Dành cho quan hệ Cha-Con, Ông-Cháu, Cụ-Chắt) */
+                {result.relationshipType === 'spouse' ? (
+                  /* 1. SƠ ĐỒ HÔN PHỐI TRỰC TIẾP (Vợ - Chồng) */
+                  <div
+                    id="spouse-relationship-view"
+                    className="p-5 sm:p-7 rounded-2xl bg-gradient-to-b from-rose-50/40 via-pink-50/30 to-slate-50/80 dark:from-slate-950 dark:to-slate-900 border border-pink-200/60 dark:border-pink-900/40"
+                  >
+                    <div className="max-w-xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 py-4">
+                      {/* Card A */}
+                      <div className="w-full sm:w-56 p-4 rounded-xl border bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-2xs text-center">
+                        <div className="text-xs text-slate-500 uppercase font-semibold mb-1">Người hỏi (A)</div>
+                        <div className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                          {selectedPersonA?.full_name}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1">
+                          {selectedPersonA?.gender === 'male' ? 'Nam' : 'Nữ'}
+                          {selectedPersonA?.birth_year ? ` · Sinh ${selectedPersonA.birth_year}` : ''}
+                        </div>
+                        <div className="mt-2 inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
+                          {result.termBtoA}
+                        </div>
+                      </div>
+
+                      {/* Cầu nối Hôn phối */}
+                      <div className="flex flex-col items-center gap-1 shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-950/60 border border-pink-300 dark:border-pink-800 flex items-center justify-center text-pink-600 dark:text-pink-300 shadow-sm text-lg">
+                          💍
+                        </div>
+                        <span className="text-[11px] font-extrabold text-pink-700 dark:text-pink-400 tracking-wide">
+                          ═(Hôn phối)═
+                        </span>
+                      </div>
+
+                      {/* Card B */}
+                      <div className="w-full sm:w-56 p-4 rounded-xl border bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-2xs text-center">
+                        <div className="text-xs text-slate-500 uppercase font-semibold mb-1">Người được gọi (B)</div>
+                        <div className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                          {selectedPersonB?.full_name}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1">
+                          {selectedPersonB?.gender === 'male' ? 'Nam' : 'Nữ'}
+                          {selectedPersonB?.birth_year ? ` · Sinh ${selectedPersonB.birth_year}` : ''}
+                        </div>
+                        <div className="mt-2 inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
+                          {result.termAtoB}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Thanh Cầu Nối Quan Hệ ở Đáy */}
+                    <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 px-2">
+                      <div className="text-xs text-slate-600 dark:text-slate-400 text-center sm:text-left">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          Mối quan hệ hôn nhân trực tiếp:
+                        </span>{' '}
+                        {result.termAtoB} <span className="text-slate-400">⇄</span> {result.termBtoA}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleSwapRoles}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-700 shadow-2xs hover:scale-102 active:scale-98 transition-all"
+                      >
+                        <ArrowRightLeft className="w-3 h-3 text-emerald-600" />
+                        <span>Đổi vai A ↔ B</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : isDirectLineage ? (
+                  /* 2. SƠ ĐỒ DÒNG TRỰC HỆ DỌC (Dành cho quan hệ Cha-Con, Ông-Cháu, Cụ-Chắt, Bố chồng - Con dâu) */
                   <div
                     id="direct-lineage-tree"
                     className="p-5 sm:p-7 rounded-2xl bg-gradient-to-b from-slate-50/80 to-slate-100/50 dark:from-slate-950 dark:to-slate-900 border border-slate-200/70 dark:border-slate-800"
@@ -758,10 +903,23 @@ export default function KinshipPage() {
 
                         return (
                           <React.Fragment key={node.id}>
-                            {/* Trục nối dọc thẳng đứng nét liền thuần túy giữa các thế hệ */}
-                            {idx > 0 && (
-                              <div className="w-0.5 h-7 bg-emerald-600 dark:bg-emerald-500 my-1 rounded-full" />
-                            )}
+                            {/* Trục nối dọc thẳng đứng nét liền thuần túy hoặc nhịp nối đôi nếu qua hôn phối */}
+                            {idx > 0 && (() => {
+                              const prevNode = directLineageNodes[idx - 1];
+                              const isSpousePair =
+                                (node.isSpouse || prevNode?.isSpouse) &&
+                                node.generationNumber === prevNode?.generationNumber;
+
+                              return isSpousePair ? (
+                                <div className="flex flex-col items-center my-1.5">
+                                  <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-pink-50 dark:bg-pink-950/60 border border-pink-200 dark:border-pink-800 text-[10px] font-bold text-pink-700 dark:text-pink-300 shadow-2xs">
+                                    <span>═(Hôn phối)═</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="w-0.5 h-7 bg-emerald-600 dark:bg-emerald-500 my-1 rounded-full" />
+                              );
+                            })()}
 
                             {/* Node thành viên trên dòng trực hệ */}
                             <div
@@ -779,21 +937,28 @@ export default function KinshipPage() {
                                     {node.name}
                                   </span>
                                 </div>
-                                <span
-                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isTop
-                                    ? 'bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
-                                    : isBottom
-                                      ? 'bg-emerald-700/90 text-white'
-                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                                    }`}
-                                >
-                                  Đời {node.generationNumber}
-                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  {node.isSpouse && (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300">
+                                      💍 Hôn phối
+                                    </span>
+                                  )}
+                                  <span
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isTop
+                                      ? 'bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
+                                      : isBottom
+                                        ? 'bg-emerald-700/90 text-white'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                      }`}
+                                  >
+                                    Đời {node.generationNumber}
+                                  </span>
+                                </div>
                               </div>
                               <div className={`flex flex-wrap items-center gap-2 mt-1.5 text-xs ${isBottom ? 'text-emerald-100' : 'text-slate-500 dark:text-slate-400'}`}>
                                 {node.birthYear ? <span>Sinh: {node.birthYear}</span> : null}
-                                {node.isSeniorBranch !== undefined && (
-                                  <span>· {node.isSeniorBranch ? 'Chi Trưởng' : 'Chi Thứ'}</span>
+                                {!node.isSpouse && formatBirthOrder(node.birthOrder) && (
+                                  <span>{node.birthYear ? '· ' : ''}{formatBirthOrder(node.birthOrder)}</span>
                                 )}
                                 {node.isAdopted && (
                                   <span className="px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-semibold">
@@ -1027,22 +1192,29 @@ function renderNodeItem(node: KinshipPathNode, isTarget: boolean) {
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-bold tracking-tight">{node.name}</span>
-        {node.relation && node.relation !== 'Bản thân' && (
-          <span
-            className={`text-[10px] px-2 py-0.5 rounded-full ${isTarget
-              ? 'bg-emerald-700/80 text-white'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}
-          >
-            {node.relation}
-          </span>
-        )}
+        <div className="flex items-center gap-1">
+          {node.isSpouse && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300 font-bold">
+              💍 Hôn phối
+            </span>
+          )}
+          {node.relation && node.relation !== 'Bản thân' && (
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full ${isTarget
+                ? 'bg-emerald-700/80 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+            >
+              {node.relation}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px] opacity-90">
         {node.birthYear && <span>Sinh: {node.birthYear}</span>}
-        {node.isSeniorBranch !== undefined && (
-          <span>· {node.isSeniorBranch ? 'Chi Trưởng' : 'Chi Thứ'}</span>
+        {!node.isSpouse && formatBirthOrder(node.birthOrder) && (
+          <span>{node.birthYear ? '· ' : ''}{formatBirthOrder(node.birthOrder)}</span>
         )}
         {node.isAdopted && (
           <span className="px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-medium">

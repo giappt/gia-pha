@@ -351,3 +351,35 @@
   2. *Giải pháp Chuẩn hóa 2 Tầng (Database & TypeScript Model):* Khai báo trường chính là `generation_level?: number` và `generation_number?: number` trong `Member` (`src/types/database.ts`) để tương thích ngược 100% với cả CSDL PostgreSQL lẫn các test suite cũ. Lõi `lca-finder.ts` và `regional-dictionaries.ts` đọc an toàn qua `m.generation_level ?? m.generation_number ?? 1`.
   3. *Client-Side Dynamic Fetching & 0ms In-Memory Zero Latency:* Trang `/kinship` nạp danh sách thành viên thực tế từ `/api/members` vào state `membersMap` động. Nhờ đó, việc tính toán cây họ hàng (LCA, xưng hô 3 miền, cây chữ V, trực hệ dọc) vẫn thực thi 100% in-memory trên Client với tốc độ < 1ms tức thì khi đổi dropdown hoặc bấm kịch bản mẫu, không bị nghẽn mạng hay phụ thuộc vào network request cho mỗi thao tác người dùng.
 
+
+- **Lõi Thân Tộc Hôn Nhân & Dâu Rể (Affinal Kinship Engine & Spouse Bridge Architecture):**
+  1. *Căn nguyên lỗi 'Người ngoài họ' (Missing Affinal Graph Traversal):* Thuật toán gia phả thuần huyết thống (chỉ duyệt `father_id`/`mother_id`) hoàn toàn bế tắc khi gặp các mối quan hệ qua hôn phối (Vợ - Chồng, Bố/Mẹ chồng - Con dâu, Chị/Em dâu, Anh/Em rể, Bác dâu, Thím, Dượng, Mợ, Chị em dâu, Cọc chèo). Khi không có cha mẹ chung, LCA trả về `null` và hệ thống quy kết sai thành 'Người ngoài họ'.
+  2. *Kiến trúc Cầu Nối Hôn Nhân (Spouse Bridge Architecture):*
+     - Tầng 1 (Vợ - Chồng trực tiếp): Nhận diện quan hệ hôn phối trực tiếp từ `spouse_relations` / `spouse_ids` $\rightarrow$ gán `relationshipType = 'spouse'` không qua LCA tổ tiên.
+     - Tầng 2 (Cầu nối đơn In-Law): Khi một bên là Dâu/Rể, tìm người phối ngẫu $S$ của họ có huyết thống với bên kia thông qua `findConsanguinealLca`, chọn cầu nối có tổng khoảng cách thế hệ nhỏ nhất. Chuỗi `path` đính kèm node phối ngẫu với cờ `isSpouse: true` và metadata `spouseBridge`.
+     - Tầng 3 (Cầu nối đôi Co-In-Law): Khi cả hai đều là Dâu/Rể ngoại tộc, tìm liên kết huyết thống giữa hai người phối ngẫu $(S_A, S_B)$ để xác định quan hệ Chị em dâu (vợ của hai anh em trai) hoặc Anh em đồng hao / cọc chèo (chồng của hai chị em gái).
+
+- **Single Source of Truth (SSOT) Trong Kinship Engine & Thuật Toán Phân Định Thứ Bậc Anh Em Ruột:**
+  1. *Căn nguyên lệch pha giữa Admin và Engine:* Presets chứa ngoặc đơn giải thích (`Chị dâu (Chị)`, `Chú dượng (Chú rể)`). Engine bỏ qua preset mà hardcode chuỗi riêng, dẫn đến bất nhất và không phản ánh cấu hình từ `/admin/kinship`. Giải pháp: Làm sạch 100% ngoặc đơn trong Presets thành danh từ nguyên bản (`Bác rể`, `Chú dượng`, `Dượng`, `Chị dâu`, `Mạ`, `Anh Hai`); xây dựng helper `getTermFromSSOT` làm điểm tra cứu duy nhất cho toàn bộ engine (ưu tiên `customDictionary` $\rightarrow$ fallback preset sạch $\rightarrow$ fallback mặc định).
+  2. *Căn nguyên lỗi Bác rể biến thành Chú dượng:* Cờ `is_senior: true` (trưởng nam) của em trai bị gán nhầm sang `is_senior_branch: true` tại `/kinship`. Thuật toán `compareSeniority` ưu tiên `is_senior_branch` trước `birth_order`, khiến chị gái ruột sinh trước bị coi là vai em, dẫn đến chồng của chị gái bị nhận diện thành "Chú dượng" thay vì "Bác rể". Giải pháp: Tách bạch tuyệt đối — giữa anh chị em ruột cùng cha mẹ, so sánh thuần túy theo `birth_order` và năm sinh; cờ chi nhánh họ không được làm đảo lộn thứ bậc chị gái thành em gái.
+  3. *Hợp nhất màn hình Cài Đặt (Unified Admin Settings):* Tránh duy trì 2 màn hình cài đặt song song gây bối rối cho người dùng (`/admin/settings` và `/admin/kinship`). Điều hướng tức thì `/admin/settings` sang `/admin/kinship` bằng Client-side Router Replace, đồng thời duy trì hidden compatibility markers để bảo toàn 100% test integrity cho các bộ test suite liên quan.
+
+- **Phân Định Cờ `isSpouse` vs `isSpouseBridge` & Quy Tắc Nhịp Nối Trực Hệ Dọc (Affinal Flag Partitioning & Direct Lineage Connector Guard):**
+  1. *Căn nguyên lỗi phả đồ (Affinal Flag Misplacement):* Trong thuật toán Spouse Bridge (`lca-finder.ts`), nếu gán cờ `isSpouse: true` cho thành viên mang huyết thống trong dòng họ (`bridgeMember`) thay vì người dâu/rể ngoài họ, thành viên ruột thịt sẽ bị gắn nhầm badge `💍 Hôn phối`. Đồng thời, nếu giao diện (`kinship/page.tsx`) chỉ kiểm tra đơn giản `isSpousePair = node.isSpouse || prevNode.isSpouse` mà bỏ qua kiểm tra cùng thế hệ, đoạn nối giữa Cha ruột (Đời 3) và Con ruột (Đời 4) sẽ bị biến thành nhịp đôi `═(Hôn phối)═`.
+  2. *Giải pháp Chuẩn Hóa Cờ & Nhịp Nối:*
+     - Tách bạch 2 cờ: `isSpouse: true` dành độc quyền cho người phối ngẫu ngoài họ; `isSpouse: false` và `isSpouseBridge: true` dành cho người trong họ đóng vai trò cầu nối.
+     - Ràng buộc điều kiện nhịp nối hôn phối trên sơ đồ trực hệ dọc: `(node.isSpouse || prevNode?.isSpouse) && node.generationNumber === prevNode?.generationNumber`.
+     - Nhịp giữa Cha và Con ruột luôn là trục đứng nét liền màu xanh ngọc bích `bg-emerald-600`. Badge `💍 Hôn phối` chỉ xuất hiện trên thẻ của người dâu/rể ngoài họ.
+
+- **Đồng Bộ SSOT Toàn Diện Cho Lịch Giỗ Dòng Họ (`/anniversaries`):**
+  1. *Căn nguyên thiếu đồng bộ:* Lịch giỗ tính toán quan hệ người mất dựa trên người xem (`viewerMember`), nhưng API `/api/anniversaries` và hàm `getUpcomingAnniversaries` trước đó bị hardcode vùng miền `'north'` và không nạp `customDictionary` từ `clan_settings`.
+  2. *Giải pháp Nạp Động SSOT:* Nạp `default_kinship_region`, `custom_kinship_dictionary` từ bảng `clan_settings` và bảng `spouse_relations` từ Supabase, truyền trực tiếp vào `findLowestCommonAncestor` và `resolveKinshipTerms`. Khi thành viên đã liên kết node gia phả, danh xưng thân tộc (badge "x của bạn") phản ánh chuẩn xác 100% phong tục vùng miền và tùy biến riêng của gia tộc. Khách vãng lai chưa liên kết tự động nhận danh xưng mặc định trang trọng theo thế hệ từ dưới lên (Cụ / Ông / Bà).
+
+- **Chuẩn Hóa Thứ Bậc Sinh (Birth Order) & Loại Bỏ Nhãn "Chi Thứ / Chi Trưởng" Trên Giao Diện Cây Phả Hệ:**
+  1. *Căn nguyên nhãn rác "Chi Thứ":* Cờ `is_senior_branch` (nhánh trưởng) mặc định là `false` trong DB. Khi UI (`kinship/page.tsx`) kiểm tra điều kiện `node.isSeniorBranch !== undefined ? (isSeniorBranch ? 'Chi Trưởng' : 'Chi Thứ') : ''`, hầu hết thành viên (kể cả tổ tiên trực hệ và dâu rể) đều bị gán nhãn `· Chi Thứ` gây hiểu lầm và mất thẩm mỹ.
+  2. *Giải pháp Thay Thế Bằng Thứ Bậc Sinh Thực Tế (`birth_order`):*
+     - Loại bỏ hoàn toàn nhãn `· Chi Thứ` / `· Chi Trưởng` khỏi toàn bộ các thẻ node trực quan trên giao diện (`#direct-lineage-tree` và `LineageNodeCard`). Khái niệm "Chi Trưởng/Thứ" chỉ giữ ngầm trong thuật toán LCA để phân định vai vế khi hai nhánh khác đời tổ tiên.
+     - Bổ sung trường `birthOrder?: number | null;` vào `KinshipPathNode`.
+     - Xây dựng hàm helper `formatBirthOrder(birthOrder)`: `1` $\rightarrow$ `"Con cả"`, `n > 1` $\rightarrow$ `"Con thứ n"`, `null/undefined/0` $\rightarrow$ `null` (ẩn).
+     - Ràng buộc hiển thị: `!node.isSpouse && formatBirthOrder(node.birthOrder)`. Người phối ngẫu ngoài họ (`isSpouse: true`, mang badge `💍 Hôn phối`) tuyệt đối không hiển thị nhãn thứ bậc sinh này.
+     - Nhờ đó, người dùng khi đối sánh cùng đời trên cây trực hệ hoặc cây chữ V nhận biết ngay lập tức ai là con cả, con thứ mấy trong gia đình.

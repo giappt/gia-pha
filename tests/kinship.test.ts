@@ -181,10 +181,10 @@ describe('Kinship Engine Test Suite (Comprehensive 7-Generation Clan)', () => {
     assert.strictEqual(northFather?.termSenior, 'Bố');
 
     const centralMother = centralRules.find((r) => r.id === 'parent_mother');
-    assert.strictEqual(centralMother?.termSenior, 'Mẹ (Mạ)');
+    assert.strictEqual(centralMother?.termSenior, 'Mạ');
 
     const southBrother = southRules.find((r) => r.id === 'sibling_brother');
-    assert.strictEqual(southBrother?.termSenior, 'Anh Hai (Anh)');
+    assert.strictEqual(southBrother?.termSenior, 'Anh Hai');
   });
 
   // TC24 & TC25: Áp dụng từ điển tùy biến vào lõi Kinship Engine
@@ -238,7 +238,7 @@ describe('Kinship Engine Test Suite (Comprehensive 7-Generation Clan)', () => {
 
     const duongNorth = northRules.find((r) => r.id === 'uncle_junior_husband');
     assert.ok(duongNorth, 'Phải có quy tắc Chồng của Cô');
-    assert.strictEqual(duongNorth?.termSenior, 'Chú dượng (Chú rể)');
+    assert.strictEqual(duongNorth?.termSenior, 'Chú dượng');
 
     const duongSouth = southRules.find((r) => r.id === 'uncle_junior_husband');
     assert.strictEqual(duongSouth?.termSenior, 'Dượng');
