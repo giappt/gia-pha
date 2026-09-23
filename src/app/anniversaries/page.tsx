@@ -38,6 +38,19 @@ export default function AnniversariesPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [enablePush, setEnablePush] = useState<boolean>(true);
+  const [scope, setScope] = useState<string>('all');
+  const [viewerMemberId, setViewerMemberId] = useState<string | null>(null);
+
+  // Nhận diện query param scope từ URL (ví dụ mở từ Web Push Notification: /anniversaries?scope=my_lineage)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlScope = params.get('scope');
+      if (urlScope === 'my_lineage') {
+        setScope('my_lineage');
+      }
+    }
+  }, []);
 
   // Tính ngày hôm nay chuẩn Âm - Dương UTC+7
   const todayInfo = useMemo(() => {
@@ -54,11 +67,15 @@ export default function AnniversariesPage() {
     let isMounted = true;
     setLoading(true);
 
-    fetch(`/api/anniversaries?days=${daysRange}`)
+    const scopeQuery = scope === 'my_lineage' ? '&scope=my_lineage' : '';
+    fetch(`/api/anniversaries?days=${daysRange}${scopeQuery}`)
       .then((res) => res.json())
       .then((resData) => {
         if (isMounted && resData.success && Array.isArray(resData.data)) {
           setDayGroups(resData.data);
+          if (resData.viewerMemberId) {
+            setViewerMemberId(resData.viewerMemberId);
+          }
         }
       })
       .catch((err) => {
@@ -71,7 +88,7 @@ export default function AnniversariesPage() {
     return () => {
       isMounted = false;
     };
-  }, [daysRange]);
+  }, [daysRange, scope]);
 
   // Đồng bộ tùy chọn cá nhân và lắng nghe thay đổi nhánh ưu tiên
   useEffect(() => {
@@ -236,6 +253,21 @@ export default function AnniversariesPage() {
                 {tab.label}
               </button>
             ))}
+
+            {viewerMemberId && (
+              <button
+                onClick={() => setScope(scope === 'my_lineage' ? 'all' : 'my_lineage')}
+                className={`px-2.5 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 border ${
+                  scope === 'my_lineage'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Lọc chỉ hiển thị các ngày giỗ thuộc nhánh dọc gia đình bạn"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Nhánh của tôi</span>
+              </button>
+            )}
           </div>
 
           {/* Tìm kiếm & Chi phái */}

@@ -379,3 +379,237 @@ export function getTodayAnniversaryMembers(
 
   return matched;
 }
+
+/**
+ * Tìm các thành viên có ngày giỗ đúng ngày mai (theo Âm lịch UTC+7)
+ * Phục vụ gửi thông báo trước 1 ngày lúc 7:00 AM
+ */
+export function getTomorrowAnniversaryMembers(
+  members: AnniversaryMemberInput[],
+  referenceDate: Date = new Date()
+): MemberRecord[] {
+  const { year, month, day } = getVietnamDate(referenceDate);
+  const tomorrowDate = new Date(year, month - 1, day + 1);
+  const tomorrowLunar = solarToLunar(tomorrowDate.getDate(), tomorrowDate.getMonth() + 1, tomorrowDate.getFullYear());
+
+  const dayAfterTomorrow = new Date(year, month - 1, day + 2);
+  const dayAfterLunar = solarToLunar(dayAfterTomorrow.getDate(), dayAfterTomorrow.getMonth() + 1, dayAfterTomorrow.getFullYear());
+  const isTomorrowMonthEnd29 = tomorrowLunar.lunarDay === 29 && dayAfterLunar.lunarDay === 1;
+
+  const matched: MemberRecord[] = [];
+
+  for (const m of members) {
+    const isLiving = m.life_status === 'living';
+    if (isLiving) continue;
+    if (m.death_lunar_day == null || m.death_lunar_month == null) continue;
+
+    const mDay = m.death_lunar_day;
+    const mMonth = m.death_lunar_month;
+
+    // 1. Trùng chính xác ngày và tháng
+    if (mDay === tomorrowLunar.lunarDay && mMonth === tomorrowLunar.lunarMonth) {
+      matched.push(m as MemberRecord);
+      continue;
+    }
+
+    // 2. Trường hợp giỗ ngày 30 mà tháng này chỉ có 29 ngày
+    if (isTomorrowMonthEnd29 && mDay === 30 && mMonth === tomorrowLunar.lunarMonth) {
+      matched.push(m as MemberRecord);
+    }
+  }
+
+  return matched;
+}
+
+/**
+ * Thuật toán trích xuất toàn bộ nhánh dọc của một thành viên
+ * Gồm: Tổ tiên trực hệ (lên đỉnh), Con cháu trực hệ (xuống đáy), Anh chị em ruột, Hôn phối
+ */
+export function getLineageMemberIds(
+  targetMemberId: string,
+  members: AnniversaryMemberInput[],
+  spouseMap?: Map<string, string[]>
+): Set<string> {
+  const lineage = new Set<string>();
+  if (!targetMemberId) return lineage;
+  lineage.add(targetMemberId);
+
+  const memberMap = new Map<string, AnniversaryMemberInput>();
+  members.forEach((m) => memberMap.set(m.id, m));
+
+  const target = memberMap.get(targetMemberId);
+  if (!target) return lineage;
+
+  // 1. Upwards: Tổ tiên trực hệ (Bố mẹ, ông bà, cụ kỵ...)
+  const ancestorQueue = [targetMemberId];
+  const ancestors = new Set<string>();
+  while (ancestorQueue.length > 0) {
+    const currId = ancestorQueue.shift()!;
+    const curr = memberMap.get(currId);
+    if (!curr) continue;
+    if (curr.father_id && !ancestors.has(curr.father_id)) {
+      ancestors.add(curr.father_id);
+      lineage.add(curr.father_id);
+      ancestorQueue.push(curr.father_id);
+    }
+    if (curr.mother_id && !ancestors.has(curr.mother_id)) {
+      ancestors.add(curr.mother_id);
+      lineage.add(curr.mother_id);
+      ancestorQueue.push(curr.mother_id);
+    }
+  }
+
+  // 2. Downwards: Con cháu trực hệ (Con, cháu, chắt...)
+  const descendantQueue = [targetMemberId];
+  while (descendantQueue.length > 0) {
+    const currId = descendantQueue.shift()!;
+    for (const m of members) {
+      if ((m.father_id === currId || m.mother_id === currId) && !lineage.has(m.id)) {
+        lineage.add(m.id);
+        descendantQueue.push(m.id);
+      }
+    }
+  }
+
+  // 3. Anh chị em ruột (cùng bố hoặc mẹ với target)
+  if (target.father_id || target.mother_id) {
+    for (const m of members) {
+      if (
+        (target.father_id && m.father_id === target.father_id) ||
+        (target.mother_id && m.mother_id === target.mother_id)
+      ) {
+        lineage.add(m.id);
+      }
+    }
+  }
+
+  // 4. Hôn phối của target và hôn phối của tổ tiên trực hệ (nếu có spouseMap)
+  if (spouseMap) {
+    for (const id of Array.from(lineage)) {
+      const spouses = spouseMap.get(id);
+      if (spouses) {
+        spouses.forEach((spId) => lineage.add(spId));
+      }
+    }
+  }
+
+  return lineage;
+}
+
+/**
+ * Thuật toán tìm toàn bộ ID con cháu trực hệ nhiều đời của một người
+ */
+export function getDescendantMemberIds(
+  targetId: string,
+  members: AnniversaryMemberInput[]
+): Set<string> {
+  const descendants = new Set<string>();
+  const queue = [targetId];
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    for (const m of members) {
+      if ((m.father_id === current || m.mother_id === current) && !descendants.has(m.id)) {
+        descendants.add(m.id);
+        queue.push(m.id);
+      }
+    }
+  }
+
+  return descendants;
+}
+
+/**
+ * Thuật toán mở rộng nhánh gia đình ruột thịt (Extended Family Scope)
+ * Phục vụ gửi thông báo ngày giỗ cá nhân hóa theo phong tục Việt Nam:
+ * 1. Toàn bộ Tổ tiên trực hệ đi lên đỉnh cây (Bố mẹ, Ông bà, Cụ kỵ...).
+ * 2. Toàn bộ Hậu duệ (Descendants) từ đời Ông Bà trở xuống (gồm Bác, Chú, Cô, Cậu, Dì, anh em họ, con cháu chắt).
+ * 3. Toàn bộ con cháu của chính target.
+ * 4. Toàn bộ Vợ/Chồng (Hôn phối - Spouses) của tất cả những người trong tập hợp trên.
+ */
+export function getExtendedFamilyMemberIds(
+  targetMemberId: string,
+  members: AnniversaryMemberInput[],
+  spouseMap?: Map<string, string[]>
+): Set<string> {
+  const family = new Set<string>();
+  if (!targetMemberId) return family;
+  family.add(targetMemberId);
+
+  const memberMap = new Map<string, AnniversaryMemberInput>();
+  members.forEach((m) => memberMap.set(m.id, m));
+
+  const target = memberMap.get(targetMemberId);
+  if (!target) return family;
+
+  // 1. Tổ tiên trực hệ đi lên (Ascendants)
+  const ancestors = new Set<string>();
+  const ancestorQueue = [targetMemberId];
+  while (ancestorQueue.length > 0) {
+    const currId = ancestorQueue.shift()!;
+    const curr = memberMap.get(currId);
+    if (!curr) continue;
+    if (curr.father_id && !ancestors.has(curr.father_id)) {
+      ancestors.add(curr.father_id);
+      family.add(curr.father_id);
+      ancestorQueue.push(curr.father_id);
+    }
+    if (curr.mother_id && !ancestors.has(curr.mother_id)) {
+      ancestors.add(curr.mother_id);
+      family.add(curr.mother_id);
+      ancestorQueue.push(curr.mother_id);
+    }
+  }
+
+  // 2. Tìm các bậc tiền nhân ở tầng Bố Mẹ và Ông Bà để trích xuất toàn bộ con cháu (họ hàng cùng nhánh)
+  const parents = [target.father_id, target.mother_id].filter(Boolean) as string[];
+  const branchRoots = new Set<string>();
+  parents.forEach((pId) => branchRoots.add(pId));
+
+  for (const pId of parents) {
+    const p = memberMap.get(pId);
+    if (p) {
+      if (p.father_id) branchRoots.add(p.father_id);
+      if (p.mother_id) branchRoots.add(p.mother_id);
+    }
+  }
+
+  // Với mỗi branchRoot (Ông, Bà, Bố, Mẹ): lấy toàn bộ con cháu của họ
+  for (const rootId of Array.from(branchRoots)) {
+    const descQueue = [rootId];
+    while (descQueue.length > 0) {
+      const currId = descQueue.shift()!;
+      for (const m of members) {
+        if ((m.father_id === currId || m.mother_id === currId) && !family.has(m.id)) {
+          family.add(m.id);
+          descQueue.push(m.id);
+        }
+      }
+    }
+  }
+
+  // 3. Con cháu của chính target
+  const selfDescQueue = [targetMemberId];
+  while (selfDescQueue.length > 0) {
+    const currId = selfDescQueue.shift()!;
+    for (const m of members) {
+      if ((m.father_id === currId || m.mother_id === currId) && !family.has(m.id)) {
+        family.add(m.id);
+        selfDescQueue.push(m.id);
+      }
+    }
+  }
+
+  // 4. Vợ/chồng (Hôn phối - Spouses) của tất cả mọi người trong tập hợp family
+  if (spouseMap) {
+    for (const id of Array.from(family)) {
+      const spouses = spouseMap.get(id);
+      if (spouses) {
+        spouses.forEach((spId) => family.add(spId));
+      }
+    }
+  }
+
+  return family;
+}
+

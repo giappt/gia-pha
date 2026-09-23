@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { MemberRecord } from '@/types/tree';
-import { getUpcomingAnniversaries } from '@/lib/anniversaries/anniversary-engine';
+import { getUpcomingAnniversaries, getLineageMemberIds } from '@/lib/anniversaries/anniversary-engine';
 import { buildSpouseMap } from '@/lib/kinship-engine/lca-finder';
 import { KinshipRegion, CustomKinshipDictionary } from '@/types/kinship';
 
@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     const daysParam = searchParams.get('days');
     const branch = searchParams.get('branch') || undefined;
     const viewerMemberId = searchParams.get('viewerMemberId') || undefined;
+    const scope = searchParams.get('scope') || undefined;
 
     let daysAhead = 30;
     if (daysParam) {
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
       members = [];
     }
 
-    const data = getUpcomingAnniversaries(members, {
+    let data = getUpcomingAnniversaries(members, {
       daysAhead,
       viewerMemberId: effectiveViewerId,
       branchFilter: branch,
@@ -102,6 +103,17 @@ export async function GET(request: NextRequest) {
       customDictionary,
       spouseMap,
     });
+
+    // Lọc theo nhánh dọc của người xem nếu có yêu cầu scope=my_lineage
+    if (scope === 'my_lineage' && effectiveViewerId && members.length > 0) {
+      const lineageIds = getLineageMemberIds(effectiveViewerId, members, spouseMap);
+      data = data
+        .map((group) => ({
+          ...group,
+          members: group.members.filter((m) => lineageIds.has(m.id)),
+        }))
+        .filter((group) => group.members.length > 0);
+    }
 
     const totalCount = data.reduce((acc, g) => acc + g.members.length, 0);
 
@@ -111,6 +123,8 @@ export async function GET(request: NextRequest) {
       totalCount,
       daysAhead,
       timeZone: 'Asia/Ho_Chi_Minh',
+      viewerMemberId: effectiveViewerId || null,
+      scope: scope || null,
     });
   } catch (error) {
     console.error('Error fetching anniversaries:', error);

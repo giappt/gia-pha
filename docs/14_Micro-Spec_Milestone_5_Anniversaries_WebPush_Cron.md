@@ -320,6 +320,40 @@ Lõi tính toán lịch giỗ và lọc cửa sổ thời gian:
      - Bắt lỗi `statusCode === 404 || statusCode === 410` để tự động xóa endpoint hỏng khỏi CSDL.
   7. Trả về thống kê JSON: `{ success: true, targetCount: number, sent: number, failed: number }`.
 
+### 4.5.1. Thuật Toán Lọc Huyết Thống Mở Rộng & Danh Xưng Cá Nhân Hóa (Recipient-Centric Kinship Batching)
+
+- **Mục tiêu:**
+  - Nhắc nhở giỗ **Hôm nay** và báo trước **Ngày mai** để con cháu kịp chuẩn bị lễ Tiên Thường.
+  - **Danh Xưng Thân Tộc Cá Nhân Hóa Chuẩn Xác (Personalized Kinship):**
+    - Khi người dùng đã liên kết node (`linked_member_id`): Hệ thống gọi `findLowestCommonAncestor` và `resolveKinshipTerms` giữa người nhận và người quá cố để xác định chính xác danh xưng thân tộc (Bà nội, Ông nội, Bác, Chú, Cô, Bố, Mẹ, Cụ Tổ...).
+    - Truyền danh xưng này vào `computeDeceasedHonorificPrefix(ancestor, maxGen, kinshipTerm)` để sinh tiêu đề trang trọng:
+      - `Hôm nay là Ngày Giỗ [Danh xưng] [Họ Tên]` (VD: `Hôm nay là Ngày Giỗ Bà nội Nguyễn Thị Chăm` hoặc `Bà Nguyễn Thị Chăm`)
+      - `Ngày mai có Ngày Giỗ [Danh xưng] [Họ Tên]` (VD: `Ngày mai có Ngày Giỗ Bác Phạm Văn Cường` hoặc `Chú Phạm Văn Cường`)
+  - **Phạm Vi Huyết Thống Mở Rộng (Extended Family Lineage Scope):**
+    - Con cháu không chỉ nhận giỗ của tổ tiên trực hệ (Bố mẹ, Ông bà, Cụ kỵ), mà còn nhận giỗ của:
+      1. Toàn bộ **Bác, Chú, Cô, Cậu, Dì** (anh chị em ruột của Bố/Mẹ).
+      2. **Vợ/chồng** của họ (Bác dâu, Thím, Dượng, Mợ...).
+      3. **Con cái, cháu chắt** của họ (anh chị em họ, con cháu trong cùng nhánh từ đời Ông Bà).
+      4. Con cháu trực hệ và phối ngẫu của chính mình.
+    - Toán học đồ thị: Trích xuất toàn bộ Hậu duệ (Descendants) từ đời Ông Bà Nội / Ông Bà Ngoại trở xuống + Toàn bộ Tổ tiên trực hệ đi lên + Toàn bộ phối ngẫu (Spouses) liên quan.
+    - Con cháu ở các Chi nhánh khác xa xôi (không chung cội nguồn từ Ông Bà/Cụ nhánh này) sẽ không bị gửi nhầm.
+  - **Tối Ưu Service Worker (`public/sw.js`) & Chuẩn Hóa Hiển Thị Android:**
+    - Service Worker nạp URL tuyệt đối cho `icon` và `badge` (`new URL('/icons/icon-192x192.png', self.location.origin).href`) để tránh fallback về chữ `G` trên Android.
+    - Truyền `tag: data.tag` và `renotify: true` vào `options` của `showNotification` $\rightarrow$ Đảm bảo khi có cả giỗ Hôm nay và Ngày mai, 2 thông báo xuất hiện song song, độc lập, không bị hệ điều hành đè lên nhau.
+  - **Định dạng thông báo:**
+    - **Giỗ Hôm nay:**
+      - `title`: `Hôm nay là Ngày Giỗ [Danh xưng] [Họ Tên]`
+      - `body`: `Tức ngày [D]/[M] Âm lịch!`
+      - `tag`: `anniversary-today-[member_id]`
+    - **Giỗ Ngày mai:**
+      - `title`: `Ngày mai có Ngày Giỗ [Danh xưng] [Họ Tên]`
+      - `body`: `Tức ngày [D]/[M] Âm lịch.`
+      - `tag`: `anniversary-tomorrow-[member_id]`
+    - **Trường hợp có CẢ HAI (Hôm nay & Ngày mai):**
+      - Bắn **2 thông báo riêng biệt** bằng 2 lệnh `webpush.sendNotification()` với 2 `tag` khác nhau.
+      - Thiết bị hiển thị 2 thẻ độc lập song song trên màn hình khóa.
+    - **URL khi click:** `/anniversaries?scope=my_lineage` (mở trang Lịch Giỗ tự động lọc theo nhánh của người dùng).
+
 ### 4.6. File: `vercel.json`
 Cấu hình Vercel Cron tự động kích hoạt 7:00 AM giờ Hà Nội (00:00 UTC):
 
@@ -789,6 +823,16 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_CLAN_HAN_CALLIGRAPHY_WRITER** | Component múa bút thư pháp SVG Mask Reveal chuẩn nét Logo dòng họ | `tests/pwa-assets.test.ts` | File `src/components/pwa/ClanHanCalligraphyWriter.tsx` | Kiểm tra JSX, mask ID và đường dẫn vector CLAN_HAN_CALLIGRAPHY_PATH | Dùng trực tiếp CLAN_HAN_CALLIGRAPHY_PATH, có mask 8 nét cọ theo bút thuận, màu #059669 | UI Component | `[x] PASS` |
 | **TC_UT_AUTH_GATE_DIRECT_ROUTING** | Cơ chế Auth Gate và Middleware tự động điều hướng khách vào /login-gate và thành viên vào / | `tests/auth-gate.test.ts` | Trạng thái xác thực `user === null` hoặc user hợp lệ | Đánh giá `evaluateAuthGate` và middleware matcher | Khách chưa login chuyển hướng `/login-gate`, thành viên đã login truy cập `/` | Navigation Flow | `[x] PASS` |
 | **TC_UT_IOS_PWA_SPLASH_METADATA** | RootLayout cấu hình status bar style và apple meta đồng bộ trải nghiệm iOS | `tests/theme-and-layout.test.ts` | File `src/app/layout.tsx` | Đọc mã nguồn metadata viewport / appleWebApp | Khai báo apple-mobile-web-app-status-bar-style default và apple-mobile-web-app-capable yes | iOS Compliance | `[x] PASS` |
+| **TC_UT_TOMORROW_ANNIVERSARY_CALCULATION** | Tính chính xác các vị tiền nhân có ngày giỗ vào ngày mai theo Âm lịch UTC+7 | `tests/cron-anniversary.test.ts` | Mock danh sách thành viên có người mất ngày mai | Gọi `getTomorrowAnniversaryMembers(members, refDate)` | Trả về chính xác các thành viên trùng ngày/tháng âm lịch ngày mai (kể cả tháng thiếu 29 ngày) | Lunar Date Engine | `[x] PASS` |
+| **TC_INT_CRON_RECIPIENT_BATCHING_CHI_1_ONLY** | Con cháu Chi 1 chỉ nhận thông báo giỗ Hôm nay của tiền nhân Chi 1 | `tests/cron-anniversary.test.ts` | Cụ X (Chi 1) giỗ hôm nay, Bà Y (Chi 2) giỗ ngày mai; User B là con cháu Chi 1 | Gọi GET `/api/cron/anniversary-reminder` với secret hợp lệ | Chỉ bắn 1 push về Cụ X cho User B với tag `anniversary-today-${cụX.id}`, không gửi tin Bà Y | Lineage Isolation | `[x] PASS` |
+| **TC_INT_CRON_RECIPIENT_BATCHING_CHI_2_ONLY** | Con cháu Chi 2 chỉ nhận thông báo giỗ Ngày mai của tiền nhân Chi 2 | `tests/cron-anniversary.test.ts` | Cụ X (Chi 1) giỗ hôm nay, Bà Y (Chi 2) giỗ ngày mai; User A là con cháu Chi 2 | Gọi GET `/api/cron/anniversary-reminder` với secret hợp lệ | Chỉ bắn 1 push về Bà Y cho User A với tag `anniversary-tomorrow-${bàY.id}`, không gửi tin Cụ X | Lineage Isolation | `[x] PASS` |
+| **TC_INT_CRON_RECIPIENT_BATCHING_DUAL_ANNIVERSARIES** | Người liên quan trực hệ cả 2 nhận đúng 2 thông báo độc lập với 2 tag khác nhau | `tests/cron-anniversary.test.ts` | User C liên quan trực hệ cả Cụ X (hôm nay) và Bà Y (ngày mai) | Gọi GET `/api/cron/anniversary-reminder` với secret hợp lệ | Bắn 2 thông báo Web Push riêng biệt cho User C: 1 tin Hôm nay (tag `anniversary-today-...`) và 1 tin Ngày mai (tag `anniversary-tomorrow-...`) | Dual Push Dispatch | `[x] PASS` |
+| **TC_INT_CRON_SKIP_UNLINKED_GUEST** | Khách/User chưa liên kết node bị bỏ qua, không gửi push tránh spam | `tests/cron-anniversary.test.ts` | Subscription có user_id chưa liên kết node (linked_member_id == null) | Gọi GET `/api/cron/anniversary-reminder` | Không gửi push đến subscription của user này, sent = 0 | Spam Prevention | `[x] PASS` |
+| **TC_UT_LINEAGE_FILTER_HELPER** | Thuật toán trích xuất toàn bộ nhánh dọc của một thành viên (tổ tiên + con cháu + quan hệ trực tiếp) | `tests/cron-anniversary.test.ts` | Cây gia phả mẫu và 1 targetMemberId | Gọi `getLineageMemberIds(targetId, members)` | Trả về Set chứa đúng ID các thế hệ dọc và quan hệ trực tiếp | Tree Traversal | `[x] PASS` |
+| **TC_UT_CRON_PERSONALIZED_KINSHIP** | Danh xưng trong push notification gọi theo Kinship Engine của người nhận (Bà nội, Bác, Chú, Cụ) | `tests/cron-anniversary.test.ts` | Viewer Giáp (cháu nội) và Cụ Chăm (bà nội), Cụ Cường (bác/chú) | Gọi hàm format notification cho viewer | Tiêu đề chứa "Bà nội Nguyễn Thị Chăm" (hoặc "Bà") và "Bác Phạm Văn Cường" (hoặc "Chú"), không gọi "Cụ" chung chung | Kinship Personalization | `[x] PASS` |
+| **TC_UT_EXTENDED_FAMILY_LINEAGE_SCOPE** | Thuật toán mở rộng nhánh gia đình bao gồm Bác, Chú, Cô, Vợ/Chồng, Con cái, Cháu chắt từ đời Ông Bà/Cụ | `tests/cron-anniversary.test.ts` | Cây gia phả mẫu có nhánh anh em của bố mẹ | Gọi `getExtendedFamilyMemberIds(targetId, members, spouseMap)` | Set trả về chứa cả Bác/Chú/Cô, vợ chồng và con cháu của họ | Extended Family Scope | `[x] PASS` |
+| **TC_UT_SW_ABSOLUTE_URL_AND_TAG_OPTIONS** | public/sw.js nạp URL tuyệt đối cho icon/badge và hỗ trợ tag: data.tag kèm renotify: true | `tests/pwa-manifest.test.ts` | File `public/sw.js` | Đọc mã nguồn kiểm tra showNotification options | Chứa `tag: data.tag`, `renotify: true`, và `new URL(..., self.location.origin).href` | SW Notification Parity | `[x] PASS` |
+| **TC_INT_CRON_SENDS_BOTH_TODAY_AND_TOMORROW_FOR_EXTENDED_FAMILY** | Kích hoạt Cron gửi đủ 2 thông báo khi người nhận có giỗ Bà nội (Hôm nay) và giỗ Bác/Chú (Ngày mai) | `tests/cron-anniversary.test.ts` | DB có giỗ Cụ Chăm hôm nay và Cụ Cường ngày mai, subscriber là Giáp | Gọi GET `/api/cron/anniversary-reminder` với secret hợp lệ | Bắn 2 Web Push riêng biệt cho Giáp với đúng danh xưng thân tộc và tag độc lập | Dual Extended Family Push | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -837,6 +881,13 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_42 (Duy Nhất 1 Màn Hình Native Khởi Động Trên Android & iOS):** Mở PWA từ màn hình chính điện thoại $\rightarrow$ Chỉ xuất hiện DUY NHẤT 1 màn hình Native Splash của OS (nền trắng `#ffffff`, ở giữa là chữ Hán "范" màu xanh ngọc bích `#059669`), biến mất tức thì sau ~0.3s - 0.5s rồi vào thẳng app. Hoàn toàn 100% không còn màn hình Splash thứ hai của React hay hiện tượng giật cục.
 - [ ] **UAT_43 (Trải Nghiệm Khởi Động Siêu Tốc & Mượt Mà):** Mở ứng dụng từ icon màn hình chính $\rightarrow$ Ứng dụng nạp mượt mà, phản hồi tức thì, không bị che phủ bởi bất kỳ rèm overlay nào, các hiệu ứng render tự nhiên của Next.js diễn ra trực tiếp.
 - [ ] **UAT_44 (Tự Động Chuyển Hướng Chuẩn Xác Ngay Sau Mở App):** Khi mở ứng dụng: Khách chưa đăng nhập lập tức thấy `/login-gate`; Thành viên đã đăng nhập lập tức thấy `/` (Trang chủ Home).
+- [ ] **UAT_45 (Thông Báo Giỗ Hôm Nay Đúng Định Dạng):** Kích hoạt Cron khi có giỗ hôm nay $\rightarrow$ Điện thoại con cháu trực hệ nhận thông báo: Title `Hôm nay là Ngày Giỗ [Danh xưng] [Họ Tên]`, Body `Tức ngày [D]/[M] Âm lịch!`.
+- [ ] **UAT_46 (Thông Báo Giỗ Ngày Mai Đúng Định Dạng):** Kích hoạt Cron khi có giỗ ngày mai $\rightarrow$ Điện thoại con cháu trực hệ nhận thông báo: Title `Ngày mai có Ngày Giỗ [Danh xưng] [Họ Tên]`, Body `Tức ngày [D]/[M] Âm lịch.`.
+- [ ] **UAT_47 (Nhận 2 Thẻ Thông Báo Độc Lập Khi Có Cả 2 Giỗ):** Thử nghiệm với người có cả 2 giỗ hôm nay và mai $\rightarrow$ Màn hình khóa nhận đúng 2 thẻ thông báo độc lập, không bị ghi đè hay gộp mất nội dung.
+- [ ] **UAT_48 (Chạm Thông Báo Mở Lịch Giỗ Nhánh Dọc):** Chạm vào thông báo Web Push $\rightarrow$ Mở PWA tại `/anniversaries?scope=my_lineage`, danh sách ngày giỗ tự động lọc theo nhánh dọc của con cháu đang đăng nhập.
+- [ ] **UAT_49 (Danh Xưng Thân Tộc Cá Nhân Hóa Chuẩn Thuần Phong Mỹ Tục):** Thông báo trên điện thoại hiển thị đúng ngôi xưng hô của người nhận với người quá cố (VD: `Bà nội Nguyễn Thị Chăm`, `Bác Phạm Văn Cường`), không bị gọi "Cụ" hay "Bà" chung chung.
+- [ ] **UAT_50 (Nhận Đủ Cả 2 Thông Báo Trong Nhánh Gia Đình Mở Rộng):** Khi CSDL có giỗ của Bà nội (Hôm nay) và giỗ của Bác ruột/Chú ruột (Ngày mai) $\rightarrow$ Điện thoại nhận đầy đủ 2 thông báo song song trên màn hình khóa.
+- [ ] **UAT_51 (Icon App Hiển Thị Chuẩn Xác, Không Fallback Chữ G):** Thông báo Web Push trên Android hiển thị Logo dòng họ chữ Hán "范" màu ngọc bích sắc nét, không bị fallback về chữ G của Google.
 
 
 ---
@@ -886,6 +937,8 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG41 (Native Splash Parity Trên Android & iOS):** Cả iOS Safari PWA và Android Chrome PWA đều hiển thị duy nhất 1 màn hình Native Splash nền trắng `#ffffff`, chữ Hán "范" màu ngọc bích `#059669`.
 - [x] **RG42 (Direct Auth Gate Unbroken):** Việc gỡ bỏ React Splash không làm ảnh hưởng đến luồng điều hướng của Auth Gate (khách chưa đăng nhập vào `/login-gate`, thành viên đã đăng nhập vào `/`).
 - [x] **RG43 (Reusability of Clan Calligraphy Assets):** Các component và dữ liệu vector thư pháp `ClanHanCalligraphyWriter.tsx`, `CLAN_HAN_CALLIGRAPHY_PATH`, `hanzi-fan-data.ts` vẫn được bảo toàn nguyên vẹn trong codebase, sẵn sàng tái sử dụng cho các phân hệ văn hóa dòng họ.
+- [x] **RG44 (Bảo Vệ Xác Thực & Feature Flag Cron):** Đảm bảo cơ chế kiểm tra `CRON_SECRET` và cờ `enable_push_notifications` trong `clan_settings` vẫn hoạt động nguyên vẹn 100% khi chuyển sang Recipient-Centric Batching.
+- [x] **RG45 (Dọn Dẹp Endpoint Hỏng Cho Cả 2 Luồng Hôm Nay & Ngày Mai):** Khi Push Service trả về 404/410 ở bất kỳ luồng gửi nào (hôm nay hoặc ngày mai), endpoint hỏng vẫn được gom và xóa sạch khỏi `push_subscriptions`.
 
 ---
 

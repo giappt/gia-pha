@@ -1,42 +1,38 @@
 # STATE MANIFEST
 ### 1. Key Context
-- **Nền tảng & Dự án:** FAT (Family Tree Management System) - Gia Phả Phạm Văn (Next.js 14 App Router, Supabase, TailwindCSS, TypeScript).
-- **Trạng thái Git:** Commit `4cc971e update splash` đã được commit và push lên `origin/main` thành công 100%. `git status` sạch hoàn toàn (`working tree clean`).
-- **Nhiệm vụ vừa hoàn thành (Zero-React Splash & Pure OS Native Splash):**
-  - Loại bỏ hoàn toàn React Splash Screen Overlay (`AppSplashScreen`): gỡ bỏ khỏi `src/app/layout.tsx`, component `src/components/pwa/AppSplashScreen.tsx` trả về `null` (zero DOM footprint).
-  - Triệt tiêu 100% tình trạng 2 màn hình Splash kế tiếp nhau trên Android PWA / iOS.
-  - Tối ưu Native Splash duy nhất của OS: Icon `purpose: "any"` (`icon-512x512.png` & `icon-192x192.png`) là chữ Hán "范" thư pháp màu ngọc bích `#059669` trên nền trắng/trong suốt kết hợp `background_color: "#ffffff"`. Khởi động chớp mắt (~0.3s - 0.5s) rồi vào thẳng app.
-  - Launcher icon ngoài màn hình chính Android: Giữ nguyên `icon-512x512-maskable.png` nền xanh tròn/vuông chuẩn Google Safe Zone 40%.
-  - Cơ chế điều hướng: Trực tiếp qua Auth Gate & Next.js Middleware (`user === null` vào `/login-gate`, thành viên đã đăng nhập vào `/`).
-  - Bảo tồn `ClanHanCalligraphyWriter.tsx` làm component nghệ thuật độc lập cho dòng họ.
-- **Kết quả Kiểm chứng 3 Tầng (`[R-VERIFY.TIERS]`):**
-  - Tầng 1: `npm run typecheck` (0 lỗi), `npm run build` (31/31 pages biên dịch thành công 100%).
-  - Tầng 2: `npm test` (Toàn bộ 339/339 tests PASS 100%, 0 regression).
-  - Tầng 3: Sẵn sàng phục vụ Human UAT tại `http://localhost:3000`.
-- **Tài liệu & Đồng bộ:**
-  - `docs/14_Micro-Spec_Milestone_5_Anniversaries_WebPush_Cron.md`: Đã cập nhật mục 5.18, 7.1 (`TC_UT_ZERO_REACT_SPLASH_IN_LAYOUT`, `TC_UT_AUTH_GATE_DIRECT_ROUTING`), 7.2 (UAT_42-UAT_44), Mục 8 (RG40-RG43) và tick `[x] PASS`.
-  - `.agents/brain/lessons_learned.md`: Đã bổ sung bài học kinh nghiệm Zero-React Splash.
-- **Các file đang mở:**
-  - `docs/11_Micro-Spec_Milestone_3_Interactive_Tree.md`
-  - `.agents/brain/lessons_learned.md`
-  - `docs/14_Micro-Spec_Milestone_5_Anniversaries_WebPush_Cron.md`
-  - `.agents/backlog/001_dang-ky-nhan-push-thong-minh-theo-chi-nhanh.md`
-  - `.agents/backlog/002_phan-quyen-phan-cap-cay-con-va-duyet-claim.md`
-  - `.agents/AGENTS.md`
+- **Mục tiêu tính năng hoàn tất:** 
+  1. Cá nhân hóa danh xưng người quá cố trong thông báo Web Push theo quan hệ thân tộc với người nhận (`Kinship Engine`: `findLowestCommonAncestor` + `resolveKinshipTerms`).
+  2. Mở rộng phạm vi thân tộc (`Extended Family Scope`): Trích xuất toàn bộ hậu duệ từ đời Ông Bà trở xuống (bao gồm Bác, Chú, Cô, Cậu, Dì, vợ/chồng và con cháu chắt của họ) để con cháu không bị bỏ sót ngày giỗ của người thân trong nhà.
+  3. Tối ưu hiển thị Web Push trên Android: Service Worker (`public/sw.js`) nạp URL icon tuyệt đối (`new URL(data.icon, self.location.origin).href`) chống fallback chữ 'G' của Google; hỗ trợ `tag: data.tag` và `renotify: Boolean(data.tag)` để 2 thông báo (Hôm nay & Ngày mai) xuất hiện song song, độc lập trên màn hình khóa.
+  4. Vượt qua bộ nhớ đệm Next.js Server App Router cho Supabase Client (`cache: 'no-store'` trong `global.fetch` của `createAdminClient()`).
+- **Các tệp cốt lõi đã hoàn thiện & kiểm chứng:**
+  - `src/lib/anniversaries/anniversary-engine.ts`: Hàm pure function `getExtendedFamilyMemberIds`.
+  - `src/lib/supabase/admin.ts`: Cấu hình bypass Data Cache cho Supabase admin client.
+  - `src/app/api/cron/anniversary-reminder/route.ts`: Tích hợp Kinship Engine, batching theo người nhận, gửi song song hôm nay và ngày mai.
+  - `public/sw.js`: URL icon tuyệt đối, xử lý `tag` và `renotify`.
+  - `tests/cron-anniversary.test.ts` & `tests/pwa-manifest.test.ts`: Bổ sung 4 Automated Test Cases (`TC_UT_CRON_PERSONALIZED_KINSHIP`, `TC_UT_EXTENDED_FAMILY_LINEAGE_SCOPE`, `TC_UT_SW_ABSOLUTE_URL_AND_TAG_OPTIONS`, `TC_INT_CRON_SENDS_BOTH_TODAY_AND_TOMORROW_FOR_EXTENDED_FAMILY`).
+  - `docs/14_Micro-Spec_Milestone_5_Anniversaries_WebPush_Cron.md`: Reverse-sync tick `[x] PASS` 100% Mục 7.1.
+  - `.agents/brain/lessons_learned.md`: Đã lưu trữ bài học kinh nghiệm về Kinship Push, Extended Family Scope và Android SW tagging.
+- **Bằng chứng kiểm chứng thực tế:**
+  - `npm run typecheck`: 0 lỗi.
+  - `npm run build`: 0 lỗi, 31/31 routes thành công.
+  - `npm test`: **349/349 tests PASS 100%**.
+  - Thực nghiệm live curl: Gửi thành công 2/2 push notification (`"sent": 2`) đến điện thoại Android của User `Phạm Tiến Giáp`.
+- **Trạng thái Git:** User đã thực hiện `git add .`, commit `add push noti` (`4a6da98`) và push lên nhánh `main` thành công.
 
 ### 2. Task Checklist
-- [x] Brainstorm & thống nhất giải pháp Zero-React Splash (/feature-brainstorm)
+- [x] Phân tích căn nguyên lỗi thiếu giỗ Bác/Chú và format hiển thị Android Web Push (/feature-brainstorm)
 - [x] Cập nhật Đặc tả kỹ thuật vi mô Milestone 5 (/feature-spec)
-- [x] Gỡ bỏ `<AppSplashScreen />` khỏi `src/app/layout.tsx`
-- [x] Làm sạch `src/components/pwa/AppSplashScreen.tsx` trả về `null`
-- [x] Cập nhật test suite `tests/pwa-assets.test.ts`
-- [x] Chạy Typecheck & Build kiểm chứng (0 lỗi, 31/31 pages pass)
-- [x] Chạy Automated Test Suite (339/339 tests PASS 100%)
-- [x] Reverse-Sync cập nhật `docs/14_Micro-Spec_Milestone_5_Anniversaries_WebPush_Cron.md`
-- [x] Ghi bài học kinh nghiệm vào `.agents/brain/lessons_learned.md`
-- [x] Commit và Push lên Git `main` (`4cc971e`)
-- [ ] User Human Visual UAT kiểm tra khởi động PWA trên thiết bị thực tế
-- [ ] Tiếp tục backlog tiếp theo (ví dụ: `001_dang-ky-nhan-push-thong-minh-theo-chi-nhanh.md` hoặc `002_phan-quyen-phan-cap-cay-con-va-duyet-claim.md`)
+- [x] Viết hàm `getExtendedFamilyMemberIds` trong `anniversary-engine.ts`
+- [x] Khắc phục Data Cache Supabase trong `admin.ts`
+- [x] Tích hợp Kinship Engine & phân luồng push kép trong `route.ts`
+- [x] Cập nhật `public/sw.js` nạp URL tuyệt đối và hỗ trợ `tag` / `renotify`
+- [x] Bổ sung 4 automated tests trong `tests/`
+- [x] Kiểm chứng 3 tầng: Typecheck (0 lỗi) -> Build (0 lỗi) -> Test (349/349 pass) -> Live push test ("sent": 2)
+- [x] Reverse-sync tài liệu Spec 14 và cập nhật `lessons_learned.md`
+- [x] Commit và push mã nguồn lên Git remote `main` (commit: `4a6da98`)
+- [ ] User Human Visual UAT nghiệm thu hiển thị thông báo trên màn hình điện thoại Android thực tế
+- [ ] Lên kế hoạch triển khai Milestone / Backlog tiếp theo
 
 ### 3. Immediate Next Step
-- Chọn một ý tưởng tiếp theo từ Kho Ý tưởng (`.agents/backlog/`) bằng lệnh `/idea-get` HOẶC nghiệm thu thị giác Human UAT trên điện thoại/trình duyệt.
+- Kiểm tra trực quan 2 thẻ thông báo trên điện thoại Android, sau đó chọn một đầu việc tiếp theo từ Backlog (ví dụ: `001_dang-ky-nhan-push-thong-minh-theo-chi-nhanh.md` hoặc `002_phan-quyen-phan-cap-cay-con-va-duyet-claim.md`).

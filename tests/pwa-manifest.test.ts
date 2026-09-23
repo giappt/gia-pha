@@ -110,4 +110,32 @@ describe('PWA Manifest & Service Worker Compliance Test Suite (Milestone 5)', ()
     assert.ok(fs.existsSync(path.join(process.cwd(), 'public', anyIcon512.src)), 'File icon-512x512.png phải tồn tại');
     assert.ok(fs.existsSync(path.join(process.cwd(), 'public', maskableIcon512.src)), 'File icon-512x512-maskable.png phải tồn tại');
   });
+
+  // TC_UT_SW_ABSOLUTE_URL_AND_TAG_OPTIONS: public/sw.js nạp URL tuyệt đối cho icon/badge và hỗ trợ tag: data.tag kèm renotify: true
+  it('TC_UT_SW_ABSOLUTE_URL_AND_TAG_OPTIONS: public/sw.js nạp URL tuyệt đối cho icon/badge và gán tag, renotify vào showNotification options', () => {
+    const swPath = path.join(process.cwd(), 'public', 'sw.js');
+    assert.ok(fs.existsSync(swPath), 'public/sw.js phải tồn tại');
+
+    const swContent = fs.readFileSync(swPath, 'utf-8');
+
+    // 1. Kiểm tra việc phân giải URL tuyệt đối từ origin
+    assert.ok(
+      swContent.includes('self.location.origin'),
+      'sw.js phải sử dụng self.location.origin để giải quyết đường dẫn tuyệt đối'
+    );
+    assert.ok(
+      swContent.includes('new URL('),
+      'sw.js phải dùng new URL(...) để tạo URL tuyệt đối cho icon/badge tránh lỗi chữ G của Android'
+    );
+
+    // 2. Kiểm tra tag và renotify
+    assert.ok(
+      swContent.includes('tag: data.tag'),
+      'showNotification options phải cấu hình tag: data.tag để phân biệt các thông báo'
+    );
+    assert.ok(
+      swContent.includes('renotify:'),
+      'showNotification options phải cấu hình renotify để hiển thị song song không bị ghi đè'
+    );
+  });
 });

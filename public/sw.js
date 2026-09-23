@@ -33,11 +33,17 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const origin = self.location.origin;
+  const iconUrl = data.icon ? new URL(data.icon, origin).href : new URL('/icons/icon-192x192.png', origin).href;
+  const badgeUrl = data.badge ? new URL(data.badge, origin).href : new URL('/icons/badge-72x72.png', origin).href;
+
   const options = {
     body: data.body,
-    icon: data.icon || '/icons/icon-192x192.png',
-    badge: data.badge || '/icons/badge-72x72.png',
+    icon: iconUrl,
+    badge: badgeUrl,
     vibrate: [200, 100, 200],
+    tag: data.tag || undefined,
+    renotify: Boolean(data.tag),
     data: {
       url: data.url || '/anniversaries',
     },

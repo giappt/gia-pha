@@ -3,29 +3,19 @@ import webpush from 'web-push';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { MemberRecord } from '@/types/tree';
-import { getTodayAnniversaryMembers } from '@/lib/anniversaries/anniversary-engine';
+import { Member } from '@/types/database';
+import {
+  getTodayAnniversaryMembers,
+  getTomorrowAnniversaryMembers,
+  getDescendantMemberIds,
+  getExtendedFamilyMemberIds,
+  computeDeceasedHonorificPrefix,
+} from '@/lib/anniversaries/anniversary-engine';
+import { findLowestCommonAncestor } from '@/lib/kinship-engine/lca-finder';
+import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
+import { solarToLunar } from '@/lib/lunar/vietnamese-lunar';
 
 export const dynamic = 'force-dynamic';
-
-/**
- * Thuật toán tìm toàn bộ ID con cháu trực hệ nhiều đời của một người
- */
-function getDescendantMemberIds(targetId: string, members: MemberRecord[]): Set<string> {
-  const descendants = new Set<string>();
-  const queue = [targetId];
-
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    for (const m of members) {
-      if ((m.father_id === current || m.mother_id === current) && !descendants.has(m.id)) {
-        descendants.add(m.id);
-        queue.push(m.id);
-      }
-    }
-  }
-
-  return descendants;
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -98,13 +88,14 @@ export async function GET(request: NextRequest) {
       members = [];
     }
 
-    // 3. Tìm các Cụ có ngày giỗ đúng hôm nay (Âm lịch UTC+7)
+    // 3. Tìm các Cụ có ngày giỗ Hôm nay & Ngày mai (Âm lịch UTC+7)
     const todayAnniversaries = getTodayAnniversaryMembers(members);
+    const tomorrowAnniversaries = getTomorrowAnniversaryMembers(members);
 
-    if (todayAnniversaries.length === 0) {
+    if (todayAnniversaries.length === 0 && tomorrowAnniversaries.length === 0) {
       return NextResponse.json({
         success: true,
-        message: 'No anniversaries today',
+        message: 'No anniversaries today or tomorrow',
         sent: 0,
         failed: 0,
         anniversariesCount: 0,
@@ -144,7 +135,7 @@ export async function GET(request: NextRequest) {
           subscriptions = subData;
         }
       } catch {
-        // Mock subscriptions list if DB not ready
+        // Fallback
       }
 
       // Lấy mapping user_id -> linked_member_id
@@ -162,57 +153,181 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let totalSent = 0;
-    let totalFailed = 0;
-    const deadEndpoints: string[] = [];
+    // 6. Precompute: Members Map & Spouse Map cho Kinship Engine và Extended Family
+    const membersMap = new Map<string, Member>();
+    members.forEach((m) => membersMap.set(m.id, m as unknown as Member));
 
-    for (const ancestor of todayAnniversaries) {
-      const descendantIds = getDescendantMemberIds(ancestor.id, members);
-
-      // Lọc subscriptions của con cháu trực hệ (hoặc toàn bộ nếu chưa gán cụ thể)
-      const targetSubs = subscriptions.filter((sub) => {
-        const linkedMemberId = userMemberMap.get(sub.user_id);
-        if (!linkedMemberId) return true; // Gửi cho thành viên chung của dòng họ
-        return descendantIds.has(linkedMemberId);
-      });
-
-      const payload = JSON.stringify({
-        title: `Hôm nay là Ngày Giỗ của Cụ ${ancestor.full_name}`,
-        body: `Tức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch. Kính mời con cháu tưởng nhớ tiền nhân.`,
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/badge-72x72.png',
-        url: '/anniversaries',
-      });
-
-      if (canSendPush && targetSubs.length > 0) {
-        const sendPromises = targetSubs.map(async (sub) => {
-          const pushSubscription = {
-            endpoint: sub.endpoint,
-            keys: {
-              p256dh: sub.p256dh_key,
-              auth: sub.auth_key,
-            },
-          };
-          try {
-            await webpush.sendNotification(pushSubscription, payload);
-            totalSent++;
-          } catch (pushErr: any) {
-            totalFailed++;
-            // Dọn dẹp endpoint chết (404 Not Found hoặc 410 Gone)
-            if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
-              deadEndpoints.push(sub.endpoint);
-            }
+    const spouseMap = new Map<string, string[]>();
+    if (supabase) {
+      try {
+        const { data: spouseData } = await supabase.from('spouse_relations').select('member1_id, member2_id');
+        if (spouseData) {
+          for (const r of spouseData) {
+            if (!spouseMap.has(r.member1_id)) spouseMap.set(r.member1_id, []);
+            if (!spouseMap.has(r.member2_id)) spouseMap.set(r.member2_id, []);
+            spouseMap.get(r.member1_id)!.push(r.member2_id);
+            spouseMap.get(r.member2_id)!.push(r.member1_id);
           }
-        });
-
-        await Promise.allSettled(sendPromises);
-      } else {
-        // Trong môi trường dev / mock không có VAPID keys thật
-        totalSent += targetSubs.length;
+        }
+      } catch {
+        // Fallback
       }
     }
 
-    // 6. Tự động xóa subscription hỏng
+    const maxGen = members.reduce(
+      (max, m) =>
+        Math.max(
+          max,
+          m.generation_level || (m as any).generation_number || (m as any).generation || 1
+        ),
+      1
+    );
+
+    // Helper tính danh xưng thân tộc cá nhân hóa theo Kinship Engine
+    const formatPersonalizedDisplayName = (viewerId: string, deceased: MemberRecord): string => {
+      let kinshipTerm: string | null = null;
+      const viewer = membersMap.get(viewerId);
+      if (viewer && viewer.id !== deceased.id) {
+        try {
+          const lca = findLowestCommonAncestor(viewer.id, deceased.id, membersMap, spouseMap);
+          if (lca.lcaNodeId) {
+            const res = resolveKinshipTerms(lca, viewer, deceased as unknown as Member);
+            if (res?.termAtoB) {
+              kinshipTerm = res.termAtoB;
+            }
+          }
+        } catch {
+          // Fallback
+        }
+      }
+
+      const prefix =
+        computeDeceasedHonorificPrefix(deceased, maxGen, kinshipTerm) ||
+        (deceased.gender === 'female' ? 'Bà' : 'Cụ');
+
+      if (
+        deceased.full_name.startsWith('Cụ ') ||
+        deceased.full_name.startsWith('Ông ') ||
+        deceased.full_name.startsWith('Bà ') ||
+        deceased.full_name.startsWith('Kỵ ')
+      ) {
+        return deceased.full_name;
+      }
+
+      return `${prefix} ${deceased.full_name}`;
+    };
+
+    // 7. Thuật toán Recipient-Centric Batching: Gửi riêng theo huyết thống từng con cháu
+    let totalSent = 0;
+    let totalFailed = 0;
+    const deadEndpoints: string[] = [];
+    const sendPromises: Promise<void>[] = [];
+
+    for (const sub of subscriptions) {
+      const linkedMemberId = userMemberMap.get(sub.user_id);
+
+      // Khách/User chưa liên kết node: Bỏ qua (chưa gửi push để tránh spam)
+      if (!linkedMemberId) {
+        continue;
+      }
+
+      // Lấy toàn bộ người thân trong phạm vi gia đình mở rộng (Tổ tiên trực hệ + Bác/Chú/Cô + Dâu/Rể + Con cháu chắt)
+      const familyScope = getExtendedFamilyMemberIds(linkedMemberId, members, spouseMap);
+
+      // Tìm các Cụ giỗ Hôm nay thuộc phạm vi gia đình
+      const matchingToday = todayAnniversaries.filter((a) => familyScope.has(a.id));
+
+      // Tìm các Cụ giỗ Ngày mai thuộc phạm vi gia đình
+      const matchingTomorrow = tomorrowAnniversaries.filter((a) => familyScope.has(a.id));
+
+      if (matchingToday.length === 0 && matchingTomorrow.length === 0) {
+        continue;
+      }
+
+      // Gửi thông báo giỗ Hôm nay
+      for (const ancestor of matchingToday) {
+        const displayName = formatPersonalizedDisplayName(linkedMemberId, ancestor);
+        const title = `Hôm nay là Ngày Giỗ ${displayName}`;
+        const body = `Tức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch!`;
+        const payload = JSON.stringify({
+          title,
+          body,
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/badge-72x72.png',
+          tag: `anniversary-today-${ancestor.id}`,
+          url: '/anniversaries?scope=my_lineage',
+        });
+
+        if (canSendPush) {
+          sendPromises.push(
+            (async () => {
+              try {
+                await webpush.sendNotification(
+                  {
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh_key, auth: sub.auth_key },
+                  },
+                  payload
+                );
+                totalSent++;
+              } catch (pushErr: any) {
+                totalFailed++;
+                if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
+                  deadEndpoints.push(sub.endpoint);
+                }
+              }
+            })()
+          );
+        } else {
+          totalSent++;
+        }
+      }
+
+      // Gửi thông báo giỗ Ngày mai
+      for (const ancestor of matchingTomorrow) {
+        const displayName = formatPersonalizedDisplayName(linkedMemberId, ancestor);
+        const title = `Ngày mai có Ngày Giỗ ${displayName}`;
+        const body = `Tức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch.`;
+        const payload = JSON.stringify({
+          title,
+          body,
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/badge-72x72.png',
+          tag: `anniversary-tomorrow-${ancestor.id}`,
+          url: '/anniversaries?scope=my_lineage',
+        });
+
+        if (canSendPush) {
+          sendPromises.push(
+            (async () => {
+              try {
+                await webpush.sendNotification(
+                  {
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh_key, auth: sub.auth_key },
+                  },
+                  payload
+                );
+                totalSent++;
+              } catch (pushErr: any) {
+                totalFailed++;
+                if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
+                  deadEndpoints.push(sub.endpoint);
+                }
+              }
+            })()
+          );
+        } else {
+          totalSent++;
+        }
+      }
+    }
+
+    if (sendPromises.length > 0) {
+      await Promise.allSettled(sendPromises);
+    }
+
+    // 8. Tự động xóa subscription hỏng
     if (deadEndpoints.length > 0 && supabase) {
       try {
         await supabase
@@ -227,8 +342,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Cron anniversary job completed',
-      targetCount: todayAnniversaries.length,
-      anniversaries: todayAnniversaries.map((m) => ({
+      targetCount: todayAnniversaries.length + tomorrowAnniversaries.length,
+      todayCount: todayAnniversaries.length,
+      tomorrowCount: tomorrowAnniversaries.length,
+      todayAnniversaries: todayAnniversaries.map((m) => ({
+        id: m.id,
+        name: m.full_name,
+        lunar_day: m.death_lunar_day,
+        lunar_month: m.death_lunar_month,
+      })),
+      tomorrowAnniversaries: tomorrowAnniversaries.map((m) => ({
         id: m.id,
         name: m.full_name,
         lunar_day: m.death_lunar_day,
@@ -239,11 +362,12 @@ export async function GET(request: NextRequest) {
       failed: totalFailed,
       deadCleaned: deadEndpoints.length,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in /api/cron/anniversary-reminder:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error in cron job' },
+      { success: false, error: error?.message || 'Internal server error in cron job', stack: error?.stack },
       { status: 500 }
     );
   }
 }
+

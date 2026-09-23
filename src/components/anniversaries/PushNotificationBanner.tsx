@@ -223,7 +223,7 @@ export function PushNotificationBanner({ enabled = true }: PushNotificationBanne
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {isSubscribed
               ? 'Hệ thống sẽ gửi thông báo lúc 7:00 sáng khi đến ngày giỗ của các bậc tiền nhân trong gia tộc.'
-              : 'Đăng ký nhận thông báo đẩy 7:00 sáng để không bao giờ quên ngày giỗ của các bậc tiền nhân.'}
+              : 'Đăng ký nhận thông báo đẩy 7:00 sáng để không bao giờ quên ngày giỗ của người đã mất.'}
           </p>
           {statusMessage && (
             <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
