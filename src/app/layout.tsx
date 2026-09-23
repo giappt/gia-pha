@@ -27,6 +27,11 @@ export const metadata: Metadata = {
   description:
     'Nền tảng số hóa gia phả dòng họ Phạm Văn, phân định vai vế xưng hô, tra cứu ngày giỗ âm lịch và kết nối con cháu.',
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Gia Phả Phạm Văn',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -158,7 +163,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900">
-        <AppSplashScreen />
+        <AppSplashScreen isGuest={effectiveIsGuest} />
         <TopProgressBar />
         <ServiceWorkerRegister />
         <RoleImpersonationBanner />

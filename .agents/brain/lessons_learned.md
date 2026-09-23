@@ -460,3 +460,19 @@
 - **Tách Biệt Màn Hình Splash Toàn Cảnh (AppSplashScreen) vs Huy Hiệu Nhận Diện (ClanHanLogo):**
   1. *Tránh nhầm lẫn phạm vi hiển thị:* Hoạt ảnh thư pháp (Stroke Order Animation với hanzi-writer) là trải nghiệm mở đầu danh giá dành cho Màn hình Splash toàn màn hình (fixed inset-0 z-[9999]), tuyệt đối không được nhồi nhét thu nhỏ vào trong header của form đăng nhập. Màn hình login gate phải luôn duy trì huy hiệu logo chuẩn tĩnh của ứng dụng (ClanHanLogo trắng trên khối vuông xanh ngọc bích bg-emerald-600) để đảm bảo tính nhất quán của hệ thống nhận diện thương hiệu.
   2. *Kiến trúc AppSplashScreen:* Nhúng trực tiếp tại RootLayout (src/app/layout.tsx) để bao bọc mọi điểm vào của ứng dụng. Áp dụng Cổng Kép Dual-Gate (canEnterApp = animationDone && isReady), Living Idle State (chữ phát ánh hào quang thở ngọc bích nếu mạng chậm) và cơ chế mờ dần mở rèm (fade-out 500ms) kết hợp hỗ trợ chạm để bỏ qua (Tap to dismiss).
+
+- **Đồng Bộ Hóa 1:1 Màn Hình Khởi Động Duy Nhất (Single Splash Experience), Múa Bút Thư Pháp Dày Dặn Logo Dòng Họ (SVG Mask Reveal) & Định Tuyến Theo Xác Thực (Auth-Based Navigation):**
+  1. *Căn nguyên lỗi 2 màn hình Splash cắn nhau trên Android PWA:*
+     - Khi cài đặt PWA WebAPK trên Android, hệ điều hành Android tự động sinh Activity Native Splash Screen từ `manifest.json` trước khi nạp trình duyệt Chrome WebView (~0.5s - 1s).
+     - Android lấy icon có `purpose: "any"` (`public/icons/icon-512x512.png`) đặt lên `background_color: "#ffffff"`. Nếu file này chứa vòng tròn xanh ngọc bích bao quanh, Android sẽ hiển thị nguyên vòng tròn xanh đó lên nền trắng.
+     - Sau khi React Web nạp xong, `AppSplashScreen` tiếp tục hiển thị màn hình trắng với chữ viết nét mảnh $\rightarrow$ Người dùng nhìn thấy 2 màn hình khác nhau nhấp nháy liên tiếp.
+     - **Giải pháp triệt để:** Bỏ hoàn toàn vòng tròn xanh ở icon `purpose: "any"` (`icon-512x512.png` và `icon-192x192.png`), chuyển thành chữ Hán "范" thư pháp màu ngọc bích `#059669` trên nền trắng/trong suốt. Giữ nguyên `icon-512x512-maskable.png` cho launcher homescreen. Android Native Splash và React Web Splash khớp 1:1, tạo cảm giác duy nhất 1 màn hình liền mạch.
+  2. *Thư pháp dày dặn nguyên bản Logo dòng họ qua SVG Mask Reveal:*
+     - Thay vì font máy tính thanh mảnh của thư viện hanzi-writer, dùng chính `CLAN_HAN_CALLIGRAPHY_PATH` của Logo dòng họ kết hợp mặt nạ SVG `<mask id="calligraphy-brush-mask">`.
+     - 8 đường cọ tâm màu trắng dày 19px theo thứ tự bút thuận truyền thống của chữ 范 chạy stroke-dasharray/stroke-dashoffset để mở dần hình bao thư pháp của cụ tổ với độ lệch pixel = 0.
+  3. *Định tuyến tự động theo trạng thái xác thực (Auth-Based Routing):*
+     - RootLayout truyền `isGuest={effectiveIsGuest}` trực tiếp từ SSR.
+     - Sau khi viết xong: Nếu `isGuest === true` $\rightarrow$ `router.replace('/login-gate')`, nếu `isGuest === false` $\rightarrow$ `router.replace('/')`.
+  4. *Đồng bộ đa nền tảng với iOS (Safari PWA):*
+     - Bổ sung `apple-mobile-web-app-status-bar-style: "default"` và `apple-mobile-web-app-capable: "yes"` trong Next.js Metadata để thanh trạng thái pin, giờ trên iPhone hiển thị chữ đen sắc nét trên nền trắng, hòa quyện tuyệt đối vào màn hình Splash.
+

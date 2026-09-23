@@ -53,15 +53,19 @@ describe('PWA Assets & Calligraphy Stroke Animation Test Suite (Milestone 5 - Se
     // 1. Kiểm tra thuộc tính giao diện toàn màn hình
     assert.ok(splashContent.includes("'use client'"), 'AppSplashScreen phải là Client Component');
     assert.ok(splashContent.includes('fixed inset-0 z-[9999]'), 'AppSplashScreen phải phủ toàn viewport với z-[9999]');
-    assert.ok(splashContent.includes('HanziCalligraphyLogo'), 'AppSplashScreen phải nhúng HanziCalligraphyLogo');
+    assert.ok(
+      splashContent.includes('ClanHanCalligraphyWriter') || splashContent.includes('HanziCalligraphyLogo'),
+      'AppSplashScreen phải nhúng ClanHanCalligraphyWriter hoặc HanziCalligraphyLogo'
+    );
     assert.ok(splashContent.includes('#059669'), 'Chữ thư pháp phải hiển thị màu ngọc bích #059669');
     assert.ok(splashContent.includes('Gia Phả Phạm Văn'), 'Phải hiển thị tiêu đề thương hiệu Gia Phả Phạm Văn');
     assert.ok(splashContent.includes('SyncLoadingBadge'), 'Phải nhúng SyncLoadingBadge theo chuẩn [R-UI.LOADING]');
     assert.ok(splashContent.includes('canEnterApp'), 'Phải triển khai logic cổng kép canEnterApp');
     assert.ok(splashContent.includes('opacity-0 pointer-events-none'), 'Phải hỗ trợ hiệu ứng fade-out mở rèm');
 
-    // 2. Kiểm tra layout.tsx nhúng AppSplashScreen
+    // 2. Kiểm tra layout.tsx nhúng AppSplashScreen kèm prop isGuest
     assert.ok(layoutContent.includes('AppSplashScreen'), 'src/app/layout.tsx phải import và nhúng AppSplashScreen');
+    assert.ok(layoutContent.includes('isGuest={effectiveIsGuest}'), 'src/app/layout.tsx phải truyền isGuest={effectiveIsGuest}');
   });
 
   // TC_UT_LOGIN_GATE_APP_LOGO_RESTORED: Trang login-gate hiển thị đúng huy hiệu logo chính thức ClanHanLogo nền xanh
@@ -77,6 +81,58 @@ describe('PWA Assets & Calligraphy Stroke Animation Test Suite (Milestone 5 - Se
       false,
       'login-gate/page.tsx tuyệt đối không nhúng LoginGateCalligraphy nhầm chỗ'
     );
+  });
+
+  // TC_UT_SINGLE_SPLASH_ICON_PARITY: Icon 512x512 và 192x192 purpose any là chữ 范 xanh trên nền trắng/trong suốt
+  it('TC_UT_SINGLE_SPLASH_ICON_PARITY: Icon 512x512 và 192x192 cho purpose "any" tồn tại, sắc nét và đồng bộ', () => {
+    const icon192Path = path.resolve(process.cwd(), 'public/icons/icon-192x192.png');
+    const icon512Path = path.resolve(process.cwd(), 'public/icons/icon-512x512.png');
+    const manifestPath = path.resolve(process.cwd(), 'public/manifest.json');
+
+    assert.ok(fs.existsSync(icon192Path), 'icon-192x192.png phải tồn tại');
+    assert.ok(fs.existsSync(icon512Path), 'icon-512x512.png phải tồn tại');
+    assert.ok(fs.statSync(icon512Path).size > 5000, 'icon-512x512.png phải sắc nét (>5KB)');
+    assert.ok(fs.statSync(icon192Path).size > 2000, 'icon-192x192.png phải sắc nét (>2KB)');
+
+    const manifestContent = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+    const anyIcon512 = manifestContent.icons.find((i: any) => i.sizes === '512x512' && i.purpose === 'any');
+    const anyIcon192 = manifestContent.icons.find((i: any) => i.sizes === '192x192' && i.purpose === 'any');
+
+    assert.ok(anyIcon512, 'manifest.json phải khai báo icon 512x512 purpose any');
+    assert.ok(anyIcon192, 'manifest.json phải khai báo icon 192x192 purpose any');
+  });
+
+  // TC_UT_CLAN_HAN_CALLIGRAPHY_WRITER: Component múa bút thư pháp SVG Mask Reveal chuẩn nét Logo dòng họ
+  it('TC_UT_CLAN_HAN_CALLIGRAPHY_WRITER: ClanHanCalligraphyWriter dùng vector CLAN_HAN_CALLIGRAPHY_PATH và mask 8 nét', () => {
+    const writerPath = path.resolve(process.cwd(), 'src/components/pwa/ClanHanCalligraphyWriter.tsx');
+    assert.ok(fs.existsSync(writerPath), 'ClanHanCalligraphyWriter.tsx phải tồn tại');
+
+    const content = fs.readFileSync(writerPath, 'utf-8');
+    assert.ok(content.includes('CLAN_HAN_CALLIGRAPHY_PATH'), 'Phải dùng vector CLAN_HAN_CALLIGRAPHY_PATH');
+    assert.ok(content.includes('CLAN_HAN_STROKES'), 'Phải định nghĩa 8 nét cọ CLAN_HAN_STROKES');
+    assert.ok(content.includes('onComplete'), 'Phải hỗ trợ callback onComplete');
+    assert.ok(content.includes('isLivingIdle'), 'Phải hỗ trợ trạng thái isLivingIdle');
+    assert.ok(content.includes('strokeColor'), 'Phải hỗ trợ tùy biến strokeColor');
+  });
+
+  // TC_UT_SPLASH_AUTH_ROUTING: AppSplashScreen tự động điều hướng theo isGuest sau khi viết chữ xong
+  it('TC_UT_SPLASH_AUTH_ROUTING: AppSplashScreen hỗ trợ prop isGuest và tự động điều hướng /login-gate hoặc /', () => {
+    const splashPath = path.resolve(process.cwd(), 'src/components/pwa/AppSplashScreen.tsx');
+    const content = fs.readFileSync(splashPath, 'utf-8');
+
+    assert.ok(content.includes('isGuest'), 'AppSplashScreen phải nhận prop isGuest');
+    assert.ok(content.includes('router.replace(\'/login-gate\')'), 'Khi isGuest phải điều hướng sang /login-gate');
+    assert.ok(content.includes('router.replace(\'/\')'), 'Khi thành viên đã login phải chuyển vào /');
+  });
+
+  // TC_UT_IOS_PWA_SPLASH_METADATA: RootLayout cấu hình status bar style và apple meta đồng bộ trải nghiệm iOS
+  it('TC_UT_IOS_PWA_SPLASH_METADATA: RootLayout khai báo appleWebApp metadata với statusBarStyle default', () => {
+    const layoutPath = path.resolve(process.cwd(), 'src/app/layout.tsx');
+    const content = fs.readFileSync(layoutPath, 'utf-8');
+
+    assert.ok(content.includes('appleWebApp'), 'src/app/layout.tsx phải khai báo appleWebApp');
+    assert.ok(content.includes("statusBarStyle: 'default'"), 'appleWebApp phải có statusBarStyle default');
+    assert.ok(content.includes('capable: true'), 'appleWebApp phải có capable: true');
   });
 
   // RG35: Bán kính nét chữ trong icon maskable không vượt quá 40% canvas
@@ -117,4 +173,14 @@ describe('PWA Assets & Calligraphy Stroke Animation Test Suite (Milestone 5 - Se
     const pageContent = fs.readFileSync(pagePath, 'utf-8');
     assert.ok(pageContent.includes('ClanHanLogo size={44} className="text-white"'), 'Logo login gate phải dùng ClanHanLogo size 44 màu trắng');
   });
+
+  // RG39 & RG40: Single Splash continuity và Session Persistence
+  it('RG39 & RG40: AppSplashScreen lưu và kiểm tra cờ sessionStorage fat_splash_shown', () => {
+    const splashPath = path.resolve(process.cwd(), 'src/components/pwa/AppSplashScreen.tsx');
+    const content = fs.readFileSync(splashPath, 'utf-8');
+
+    assert.ok(content.includes('sessionStorage.getItem(\'fat_splash_shown\')'), 'Phải kiểm tra cờ fat_splash_shown');
+    assert.ok(content.includes('sessionStorage.setItem(\'fat_splash_shown\', \'true\')'), 'Phải lưu cờ fat_splash_shown khi dismiss');
+  });
 });
+
