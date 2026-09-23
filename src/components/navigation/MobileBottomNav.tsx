@@ -77,6 +77,24 @@ export default function MobileBottomNav({
     return true;
   });
 
+  const [pendingHref, setPendingHref] = React.useState<string | null>(null);
+
+  // Reset pending state khi pathname thay đổi
+  React.useEffect(() => {
+    setPendingHref(null);
+  }, [pathname]);
+
+  const handleItemClick = (href: string) => {
+    if (href !== pathname) {
+      setPendingHref(href);
+      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(10);
+        } catch {}
+      }
+    }
+  };
+
   return (
     <nav
       id="mobile-bottom-nav"
@@ -89,22 +107,31 @@ export default function MobileBottomNav({
           item.href === '/'
             ? pathname === '/'
             : pathname.startsWith(item.href);
+        const isPending = pendingHref === item.href && !isActive;
 
         return (
           <Link
             key={item.href}
             href={item.href}
-            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-2 rounded-xl transition-all duration-200 ${
+            onClick={() => handleItemClick(item.href)}
+            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-2 rounded-xl transition-all duration-200 relative ${
               isActive
                 ? 'text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-500/10 dark:bg-emerald-950/50'
+                : isPending
+                ? 'text-emerald-600 dark:text-emerald-300 font-medium bg-emerald-500/15 animate-pulse'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95'
             }`}
           >
-            <Icon
-              className={`w-5 h-5 transition-transform ${
-                isActive ? 'scale-110 stroke-[2.25]' : 'stroke-[1.75]'
-              }`}
-            />
+            <div className="relative">
+              <Icon
+                className={`w-5 h-5 transition-transform ${
+                  isActive ? 'scale-110 stroke-[2.25]' : isPending ? 'scale-105 stroke-[2] animate-bounce' : 'stroke-[1.75]'
+                }`}
+              />
+              {isPending && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              )}
+            </div>
             <span
               className={`text-[11px] mt-0.5 tracking-tight ${
                 isActive ? 'font-bold' : 'font-medium'

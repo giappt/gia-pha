@@ -255,3 +255,17 @@ flowchart TD
 +---------------------------------------------------------------------------------------+
 ```
 
+### 5.5. Tiêu Chuẩn Phản Hồi Chuyển Màn & Trải Nghiệm Cây Phả Hệ Quy Mô Lớn (1.500 Người)
+
+#### A. Phản Hồi Chuyển Màn Toàn Diện:
+- **Thanh Tiến Trình Đỉnh Trang (Top Progress Bar):** Chiều cao 3px, vệt sáng shimmer chạy ngang, đồng bộ màu theo theme token `--brand-primary`. Kích hoạt ngay trong 50ms sau khi bấm chuyển trang.
+- **Phản Hồi Thị Giác Trên Navbar & Bottom Nav:** Nút/tab được bấm lập tức nảy nhẹ (scale bounce `active:scale-95`), viền phát sáng ngọc bích pulse xoay nhẹ báo hiệu hệ thống đã nhận thao tác.
+- **Bộ 5 Màn Hình Loading Skeleton Chuẩn Next.js App Router:** Trang bị file `loading.tsx` cho `/`, `/tree`, `/anniversaries`, `/kinship`, `/admin` để triệt tiêu hoàn toàn màn hình trắng hoặc cảm giác chờ đợi vô hình.
+
+#### B. Trải Nghiệm Cây Phả Hệ 1.500 Người:
+- **Phân Tầng Theo Chi/Nhánh & Breadcrumbs:** Lọc nhanh từng Chi (Chi Trưởng, Chi 2...) và breadcrumb điều hướng `Gia tộc Phạm Văn > Chi 1 > Nhánh Cụ Chiến`.
+- **Chế Độ Bán Kính Gia Đình 5 Đời:** Xem tập trung 5 đời quanh người được chọn ($\text{Ông bà} \rightarrow \text{Cha mẹ} \rightarrow \text{Bản thân} \rightarrow \text{Con} \rightarrow \text{Cháu}$). Các nhánh xa hơn gập gọn thành nút `[ + 18 con cháu ]` bấm đến đâu bung đến đó.
+- **Trải Nghiệm Khách & Người Chưa Liên Kết:** Mặc định hiển thị Cụ Thủy Tổ + 3 đời đầu trang nghiêm (~15 người), các Chi đời sau gập gọn thành nút `[ + Chi 1 ]`. Banner gợi ý: *"👋 Chưa nhận vị trí của bạn trong cây? [ 🎯 Tìm & Nhận Node ] hoặc gõ tìm tên người thân để xem nhanh 5 đời quanh họ"*.
+- **Cắt Tỉa Viewport (Virtualization) & LOD:** Bật `onlyRenderVisibleElements={true}` trong React Flow để DOM chỉ gánh các thẻ trong màn hình nhìn thấy, tiết kiệm 95% RAM; zoom out xa co thành thẻ mini (LOD).
+
+

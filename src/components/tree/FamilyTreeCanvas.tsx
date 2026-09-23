@@ -31,7 +31,8 @@ import { SAMPLE_POLYGAMY_MEMBERS, SAMPLE_POLYGAMY_SPOUSES } from '@/lib/tree-lay
 import { MemberRecord, SpouseRelationRecord, LayoutNode, TreeNodeData } from '@/types/tree';
 import { getUnlinkedMembers } from '@/lib/tree-layout/graph-validation';
 import { useAppTheme } from '@/hooks/use-theme';
-import { Keyboard } from 'lucide-react';
+import Link from 'next/link';
+import { Keyboard, X } from 'lucide-react';
 import type { BranchNode, UserRole, ClanFeatureFlags } from '@/types/database';
 import { resolveMemberBranchHierarchy } from '@/lib/tree-layout/branch-engine';
 
@@ -75,6 +76,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   const [showMaternalBranches, setShowMaternalBranches] = useState(true);
   const [showInternalHusbands, setShowInternalHusbands] = useState(true);
   const [focusRootId, setFocusRootId] = useState<string | null>(null);
+  const [isGuestBannerVisible, setIsGuestBannerVisible] = useState(true);
 
   // Live state cho clan28 / DB thật
   const [liveMembers, setLiveMembers] = useState<MemberRecord[]>(initialMembers);
@@ -521,6 +523,36 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         onOpenAddMemberModal={canManageTree ? handleOpenAddMemberModal : undefined}
       />
 
+      {/* Banner hướng dẫn tương tác cho Khách & Thành viên chưa nhận node */}
+      {(!effectiveRole || effectiveRole === 'viewer' || effectiveRole === 'guest') && isGuestBannerVisible && (
+        <div
+          id="unlinked-member-guide-banner"
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/95 dark:bg-slate-900/95 border border-emerald-500/40 shadow-lg backdrop-blur-md text-xs text-slate-700 dark:text-slate-200 transition-all animate-fade-in max-w-[92vw]"
+        >
+          <span className="flex items-center gap-1.5 font-medium">
+            <span>👋</span>
+            <span>Chưa nhận vị trí trong cây?</span>
+          </span>
+          <Link
+            href="/login-gate"
+            className="flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-400 hover:underline"
+          >
+            <span>🎯 Nhận Node</span>
+          </Link>
+          <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">|</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">
+            Click thẻ bất kỳ để xem 5 đời quanh họ
+          </span>
+          <button
+            onClick={() => setIsGuestBannerVisible(false)}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-1 p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label="Đóng gợi ý"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Vùng Vẽ Cây React Flow */}
       <ReactFlow
         nodes={nodes}
@@ -539,7 +571,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         panOnScroll={false}
         zoomOnScroll={true}
         onNodeClick={onNodeClick}
-        onlyRenderVisibleElements={currentDataset === 'clan1500'}
+        onlyRenderVisibleElements={true}
         className="touch-none"
         style={{ width: '100%', height: '100%' }}
         colorMode={isDark ? 'dark' : 'light'}

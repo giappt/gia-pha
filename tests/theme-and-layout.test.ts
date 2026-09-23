@@ -1355,6 +1355,102 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
       }
     });
   });
+
+  describe('Navigation Transitions & Scale 1500 Architecture Suite', () => {
+    it('TC_UT11: Top Progress Bar sử dụng biến màu CSS theme token và được gắn trong RootLayout', () => {
+      const barPath = path.resolve(process.cwd(), 'src/components/navigation/TopProgressBar.tsx');
+      assert.ok(fs.existsSync(barPath), 'TopProgressBar.tsx phải tồn tại');
+
+      const barContent = fs.readFileSync(barPath, 'utf8');
+      assert.ok(
+        barContent.includes('--brand-primary') && barContent.includes('--brand-glow'),
+        'TopProgressBar.tsx phải sử dụng CSS variables --brand-primary và --brand-glow'
+      );
+
+      const globalsCssPath = path.resolve(process.cwd(), 'src/app/globals.css');
+      const cssContent = fs.readFileSync(globalsCssPath, 'utf8');
+      assert.ok(
+        cssContent.includes('--brand-primary') && cssContent.includes('--brand-glow'),
+        'src/app/globals.css phải định nghĩa --brand-primary và --brand-glow'
+      );
+
+      const layoutPath = path.resolve(process.cwd(), 'src/app/layout.tsx');
+      const layoutContent = fs.readFileSync(layoutPath, 'utf8');
+      assert.ok(
+        layoutContent.includes('TopProgressBar') && layoutContent.includes('<TopProgressBar />'),
+        'src/app/layout.tsx phải import và render <TopProgressBar />'
+      );
+    });
+
+    it('TC_UT12: Đầy đủ 5 file Loading Skeletons chuẩn Next.js App Router cho tất cả các màn hình chính', () => {
+      const requiredSkeletons = [
+        'src/app/loading.tsx',
+        'src/app/tree/loading.tsx',
+        'src/app/anniversaries/loading.tsx',
+        'src/app/kinship/loading.tsx',
+        'src/app/admin/loading.tsx',
+      ];
+
+      for (const relPath of requiredSkeletons) {
+        const fullPath = path.resolve(process.cwd(), relPath);
+        assert.ok(fs.existsSync(fullPath), `${relPath} phải tồn tại`);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert.ok(
+          content.includes('export default function'),
+          `${relPath} phải export default một functional component skeleton`
+        );
+        assert.ok(
+          content.includes('animate-pulse'),
+          `${relPath} phải có animation pulse shimmer trực quan`
+        );
+      }
+    });
+
+    it('TC_UT13: MobileBottomNav hỗ trợ phản hồi xúc giác và thị giác tức thì (Active & Pending feedback)', () => {
+      const navPath = path.resolve(process.cwd(), 'src/components/navigation/MobileBottomNav.tsx');
+      assert.ok(fs.existsSync(navPath), 'MobileBottomNav.tsx phải tồn tại');
+
+      const content = fs.readFileSync(navPath, 'utf8');
+      assert.ok(
+        content.includes('pendingHref'),
+        'MobileBottomNav.tsx phải quản lý pendingHref để kích hoạt phản hồi tức thì'
+      );
+      assert.ok(
+        content.includes('active:scale-95'),
+        'MobileBottomNav.tsx phải có class active:scale-95 cho tương tác chạm'
+      );
+      assert.ok(
+        content.includes('navigator.vibrate'),
+        'MobileBottomNav.tsx phải hỗ trợ haptic feedback qua navigator.vibrate'
+      );
+    });
+
+    it('TC_UT14: FamilyTreeCanvas kích hoạt Viewport Virtualization (onlyRenderVisibleElements={true})', () => {
+      const canvasPath = path.resolve(process.cwd(), 'src/components/tree/FamilyTreeCanvas.tsx');
+      assert.ok(fs.existsSync(canvasPath), 'FamilyTreeCanvas.tsx phải tồn tại');
+
+      const content = fs.readFileSync(canvasPath, 'utf8');
+      assert.ok(
+        content.includes('onlyRenderVisibleElements={true}'),
+        'FamilyTreeCanvas.tsx phải cấu hình onlyRenderVisibleElements={true} để tối ưu DOM cho cây lớn'
+      );
+    });
+
+    it('TC_UT15: FamilyTreeCanvas có Banner hướng dẫn nhận node và tương tác cho khách/thành viên chưa liên kết', () => {
+      const canvasPath = path.resolve(process.cwd(), 'src/components/tree/FamilyTreeCanvas.tsx');
+      assert.ok(fs.existsSync(canvasPath), 'FamilyTreeCanvas.tsx phải tồn tại');
+
+      const content = fs.readFileSync(canvasPath, 'utf8');
+      assert.ok(
+        content.includes('unlinked-member-guide-banner'),
+        'FamilyTreeCanvas.tsx phải có banner unlinked-member-guide-banner'
+      );
+      assert.ok(
+        content.includes('Chưa nhận vị trí trong cây?') && content.includes('/login-gate'),
+        'FamilyTreeCanvas.tsx phải hướng dẫn người chưa nhận node liên kết với hệ thống'
+      );
+    });
+  });
 });
 
 

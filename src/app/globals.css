@@ -13,11 +13,15 @@ body {
 :root {
   --foreground-rgb: 15, 23, 42;
   --surface-bg: #f8fafc;
+  --brand-primary: #059669;
+  --brand-glow: rgba(16, 185, 129, 0.6);
 }
 
 .dark {
   --foreground-rgb: 248, 250, 252;
   --surface-bg: #090e1a;
+  --brand-primary: #10b981;
+  --brand-glow: rgba(52, 211, 153, 0.6);
 }
 
 body {

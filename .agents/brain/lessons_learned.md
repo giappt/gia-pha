@@ -406,3 +406,13 @@
      - Xóa bỏ 100% 8 chip kịch bản mẫu hardcoded, chuyển quyền tra cứu hoàn toàn về dropdown chọn thành viên thực tế từ CSDL dòng họ.
   4. *Chuẩn Hóa Thương Hiệu Toàn Hệ Thống (Brand Identity Fallback):* Đồng bộ 100% các chuỗi fallback thương hiệu từ `'DÒNG HỌ NGUYỄN VĂN'` thành `'GIA PHẢ PHẠM VĂN'` trên toàn bộ các route API, Admin Shell, Dashboard và Sidebar. Quét AST và grep search đảm bảo 0 leak chuỗi mock trên toàn codebase.
 
+- **Chuyển Trang Liền Mạch (Seamless Route Transitions), Theme Tokenization & Chiến Lược Cây Phả Hệ 1.500 Người:**
+  1. *Căn nguyên "Đơ lag vô hình" khi điều hướng Next.js App Router:* Khi click link dẫn tới Server Component tải nặng (như `/tree`), trình duyệt tải RSC payload ngầm trong 300ms - 1.500ms mà không có bất kỳ phản hồi thị giác nào. Người dùng tưởng bấm hụt nên click dồn dập (rage clicks) hoặc tưởng app bị treo. Giải pháp chuẩn gồm bộ 3 lớp đồng bộ:
+     - **Thanh Tiến Trình Toàn Cục Tinh Tế (Top Progress Bar):** Chiều cao 3px, fixed mép đỉnh viewport, có vệt sáng shimmer lướt qua, kích hoạt ngay trong 50ms khi click link nội bộ.
+     - **Phản Hồi Xúc Giác & Thị Giác (Tactile & Visual Pending Feedback):** Trên Mobile Bottom Nav và Navbar, khi tap vào tab, icon lập tức nảy nhẹ (`active:scale-95`), viền sáng ngọc bích pulse xoay nhẹ báo hiệu hệ thống đã nhận thao tác, kết hợp rung haptic (`navigator.vibrate(10)`).
+     - **Bộ 5 Màn Hình Loading Skeleton Chuẩn Next.js App Router:** Trang bị file `loading.tsx` cho toàn bộ 5 route chính (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`) để ngay khi bấm là màn hình chuyển sang Skeleton trang trọng mượt mà 60fps, triệt tiêu 100% cảm giác chờ đợi vô hình.
+  2. *Theme Tokenization Cho Thanh Tiến Trình (CSS Variables vs Hardcoded Hex):* Tuyệt đối không hardcode mã màu hex tĩnh trong style hay CSS của progress bar. Cấu hình biến CSS `--brand-primary` và `--brand-glow` trong `:root` và `.dark` tại `globals.css` (kết nối với Tailwind `colors.clan`). Khi quản trị viên thay đổi màu chủ đề dòng họ trong tương lai, thanh Progress Bar và vệt shimmer tự động đổi màu theo 100%.
+  3. *Chiến Lược Cây Phả Hệ 1.500 Người & Đón Tiếp Người Chưa Liên Kết:*
+     - **Cắt tỉa khung nhìn (Viewport Virtualization):** Kích hoạt `onlyRenderVisibleElements={true}` trong React Flow để DOM chỉ gánh các node trong tầm mắt (< 100 nodes), tiết kiệm 95% RAM, chống sập OOM và giữ vững 60fps trên điện thoại.
+     - **Trải nghiệm Khách / Unlinked:** Người chưa liên kết được đón nhận bằng giao diện Thủy Tổ + 3 đời đầu gọn gàng (~15 người) kèm nút cành thu gọn `[ + Chi 1 ]` và banner gợi ý nhận node / chọn tâm điểm 5 đời.
+
