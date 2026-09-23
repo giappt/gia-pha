@@ -697,13 +697,17 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - Bundle tĩnh toàn bộ dữ liệu vector của chữ **"Phạm" (范)** (mã Unicode `U+8303`, 8 nét chuẩn) tại `src/lib/pwa/hanzi-fan-data.ts` (~1.5 KB JSON). 100% offline, không gọi CDN ngoài.
   - Thư viện `hanzi-writer` (~30 KB minified, ~10 KB gzipped) render bằng SVG thuần qua `requestAnimationFrame`, vẽ 8 nét chuẩn xác theo thứ tự bút thuận truyền thống (Thảo đầu $\rightarrow$ Thủy $\rightarrow$ Thân Kỷ).
 
-- **5. Cơ Chế Đồng Bộ Trạng Thái Tải Thông Minh (Splash State Machine):**
-  - Quản lý bằng cổng kép (Dual-Gate):
-    $$\text{canEnterApp} = \text{isAnimationDone} \ \mathbf{AND} \ \text{isDataReady}$$
-  - **Mạng nhanh (< 1.8s):** Dữ liệu xong sớm nhưng ứng dụng vẫn kiên nhẫn đợi nét thứ 8 hạ bút hoàn tất mới mở rèm (fade-out 300ms). Người dùng luôn xem trọn vẹn nét cọ thư pháp.
-  - **Mạng chậm (> 1.8s):** Chữ 范 viết xong 8 nét sẽ giữ nguyên vẹn trên màn hình và bước vào trạng thái **Living Idle State**: tỏa ánh hào quang thở (Breathing Pulse Glow) nhịp nhàng màu ngọc bích `#059669`.
-  - **Chỉ báo Loading chuẩn tắc (`[R-UI.LOADING]`):** Dưới chân chữ hiển thị `Loader2` màu ngọc bích (`shrink-0 aspect-square text-emerald-600 animate-spin`) và dòng chữ chuẩn `"Đang tải dữ liệu..."`.
-  - **Timeout Safeguard:** Sau 8 giây nếu mất kết nối, hiển thị nút thử lại hoặc tiếp tục ngoại tuyến, không bao giờ để kẹt màn hình.
+- **5. Màn Hình Splash Toàn Ứng Dụng (`AppSplashScreen.tsx`) & Khôi Phục Logo Chuẩn Tại Login Gate:**
+  - **Màn hình Splash toàn cảnh (`AppSplashScreen.tsx` nhúng trong `src/app/layout.tsx`):**
+    - Khung bao phủ toàn viewport: `fixed inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col items-center justify-center transition-opacity duration-500`.
+    - Ở trung tâm: Chữ 范 thư pháp màu xanh ngọc bích `#059669` (size lớn $110\text{px} - 120\text{px}$) tự động vung cọ vẽ 8 nét uyển chuyển.
+    - Dưới chữ: Tiêu đề dòng họ trang nghiêm `"GIA PHẢ PHẠM VĂN"` (font serif).
+    - **Cổng kép Splash State Machine:** $\text{canEnterApp} = \text{isAnimationDone} \ \mathbf{AND} \ \text{isAppReady}$.
+    - **Mạng nhanh (< 1.8s):** Chờ nét bút thứ 8 hoàn tất mới mở rèm (fade-out 500ms) để người xem chiêm ngưỡng trọn vẹn nét cọ.
+    - **Mạng chậm (> 1.8s):** Chữ 范 giữ nguyên vẹn trên màn hình và bước vào trạng thái **Living Idle State** (phát ánh hào quang thở Breathing Pulse Glow nhịp nhàng màu ngọc bích), phía dưới hiển thị spinner `Loader2` và thông điệp chuẩn `[R-UI.LOADING]`: `"Đang tải dữ liệu..."`.
+    - **Tiện ích:** Hỗ trợ chạm để bỏ qua (Tap to dismiss) vào app tức thì. Kích hoạt khi mở app trong phiên (`sessionStorage`), không làm gián đoạn chuyển trang nội bộ Next.js.
+  - **Khôi phục Logo chuẩn tại Cổng Đăng Nhập (`src/app/login-gate/page.tsx`):**
+    - Biểu trưng trên đầu Auth Card là logo chính thức của ứng dụng: khối vuông bo góc xanh ngọc bích `bg-emerald-600` với logo chữ trắng tĩnh nguyên bản (`ClanHanLogo`). Gỡ bỏ hoàn toàn việc nhúng nhầm animation vào trong card đăng nhập.
 
 ---
 
@@ -759,6 +763,8 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_HANZI_DATA_INTEGRITY** | Bộ dữ liệu vector chữ 范 chuẩn hóa đủ 8 nét và medians tọa độ | `tests/pwa-assets.test.ts` | File `src/lib/pwa/hanzi-fan-data.ts` | Kiểm tra đối tượng dữ liệu chữ Hán | Chứa trường `character === '范'`, mảng `strokes` có đúng 8 phần tử và `medians` hợp lệ | Calligraphy Engine | `[x] PASS` |
 | **TC_UT_CALLIGRAPHY_COMPONENT_EXISTS** | Component HanziCalligraphyLogo hỗ trợ Client Component và callback hoàn tất | `tests/theme-and-layout.test.ts` / `tests/pwa-assets.test.ts` | File `src/components/pwa/HanziCalligraphyLogo.tsx` | Kiểm tra mã nguồn component | Chứa directive 'use client', import dữ liệu chữ 范 local, hỗ trợ callback onComplete | UI Component | `[x] PASS` |
 | **TC_UT_SPLASH_STATE_MACHINE_LOGIC** | Logic cổng kép Dual-Gate canEnterApp đồng bộ hoàn tất cả animation và data | `tests/theme-and-layout.test.ts` / `tests/pwa-assets.test.ts` | Files `src/app/login-gate/page.tsx` hoặc Splash Component | Kiểm tra biểu thức điều kiện mở rèm và loading indicator | canEnterApp chỉ true khi cả animationDone và dataReady, tuân thủ [R-UI.LOADING] với Loader2 và 'Đang tải dữ liệu...' | State Machine | `[x] PASS` |
+| **TC_UT_APP_SPLASH_SCREEN_OVERLAY** | Màn hình Splash toàn màn hình AppSplashScreen phủ toàn viewport z-[9999] và fade-out | `tests/pwa-assets.test.ts` | File `src/components/pwa/AppSplashScreen.tsx`, `src/app/layout.tsx` | Kiểm tra component và việc nhúng trong RootLayout | Bao phủ fixed inset-0 z-[9999], nhúng HanziCalligraphyLogo, có Living Idle State và fade-out | Splash Screen | `[x] PASS` |
+| **TC_UT_LOGIN_GATE_APP_LOGO_RESTORED** | Trang login-gate hiển thị đúng huy hiệu logo chính thức ClanHanLogo nền xanh | `tests/theme-and-layout.test.ts` / `tests/pwa-assets.test.ts` | File `src/app/login-gate/page.tsx` | Kiểm tra JSX trên đầu Auth Card | Chứa ClanHanLogo bên trong container bg-emerald-600, không chứa animation nhúng nhầm | Brand Identity | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -802,8 +808,8 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_37 (Phản Hồi Tiến Trình Cài Đặt & Native Parity Tại Login Gate):** Mở `/login-gate` trên điện thoại Android Chrome (chưa cài app). Bấm nút cài đặt: Nút chuyển sang trạng thái spinner `Loader2` xoay nhẹ và chữ "Đang cài đặt..."; hiển thị thông báo "Đang mở hộp thoại cài đặt ứng dụng...". Hộp thoại native Chrome "Install app - Gia Phả Phạm Văn" lập tức xuất hiện (y hệt Trang Chủ). Sau khi bấm Install, nhận được thông báo "Cài đặt ứng dụng Gia Phả thành công!".
 - [ ] **UAT_38 (Icon Android Nằm Trọn Vẹn Trong Vòng Tròn):** Cài đặt PWA lên điện thoại Android $\rightarrow$ Icon trên màn hình chính là hình tròn hoàn hảo, chữ Hán "范" nằm lọt 100% bên trong vòng tròn với lề an toàn rộng rãi, không bị launcher gọt mất bất kỳ góc nét nào.
 - [ ] **UAT_39 (Splash Screen Mở App Sắc Nét Không Vỡ Hạt):** Chạm vào icon ngoài màn hình chính để mở app $\rightarrow$ Màn hình Splash hiển thị icon sắc nét tuyệt đối, màu xanh ngọc bích `#059669` đồng bộ, không bị vỡ hạt hay mờ nhòe.
-- [ ] **UAT_40 (Hiệu Ứng Thư Pháp Múa Bút Chữ 范):** Khi mở trang $\rightarrow$ Logo chữ 范 đưa cọ viết 8 nét thư pháp màu ngọc bích chuẩn xác theo thứ tự bút thuận. Chạm vào logo để kích hoạt viết lại mượt mà.
-- [ ] **UAT_41 (Đồng Bộ Trạng Thái Chờ & Loading Chuẩn Tắc):** Khi mạng nhanh $\rightarrow$ xem trọn 8 nét mới mở vào app. Khi mạng chậm $\rightarrow$ chữ viết xong phát hào quang thở ngọc bích nhịp nhàng, bên dưới hiện rõ `Loader2` quay tròn và dòng chữ "Đang tải dữ liệu...".
+- [ ] **UAT_40 (Hiệu Ứng Thư Pháp Múa Bút Trên Màn Hình Splash Toàn Cảnh):** Mở ứng dụng web/PWA $\rightarrow$ Màn hình Splash toàn màn hình xuất hiện trang nhã, chữ 范 đưa cọ viết 8 nét thư pháp màu xanh ngọc bích chuẩn xác theo thứ tự bút thuận. Khi hoàn tất, màn hình mờ dần (fade-out 500ms) để lộ giao diện ứng dụng. Chạm nhẹ vào màn hình để bỏ qua nhanh nếu muốn.
+- [ ] **UAT_41 (Khôi Phục Logo Chuẩn Của App Tại Màn Hình Login Gate):** Truy cập `/login-gate` $\rightarrow$ Khối huy hiệu trên đầu form đăng nhập hiển thị đúng logo chính thức của ứng dụng (chữ trắng tĩnh `ClanHanLogo` trên khối vuông xanh ngọc bích `bg-emerald-600`), không còn animation tại đây.
 
 ---
 
@@ -846,6 +852,7 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG35 (PWA Maskable Icon Safe Zone Verification):** Bán kính nét chữ trong icon maskable không vượt quá 40% bán kính canvas 512x512.
 - [x] **RG36 (Offline Hanzi Data Zero-Network Overhead):** Component HanziCalligraphyLogo hoạt động hoàn toàn offline, 0 request tới cdn.jsdelivr.net.
 - [x] **RG37 (Dual-Gate Fallback Timeout Safety):** Sau 8 giây mạng nghẽn, giao diện tự động cung cấp lối thoát cho người dùng, không bao giờ kẹt vĩnh viễn ở màn hình chờ.
+- [x] **RG38 (Login Gate Official Logo Stability):** Đảm bảo trang `/login-gate` luôn hiển thị huy hiệu logo tĩnh chuẩn của ứng dụng, không bị ghi đè nhầm lẫn.
 
 ---
 

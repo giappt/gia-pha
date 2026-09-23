@@ -456,3 +456,7 @@
      - Nếu mạng nhanh (< 1.8s): Hệ thống kiên nhẫn chờ nét bút thứ 8 hoàn tất mới mở rèm (fade-out 300ms) vào trang chủ. Người dùng luôn được thưởng thức trọn vẹn 100% vẻ đẹp nét cọ thư pháp.
      - Nếu mạng chậm (> 1.8s): Chữ 范 hoàn chỉnh 8 nét giữ nguyên vẹn trên màn hình và bước vào trạng thái Living Idle State (chữ phát ánh hào quang thở Breathing Pulse Glow nhịp nhàng màu ngọc bích #059669).
      - Dưới chân chữ xuất hiện chỉ báo tải chuẩn hóa theo luật [R-UI.LOADING] (Loader2 spinner màu ngọc bích và thông điệp "Đang tải dữ liệu..."), kèm cơ chế an toàn chống treo (Timeout Safeguard 8s).
+
+- **Tách Biệt Màn Hình Splash Toàn Cảnh (AppSplashScreen) vs Huy Hiệu Nhận Diện (ClanHanLogo):**
+  1. *Tránh nhầm lẫn phạm vi hiển thị:* Hoạt ảnh thư pháp (Stroke Order Animation với hanzi-writer) là trải nghiệm mở đầu danh giá dành cho Màn hình Splash toàn màn hình (fixed inset-0 z-[9999]), tuyệt đối không được nhồi nhét thu nhỏ vào trong header của form đăng nhập. Màn hình login gate phải luôn duy trì huy hiệu logo chuẩn tĩnh của ứng dụng (ClanHanLogo trắng trên khối vuông xanh ngọc bích bg-emerald-600) để đảm bảo tính nhất quán của hệ thống nhận diện thương hiệu.
+  2. *Kiến trúc AppSplashScreen:* Nhúng trực tiếp tại RootLayout (src/app/layout.tsx) để bao bọc mọi điểm vào của ứng dụng. Áp dụng Cổng Kép Dual-Gate (canEnterApp = animationDone && isReady), Living Idle State (chữ phát ánh hào quang thở ngọc bích nếu mạng chậm) và cơ chế mờ dần mở rèm (fade-out 500ms) kết hợp hỗ trợ chạm để bỏ qua (Tap to dismiss).

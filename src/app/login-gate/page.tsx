@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import ClanHanLogo from '@/components/icons/ClanHanLogo';
-import LoginGateCalligraphy from '@/components/pwa/LoginGateCalligraphy';
 import LoginGateAuthButton from '@/components/auth/LoginGateAuthButton';
 import InstallPwaButton, { PwaMiniBanner } from '@/components/pwa/InstallPwaButton';
 import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
@@ -61,8 +60,10 @@ export default async function LoginGatePage({
   return (
     <div className="flex-1 flex items-center justify-center p-4 -mb-16 md:mb-0 overflow-y-auto bg-gradient-to-b from-slate-50 via-slate-100/70 to-slate-200/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors">
       <div className="w-full max-w-md p-6 sm:p-8 rounded-2xl bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xl shadow-emerald-900/5 dark:shadow-emerald-950/40 text-center flex flex-col items-center my-auto">
-        {/* Emblem Logo Chữ Hán Thư Pháp Động */}
-        <LoginGateCalligraphy />
+        {/* Emblem Logo Chữ Hán Thư Pháp */}
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-emerald-600 shadow-xl shadow-emerald-600/30 dark:shadow-emerald-950/60 flex items-center justify-center mb-4 sm:mb-6 ring-4 ring-emerald-500/20 dark:ring-emerald-400/10">
+          <ClanHanLogo size={44} className="text-white" />
+        </div>
 
         {/* Tên Dòng Họ & Huy Hiệu Chế Độ */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider mb-2.5 border border-emerald-500/20 dark:border-emerald-800/40">
