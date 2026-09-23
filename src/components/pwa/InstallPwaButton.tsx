@@ -256,7 +256,7 @@ export default function InstallPwaButton({
           onClick={() => setShowIOSModal(false)}
           className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors"
         >
-          Đã hiểu, tôi sẽ thực hiện
+          Đóng hướng dẫn
         </button>
       </div>
     </div>
@@ -295,7 +295,7 @@ export default function InstallPwaButton({
         </div>
 
         <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-          Trình duyệt của bạn hỗ trợ cài đặt ứng dụng trực tiếp qua thanh công cụ:
+          Hộp thoại cài đặt tự động không khả dụng trên trình duyệt hiện tại (hoặc ứng dụng đã được cài đặt sẵn). Quý bà con vui lòng thao tác cài đặt thủ công theo hướng dẫn sau:
         </p>
 
         <div className="space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
@@ -331,7 +331,7 @@ export default function InstallPwaButton({
           onClick={() => setShowFallbackModal(false)}
           className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors"
         >
-          Đã hiểu, tôi sẽ thực hiện
+          Đóng hướng dẫn
         </button>
       </div>
     </div>

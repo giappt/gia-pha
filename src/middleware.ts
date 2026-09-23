@@ -15,8 +15,14 @@ export async function middleware(request: NextRequest) {
   // 1. Cập nhật session và lấy trạng thái người dùng
   const { response, user, supabase } = await updateSession(request);
 
-  // 2. Bypass check nhanh: Tuyến đường admin, api, auth, login-gate không qua gate
+  // 2. Bypass check nhanh: Tuyến đường admin, api, auth, login-gate và PWA static assets không qua gate
   if (
+    pathname === '/manifest.json' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/sw.js' ||
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/icons/') ||
+    pathname.startsWith('/images/') ||
     pathname.startsWith('/admin') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/auth') ||
@@ -110,9 +116,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - manifest.json, manifest.webmanifest, sw.js (PWA core files)
      * - images, icons (public media)
      * - api/kinship (Zero-latency public kinship endpoint)
      */
-    '/((?!_next/static|_next/image|favicon.ico|icons|images|api/kinship|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest\\.json|manifest\\.webmanifest|sw\\.js|icons|images|api/kinship|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json|js)$).*)',
   ],
 };

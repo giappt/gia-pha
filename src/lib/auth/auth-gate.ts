@@ -17,7 +17,7 @@ export function evaluateAuthGate(
   featureFlags: ClanFeatureFlags,
   isSuperAdmin: boolean = false
 ): AuthGateDecision {
-  // 1. Bypass routes: Các tuyến đường hệ thống, quản trị, API và tài nguyên tĩnh
+  // 1. Bypass routes: Các tuyến đường hệ thống, quản trị, API và tài nguyên tĩnh / PWA assets
   if (
     pathname.startsWith('/admin') ||
     pathname.startsWith('/api') ||
@@ -25,7 +25,12 @@ export function evaluateAuthGate(
     pathname.startsWith('/login-gate') ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico' ||
-    /\.(?:svg|png|jpg|jpeg|gif|webp|ico)$/.test(pathname)
+    pathname === '/manifest.json' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/sw.js' ||
+    pathname.startsWith('/icons/') ||
+    pathname.startsWith('/images/') ||
+    /\.(?:svg|png|jpg|jpeg|gif|webp|ico|json|js|webmanifest)$/.test(pathname)
   ) {
     return { action: 'pass' };
   }

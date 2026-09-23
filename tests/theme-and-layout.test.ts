@@ -1559,6 +1559,51 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
         'PwaMiniBanner phải gọi triggerPwaInstall qua handleInstallClick kích hoạt native prompt Chromium/Android'
       );
     });
+
+    it('TC_UT_MIDDLEWARE_PWA_MATCHER_EXCLUSION: middleware.ts loại trừ manifest.json và sw.js khỏi Auth Gate xử lý', () => {
+      const middlewarePath = path.resolve(process.cwd(), 'src/middleware.ts');
+      assert.ok(fs.existsSync(middlewarePath), 'src/middleware.ts phải tồn tại');
+
+      const content = fs.readFileSync(middlewarePath, 'utf8');
+
+      // 1. Kiểm tra early bypass check cho manifest và sw.js
+      assert.ok(
+        content.includes("pathname === '/manifest.json'") &&
+        content.includes("pathname === '/sw.js'"),
+        'middleware.ts phải có early bypass check cho /manifest.json và /sw.js'
+      );
+
+      // 2. Kiểm tra matcher regex loại trừ
+      assert.ok(
+        content.includes('manifest') && content.includes('sw') && content.includes('matcher'),
+        'middleware.ts matcher regex phải loại trừ manifest.json và sw.js để Next.js phục vụ trực tiếp static asset'
+      );
+    });
+
+    it('TC_UT_PWA_FALLBACK_MODAL_UX_CLARITY: Modal Fallback đổi nhãn nút thành "Đóng hướng dẫn" và có thông điệp giải thích rõ ràng', () => {
+      const buttonPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+      assert.ok(fs.existsSync(buttonPath), 'src/components/pwa/InstallPwaButton.tsx phải tồn tại');
+
+      const content = fs.readFileSync(buttonPath, 'utf8');
+
+      // 1. Nút của modal phải là "Đóng hướng dẫn"
+      assert.ok(
+        content.includes('Đóng hướng dẫn'),
+        'InstallPwaButton.tsx phải đổi nhãn nút trong Fallback Modal thành "Đóng hướng dẫn"'
+      );
+
+      // 2. Tuyệt đối không còn chuỗi gây hiểu nhầm "Đã hiểu, tôi sẽ thực hiện"
+      assert.ok(
+        !content.includes('Đã hiểu, tôi sẽ thực hiện'),
+        'InstallPwaButton.tsx không được chứa chuỗi gây hiểu nhầm "Đã hiểu, tôi sẽ thực hiện"'
+      );
+
+      // 3. Phải có thông điệp giải thích rõ tại sao phải thao tác tay
+      assert.ok(
+        content.includes('Hộp thoại cài đặt tự động không khả dụng trên trình duyệt hiện tại'),
+        'Fallback Modal phải có thông điệp giải thích rõ ràng cho người dùng'
+      );
+    });
   });
 });
 

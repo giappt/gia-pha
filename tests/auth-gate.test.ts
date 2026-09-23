@@ -555,6 +555,40 @@ describe('Auth Gate & Guest Visibility Test Suite (Milestone 7.5)', () => {
       'AuthButton phải có nhãn "Đăng nhập Google"'
     );
   });
+
+  // 36. TC_UT_GATE_PWA_ASSETS_BYPASS_GUEST (Milestone 5 Section 5.16)
+  it('TC_UT_GATE_PWA_ASSETS_BYPASS_GUEST: evaluateAuthGate cho phép khách chưa đăng nhập tải trực tiếp sw.js và manifest.json (action === pass)', () => {
+    const defaultFlags = resolveFeatureFlags({
+      enable_public_tree: false, // Thử thách cao nhất: Cây chế độ Riêng tư (Private mode)
+      enable_kinship_lookup: false,
+      enable_anniversaries: false,
+      maintenance_mode: false,
+    });
+
+    const pwaPaths = [
+      '/manifest.json',
+      '/manifest.webmanifest',
+      '/sw.js',
+      '/favicon.ico',
+      '/icons/icon-192x192.png',
+      '/icons/icon-512x512.png',
+      '/icons/badge-72x72.png',
+    ];
+
+    for (const p of pwaPaths) {
+      const decision = evaluateAuthGate(p, null, defaultFlags, false);
+      assert.strictEqual(
+        decision.action,
+        'pass',
+        `evaluateAuthGate phải bypass và trả về action: pass cho PWA asset: ${p} khi user = null`
+      );
+      assert.strictEqual(
+        decision.redirectUrl,
+        undefined,
+        `PWA asset: ${p} tuyệt đối không được redirect sang login-gate`
+      );
+    }
+  });
 });
 
 

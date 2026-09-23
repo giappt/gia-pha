@@ -431,3 +431,10 @@
      - Giải pháp: Quản lý vòng đời `isInstalling` (nút bị vô hiệu hóa `disabled={isInstalling}`, thay đổi icon thành `Loader2 animate-spin` và nhãn `"Đang cài đặt..."`).
      - Đồng thời hiển thị Toast thông báo tiến trình định vị cố định ở đáy màn hình (`fixed bottom-6 z-50 left-1/2 -translate-x-1/2`), tự ẩn sau 3.5 giây (`RG32`), không che khuất form đăng nhập hay nút thao tác chính.
      - Nút cài đặt tại `/login-gate` gọi trực tiếp `triggerPwaInstall()`, mang lại trải nghiệm cài đặt PWA native trên Android/Chromium đồng đẳng 100% với Trang Chủ.
+
+- **Khai Thông Tuyến Đường Gateway Cho PWA Assets (sw.js & manifest.json) & Chống Bẫy Redirect 307 Đối Với Khách (Gateway PWA Asset Bypass):**
+  1. *Căn nguyên Chrome không bắn `beforeinstallprompt` trên trang bảo vệ:* Khi một trang web dùng Next.js Middleware hoặc Auth Gate để bảo vệ các route (ví dụ redirect khách chưa đăng nhập về `/login-gate` khi `enable_public_tree = false`), nếu danh mục bypass tĩnh thiếu `/manifest.json` và `/sw.js`, server sẽ redirect HTTP 307 hai file này về trang đăng nhập. Trình duyệt nhận về mã HTML của trang login thay vì mã JSON hoặc JavaScript. Chrome lập tức báo lỗi cú pháp manifest và unsupported MIME type `text/html`, đánh giá trang web không đạt tiêu chí PWA và vĩnh viễn không phát sự kiện `beforeinstallprompt`. Hậu quả là `deferredPrompt` luôn bằng `null`, nút cài đặt rơi vào Fallback Modal.
+  2. *Giải pháp triệt để:*
+     - Trong `src/lib/auth/auth-gate.ts`: Bổ sung `/manifest.json`, `/manifest.webmanifest`, `/sw.js`, `/icons/*`, `/images/*`, và các đuôi `.json`, `.js`, `.webmanifest` vào danh mục bypass tĩnh tuyệt đối (`action: 'pass'`).
+     - Trong `src/middleware.ts`: Bổ sung kiểm tra bypass sớm ở đầu hàm và vào `matcher` exclusion để Next.js phục vụ trực tiếp static asset từ `public/`.
+  3. *Chuẩn hóa nhãn nút Fallback Modal:* Đổi từ `"Đã hiểu, tôi sẽ thực hiện"` sang `"Đóng hướng dẫn"` kèm thông điệp giải thích rõ tại sao phải thao tác tay để tránh người dùng hiểu nhầm rằng nút đó sẽ tự động cài đặt ứng dụng.

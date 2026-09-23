@@ -642,15 +642,40 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
     ```
   - `src/lib/pwa/pwa-store.ts` tự động khôi phục ngay `globalDeferredPrompt = window.__fat_deferred_prompt` khi module khởi tạo.
 - **2. Đồng Đẳng Kích Hoạt Prompt Native Giữa Login Gate và Trang Chủ:**
-  - Bấm nút cài đặt trên `PwaMiniBanner` tại `/login-gate` kích hoạt trực tiếp hộp thoại cài đặt native của Chromium y hệt như Banner Trang Chủ (`variant="banner"`).
-- **3. Phản Hồi Trạng Thái Tiến Trình Cài Đặt (Installing Feedback & Notifications):**
-  - Quản lý trạng thái `isInstalling: boolean` trong component và PWA Store.
-  - Khi người dùng nhấn nút cài đặt:
-    - Nút hiển thị spinner `Loader2 animate-spin shrink-0` kèm nhãn *"Đang cài đặt..."*.
-    - Kích hoạt Toast / thông báo thị giác:
-      * Bắt đầu: *"Đang mở hộp thoại cài đặt ứng dụng..."*
-      * Người dùng chọn Install trên dialog: *"Đang tiến hành cài đặt ứng dụng..."*
-      * Khi sự kiện `appinstalled` phát tín hiệu: Thông báo chúc mừng *"Cài đặt ứng dụng Gia Phả thành công! Bạn có thể mở từ màn hình chính."*
+### 5.16. Khai Thông Tuyến Đường Gateway Cho PWA Assets (`/sw.js`, `/manifest.json`) & Chuẩn Hóa UX Fallback Modal
+
+- **1. Căn Nguyên Sâu Xa (Deep Root Cause of PWA Install Inability at Login Gate):**
+  - Trình duyệt Chromium (Chrome, Edge, Samsung Internet, Cốc Cốc) chỉ cấp sự kiện `beforeinstallprompt` khi tải thành công 2 tài nguyên bắt buộc: `/manifest.json` (JSON) và `/sw.js` (JavaScript Service Worker).
+  - Trước đây, `src/lib/auth/auth-gate.ts` và `src/middleware.ts` áp dụng rào chắn kiểm soát cho khách chưa đăng nhập (Guest tại `/login-gate` hoặc khi `enable_public_tree = false`). Do danh mục bypass tĩnh thiếu `/manifest.json` và `/sw.js`, Next.js đã redirect HTTP 307 hai file này về `/login-gate`.
+  - Hậu quả: Trình duyệt nhận về mã HTML của trang đăng nhập thay vì file JSON/JS, gây lỗi cú pháp Syntax error / Unsupported MIME type `text/html`. Trình duyệt lập tức đánh giá trang web **KHÔNG ĐẠT TIÊU CHÍ PWA**, và **CỐ TÌNH KHÔNG BAO GIỜ BẮN SỰ KIỆN `beforeinstallprompt`**.
+  - Do đó, biến `deferredPrompt` luôn là `null`, khiến nút Cài Đặt luôn bị đẩy vào Fallback Modal.
+
+- **2. Kiến Trúc Gateway Bypass Tuyệt Đối Cho PWA Assets (src/lib/auth/auth-gate.ts & src/middleware.ts):**
+  - **Auth Gate Pure Function (`src/lib/auth/auth-gate.ts`):**
+    - Bổ sung `/sw.js`, `/manifest.json`, `/manifest.webmanifest`, `/icons/*`, `/images/*`, và các đuôi file `.json`, `.js`, `.webmanifest` vào danh sách bypass tĩnh tuyệt đối:
+      ```typescript
+      if (
+        pathname === '/manifest.json' ||
+        pathname === '/manifest.webmanifest' ||
+        pathname === '/sw.js' ||
+        pathname === '/favicon.ico' ||
+        pathname.startsWith('/icons/') ||
+        pathname.startsWith('/images/') ||
+        /\.(?:svg|png|jpg|jpeg|gif|webp|ico|json|js|webmanifest)$/.test(pathname)
+      ) {
+        return { action: 'pass' };
+      }
+      ```
+    - Bảo đảm 100% khách chưa đăng nhập tải được đúng file JSON và file JS của Service Worker mà không bao giờ bị redirect 307.
+  - **Middleware Route Matcher (`src/middleware.ts`):**
+    - Bổ sung `manifest.json`, `manifest.webmanifest`, `sw.js` vào điều kiện bypass sớm ở đầu hàm và vào `matcher` exclusion để Next.js phục vụ trực tiếp static asset từ thư mục `public/`.
+
+- **3. Chuẩn Hóa UX Fallback Modal (Triệt Tiêu Hiểu Nhầm Về Hành Động Cài Đặt):**
+  - **Vấn đề nhận thức:** Nút `"Đã hiểu, tôi sẽ thực hiện"` trước đây khiến người dùng hiểu nhầm rằng hệ thống sẽ tự động cài đặt khi bấm nút.
+  - **Chuẩn hóa ngôn ngữ UI (`src/components/pwa/InstallPwaButton.tsx`):**
+    - Đổi nhãn nút hành động của Fallback Modal thành: **`"Đóng hướng dẫn"`** (hoặc `"Đã hiểu và đóng"`).
+    - Bổ sung thông điệp giải thích rõ tại đầu Fallback Modal khi thiết bị/trình duyệt không hỗ trợ prompt native (như Safari trên Mac hoặc tab ẩn danh):
+      > *"Trình duyệt hiện tại chưa hỗ trợ tự động mở hộp thoại cài đặt (hoặc ứng dụng đã được cài đặt sẵn). Quý bà con vui lòng thao tác cài đặt thủ công theo hướng dẫn sau:"*
 
 ---
 
@@ -699,6 +724,9 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_PWA_HEAD_EARLY_CAPTURE** | layout.tsx chứa script inline trong head đón bắt beforeinstallprompt vào window.__fat_deferred_prompt | `tests/theme-and-layout.test.ts` | File `src/app/layout.tsx` | Phân tích thẻ `<head>` | Chứa inline script lắng nghe `beforeinstallprompt` sớm, không bị race condition | PWA Resilience | `[x] PASS` |
 | **TC_UT_PWA_INSTALLING_FEEDBACK** | InstallPwaButton hiển thị trạng thái isInstalling và spinner khi click | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Kiểm tra state và logic phản hồi khi click | Chứa logic `isInstalling`, icon `Loader2 animate-spin shrink-0`, thông báo tiến trình | UX Feedback | `[x] PASS` |
 | **TC_UT_LOGIN_GATE_NATIVE_PROMPT_PARITY** | Login Gate kích hoạt triggerPwaInstall đồng đẳng với Trang Chủ khi có prompt | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx`, `login-gate/page.tsx` | Phân tích hàm triggerPwaInstall và variant mini-banner | Đảm bảo mini-banner gọi trực tiếp `triggerPwaInstall()` khi có prompt | Functional Parity | `[x] PASS` |
+| **TC_UT_GATE_PWA_ASSETS_BYPASS_GUEST** | evaluateAuthGate cho phép khách chưa đăng nhập tải trực tiếp sw.js và manifest.json (action === 'pass') | `tests/auth-gate.test.ts` | Request `/sw.js`, `/manifest.json`, `/manifest.webmanifest` với `user = null` | Gọi `evaluateAuthGate(pathname, null, flags)` | Trả về `{ action: 'pass' }`, không redirect sang `/login-gate` | Security & PWA | `[x] PASS` |
+| **TC_UT_MIDDLEWARE_PWA_MATCHER_EXCLUSION** | middleware.ts loại trừ manifest.json và sw.js khỏi Auth Gate xử lý | `tests/theme-and-layout.test.ts` | File `src/middleware.ts` | Đọc mã nguồn kiểm tra bypass và matcher regex | Chứa điều kiện bypass `/manifest.json`, `/sw.js` và matcher loại trừ | Route Configuration | `[x] PASS` |
+| **TC_UT_PWA_FALLBACK_MODAL_UX_CLARITY** | Modal Fallback đổi nhãn nút thành "Đóng hướng dẫn" và có thông điệp giải thích rõ ràng | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Đọc mã nguồn kiểm tra Modal Fallback | Chứa nhãn "Đóng hướng dẫn" (hoặc "Đã hiểu và đóng"), giải thích lý do thủ công, loại bỏ chuỗi gây hiểu nhầm "Đã hiểu, tôi sẽ thực hiện" | UX Clarity | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -777,6 +805,8 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG30 (Zero Breakage on Login Flow):** Các thay đổi PWA trên Login Gate không ảnh hưởng đến nút đăng nhập Google OAuth và nút Dev Bypass.
 - [ ] **RG31 (PWA Head Script Zero-Crash & SSR Safe):** Script inline `<head>` phải tự đóng gói an toàn (IIFE, try/catch hoặc safe window check), không gây FOUC hoặc lỗi console.
 - [ ] **RG32 (Toast Notification Timing & Auto-dismiss):** Thông báo tiến trình cài đặt PWA tự động biến mất sau 3-4 giây, không che khuất nút Đăng nhập hay form chính.
+- [x] **RG33 (Auth Gate Route Protection Integrity):** Khách chưa đăng nhập khi truy cập `/anniversaries`, `/kinship`, hoặc `/tree` (khi `enable_public_tree = false`) vẫn bị chặn và chuyển hướng về `/login-gate` chính xác, không bị rò rỉ bảo mật.
+- [x] **RG34 (PWA Static Asset MIME Type Integrity):** Request `/manifest.json` và `/sw.js` luôn trả về đúng loại nội dung JSON/JavaScript thật, không bao giờ bị redirect 307 trả về HTML.
 
 ---
 
