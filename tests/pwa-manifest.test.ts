@@ -87,4 +87,27 @@ describe('PWA Manifest & Service Worker Compliance Test Suite (Milestone 5)', ()
     // 3. Không còn chứa FAT hay chữ "Đại Tộc" chung chung
     assert.strictEqual(json.name.includes('FAT'), false, 'Tên không được chứa FAT');
   });
+
+  // TC_UT_MANIFEST_ICON_PURPOSE_SEPARATION: Tách bạch purpose any và maskable cho icon 512x512
+  it('TC_UT_MANIFEST_ICON_PURPOSE_SEPARATION: manifest.json tách bạch purpose any và maskable cho icon 512x512', () => {
+    const manifestPath = path.join(process.cwd(), 'public', 'manifest.json');
+    const content = fs.readFileSync(manifestPath, 'utf-8');
+    const json = JSON.parse(content);
+
+    const anyIcon512 = json.icons.find(
+      (i: { sizes: string; purpose?: string }) => i.sizes === '512x512' && i.purpose === 'any'
+    );
+    const maskableIcon512 = json.icons.find(
+      (i: { sizes: string; purpose?: string }) => i.sizes === '512x512' && i.purpose === 'maskable'
+    );
+
+    assert.ok(anyIcon512, 'Phải có icon 512x512 với purpose: "any" cho Splash Screen và Task Switcher');
+    assert.ok(maskableIcon512, 'Phải có icon 512x512 với purpose: "maskable" cho Android Launcher');
+    assert.strictEqual(anyIcon512.src, '/icons/icon-512x512.png');
+    assert.strictEqual(maskableIcon512.src, '/icons/icon-512x512-maskable.png');
+
+    // Đảm bảo các file vật lý thật sự tồn tại trên đĩa
+    assert.ok(fs.existsSync(path.join(process.cwd(), 'public', anyIcon512.src)), 'File icon-512x512.png phải tồn tại');
+    assert.ok(fs.existsSync(path.join(process.cwd(), 'public', maskableIcon512.src)), 'File icon-512x512-maskable.png phải tồn tại');
+  });
 });

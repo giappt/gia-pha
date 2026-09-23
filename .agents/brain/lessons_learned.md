@@ -438,3 +438,21 @@
      - Trong `src/lib/auth/auth-gate.ts`: Bổ sung `/manifest.json`, `/manifest.webmanifest`, `/sw.js`, `/icons/*`, `/images/*`, và các đuôi `.json`, `.js`, `.webmanifest` vào danh mục bypass tĩnh tuyệt đối (`action: 'pass'`).
      - Trong `src/middleware.ts`: Bổ sung kiểm tra bypass sớm ở đầu hàm và vào `matcher` exclusion để Next.js phục vụ trực tiếp static asset từ `public/`.
   3. *Chuẩn hóa nhãn nút Fallback Modal:* Đổi từ `"Đã hiểu, tôi sẽ thực hiện"` sang `"Đóng hướng dẫn"` kèm thông điệp giải thích rõ tại sao phải thao tác tay để tránh người dùng hiểu nhầm rằng nút đó sẽ tự động cài đặt ứng dụng.
+
+- **Chuẩn Hóa PWA Maskable Icon (Google Safe Zone), Tách Bạch Manifest & Thư Pháp Động Chữ Hán "Phạm" (范) (Dual-Gate Splash State Machine):**
+  1. *Căn nguyên icon launcher Android bị gọt vát góc & Splash screen vỡ hạt:*
+     - Trên Android Adaptive Icons, hệ điều hành cắt icon theo nhiều khuôn dáng (hình tròn, giọt nước, squircles). Vùng an toàn (Safe Zone) chỉ chiếm tối đa một hình tròn có bán kính 40% từ tâm canvas (đường kính 80%, tương đương 409px trên canvas 512px). Nét chữ thư pháp trước đây chiếm 88% khung hình nên bị launcher Android gọt mất các nét ngoài rìa.
+     - Đồng thời, việc cấu hình gộp "purpose": "any maskable" cho cùng một file ảnh khiến Android Splash Screen phải phóng to và nội suy ảnh crop lên màn hình dọc 2K, dẫn đến hiện tượng vỡ hạt (pixelated) và mờ nhòe.
+     - **Giải pháp chuẩn hóa:**
+       - Tách bạch public/manifest.json thành 2 entry riêng biệt: purpose: "any" (ảnh 512x512 và 192x192 cho Splash Screen và Task Switcher) và purpose: "maskable" (ảnh 512x512 nền ngọc bích #059669 tràn viền 100% full bleed, chữ trắng thu nhỏ còn 55%-60% đặt trọn vẹn trong bán kính an toàn r <= 204px).
+       - Dùng vector SVG xuất lại toàn bộ bộ icon PNG bằng ImageMagick (convert -density 300) đạt độ nét tuyệt đối ở mọi kích thước.
+  2. *Thư pháp động chữ Hán "Phạm" (范) với HanziWriter & Zero-CDN Offline:*
+     - Chữ 范 gồm đúng 8 nét chuẩn theo thứ tự bút thuận cổ truyền (Thảo đầu -> Thủy -> Thân Kỷ).
+     - Bundle trực tiếp dữ liệu vector tĩnh (~1.5 KB JSON) vào src/lib/pwa/hanzi-fan-data.ts, không gọi CDN ngoài (cdn.jsdelivr.net), bảo đảm ứng dụng chạy offline 100% khi mất mạng.
+     - Thư viện hanzi-writer (~30 KB minified) render SVG thuần 60 FPS qua requestAnimationFrame, không dùng WebGL/3D, không làm nóng máy hay hao pin điện thoại.
+  3. *Mô hình Cổng Kép Đồng Bộ Trạng Thái Tải (Dual-Gate Splash State Machine):*
+     - Tránh tình trạng animation bị cắt cụt giữa chừng khi mạng quá nhanh, hoặc đơ màn hình khi mạng quá chậm:
+     - Biểu thức điều kiện: canEnterApp = isAnimationDone AND isDataReady.
+     - Nếu mạng nhanh (< 1.8s): Hệ thống kiên nhẫn chờ nét bút thứ 8 hoàn tất mới mở rèm (fade-out 300ms) vào trang chủ. Người dùng luôn được thưởng thức trọn vẹn 100% vẻ đẹp nét cọ thư pháp.
+     - Nếu mạng chậm (> 1.8s): Chữ 范 hoàn chỉnh 8 nét giữ nguyên vẹn trên màn hình và bước vào trạng thái Living Idle State (chữ phát ánh hào quang thở Breathing Pulse Glow nhịp nhàng màu ngọc bích #059669).
+     - Dưới chân chữ xuất hiện chỉ báo tải chuẩn hóa theo luật [R-UI.LOADING] (Loader2 spinner màu ngọc bích và thông điệp "Đang tải dữ liệu..."), kèm cơ chế an toàn chống treo (Timeout Safeguard 8s).

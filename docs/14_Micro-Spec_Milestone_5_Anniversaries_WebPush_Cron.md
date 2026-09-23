@@ -677,6 +677,34 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
     - Bổ sung thông điệp giải thích rõ tại đầu Fallback Modal khi thiết bị/trình duyệt không hỗ trợ prompt native (như Safari trên Mac hoặc tab ẩn danh):
       > *"Trình duyệt hiện tại chưa hỗ trợ tự động mở hộp thoại cài đặt (hoặc ứng dụng đã được cài đặt sẵn). Quý bà con vui lòng thao tác cài đặt thủ công theo hướng dẫn sau:"*
 
+### 5.17. Chuẩn Hóa Maskable Icon An Toàn Android, Splash Screen Siêu Nét & Animation Thư Pháp Viết Chữ Hán Chữ 范 (Dual-Gate State Machine)
+
+- **1. Chuẩn Hóa Maskable Icon Theo Khuyến Cáo Của Google (Android Safe Zone):**
+  - **Căn nguyên lỗi cắt góc:** Trên Android Launcher, icon maskable bị cắt theo nhiều khuôn (tròn, vuông bo góc squircles, giọt nước). Vùng an toàn (Safe Zone) chỉ chiếm tối đa một hình tròn có bán kính $40\%$ từ tâm canvas (đường kính $80\%$, tương đương $409\text{px}$ trên canvas $512\text{px}$). Nét chữ "范" trước đây chạm sát mép $88\%$ nên bị launcher Android gọt vát mất nét.
+  - **Quy chuẩn đồ họa mới:**
+    - Canvas vuông $512 \times 512$ pixel được phủ màu nền ngọc bích `#059669` tràn viền 100% (full bleed, không có viền trắng, không bo tròn sẵn).
+    - Chữ Hán "范" màu trắng được thu nhỏ tỉ lệ còn **$55\% - 60\%$** và đặt chính xác tại tâm hình học $(256, 256)$, nằm lọt hoàn toàn bên trong bán kính $40\%$ ($r \le 204\text{px}$). Khi Android gọt tròn hay bo góc, các nét bút lông vẫn nguyên vẹn 100%, lề thoáng đãng và đĩnh đạc.
+
+- **2. Tách Bạch Danh Mục Manifest Icons (`public/manifest.json`):**
+  - CẤM gộp chung `"purpose": "any maskable"` vào 1 file ảnh. Tách thành 2 entry riêng biệt:
+    1. Icon `purpose: "any"`: File $512 \times 512$ và $192 \times 192$ phục vụ Splash Screen, Task Switcher và Desktop PWA.
+    2. Icon `purpose: "maskable"`: File $512 \times 512$ nền tràn viền và chữ nằm trong Safe Zone dành riêng cho Android Adaptive Launcher.
+
+- **3. Tái Sinh Toàn Bộ Asset PWA Độ Phân Giải Cao (`public/icons/*`):**
+  - Sinh lại bằng script tự động chất lượng cao: `icon-192x192.png`, `icon-512x512.png`, `apple-touch-icon.png`, `badge-72x72.png`. Triệt tiêu hoàn toàn hiện tượng vỡ hạt (pixelated) và mờ nhòe trên màn hình Splash của Android $2K/FHD+$.
+
+- **4. Hiệu Ứng Thư Pháp Bút Thuận Chữ 范 (`hanzi-writer` & Zero-CDN Offline):**
+  - Bundle tĩnh toàn bộ dữ liệu vector của chữ **"Phạm" (范)** (mã Unicode `U+8303`, 8 nét chuẩn) tại `src/lib/pwa/hanzi-fan-data.ts` (~1.5 KB JSON). 100% offline, không gọi CDN ngoài.
+  - Thư viện `hanzi-writer` (~30 KB minified, ~10 KB gzipped) render bằng SVG thuần qua `requestAnimationFrame`, vẽ 8 nét chuẩn xác theo thứ tự bút thuận truyền thống (Thảo đầu $\rightarrow$ Thủy $\rightarrow$ Thân Kỷ).
+
+- **5. Cơ Chế Đồng Bộ Trạng Thái Tải Thông Minh (Splash State Machine):**
+  - Quản lý bằng cổng kép (Dual-Gate):
+    $$\text{canEnterApp} = \text{isAnimationDone} \ \mathbf{AND} \ \text{isDataReady}$$
+  - **Mạng nhanh (< 1.8s):** Dữ liệu xong sớm nhưng ứng dụng vẫn kiên nhẫn đợi nét thứ 8 hạ bút hoàn tất mới mở rèm (fade-out 300ms). Người dùng luôn xem trọn vẹn nét cọ thư pháp.
+  - **Mạng chậm (> 1.8s):** Chữ 范 viết xong 8 nét sẽ giữ nguyên vẹn trên màn hình và bước vào trạng thái **Living Idle State**: tỏa ánh hào quang thở (Breathing Pulse Glow) nhịp nhàng màu ngọc bích `#059669`.
+  - **Chỉ báo Loading chuẩn tắc (`[R-UI.LOADING]`):** Dưới chân chữ hiển thị `Loader2` màu ngọc bích (`shrink-0 aspect-square text-emerald-600 animate-spin`) và dòng chữ chuẩn `"Đang tải dữ liệu..."`.
+  - **Timeout Safeguard:** Sau 8 giây nếu mất kết nối, hiển thị nút thử lại hoặc tiếp tục ngoại tuyến, không bao giờ để kẹt màn hình.
+
 ---
 
 ## 7. MA TRẬN TEST CASES & TIÊU CHÍ NGHIỆM THU (TEST SPECIFICATION)
@@ -727,6 +755,10 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_GATE_PWA_ASSETS_BYPASS_GUEST** | evaluateAuthGate cho phép khách chưa đăng nhập tải trực tiếp sw.js và manifest.json (action === 'pass') | `tests/auth-gate.test.ts` | Request `/sw.js`, `/manifest.json`, `/manifest.webmanifest` với `user = null` | Gọi `evaluateAuthGate(pathname, null, flags)` | Trả về `{ action: 'pass' }`, không redirect sang `/login-gate` | Security & PWA | `[x] PASS` |
 | **TC_UT_MIDDLEWARE_PWA_MATCHER_EXCLUSION** | middleware.ts loại trừ manifest.json và sw.js khỏi Auth Gate xử lý | `tests/theme-and-layout.test.ts` | File `src/middleware.ts` | Đọc mã nguồn kiểm tra bypass và matcher regex | Chứa điều kiện bypass `/manifest.json`, `/sw.js` và matcher loại trừ | Route Configuration | `[x] PASS` |
 | **TC_UT_PWA_FALLBACK_MODAL_UX_CLARITY** | Modal Fallback đổi nhãn nút thành "Đóng hướng dẫn" và có thông điệp giải thích rõ ràng | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Đọc mã nguồn kiểm tra Modal Fallback | Chứa nhãn "Đóng hướng dẫn" (hoặc "Đã hiểu và đóng"), giải thích lý do thủ công, loại bỏ chuỗi gây hiểu nhầm "Đã hiểu, tôi sẽ thực hiện" | UX Clarity | `[x] PASS` |
+| **TC_UT_MANIFEST_ICON_PURPOSE_SEPARATION** | Manifest tách bạch purpose any và maskable cho icon 512x512 | `tests/pwa-manifest.test.ts` | File `public/manifest.json` | Phân tích mảng icons trong JSON | Có ít nhất 1 icon có purpose "any" và 1 icon có purpose "maskable" với kích thước 512x512 | PWA Standards | `[x] PASS` |
+| **TC_UT_HANZI_DATA_INTEGRITY** | Bộ dữ liệu vector chữ 范 chuẩn hóa đủ 8 nét và medians tọa độ | `tests/pwa-assets.test.ts` | File `src/lib/pwa/hanzi-fan-data.ts` | Kiểm tra đối tượng dữ liệu chữ Hán | Chứa trường `character === '范'`, mảng `strokes` có đúng 8 phần tử và `medians` hợp lệ | Calligraphy Engine | `[x] PASS` |
+| **TC_UT_CALLIGRAPHY_COMPONENT_EXISTS** | Component HanziCalligraphyLogo hỗ trợ Client Component và callback hoàn tất | `tests/theme-and-layout.test.ts` / `tests/pwa-assets.test.ts` | File `src/components/pwa/HanziCalligraphyLogo.tsx` | Kiểm tra mã nguồn component | Chứa directive 'use client', import dữ liệu chữ 范 local, hỗ trợ callback onComplete | UI Component | `[x] PASS` |
+| **TC_UT_SPLASH_STATE_MACHINE_LOGIC** | Logic cổng kép Dual-Gate canEnterApp đồng bộ hoàn tất cả animation và data | `tests/theme-and-layout.test.ts` / `tests/pwa-assets.test.ts` | Files `src/app/login-gate/page.tsx` hoặc Splash Component | Kiểm tra biểu thức điều kiện mở rèm và loading indicator | canEnterApp chỉ true khi cả animationDone và dataReady, tuân thủ [R-UI.LOADING] với Loader2 và 'Đang tải dữ liệu...' | State Machine | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -768,6 +800,10 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_35 (Header Lịch Giỗ Tinh Gọn):** Mở `/anniversaries` $\rightarrow$ Phần đầu trang sạch sẽ, không còn badge `Hiếu Nghĩa Truyền Gia`, tập trung trực tiếp vào tiêu đề Lịch Giỗ Gia Tộc và Thẻ Ngày Hiện Tại.
 - [ ] **UAT_36 (Đồng Bộ Vận Hành PWA Install Trang Chủ & Login Gate):** Mở Trang Chủ (`/`) và Cổng Đăng Nhập (`/login-gate`): Cả hai đều có tiêu đề *"Cài đặt ứng dụng Gia Phả lên màn hình chính"*, mô tả ngày giỗ rõ ràng. Bấm cài đặt trên cả 2 màn hình đều kích hoạt hộp thoại cài đặt native của trình duyệt (hoặc mở modal hướng dẫn trực quan chuyên nghiệp), tuyệt đối không xuất hiện popup `alert()` native thô sơ, console sạch 0 lỗi.
 - [ ] **UAT_37 (Phản Hồi Tiến Trình Cài Đặt & Native Parity Tại Login Gate):** Mở `/login-gate` trên điện thoại Android Chrome (chưa cài app). Bấm nút cài đặt: Nút chuyển sang trạng thái spinner `Loader2` xoay nhẹ và chữ "Đang cài đặt..."; hiển thị thông báo "Đang mở hộp thoại cài đặt ứng dụng...". Hộp thoại native Chrome "Install app - Gia Phả Phạm Văn" lập tức xuất hiện (y hệt Trang Chủ). Sau khi bấm Install, nhận được thông báo "Cài đặt ứng dụng Gia Phả thành công!".
+- [ ] **UAT_38 (Icon Android Nằm Trọn Vẹn Trong Vòng Tròn):** Cài đặt PWA lên điện thoại Android $\rightarrow$ Icon trên màn hình chính là hình tròn hoàn hảo, chữ Hán "范" nằm lọt 100% bên trong vòng tròn với lề an toàn rộng rãi, không bị launcher gọt mất bất kỳ góc nét nào.
+- [ ] **UAT_39 (Splash Screen Mở App Sắc Nét Không Vỡ Hạt):** Chạm vào icon ngoài màn hình chính để mở app $\rightarrow$ Màn hình Splash hiển thị icon sắc nét tuyệt đối, màu xanh ngọc bích `#059669` đồng bộ, không bị vỡ hạt hay mờ nhòe.
+- [ ] **UAT_40 (Hiệu Ứng Thư Pháp Múa Bút Chữ 范):** Khi mở trang $\rightarrow$ Logo chữ 范 đưa cọ viết 8 nét thư pháp màu ngọc bích chuẩn xác theo thứ tự bút thuận. Chạm vào logo để kích hoạt viết lại mượt mà.
+- [ ] **UAT_41 (Đồng Bộ Trạng Thái Chờ & Loading Chuẩn Tắc):** Khi mạng nhanh $\rightarrow$ xem trọn 8 nét mới mở vào app. Khi mạng chậm $\rightarrow$ chữ viết xong phát hào quang thở ngọc bích nhịp nhàng, bên dưới hiện rõ `Loader2` quay tròn và dòng chữ "Đang tải dữ liệu...".
 
 ---
 
@@ -807,6 +843,9 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **RG32 (Toast Notification Timing & Auto-dismiss):** Thông báo tiến trình cài đặt PWA tự động biến mất sau 3-4 giây, không che khuất nút Đăng nhập hay form chính.
 - [x] **RG33 (Auth Gate Route Protection Integrity):** Khách chưa đăng nhập khi truy cập `/anniversaries`, `/kinship`, hoặc `/tree` (khi `enable_public_tree = false`) vẫn bị chặn và chuyển hướng về `/login-gate` chính xác, không bị rò rỉ bảo mật.
 - [x] **RG34 (PWA Static Asset MIME Type Integrity):** Request `/manifest.json` và `/sw.js` luôn trả về đúng loại nội dung JSON/JavaScript thật, không bao giờ bị redirect 307 trả về HTML.
+- [x] **RG35 (PWA Maskable Icon Safe Zone Verification):** Bán kính nét chữ trong icon maskable không vượt quá 40% bán kính canvas 512x512.
+- [x] **RG36 (Offline Hanzi Data Zero-Network Overhead):** Component HanziCalligraphyLogo hoạt động hoàn toàn offline, 0 request tới cdn.jsdelivr.net.
+- [x] **RG37 (Dual-Gate Fallback Timeout Safety):** Sau 8 giây mạng nghẽn, giao diện tự động cung cấp lối thoát cho người dùng, không bao giờ kẹt vĩnh viễn ở màn hình chờ.
 
 ---
 
