@@ -697,43 +697,38 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - Bundle tĩnh toàn bộ dữ liệu vector của chữ **"Phạm" (范)** (mã Unicode `U+8303`, 8 nét chuẩn) tại `src/lib/pwa/hanzi-fan-data.ts` (~1.5 KB JSON). 100% offline, không gọi CDN ngoài.
   - Thư viện `hanzi-writer` (~30 KB minified, ~10 KB gzipped) render bằng SVG thuần qua `requestAnimationFrame`, vẽ 8 nét chuẩn xác theo thứ tự bút thuận truyền thống (Thảo đầu $\rightarrow$ Thủy $\rightarrow$ Thân Kỷ).
 
-### 5.18. Đồng Bộ 1 Màn Hình Khởi Động Duy Nhất (Single Splash Experience), Múa Bút Thư Pháp Logo Dòng Họ (SVG Mask Reveal) & Tự Động Điều Hướng Theo Trạng Thái Xác Thực (Auth-Based Routing)
+### 5.18. Tối Ưu Hóa Khởi Động Tinh Gọn (Zero-React Splash & Pure Native OS Splash): Loại Bỏ Hoàn Toàn React Splash Overlay, Giữ Duy Nhất 1 Màn Hình Native Của Hệ Điều Hành & Điều Hướng Chuẩn Xác
 
-- **1. Căn Nguyên Sâu Xa Của Lỗi 2 Màn Hình Splash (Android WebAPK vs React Web):**
+- **1. Căn Nguyên Kỹ Thuật Khiến Xuất Hiện 2 Màn Hình Splash (Android WebAPK vs React Web):**
   - Khi cài đặt PWA trên Android, hệ điều hành Android tự động sinh Activity Native Splash Screen từ `manifest.json`.
-  - Android đọc icon có `purpose: "any"` (`public/icons/icon-512x512.png`). Vì file này trước đây là **vòng tròn xanh ngọc bích chứa chữ trắng**, Android đã đặt nguyên vòng tròn xanh đó lên nền trắng `#ffffff`.
-  - Sau đó, khi React Web mount xong, `AppSplashScreen` tiếp tục hiển thị màn hình trắng với chữ múa bút nét mảnh `hanzi-writer` và tiêu đề "GIA PHẢ PHẠM VĂN".
-  - Người dùng thấy rõ sự đứt gãy: Vòng tròn xanh tắt đi $\rightarrow$ Màn hình chữ xanh múa bút lại hiện lên (2 màn hình Splash cắn nhau).
+  - Android bắt buộc hiển thị Native Splash Activity này khi người dùng chạm vào icon ngoài màn hình chính để mở app; không có bất kỳ API JavaScript nào có thể tắt hay can thiệp vào Native Activity này.
+  - Khi React Web mount xong, nếu hệ thống tiếp tục hiển thị một overlay Splash thứ hai trong React (`AppSplashScreen`), người dùng sẽ luôn nhìn thấy **2 màn hình Splash nối tiếp nhau**:
+    1. Màn hình 1: Native Splash của Android OS (chữ Hán "范" màu xanh trên nền trắng, kéo dài ~0.3s - 0.5s).
+    2. Màn hình 2: React Web Splash (`AppSplashScreen`) che phủ toàn viewport với animation múa bút.
+  - Việc tồn tại 2 màn hình liên tiếp gây cảm giác giật cục, chậm chạp và đứt gãy trải nghiệm người dùng.
 
-- **2. Đồng Nhất 1:1 Thị Giác Thành DUY NHẤT 1 MÀN HÌNH Khởi Động:**
-  - **Sửa icon `purpose: "any"` (`icon-512x512.png` & `icon-192x192.png`):**
-    - **Bỏ hoàn toàn vòng tròn xanh ngọc bích bao ngoài.**
-    - Thay thế bằng **chữ Hán "范" thư pháp màu xanh ngọc bích `#059669` trên nền trắng/trong suốt**, lấy từ chính vector chuẩn của Logo dòng họ `CLAN_HAN_CALLIGRAPHY_PATH`.
-    - Tỷ lệ hiển thị $55\% - 60\%$, đặt tại tâm hình học $(256, 256)$.
-  - **Bảo toàn launcher icon ngoài màn hình chính Android:**
-    - `icon-512x512-maskable.png` tiếp tục giữ nền xanh ngọc bích tràn viền (full bleed) với safe zone $40\%$ để Android cắt tròn/vuông chuẩn Google Material Design.
-  - **Trải nghiệm khởi động liền mạch:**
-    - Khi chạm mở app trên Android: Android Native Splash hiện chữ "范" xanh trên nền trắng $\rightarrow$ Ngay sau đó React `AppSplashScreen` xuất hiện cũng với chữ "范" xanh trên nền trắng đúng vị trí đó $\rightarrow$ Người dùng cảm nhận **100% là DUY NHẤT 1 màn hình**.
+- **2. Quyết Định Kiến Trúc: Loại Bỏ Hoàn Toàn React Splash Screen (Zero-React Splash):**
+  - **Gỡ bỏ triệt để overlay Splash trong React:**
+    - Gỡ bỏ hoàn toàn việc import và render `<AppSplashScreen />` khỏi `src/app/layout.tsx`.
+    - Component `src/components/pwa/AppSplashScreen.tsx` được làm sạch, trả về `null` (zero DOM footprint) để triệt tiêu 100% khả năng che phủ giao diện hay giật màn hình khi tải trang.
+    - Bảo toàn component `ClanHanCalligraphyWriter.tsx` trong codebase như một thư viện UI nghệ thuật độc lập cho dòng họ, phục vụ các tính năng giới thiệu văn hóa gia tộc.
+  - **Trải nghiệm Khởi Động Duy Nhất 1 Màn Hình (Pure Native OS Splash):**
+    - Khi người dùng chạm mở PWA từ màn hình chính điện thoại (Android hoặc iOS):
+      - Hệ điều hành kích hoạt **DUY NHẤT 1 màn hình Native Splash** dựa trên cấu hình `manifest.json` (`background_color: "#ffffff"`, icon `purpose: "any"` là chữ Hán "范" màu ngọc bích `#059669` trên nền trắng/trong suốt).
+      - Ngay khi Native Splash của OS kết thúc (sau ~0.3s - 0.5s), ứng dụng lập tức hiển thị giao diện đích thực tế của ứng dụng, không có bất kỳ màn hình che phủ thứ hai nào.
 
-- **3. Múa Bút Thư Pháp Dày Dặn Nguyên Bản Logo Dòng Họ (SVG Mask Reveal Animation):**
-  - Không sử dụng font máy tính thanh mảnh của thư viện `hanzi-writer`.
-  - Xây dựng component `ClanHanCalligraphyWriter.tsx`:
-    - Sử dụng trực tiếp `CLAN_HAN_CALLIGRAPHY_PATH` (viewBox `0 0 100 100`) của Logo dòng họ.
-    - Áp dụng kỹ thuật SVG `<mask id="calligraphy-brush-mask">`:
-      - Tạo 8 đường tim nét cọ dày (`stroke-width="16px - 18px"`, `stroke-linecap="round"`) theo đúng thứ tự bút thuận truyền thống 1 $\rightarrow$ 8 của chữ 范 (Thảo đầu $\rightarrow$ Thủy $\rightarrow$ Thân Kỷ).
-      - Sử dụng CSS animation `stroke-dasharray / stroke-dashoffset` chạy tuần tự để "quét mực" mở dần hình bao thư pháp dày dặn nguyên bản của cụ tổ.
-    - Chữ hiển thị màu xanh ngọc bích `#059669` trên nền trắng `#ffffff`.
-    - Hỗ trợ callback `onComplete()` khi nét thứ 8 hoàn tất.
+- **3. Cơ Chế Điều Hướng Tức Thì Theo Trạng Thái Xác Thực (Auth-Based Direct Routing):**
+  - Không cần chờ đợi bất kỳ animation nào, luồng điều hướng được xử lý trực tiếp bởi **Auth Gate** và **Middleware** (`src/middleware.ts` & `src/lib/auth/auth-gate.ts`):
+    - **Khách chưa đăng nhập (`user === null` hoặc `effectiveIsGuest === true`):**
+      - Tự động chuyển hướng ngay lập tức về trang **`/login-gate`**.
+      - Trang `/login-gate` hiển thị đầy đủ Huy hiệu Logo chính thức `ClanHanLogo` (nền ngọc bích `bg-emerald-600`), Form Đăng nhập Google, và Nút/Banner Cài đặt PWA ở chân trang.
+    - **Thành viên đã đăng nhập:**
+      - Hiển thị ngay lập tức trang chủ **`/` (Home)** với lời chào mừng cá nhân hóa và Tiêu điểm Ngày Giỗ Gần Nhất.
 
-- **4. Tự Động Điều Hướng Theo Trạng Thái Xác Thực (Auth-Based Routing):**
-  - `src/app/layout.tsx` truyền trực tiếp trạng thái xác thực SSR `effectiveIsGuest` vào `<AppSplashScreen isGuest={effectiveIsGuest} />`.
-  - Khi animation viết chữ hoàn thành:
-    - **Nếu `isGuest === true` (chưa đăng nhập):** Tự động chuyển hướng vào màn hình **`/login-gate`**.
-    - **Nếu `isGuest === false` (đã đăng nhập):** Chuyển hướng vào màn hình **`/` (Trang chủ Home)**.
-  - Màn hình Splash fade-out mờ dần 300ms rồi ẩn hoàn toàn, đồng thời đánh dấu `sessionStorage.setItem('fat_splash_shown', 'true')` để không lặp lại khi chuyển trang SPA nội bộ.
-
-- **5. Đồng Bộ Trải Nghiệm Hoàn Hảo Trên iOS (Safari PWA):**
-  - Bổ sung cấu hình `apple-mobile-web-app-status-bar-style: "default"` và `apple-mobile-web-app-capable: "yes"` trong Metadata `layout.tsx` để thanh trạng thái (giờ, pin, Dynamic Island) hiển thị chữ đen sắc nét trên nền trắng, hòa quyện tuyệt đối vào màn hình Splash.
+- **4. Bảo Toàn Tính Nhất Quán Giữa Launcher Icon & Native Splash:**
+  - **Launcher Icon ngoài màn hình chính Android (`purpose: "maskable"`):** Giữ nguyên file `public/icons/icon-512x512-maskable.png` với nền xanh ngọc bích tràn viền và safe zone 40% chuẩn Material Design để launcher bo tròn/vuông hoàn hảo.
+  - **Native Splash Icon (`purpose: "any"`):** Sử dụng `public/icons/icon-512x512.png` và `icon-192x192.png` là chữ Hán "范" thư pháp xanh ngọc bích trên nền trắng/trong suốt, hòa quyện tuyệt đối với `background_color: "#ffffff"`.
+  - **Trải nghiệm iOS (Safari PWA):** Metadata `appleWebApp` với `statusBarStyle: 'default'` giữ thanh trạng thái chữ đen sắc nét trên nền trắng, đảm bảo tính đồng nhất 100% giữa Android và iOS.
 
 ---
 
@@ -788,12 +783,11 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_MANIFEST_ICON_PURPOSE_SEPARATION** | Manifest tách bạch purpose any và maskable cho icon 512x512 | `tests/pwa-manifest.test.ts` | File `public/manifest.json` | Phân tích mảng icons trong JSON | Có ít nhất 1 icon có purpose "any" và 1 icon có purpose "maskable" với kích thước 512x512 | PWA Standards | `[x] PASS` |
 | **TC_UT_HANZI_DATA_INTEGRITY** | Bộ dữ liệu vector chữ 范 chuẩn hóa đủ 8 nét và medians tọa độ | `tests/pwa-assets.test.ts` | File `src/lib/pwa/hanzi-fan-data.ts` | Kiểm tra đối tượng dữ liệu chữ Hán | Chứa trường `character === '范'`, mảng `strokes` có đúng 8 phần tử và `medians` hợp lệ | Calligraphy Engine | `[x] PASS` |
 | **TC_UT_CALLIGRAPHY_COMPONENT_EXISTS** | Component HanziCalligraphyLogo hỗ trợ Client Component và callback hoàn tất | `tests/theme-and-layout.test.ts` / `tests/pwa-assets.test.ts` | File `src/components/pwa/HanziCalligraphyLogo.tsx` | Kiểm tra mã nguồn component | Chứa directive 'use client', import dữ liệu chữ 范 local, hỗ trợ callback onComplete | UI Component | `[x] PASS` |
-| **TC_UT_SPLASH_STATE_MACHINE_LOGIC** | Logic cổng kép Dual-Gate canEnterApp đồng bộ hoàn tất cả animation và data | `tests/theme-and-layout.test.ts` / `tests/pwa-assets.test.ts` | Files `src/app/login-gate/page.tsx` hoặc Splash Component | Kiểm tra biểu thức điều kiện mở rèm và loading indicator | canEnterApp chỉ true khi cả animationDone và dataReady, tuân thủ [R-UI.LOADING] với Loader2 và 'Đang tải dữ liệu...' | State Machine | `[x] PASS` |
-| **TC_UT_APP_SPLASH_SCREEN_OVERLAY** | Màn hình Splash toàn màn hình AppSplashScreen phủ toàn viewport z-[9999] và fade-out | `tests/pwa-assets.test.ts` | File `src/components/pwa/AppSplashScreen.tsx`, `src/app/layout.tsx` | Kiểm tra component và việc nhúng trong RootLayout | Bao phủ fixed inset-0 z-[9999], nhúng HanziCalligraphyLogo, có Living Idle State và fade-out | Splash Screen | `[x] PASS` |
+| **TC_UT_ZERO_REACT_SPLASH_IN_LAYOUT** | RootLayout loại bỏ hoàn toàn overlay AppSplashScreen, AppSplashScreen trả về null | `tests/pwa-assets.test.ts` | Files `src/app/layout.tsx`, `src/components/pwa/AppSplashScreen.tsx` | Kiểm tra layout.tsx không nhúng AppSplashScreen, component trả về null | Không còn `<AppSplashScreen />` che phủ DOM viewport, component trả về null | Clean App Lifecycle | `[x] PASS` |
 | **TC_UT_LOGIN_GATE_APP_LOGO_RESTORED** | Trang login-gate hiển thị đúng huy hiệu logo chính thức ClanHanLogo nền xanh | `tests/theme-and-layout.test.ts` / `tests/pwa-assets.test.ts` | File `src/app/login-gate/page.tsx` | Kiểm tra JSX trên đầu Auth Card | Chứa ClanHanLogo bên trong container bg-emerald-600, không chứa animation nhúng nhầm | Brand Identity | `[x] PASS` |
-| **TC_UT_SINGLE_SPLASH_ICON_PARITY** | Icon 512x512 và 192x192 purpose any là chữ 范 xanh trên nền trắng/trong suốt | `tests/pwa-assets.test.ts` | File `public/manifest.json`, `public/icons/icon-512x512.png`, `public/icons/icon-192x192.png` | Kiểm tra kích thước và cấu trúc hình ảnh của icon any | Khai báo purpose "any", không còn vòng tròn xanh ngọc bích bao ngoài, đồng bộ với splash | PWA Parity | `[x] PASS` |
+| **TC_UT_SINGLE_SPLASH_ICON_PARITY** | Icon 512x512 và 192x192 purpose any là chữ 范 xanh trên nền trắng/trong suốt | `tests/pwa-assets.test.ts` | File `public/manifest.json`, `public/icons/icon-512x512.png`, `public/icons/icon-192x192.png` | Kiểm tra kích thước và cấu trúc hình ảnh của icon any | Khai báo purpose "any", không còn vòng tròn xanh ngọc bích bao ngoài, đồng bộ với Native Splash của OS | PWA Parity | `[x] PASS` |
 | **TC_UT_CLAN_HAN_CALLIGRAPHY_WRITER** | Component múa bút thư pháp SVG Mask Reveal chuẩn nét Logo dòng họ | `tests/pwa-assets.test.ts` | File `src/components/pwa/ClanHanCalligraphyWriter.tsx` | Kiểm tra JSX, mask ID và đường dẫn vector CLAN_HAN_CALLIGRAPHY_PATH | Dùng trực tiếp CLAN_HAN_CALLIGRAPHY_PATH, có mask 8 nét cọ theo bút thuận, màu #059669 | UI Component | `[x] PASS` |
-| **TC_UT_SPLASH_AUTH_ROUTING** | AppSplashScreen tự động điều hướng theo isGuest sau khi viết chữ xong | `tests/pwa-assets.test.ts` | File `src/components/pwa/AppSplashScreen.tsx`, `src/app/layout.tsx` | Kiểm tra props isGuest và logic gọi router.replace | isGuest === true chuyển sang '/login-gate', isGuest === false chuyển sang '/' | Navigation Flow | `[x] PASS` |
+| **TC_UT_AUTH_GATE_DIRECT_ROUTING** | Cơ chế Auth Gate và Middleware tự động điều hướng khách vào /login-gate và thành viên vào / | `tests/auth-gate.test.ts` | Trạng thái xác thực `user === null` hoặc user hợp lệ | Đánh giá `evaluateAuthGate` và middleware matcher | Khách chưa login chuyển hướng `/login-gate`, thành viên đã login truy cập `/` | Navigation Flow | `[x] PASS` |
 | **TC_UT_IOS_PWA_SPLASH_METADATA** | RootLayout cấu hình status bar style và apple meta đồng bộ trải nghiệm iOS | `tests/theme-and-layout.test.ts` | File `src/app/layout.tsx` | Đọc mã nguồn metadata viewport / appleWebApp | Khai báo apple-mobile-web-app-status-bar-style default và apple-mobile-web-app-capable yes | iOS Compliance | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
@@ -838,11 +832,12 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_37 (Phản Hồi Tiến Trình Cài Đặt & Native Parity Tại Login Gate):** Mở `/login-gate` trên điện thoại Android Chrome (chưa cài app). Bấm nút cài đặt: Nút chuyển sang trạng thái spinner `Loader2` xoay nhẹ và chữ "Đang cài đặt..."; hiển thị thông báo "Đang mở hộp thoại cài đặt ứng dụng...". Hộp thoại native Chrome "Install app - Gia Phả Phạm Văn" lập tức xuất hiện (y hệt Trang Chủ). Sau khi bấm Install, nhận được thông báo "Cài đặt ứng dụng Gia Phả thành công!".
 - [ ] **UAT_38 (Icon Android Nằm Trọn Vẹn Trong Vòng Tròn):** Cài đặt PWA lên điện thoại Android $\rightarrow$ Icon trên màn hình chính là hình tròn hoàn hảo, chữ Hán "范" nằm lọt 100% bên trong vòng tròn với lề an toàn rộng rãi, không bị launcher gọt mất bất kỳ góc nét nào.
 - [ ] **UAT_39 (Splash Screen Mở App Sắc Nét Không Vỡ Hạt):** Chạm vào icon ngoài màn hình chính để mở app $\rightarrow$ Màn hình Splash hiển thị icon sắc nét tuyệt đối, màu xanh ngọc bích `#059669` đồng bộ, không bị vỡ hạt hay mờ nhòe.
-- [ ] **UAT_40 (Hiệu Ứng Thư Pháp Múa Bút Trên Màn Hình Splash Toàn Cảnh):** Mở ứng dụng web/PWA $\rightarrow$ Màn hình Splash toàn màn hình xuất hiện trang nhã, chữ 范 đưa cọ viết 8 nét thư pháp màu xanh ngọc bích chuẩn xác theo thứ tự bút thuận. Khi hoàn tất, màn hình mờ dần (fade-out 500ms) để lộ giao diện ứng dụng. Chạm nhẹ vào màn hình để bỏ qua nhanh nếu muốn.
+- [ ] **UAT_40 (Đồng Bộ Nhận Diện Thương Hiệu Gia Phả Phạm Văn Khắp Ứng Dụng):** Khắp các trang (`/`, `/tree`, `/anniversaries`, `/kinship`, `/login-gate`), thương hiệu Gia Phả Phạm Văn và chữ Hán "范" hiển thị đồng bộ, trang nghiêm, nhất quán bảng màu ngọc bích di sản.
 - [ ] **UAT_41 (Khôi Phục Logo Chuẩn Của App Tại Màn Hình Login Gate):** Truy cập `/login-gate` $\rightarrow$ Khối huy hiệu trên đầu form đăng nhập hiển thị đúng logo chính thức của ứng dụng (chữ trắng tĩnh `ClanHanLogo` trên khối vuông xanh ngọc bích `bg-emerald-600`), không còn animation tại đây.
-- [ ] **UAT_42 (Đồng Bộ 1 Màn Hình Khởi Động Duy Nhất Trên Android & iOS):** Mở PWA từ màn hình chính điện thoại $\rightarrow$ Chỉ thấy 1 màn hình nền trắng chữ xanh ngọc bích duy nhất từ giây đầu tiên đến khi viết xong, triệt tiêu hoàn toàn màn hình vòng tròn xanh cắn nhau.
-- [ ] **UAT_43 (Nét Chữ Thư Pháp Dày Dặn Chuẩn Xác Từ Logo Dòng Họ - SVG Mask Reveal):** Quan sát chữ 范 múa bút trên màn hình Splash $\rightarrow$ Nét cọ đưa uyển chuyển theo 8 nét bút thuận, nét chữ dày dặn, đậm chất cổ truyền, khớp 100% hình thái Logo dòng họ.
-- [ ] **UAT_44 (Tự Động Điều Hướng Vào Cổng Đăng Nhập Hoặc Trang Chủ Sau Khi Viết Xong):** Khi mở ứng dụng: Khách chưa đăng nhập tự động vào `/login-gate`; Thành viên đã đăng nhập tự động vào `/` (Trang chủ Home).
+- [ ] **UAT_42 (Duy Nhất 1 Màn Hình Native Khởi Động Trên Android & iOS):** Mở PWA từ màn hình chính điện thoại $\rightarrow$ Chỉ xuất hiện DUY NHẤT 1 màn hình Native Splash của OS (nền trắng `#ffffff`, ở giữa là chữ Hán "范" màu xanh ngọc bích `#059669`), biến mất tức thì sau ~0.3s - 0.5s rồi vào thẳng app. Hoàn toàn 100% không còn màn hình Splash thứ hai của React hay hiện tượng giật cục.
+- [ ] **UAT_43 (Trải Nghiệm Khởi Động Siêu Tốc & Mượt Mà):** Mở ứng dụng từ icon màn hình chính $\rightarrow$ Ứng dụng nạp mượt mà, phản hồi tức thì, không bị che phủ bởi bất kỳ rèm overlay nào, các hiệu ứng render tự nhiên của Next.js diễn ra trực tiếp.
+- [ ] **UAT_44 (Tự Động Chuyển Hướng Chuẩn Xác Ngay Sau Mở App):** Khi mở ứng dụng: Khách chưa đăng nhập lập tức thấy `/login-gate`; Thành viên đã đăng nhập lập tức thấy `/` (Trang chủ Home).
+
 
 ---
 
@@ -887,8 +882,10 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG37 (Dual-Gate Fallback Timeout Safety):** Sau 8 giây mạng nghẽn, giao diện tự động cung cấp lối thoát cho người dùng, không bao giờ kẹt vĩnh viễn ở màn hình chờ.
 - [x] **RG38 (Login Gate Official Logo Stability):** Đảm bảo trang `/login-gate` luôn hiển thị huy hiệu logo tĩnh chuẩn của ứng dụng, không bị ghi đè nhầm lẫn.
 - [x] **RG39 (Single Splash Visual Continuity):** Đảm bảo icon `purpose: "any"` nền trắng không phá vỡ launcher icon `purpose: "maskable"` ngoài màn hình chính Android.
-- [x] **RG40 (Session Persistence & No Splash Loop on SPA Navigation):** Cờ `sessionStorage` 'fat_splash_shown' ngăn cản màn hình Splash lặp lại khi chuyển trang SPA nội bộ.
-- [x] **RG41 (iOS WebKit & Android Chrome Parity):** Cả iOS Safari PWA và Android Chrome PWA đều hiển thị đồng nhất nền trắng, chữ xanh múa bút và tự động điều hướng chính xác.
+- [x] **RG40 (Clean Layout & Zero DOM Footprint):** Gỡ bỏ `AppSplashScreen` khỏi `src/app/layout.tsx` và để `AppSplashScreen.tsx` trả về `null`, bảo toàn 100% không làm xô lệch cấu trúc DOM hoặc gây giật layout/FOUC.
+- [x] **RG41 (Native Splash Parity Trên Android & iOS):** Cả iOS Safari PWA và Android Chrome PWA đều hiển thị duy nhất 1 màn hình Native Splash nền trắng `#ffffff`, chữ Hán "范" màu ngọc bích `#059669`.
+- [x] **RG42 (Direct Auth Gate Unbroken):** Việc gỡ bỏ React Splash không làm ảnh hưởng đến luồng điều hướng của Auth Gate (khách chưa đăng nhập vào `/login-gate`, thành viên đã đăng nhập vào `/`).
+- [x] **RG43 (Reusability of Clan Calligraphy Assets):** Các component và dữ liệu vector thư pháp `ClanHanCalligraphyWriter.tsx`, `CLAN_HAN_CALLIGRAPHY_PATH`, `hanzi-fan-data.ts` vẫn được bảo toàn nguyên vẹn trong codebase, sẵn sàng tái sử dụng cho các phân hệ văn hóa dòng họ.
 
 ---
 

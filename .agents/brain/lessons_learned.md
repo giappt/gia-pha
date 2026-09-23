@@ -476,3 +476,13 @@
   4. *Đồng bộ đa nền tảng với iOS (Safari PWA):*
      - Bổ sung `apple-mobile-web-app-status-bar-style: "default"` và `apple-mobile-web-app-capable: "yes"` trong Next.js Metadata để thanh trạng thái pin, giờ trên iPhone hiển thị chữ đen sắc nét trên nền trắng, hòa quyện tuyệt đối vào màn hình Splash.
 
+
+
+- **Tối Ưu Hóa Khởi Động Tinh Gọn (Zero-React Splash & Pure Native OS Splash) - Giải Pháp Triệt Để Cho Vấn Đề 2 Màn Hình Splash:**
+  1. *Giới hạn kiến trúc của PWA:* Trên Android WebAPK (Chrome) và iOS Standalone (Safari), hệ điều hành luôn tự động kích hoạt Native Splash Screen từ `manifest.json` và metadata trước khi nạp webview. Không có API JavaScript nào có thể hủy hay can thiệp vào Native Splash Activity này.
+  2. *Hệ quả của việc lạm dụng Web Splash Overlay:* Nếu tiếp tục duy trì thêm một component Splash Overlay trong React (`AppSplashScreen`), ứng dụng luôn phải trải qua 2 màn hình kế tiếp nhau: Màn hình 1 (Native OS Splash) -> Màn hình 2 (React Web Splash). Điều này gây ra độ trễ khởi động không cần thiết, tiêu tốn CPU/bộ nhớ và tạo cảm giác giật cục cho người dùng.
+  3. *Giải pháp kiến trúc dứt điểm (Zero-React Splash):*
+     - Gỡ bỏ hoàn toàn `<AppSplashScreen />` khỏi `layout.tsx` và để component trả về `null` (zero DOM footprint).
+     - Phục vụ Native Splash tối ưu của OS: Icon `purpose: "any"` (`icon-512x512.png`) là chữ Hán "范" màu ngọc bích `#059669` trên nền trắng/trong suốt kết hợp `background_color: "#ffffff"`. Người dùng chỉ thấy đúng 1 màn hình Native duy nhất trong chớp mắt (~0.3s - 0.5s) rồi vào thẳng app.
+  4. *Điều hướng trực tiếp qua Auth Gate & Middleware:*
+     - Không cần chờ animation hay timer nào, luồng bảo mật của hệ thống được Auth Gate và Next.js Middleware đảm nhiệm tức thì: Khách chưa đăng nhập được chuyển hướng vào `/login-gate`; Thành viên đã đăng nhập vào thẳng `/` (Trang chủ Home). Trải nghiệm mở app đạt tốc độ tức thì, tối giản và mượt mà tuyệt đối.

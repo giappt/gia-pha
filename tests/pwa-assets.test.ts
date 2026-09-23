@@ -3,6 +3,8 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { HANZI_FAN_DATA } from '../src/lib/pwa/hanzi-fan-data';
+import { evaluateAuthGate } from '../src/lib/auth/auth-gate';
+import { resolveFeatureFlags } from '../src/lib/admin/admin-engine';
 
 describe('PWA Assets & Calligraphy Stroke Animation Test Suite (Milestone 5 - Section 5.17)', () => {
   // TC_UT_HANZI_DATA_INTEGRITY: Bộ dữ liệu vector chữ 范 chuẩn hóa đủ 8 nét và medians tọa độ
@@ -39,8 +41,8 @@ describe('PWA Assets & Calligraphy Stroke Animation Test Suite (Milestone 5 - Se
     assert.ok(content.includes('isLivingIdle'), 'HanziCalligraphyLogo phải hỗ trợ prop isLivingIdle (hào quang thở)');
   });
 
-  // TC_UT_APP_SPLASH_SCREEN_OVERLAY: Màn hình Splash toàn màn hình AppSplashScreen phủ toàn viewport z-[9999] và fade-out
-  it('TC_UT_APP_SPLASH_SCREEN_OVERLAY: AppSplashScreen phủ toàn màn hình, tích hợp chữ 范 và được nhúng trong RootLayout', () => {
+  // TC_UT_ZERO_REACT_SPLASH_IN_LAYOUT: RootLayout loại bỏ hoàn toàn overlay AppSplashScreen, AppSplashScreen trả về null
+  it('TC_UT_ZERO_REACT_SPLASH_IN_LAYOUT: RootLayout không còn nhúng AppSplashScreen, AppSplashScreen trả về null', () => {
     const splashPath = path.resolve(process.cwd(), 'src/components/pwa/AppSplashScreen.tsx');
     const layoutPath = path.resolve(process.cwd(), 'src/app/layout.tsx');
 
@@ -50,22 +52,28 @@ describe('PWA Assets & Calligraphy Stroke Animation Test Suite (Milestone 5 - Se
     const splashContent = fs.readFileSync(splashPath, 'utf-8');
     const layoutContent = fs.readFileSync(layoutPath, 'utf-8');
 
-    // 1. Kiểm tra thuộc tính giao diện toàn màn hình
-    assert.ok(splashContent.includes("'use client'"), 'AppSplashScreen phải là Client Component');
-    assert.ok(splashContent.includes('fixed inset-0 z-[9999]'), 'AppSplashScreen phải phủ toàn viewport với z-[9999]');
-    assert.ok(
-      splashContent.includes('ClanHanCalligraphyWriter') || splashContent.includes('HanziCalligraphyLogo'),
-      'AppSplashScreen phải nhúng ClanHanCalligraphyWriter hoặc HanziCalligraphyLogo'
+    // 1. Kiểm tra layout.tsx không còn import hay nhúng AppSplashScreen
+    assert.strictEqual(
+      layoutContent.includes('<AppSplashScreen'),
+      false,
+      'src/app/layout.tsx tuyệt đối không được nhúng <AppSplashScreen />'
     );
-    assert.ok(splashContent.includes('#059669'), 'Chữ thư pháp phải hiển thị màu ngọc bích #059669');
-    assert.ok(splashContent.includes('Gia Phả Phạm Văn'), 'Phải hiển thị tiêu đề thương hiệu Gia Phả Phạm Văn');
-    assert.ok(splashContent.includes('SyncLoadingBadge'), 'Phải nhúng SyncLoadingBadge theo chuẩn [R-UI.LOADING]');
-    assert.ok(splashContent.includes('canEnterApp'), 'Phải triển khai logic cổng kép canEnterApp');
-    assert.ok(splashContent.includes('opacity-0 pointer-events-none'), 'Phải hỗ trợ hiệu ứng fade-out mở rèm');
+    assert.strictEqual(
+      layoutContent.includes('import AppSplashScreen'),
+      false,
+      'src/app/layout.tsx tuyệt đối không import AppSplashScreen'
+    );
 
-    // 2. Kiểm tra layout.tsx nhúng AppSplashScreen kèm prop isGuest
-    assert.ok(layoutContent.includes('AppSplashScreen'), 'src/app/layout.tsx phải import và nhúng AppSplashScreen');
-    assert.ok(layoutContent.includes('isGuest={effectiveIsGuest}'), 'src/app/layout.tsx phải truyền isGuest={effectiveIsGuest}');
+    // 2. Kiểm tra AppSplashScreen component trả về null (zero DOM footprint)
+    assert.ok(
+      splashContent.includes('return null'),
+      'AppSplashScreen phải trả về null để triệt tiêu toàn bộ DOM overlay'
+    );
+    assert.strictEqual(
+      splashContent.includes('fixed inset-0 z-[9999]'),
+      false,
+      'AppSplashScreen không được chứa class fixed inset-0 z-[9999] gây che khuất viewport'
+    );
   });
 
   // TC_UT_LOGIN_GATE_APP_LOGO_RESTORED: Trang login-gate hiển thị đúng huy hiệu logo chính thức ClanHanLogo nền xanh
@@ -115,14 +123,22 @@ describe('PWA Assets & Calligraphy Stroke Animation Test Suite (Milestone 5 - Se
     assert.ok(content.includes('strokeColor'), 'Phải hỗ trợ tùy biến strokeColor');
   });
 
-  // TC_UT_SPLASH_AUTH_ROUTING: AppSplashScreen tự động điều hướng theo isGuest sau khi viết chữ xong
-  it('TC_UT_SPLASH_AUTH_ROUTING: AppSplashScreen hỗ trợ prop isGuest và tự động điều hướng /login-gate hoặc /', () => {
-    const splashPath = path.resolve(process.cwd(), 'src/components/pwa/AppSplashScreen.tsx');
-    const content = fs.readFileSync(splashPath, 'utf-8');
+  // TC_UT_AUTH_GATE_DIRECT_ROUTING: Khởi động không cần Splash - Khách chưa login vào /login-gate, thành viên vào /
+  it('TC_UT_AUTH_GATE_DIRECT_ROUTING: evaluateAuthGate bảo vệ trang chủ và điều hướng chuẩn xác', () => {
+    // Khi public tree = false (chế độ bảo mật), khách vào /tree bị redirect
+    const flagsPrivate = resolveFeatureFlags({ enable_public_tree: false });
+    const decisionTree = evaluateAuthGate('/tree', null, flagsPrivate);
+    assert.strictEqual(decisionTree.action, 'redirect');
+    assert.strictEqual(decisionTree.redirectUrl, '/login-gate?returnTo=%2Ftree');
 
-    assert.ok(content.includes('isGuest'), 'AppSplashScreen phải nhận prop isGuest');
-    assert.ok(content.includes('router.replace(\'/login-gate\')'), 'Khi isGuest phải điều hướng sang /login-gate');
-    assert.ok(content.includes('router.replace(\'/\')'), 'Khi thành viên đã login phải chuyển vào /');
+    // Khách truy cập /login-gate luôn được pass
+    const decisionLoginGate = evaluateAuthGate('/login-gate', null, flagsPrivate);
+    assert.strictEqual(decisionLoginGate.action, 'pass');
+
+    // Thành viên đã đăng nhập truy cập / hoặc /tree luôn pass
+    const mockUser = { id: '00000000-0000-0000-0000-000000000001' } as any;
+    const decisionHome = evaluateAuthGate('/', mockUser, flagsPrivate);
+    assert.strictEqual(decisionHome.action, 'pass');
   });
 
   // TC_UT_IOS_PWA_SPLASH_METADATA: RootLayout cấu hình status bar style và apple meta đồng bộ trải nghiệm iOS
@@ -174,13 +190,15 @@ describe('PWA Assets & Calligraphy Stroke Animation Test Suite (Milestone 5 - Se
     assert.ok(pageContent.includes('ClanHanLogo size={44} className="text-white"'), 'Logo login gate phải dùng ClanHanLogo size 44 màu trắng');
   });
 
-  // RG39 & RG40: Single Splash continuity và Session Persistence
-  it('RG39 & RG40: AppSplashScreen lưu và kiểm tra cờ sessionStorage fat_splash_shown', () => {
-    const splashPath = path.resolve(process.cwd(), 'src/components/pwa/AppSplashScreen.tsx');
-    const content = fs.readFileSync(splashPath, 'utf-8');
-
-    assert.ok(content.includes('sessionStorage.getItem(\'fat_splash_shown\')'), 'Phải kiểm tra cờ fat_splash_shown');
-    assert.ok(content.includes('sessionStorage.setItem(\'fat_splash_shown\', \'true\')'), 'Phải lưu cờ fat_splash_shown khi dismiss');
+  // RG40: Clean Layout & Zero DOM Footprint - AppSplashScreen trả về null và layout.tsx không nhúng
+  it('RG40: Clean Layout & Zero DOM Footprint - Không tồn tại bất kỳ overlay nào che phủ app', () => {
+    const layoutPath = path.resolve(process.cwd(), 'src/app/layout.tsx');
+    const layoutContent = fs.readFileSync(layoutPath, 'utf-8');
+    assert.strictEqual(
+      layoutContent.includes('AppSplashScreen'),
+      false,
+      'layout.tsx không được import hoặc nhúng AppSplashScreen'
+    );
   });
 });
 
