@@ -605,6 +605,28 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - Xóa bỏ badge tiếp thị `Hiếu Nghĩa Truyền Gia` để giao diện thanh thoát, tôn nghiêm.
   - Tinh gọn dòng mô tả: *"Theo dõi ngày giỗ trong gia phả theo chuẩn Lịch Âm Việt Nam, tự động thông báo để con cháu hướng về cội nguồn."*
 
+### 5.14. Đồng Bộ Hóa PWA Installability Cấp Toàn Cục (Global PWA Store) & Chuẩn Hóa Mini Banner "Cài Đặt Ứng Dụng Gia Phả Lên Màn Hình Chính" Tại Cổng Đăng Nhập (`/login-gate` - Phương Án 1)
+
+- **1. Kiến Trúc Global PWA Store (Singleton Pattern - `src/lib/pwa/pwa-store.ts`):**
+  - Khắc phục triệt để lỗi mất sự kiện `beforeinstallprompt` khi chuyển trang bằng SPA client-side routing giữa `/` và `/login-gate`.
+  - Bắt và lưu giữ vĩnh viễn sự kiện `beforeinstallprompt` vào `window.__fat_deferred_prompt` và danh sách subscribers toàn cục ngay khi trình duyệt khởi tạo.
+  - Tự động đồng bộ trạng thái `appinstalled` và chế độ Standalone (`display-mode: standalone`).
+  - Mọi component PWA (trên Trang Chủ, Login Gate hay bất kỳ trang nào) khi mount đều lập tức đọc được `deferredPrompt` từ store, không phụ thuộc vào thứ tự render hay chuyển route.
+- **2. Loại Bỏ Triệt Để `alert()` Thô Sơ — Bổ Sung Modal Hướng Dẫn Trực Quan Đa Nền Tảng:**
+  - Xóa bỏ 100% lệnh `alert(...)` trong `InstallPwaButton.tsx`.
+  - Khi người dùng nhấn nút cài đặt mà `deferredPrompt` chưa sẵn sàng hoặc không được trình duyệt hỗ trợ trực tiếp (như Desktop Chrome/Edge khi chưa đủ điều kiện tự động hoặc Android WebView):
+    - Hiển thị Modal hướng dẫn trực quan (Responsive Install Guide Modal):
+      - **Desktop (Chrome/Edge):** Hướng dẫn bấm vào biểu tượng cài đặt hình màn hình/mũi tên tải xuống nằm ở góc phải thanh địa chỉ (Omnibox).
+      - **Android (Chrome/Samsung Internet):** Hướng dẫn bấm vào nút Menu 3 chấm $\rightarrow$ Chọn *"Thêm vào màn hình chính"* (Add to Home screen) hoặc *"Cài đặt ứng dụng"*.
+      - **iOS (Safari):** Tiếp tục duy trì modal hướng dẫn 3 bước chuẩn (Nút Chia sẻ $\rightarrow$ Thêm vào MH chính $\rightarrow$ Thêm).
+- **3. Chuẩn Hóa Giao Diện Mini Banner Tại Cổng Đăng Nhập (`src/app/login-gate/page.tsx` - Phương Án 1):**
+  - Xóa bỏ nút viền mảnh (`variant="outline"`) đơn điệu dưới chân Auth Card.
+  - Thay thế bằng **Mini Banner PWA** bo góc trang nhã (`rounded-xl p-3.5 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 border border-emerald-500/25 dark:border-emerald-700/30`):
+    - **Tiêu đề đồng bộ:** `"Cài đặt ứng dụng Gia Phả lên màn hình chính"` (font bold, text-xs sm:text-sm, màu slate-900 / dark:slate-100).
+    - **Mô tả ngắn gọn:** `"Nhận thông báo ngày giỗ tự động thuận tiện."`
+    - **Nút hành động nổi bật:** Nút bấm màu ngọc bích `bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-3.5 rounded-lg shadow-xs active:scale-95`, nhãn responsive thông minh (*"Cài đặt ứng dụng"* trên Desktop / *"Cài đặt ứng dụng điện thoại"* trên Mobile).
+  - Tự động ẩn 100% khi ứng dụng đang chạy ở chế độ Standalone.
+
 ---
 
 ## 7. MA TRẬN TEST CASES & TIÊU CHÍ NGHIỆM THU (TEST SPECIFICATION)
@@ -629,7 +651,8 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_AVATAR_EDGE_CASES** | Xử lý tên 1 từ, Khuyết danh và fallback chuỗi rỗng | `tests/avatar-utils.test.ts` | Tên "Trưởng", Khuyết danh `is_anonymous: true`, chuỗi null/rỗng | Gọi `getMemberInitials(...)` | "Trưởng" $\rightarrow$ "TR", Khuyết danh $\rightarrow$ "KD", null/rỗng $\rightarrow$ "TV" | Edge Case | `[x] PASS` |
 | **TC_UT_ANNIV_DEDUP_INFO** | Dòng thành viên không lặp lại chuỗi ngày âm, tính đúng tuổi thọ | `tests/anniversary.test.ts` | Thành viên có `birth_year: 1935, death_year: 2005` | Tính toán thông tin hiển thị dòng người giỗ | Tuổi thọ đạt 71 tuổi (`2005 - 1935 + 1`), không chứa chuỗi ngày âm lặp lại | Happy Path | `[x] PASS` |
 | **TC_UT_HOMEPAGE_CLEAN_NO_REDUNDANT_CARDS** | Loại bỏ hoàn toàn khối 3 thẻ tính năng thừa trên trang chủ, tiêu đề Ngày Giỗ Gần Nhất tinh gọn | `tests/theme-and-layout.test.ts` | Đọc mã nguồn `src/app/page.tsx` | Kiểm tra các chuỗi và thẻ điều hướng | Không chứa 3 thẻ thừa; chứa đúng tiêu đề "Ngày Giỗ Gần Nhất" | Architecture / UX | `[x] PASS` |
-| **TC_UT_SOLAR_DAY_OF_WEEK** | Tính đúng Thứ trong tuần (Thứ Hai $\rightarrow$ Chủ Nhật) và format Dương lịch đầy đủ | `tests/anniversary.test.ts` | Ngày 18/10/2026 (Chủ Nhật), Ngày 19/10/2026 (Thứ Hai) | Gọi `formatSolarDateWithDayOfWeek(year, month, day)` | Trả về chuỗi có chứa tên| **TC_UT_FAVICON_AND_ICONS_EXIST** | Bộ nhận diện Favicon, Apple Touch Icon và PWA Icons tồn tại và được khai báo chuẩn | `tests/theme-and-layout.test.ts` | Thư mục `public/` và file `src/app/layout.tsx` | Kiểm tra sự tồn tại của files và metadata.icons | Tồn tại `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192x192.png`, `icon-512x512.png` và metadata có trường icons | Brand Assets | `[x] PASS` |
+| **TC_UT_SOLAR_DAY_OF_WEEK** | Tính đúng Thứ trong tuần (Thứ Hai $\rightarrow$ Chủ Nhật) và format Dương lịch đầy đủ | `tests/anniversary.test.ts` | Ngày 18/10/2026 (Chủ Nhật), Ngày 19/10/2026 (Thứ Hai) | Gọi `formatSolarDateWithDayOfWeek(year, month, day)` | Trả về chuỗi có chứa tên Thứ chuẩn tiếng Việt | Helper | `[x] PASS` |
+| **TC_UT_FAVICON_AND_ICONS_EXIST** | Bộ nhận diện Favicon, Apple Touch Icon và PWA Icons tồn tại và được khai báo chuẩn | `tests/theme-and-layout.test.ts` | Thư mục `public/` và file `src/app/layout.tsx` | Kiểm tra sự tồn tại của files và metadata.icons | Tồn tại `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192x192.png`, `icon-512x512.png` và metadata có trường icons | Brand Assets | `[x] PASS` |
 | **TC_UT_LOGIN_GATE_INSTALL_PWA** | Component InstallPwaButton tồn tại và được tích hợp trên Login Gate và Trang Chủ | `tests/theme-and-layout.test.ts` | Files `src/components/pwa/InstallPwaButton.tsx`, `src/app/login-gate/page.tsx`, `src/app/page.tsx` | Đọc mã nguồn kiểm tra sự tồn tại và nhúng component | Component tồn tại, có xử lý beforeinstallprompt và iOS guide, được nhúng trong cả 2 màn hình | PWA Installation | `[x] PASS` |
 | **TC_UT_HOMEPAGE_UNIFIED_WIDTH_ALIGNMENT** | Thẻ Ngày Giỗ và Banner Tiện Ích PWA đồng bộ độ rộng chuẩn max-w-3xl | `tests/theme-and-layout.test.ts` | File `src/app/page.tsx` | Đọc mã nguồn và kiểm tra container classes | Thẻ Ngày Giỗ và Banner Tiện Ích PWA đều có class `max-w-3xl w-full` | Geometry Alignment | `[x] PASS` |
 | **TC_UT_HOMEPAGE_NO_ADMIN_CARD** | Trang Chủ loại bỏ hoàn toàn Khối Thẻ Quản Trị Viên (Super Admin) ở cuối trang | `tests/theme-and-layout.test.ts` | File `src/app/page.tsx` | Đọc mã nguồn kiểm tra JSX/text | Không còn chứa chuỗi "Khu vực Quản Trị Viên (Super Admin)" hay ID `admin-settings-btn` trên trang chủ | Clean Homepage | `[x] PASS` |
@@ -645,6 +668,10 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_METADATA_CLAN_BRANDING** | layout.tsx và login-gate/page.tsx định danh thương hiệu Gia Phả Phạm Văn | `tests/theme-and-layout.test.ts` | Files `src/app/layout.tsx`, `src/app/login-gate/page.tsx` | Đọc mã nguồn kiểm tra title | Title chứa "Gia Phả Phạm Văn", không còn chuỗi "Đăng nhập - Gia Phả Dòng Họ" | Brand Consistency | `[x] PASS` |
 | **TC_UT_UNIFIED_LUNAR_PREFIX_FORMAT** | Cả Trang Chủ và Lịch Giỗ đều dùng cấu trúc tiền tố Âm lịch: Ngày DD/MM | `tests/theme-and-layout.test.ts` | Files `src/app/page.tsx`, `src/app/anniversaries/page.tsx`, `src/lib/anniversaries/anniversary-engine.ts` | Đọc mã nguồn kiểm tra JSX/format | Trang Lịch Giỗ chứa "Âm lịch: Ngày " thay vì " Ngày ... Âm lịch", thẻ Hôm Nay không lặp chữ Âm lịch | Visual Normalization | `[x] PASS` |
 | **TC_UT_ANNIV_HERO_CLEAN** | Trang Lịch Giỗ loại bỏ hoàn toàn badge Hiếu Nghĩa Truyền Gia | `tests/theme-and-layout.test.ts` | File `src/app/anniversaries/page.tsx` | Đọc mã nguồn kiểm tra JSX | Không còn chứa chuỗi "Hiếu Nghĩa Truyền Gia" | Clean Header | `[x] PASS` |
+| **TC_UT_PWA_GLOBAL_STORE_01** | PWA Store Singleton tồn tại, quản lý beforeinstallprompt và subscribers toàn cục | `tests/theme-and-layout.test.ts` | File `src/lib/pwa/pwa-store.ts` | Đọc mã nguồn kiểm tra hàm getDeferredPrompt, subscribePwaPrompt và promptInstall | File tồn tại, có cơ chế lưu trữ singleton và notify subscribers khi có prompt | Global PWA Store | `[x] PASS` |
+| **TC_UT_LOGIN_GATE_INSTALL_PWA_TITLE** | Cả Trang Chủ và Login Gate đều hiển thị tiêu đề chuẩn "Cài đặt ứng dụng Gia Phả lên màn hình chính" | `tests/theme-and-layout.test.ts` | Files `src/app/page.tsx`, `src/app/login-gate/page.tsx`, `src/components/pwa/InstallPwaButton.tsx` | Đọc mã nguồn kiểm tra chuỗi tiêu đề | Cả hai màn hình đều chứa chuỗi "Cài đặt ứng dụng Gia Phả lên màn hình chính" | UI Synchronization | `[x] PASS` |
+| **TC_UT_NO_RAW_ALERT_IN_PWA_BUTTON** | InstallPwaButton tuyệt đối không chứa hàm alert native, thay thế bằng modal hướng dẫn | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Quét mã nguồn tìm kiếm `alert(` | Không chứa bất kỳ lệnh `alert(` nào | UX Quality | `[x] PASS` |
+| **TC_UT_PWA_MINI_BANNER_LOGIN_GATE** | Login Gate nhúng Mini Banner PWA với đầy đủ mô tả ngày giỗ và nút bấm | `tests/theme-and-layout.test.ts` | File `src/app/login-gate/page.tsx` | Đọc mã nguồn kiểm tra JSX tại chân Auth Card | Chứa tiêu đề cài đặt, mô tả ngày giỗ và component InstallPwaButton | Component Integration | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -684,6 +711,7 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_33 (Hộp Thoại Cài Đặt PWA Native Đúng Tên Gia Phả Phạm Văn):** Nhấp nút [Cài đặt ứng dụng] trên Trang Chủ hoặc Login Gate $\rightarrow$ Trình duyệt kích hoạt hộp thoại cài đặt native hiển thị rõ tên "Gia Phả Phạm Văn" và biểu tượng chữ Hán "范", không còn hiện "Đăng nhập - Gia Phả Dòng Họ".
 - [ ] **UAT_34 (Hiển Thị Tiền Tố Âm Lịch Đồng Bộ):** Mở `/anniversaries` $\rightarrow$ Header các khối ngày hiển thị rõ ràng `Âm lịch: Ngày 12/08` màu ngọc bích, đồng bộ 100% với Thẻ Ngày Giỗ Gần Nhất trên Trang Chủ. Thẻ Hôm Nay hiển thị `Âm lịch: Ngày 07 tháng 08` không lặp chữ.
 - [ ] **UAT_35 (Header Lịch Giỗ Tinh Gọn):** Mở `/anniversaries` $\rightarrow$ Phần đầu trang sạch sẽ, không còn badge `Hiếu Nghĩa Truyền Gia`, tập trung trực tiếp vào tiêu đề Lịch Giỗ Gia Tộc và Thẻ Ngày Hiện Tại.
+- [ ] **UAT_36 (Đồng Bộ Vận Hành PWA Install Trang Chủ & Login Gate):** Mở Trang Chủ (`/`) và Cổng Đăng Nhập (`/login-gate`): Cả hai đều có tiêu đề *"Cài đặt ứng dụng Gia Phả lên màn hình chính"*, mô tả ngày giỗ rõ ràng. Bấm cài đặt trên cả 2 màn hình đều kích hoạt hộp thoại cài đặt native của trình duyệt (hoặc mở modal hướng dẫn trực quan chuyên nghiệp), tuyệt đối không xuất hiện popup `alert()` native thô sơ, console sạch 0 lỗi.
 
 ---
 
@@ -717,6 +745,8 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG26 (PWA Manifest Compliance):** `manifest.json` tiếp tục thỏa mãn `tests/pwa-manifest.test.ts`.
 - [x] **RG27 (Service Worker Push & Fetch Integrity):** `sw.js` bảo toàn 100% xử lý `push` và `notificationclick` cho nhắc giỗ.
 - [x] **RG28 (Offline / Fallback Safety):** Khi chạy ở môi trường không có SW (như localhost HTTP không an toàn hoặc Private mode), nút Cài đặt ứng dụng fallback an toàn, không gây crash ứng dụng.
+- [x] **RG29 (PWA Standalone Disappearance on Login Gate):** Khi ứng dụng chạy trong chế độ Standalone, Mini Banner trên Login Gate tự động ẩn 100%, không để lại khoảng trống thừa.
+- [x] **RG30 (Zero Breakage on Login Flow):** Các thay đổi PWA trên Login Gate không ảnh hưởng đến nút đăng nhập Google OAuth và nút Dev Bypass.
 
 ---
 

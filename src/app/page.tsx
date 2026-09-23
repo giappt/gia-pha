@@ -4,7 +4,6 @@ import Link from 'next/link';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 import { Calendar, Compass, Shield, AlertCircle, Sparkles, Clock, ArrowRight } from 'lucide-react';
 import { getUpcomingAnniversaries, formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
-import { SAMPLE_MEMBERS_28 } from '@/lib/tree-layout/sample-data';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 import InstallPwaButton, { PwaInstallBanner } from '@/components/pwa/InstallPwaButton';
@@ -20,7 +19,7 @@ export default async function HomePage({
   const devClanName = cookieStore.get('fat_dev_clan_name')?.value;
 
   // Fetch clan settings if existing
-  let clanName = devClanName || 'DÒNG HỌ NGUYỄN VĂN';
+  let clanName = devClanName || 'GIA PHẢ PHẠM VĂN';
   let isDbConnected = false;
   let featureFlags = resolveFeatureFlags(undefined);
 
@@ -102,10 +101,10 @@ export default async function HomePage({
     if (!memberErr && dbMembers && dbMembers.length > 0) {
       membersList = dbMembers as unknown as MemberRecord[];
     } else {
-      membersList = SAMPLE_MEMBERS_28;
+      membersList = [];
     }
   } catch {
-    membersList = SAMPLE_MEMBERS_28;
+    membersList = [];
   }
 
   // Calculate upcoming anniversaries over a full 365-day window to guarantee finding the nearest one

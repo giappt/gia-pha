@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { SAMPLE_MEMBERS_28 } from '@/lib/tree-layout/sample-data';
 import { MemberRecord } from '@/types/tree';
 import { getTodayAnniversaryMembers } from '@/lib/anniversaries/anniversary-engine';
 
@@ -90,13 +89,13 @@ export async function GET(request: NextRequest) {
         if (!error && dbMembers && dbMembers.length > 0) {
           members = dbMembers as unknown as MemberRecord[];
         } else {
-          members = SAMPLE_MEMBERS_28;
+          members = [];
         }
       } catch {
-        members = SAMPLE_MEMBERS_28;
+        members = [];
       }
     } else {
-      members = SAMPLE_MEMBERS_28;
+      members = [];
     }
 
     // 3. Tìm các Cụ có ngày giỗ đúng hôm nay (Âm lịch UTC+7)

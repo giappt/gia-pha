@@ -1186,7 +1186,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       setFullName(fullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim());
                     }
                   }}
-                  placeholder="VD: Nguyễn Văn Nam"
+                  placeholder="VD: Phạm Văn Nam"
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
                 />
               </div>

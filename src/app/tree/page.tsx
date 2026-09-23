@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS } from '@/lib/tree-layout/sample-data';
 import { FamilyTreeCanvas } from '@/components/tree/FamilyTreeCanvas';
 import { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import type { BranchNode, UserRole, ClanFeatureFlags } from '@/types/database';
@@ -17,7 +16,7 @@ export default async function TreePage() {
   const cookieStore = cookies();
   let members: MemberRecord[] = [];
   let spouseRelations: SpouseRelationRecord[] = [];
-  let clanName = 'DÒNG HỌ NGUYỄN VĂN';
+  let clanName = 'GIA PHẢ PHẠM VĂN';
   let clanBranches: BranchNode[] = [];
   let rootAncestorId: string | null = null;
   let userRole: UserRole = 'viewer';
@@ -115,12 +114,12 @@ export default async function TreePage() {
       members = dbMembers as unknown as MemberRecord[];
       spouseRelations = (dbRelations || []) as unknown as SpouseRelationRecord[];
     } else {
-      members = SAMPLE_MEMBERS_28;
-      spouseRelations = SAMPLE_SPOUSE_RELATIONS;
+      members = [];
+      spouseRelations = [];
     }
   } catch {
-    members = SAMPLE_MEMBERS_28;
-    spouseRelations = SAMPLE_SPOUSE_RELATIONS;
+    members = [];
+    spouseRelations = [];
   }
 
   // Đọc chế độ Đóng Vai (Role Impersonation) để điều chỉnh quyền hạn và hiển thị thực tế

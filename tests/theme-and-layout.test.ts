@@ -1140,7 +1140,223 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
       'kinship/page.tsx không được render Compass icon'
     );
   });
+
+  // TC_UT_PWA_GLOBAL_STORE_01: PWA Store Singleton tồn tại, quản lý beforeinstallprompt và subscribers toàn cục
+  it('TC_UT_PWA_GLOBAL_STORE_01: PWA Store Singleton tồn tại, quản lý beforeinstallprompt và subscribers toàn cục', () => {
+    const storePath = path.resolve(process.cwd(), 'src/lib/pwa/pwa-store.ts');
+    assert.ok(fs.existsSync(storePath), 'File src/lib/pwa/pwa-store.ts phải tồn tại');
+
+    const content = fs.readFileSync(storePath, 'utf8');
+    assert.ok(content.includes('export function getPwaState'), 'pwa-store phải export getPwaState');
+    assert.ok(content.includes('export function subscribePwa'), 'pwa-store phải export subscribePwa');
+    assert.ok(content.includes('export function initPwaListeners'), 'pwa-store phải export initPwaListeners');
+    assert.ok(
+      content.includes('export async function triggerPwaInstall') || content.includes('export function triggerPwaInstall'),
+      'pwa-store phải export triggerPwaInstall'
+    );
+    assert.ok(content.includes('__fat_deferred_prompt'), 'pwa-store phải lưu __fat_deferred_prompt trên window');
+    assert.ok(content.includes('beforeinstallprompt'), 'pwa-store phải xử lý beforeinstallprompt');
+  });
+
+  // TC_UT_LOGIN_GATE_INSTALL_PWA_TITLE: Cả Trang Chủ và Login Gate đều hiển thị tiêu đề chuẩn "Cài đặt ứng dụng Gia Phả lên màn hình chính"
+  it('TC_UT_LOGIN_GATE_INSTALL_PWA_TITLE: Cả Trang Chủ và Login Gate đều hiển thị tiêu đề chuẩn "Cài đặt ứng dụng Gia Phả lên màn hình chính"', () => {
+    const homePath = path.resolve(process.cwd(), 'src/app/page.tsx');
+    const loginGatePath = path.resolve(process.cwd(), 'src/app/login-gate/page.tsx');
+    const pwaBtnPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+
+    const homeContent = fs.readFileSync(homePath, 'utf8');
+    const loginGateContent = fs.readFileSync(loginGatePath, 'utf8');
+    const pwaBtnContent = fs.readFileSync(pwaBtnPath, 'utf8');
+
+    // 1. InstallPwaButton chứa tiêu đề chuẩn
+    assert.ok(
+      pwaBtnContent.includes('Cài đặt ứng dụng Gia Phả lên màn hình chính'),
+      'InstallPwaButton phải chứa tiêu đề "Cài đặt ứng dụng Gia Phả lên màn hình chính"'
+    );
+
+    // 2. Trang chủ nhúng Banner Tiện Ích
+    assert.ok(
+      homeContent.includes('PwaInstallBanner'),
+      'src/app/page.tsx phải nhúng PwaInstallBanner'
+    );
+
+    // 3. Login gate nhúng Mini Banner đồng bộ
+    assert.ok(
+      loginGateContent.includes('PwaMiniBanner'),
+      'src/app/login-gate/page.tsx phải nhúng PwaMiniBanner'
+    );
+  });
+
+  // TC_UT_NO_RAW_ALERT_IN_PWA_BUTTON: InstallPwaButton tuyệt đối không chứa hàm alert native, thay thế bằng modal hướng dẫn
+  it('TC_UT_NO_RAW_ALERT_IN_PWA_BUTTON: InstallPwaButton tuyệt đối không chứa hàm alert native, thay thế bằng modal hướng dẫn', () => {
+    const pwaBtnPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+    const content = fs.readFileSync(pwaBtnPath, 'utf8');
+
+    // 1. Không còn lệnh alert(
+    assert.strictEqual(
+      content.includes('alert('),
+      false,
+      'InstallPwaButton.tsx tuyệt đối không được dùng alert( native'
+    );
+
+    // 2. Chứa Modal hướng dẫn cài đặt ứng dụng
+    assert.ok(
+      content.includes('Hướng Dẫn Cài Đặt Ứng Dụng'),
+      'InstallPwaButton.tsx phải có Modal "Hướng Dẫn Cài Đặt Ứng Dụng"'
+    );
+    assert.ok(
+      content.includes('Trên Máy Tính (Chrome / Edge)'),
+      'InstallPwaButton.tsx phải có hướng dẫn cho Desktop Chrome/Edge'
+    );
+    assert.ok(
+      content.includes('Trên Điện Thoại Android'),
+      'InstallPwaButton.tsx phải có hướng dẫn cho Android'
+    );
+  });
+
+  // TC_UT_PWA_MINI_BANNER_LOGIN_GATE: Login Gate nhúng Mini Banner PWA với đầy đủ mô tả ngày giỗ và nút bấm
+  it('TC_UT_PWA_MINI_BANNER_LOGIN_GATE: Login Gate nhúng Mini Banner PWA với đầy đủ mô tả ngày giỗ và nút bấm', () => {
+    const loginGatePath = path.resolve(process.cwd(), 'src/app/login-gate/page.tsx');
+    const pwaBtnPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+
+    const loginGateContent = fs.readFileSync(loginGatePath, 'utf8');
+    const pwaBtnContent = fs.readFileSync(pwaBtnPath, 'utf8');
+
+    // 1. login-gate nhúng PwaMiniBanner
+    assert.ok(
+      loginGateContent.includes('<PwaMiniBanner'),
+      'login-gate/page.tsx phải render <PwaMiniBanner'
+    );
+
+    // 2. InstallPwaButton export PwaMiniBanner và hỗ trợ variant mini-banner
+    assert.ok(
+      pwaBtnContent.includes('export function PwaMiniBanner'),
+      'InstallPwaButton.tsx phải export PwaMiniBanner'
+    );
+    assert.ok(
+      pwaBtnContent.includes('data-testid="pwa-mini-banner"'),
+      'InstallPwaButton.tsx phải có data-testid="pwa-mini-banner"'
+    );
+    assert.ok(
+      pwaBtnContent.includes('Nhận thông báo ngày giỗ tự động thuận tiện.'),
+      'InstallPwaButton.tsx phải có mô tả ngày giỗ trên mini-banner'
+    );
+  });
+
+  // =========================================================================
+  // ZERO MOCK LEAK & BRAND INTEGRITY TESTS (AC51 - AC56)
+  // =========================================================================
+  describe('Zero Mock Leak & Brand Integrity (AC51 - AC56)', () => {
+    it('TC_UT_ZERO_MOCK_LEAK_IN_KINSHIP: Kinship page không chứa mock import, không chứa 8 chip kịch bản mẫu, có skeleton & empty state', () => {
+      const kinshipPath = path.resolve(process.cwd(), 'src/app/kinship/page.tsx');
+      const content = fs.readFileSync(kinshipPath, 'utf8');
+
+      // 1. Không import mock-data hay sample-data
+      assert.ok(!content.includes("from '@/lib/kinship-engine/mock-data'"), 'kinship/page.tsx không được import mock-data');
+      assert.ok(!content.includes("from '@/lib/tree-layout/sample-data'"), 'kinship/page.tsx không được import sample-data');
+      assert.ok(!content.includes('MOCK_CLAN_MEMBERS'), 'kinship/page.tsx không được dùng MOCK_CLAN_MEMBERS');
+
+      // 2. Không chứa 8 chip kịch bản mẫu hardcoded
+      assert.ok(!content.includes('sample-direct-btn'), 'kinship/page.tsx không được chứa sample-direct-btn');
+      assert.ok(!content.includes('sample-tc08-btn'), 'kinship/page.tsx không được chứa sample-tc08-btn');
+      assert.ok(!content.includes('sample-tc10-btn'), 'kinship/page.tsx không được chứa sample-tc10-btn');
+      assert.ok(!content.includes('sample-tc09-btn'), 'kinship/page.tsx không được chứa sample-tc09-btn');
+      assert.ok(!content.includes('sample-tc11-btn'), 'kinship/page.tsx không được chứa sample-tc11-btn');
+      assert.ok(!content.includes('sample-spouse-btn'), 'kinship/page.tsx không được chứa sample-spouse-btn');
+      assert.ok(!content.includes('sample-inlaw-parent-btn'), 'kinship/page.tsx không được chứa sample-inlaw-parent-btn');
+      assert.ok(!content.includes('sample-inlaw-sibling-btn'), 'kinship/page.tsx không được chứa sample-inlaw-sibling-btn');
+
+      // 3. Phải có Skeleton Loading và Empty State
+      assert.ok(content.includes('data-testid="kinship-skeleton-loading"'), 'kinship/page.tsx phải có data-testid="kinship-skeleton-loading"');
+      assert.ok(content.includes('data-testid="kinship-empty-state"'), 'kinship/page.tsx phải có data-testid="kinship-empty-state"');
+    });
+
+    it('TC_UT_ZERO_MOCK_LEAK_IN_API_ROUTES: Toàn bộ API routes không import mock-data và không có top-level sample import', () => {
+      const apiFiles = [
+        'src/app/api/kinship/route.ts',
+        'src/app/api/tree/route.ts',
+        'src/app/api/anniversaries/route.ts',
+        'src/app/api/members/route.ts',
+        'src/app/api/members/[id]/route.ts',
+        'src/app/api/spouse-relations/route.ts',
+        'src/app/api/cron/anniversary-reminder/route.ts',
+      ];
+
+      for (const relPath of apiFiles) {
+        const fullPath = path.resolve(process.cwd(), relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert.ok(
+          !content.includes('mock-data'),
+          `${relPath} không được import mock-data`
+        );
+        assert.ok(
+          !content.includes("from '@/lib/tree-layout/sample-data'"),
+          `${relPath} không được có top-level import từ sample-data`
+        );
+      }
+
+      // Kinship, Anniversaries, Cron hoàn toàn sạch bóng sample-data
+      const zeroSampleFiles = [
+        'src/app/api/kinship/route.ts',
+        'src/app/api/anniversaries/route.ts',
+        'src/app/api/cron/anniversary-reminder/route.ts',
+      ];
+      for (const relPath of zeroSampleFiles) {
+        const fullPath = path.resolve(process.cwd(), relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert.ok(
+          !content.includes('sample-data'),
+          `${relPath} không được chứa bất kỳ tham chiếu sample-data nào`
+        );
+      }
+    });
+
+    it('TC_UT_ZERO_MOCK_LEAK_IN_UI_PAGES: Các trang giao diện chính không import mock-data hoặc sample-data', () => {
+      const uiFiles = [
+        'src/app/page.tsx',
+        'src/app/tree/page.tsx',
+        'src/app/kinship/page.tsx',
+      ];
+
+      for (const relPath of uiFiles) {
+        const fullPath = path.resolve(process.cwd(), relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert.ok(
+          !content.includes('mock-data') && !content.includes('sample-data'),
+          `${relPath} không được import mock-data hoặc sample-data`
+        );
+      }
+    });
+
+    it('TC_UT_BRAND_INTEGRITY_NO_NGUYEN_VAN_FALLBACK: Toàn hệ thống runtime không chứa DÒNG HỌ NGUYỄN VĂN', () => {
+      const checkFiles = [
+        'src/app/page.tsx',
+        'src/app/tree/page.tsx',
+        'src/app/api/tree/route.ts',
+        'src/app/api/clan-settings/route.ts',
+        'src/components/admin/ClanDashboard.tsx',
+        'src/components/admin/AdminSidebar.tsx',
+        'src/components/admin/AdminShell.tsx',
+        'src/app/admin/layout.tsx',
+        'src/app/admin/profile/page.tsx',
+      ];
+
+      for (const relPath of checkFiles) {
+        const fullPath = path.resolve(process.cwd(), relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert.ok(
+          !content.includes('DÒNG HỌ NGUYỄN VĂN'),
+          `${relPath} không được chứa fallback 'DÒNG HỌ NGUYỄN VĂN'`
+        );
+        assert.ok(
+          content.includes('GIA PHẢ PHẠM VĂN'),
+          `${relPath} phải có fallback chuẩn 'GIA PHẢ PHẠM VĂN'`
+        );
+      }
+    });
+  });
 });
+
 
 
 

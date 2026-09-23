@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { SAMPLE_MEMBERS_28 } from '@/lib/tree-layout/sample-data';
 import { MemberRecord } from '@/types/tree';
 import { getUpcomingAnniversaries } from '@/lib/anniversaries/anniversary-engine';
 import { buildSpouseMap } from '@/lib/kinship-engine/lca-finder';
@@ -89,10 +88,10 @@ export async function GET(request: NextRequest) {
       if (!error && dbMembers && dbMembers.length > 0) {
         members = dbMembers as unknown as MemberRecord[];
       } else {
-        members = SAMPLE_MEMBERS_28;
+        members = [];
       }
     } catch {
-      members = SAMPLE_MEMBERS_28;
+      members = [];
     }
 
     const data = getUpcomingAnniversaries(members, {

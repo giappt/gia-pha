@@ -63,7 +63,7 @@ export async function GET() {
       }
     }
 
-    const clan_name = devClanName || clanData?.clan_name || 'DÒNG HỌ NGUYỄN VĂN';
+    const clan_name = devClanName || clanData?.clan_name || 'GIA PHẢ PHẠM VĂN';
     const root_ancestor_id = clanData?.root_ancestor_id || null;
     const default_kinship_region = clanData?.regional_preset || clanData?.default_kinship_region || 'north';
     const custom_kinship_dictionary = devCustomDict || clanData?.custom_kinship_dictionary || {};
@@ -92,7 +92,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        clan_name: devClanName || 'DÒNG HỌ NGUYỄN VĂN',
+        clan_name: devClanName || 'GIA PHẢ PHẠM VĂN',
         root_ancestor_id: null,
         default_kinship_region: 'north',
         custom_kinship_dictionary: {},
@@ -309,7 +309,7 @@ export async function PATCH(request: Request) {
       success: true,
       message: 'Cập nhật thông tin dòng họ thành công',
       data: {
-        clan_name: clan_name || 'DÒNG HỌ NGUYỄN VĂN',
+        clan_name: clan_name || 'GIA PHẢ PHẠM VĂN',
         root_ancestor_id: updatePayload.root_ancestor_id !== undefined ? updatePayload.root_ancestor_id : (body.root_ancestor_id || null),
         default_kinship_region: updatePayload.regional_preset || 'north',
         custom_kinship_dictionary: custom_kinship_dictionary || {},

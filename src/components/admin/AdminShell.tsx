@@ -10,7 +10,7 @@ interface AdminShellProps {
   clanName?: string;
 }
 
-export default function AdminShell({ children, clanName = 'DÒNG HỌ NGUYỄN VĂN' }: AdminShellProps) {
+export default function AdminShell({ children, clanName = 'GIA PHẢ PHẠM VĂN' }: AdminShellProps) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // Close drawer on resize to desktop

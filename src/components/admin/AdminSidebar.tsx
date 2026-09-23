@@ -97,7 +97,7 @@ interface AdminSidebarProps {
 }
 
 export default function AdminSidebar({
-  clanName = 'DÒNG HỌ NGUYỄN VĂN',
+  clanName = 'GIA PHẢ PHẠM VĂN',
   onCloseMobileDrawer,
 }: AdminSidebarProps) {
   const pathname = usePathname();

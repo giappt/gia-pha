@@ -402,10 +402,10 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     roles: { guest: false, viewer: false, claimed_member: false, branch_editor: true, super_admin: true },
   },
 
-  // Nhóm 4: Bàn Điều Hành Tông Tộc
+  // Nhóm 4: Bàn Điều Hành
   {
     id: 'admin_dashboard',
-    name: 'Truy Cập Bàn Điều Hành Tông Tộc',
+    name: 'Truy Cập Bàn Điều Hành',
     description: 'Xem các chỉ số sức sống phả hệ và cảnh báo thành viên chưa nối phả (/admin)',
     category: 'administration',
     roles: { guest: false, viewer: false, claimed_member: false, branch_editor: false, super_admin: true },

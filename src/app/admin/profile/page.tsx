@@ -173,7 +173,7 @@ export default function ClanProfilePage() {
               value={clanName}
               onChange={(e) => setClanName(e.target.value)}
               maxLength={40}
-              placeholder="Ví dụ: DÒNG HỌ NGUYỄN VĂN"
+              placeholder="Ví dụ: GIA PHẢ PHẠM VĂN"
               className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 text-base font-bold tracking-tight focus:outline-hidden focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400"
             />
 
@@ -212,7 +212,7 @@ export default function ClanProfilePage() {
                 className={`font-black tracking-tight text-emerald-950 dark:text-emerald-50 mt-1 uppercase text-balance break-words ${clanName.length > 25 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'
                   }`}
               >
-                {clanName.trim() || 'DÒNG HỌ NGUYỄN VĂN'}
+                {clanName.trim() || 'GIA PHẢ PHẠM VĂN'}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto line-clamp-1">
                 Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu...

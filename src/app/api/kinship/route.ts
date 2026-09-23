@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { findLowestCommonAncestor, buildSpouseMap } from '@/lib/kinship-engine/lca-finder';
 import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
-import { MOCK_CLAN_MEMBERS, MOCK_SPOUSE_RELATIONS } from '@/lib/kinship-engine/mock-data';
 import type { Member } from '@/types/database';
 import type { KinshipRegion } from '@/types/kinship';
 
@@ -15,7 +14,7 @@ export async function GET(request: NextRequest) {
     const region = (searchParams.get('region') as KinshipRegion) || 'north';
     const action = searchParams.get('action');
 
-    // 1. Lấy danh sách thành viên và quan hệ hôn phối từ Supabase (hoặc fallback bộ mock dữ liệu)
+    // 1. Lấy danh sách thành viên và quan hệ hôn phối từ Supabase
     let members: Member[] = [];
     let spouseRelations: any[] = [];
     try {
@@ -39,18 +38,14 @@ export async function GET(request: NextRequest) {
           generation_number: m.generation_level ?? m.generation_number ?? 1,
           is_senior_branch: m.is_senior_branch ?? m.is_senior ?? false,
         }));
-      } else {
-        members = MOCK_CLAN_MEMBERS;
       }
 
       if (!spousesRes.error && spousesRes.data && spousesRes.data.length > 0) {
         spouseRelations = spousesRes.data;
-      } else {
-        spouseRelations = MOCK_SPOUSE_RELATIONS;
       }
     } catch {
-      members = MOCK_CLAN_MEMBERS;
-      spouseRelations = MOCK_SPOUSE_RELATIONS;
+      members = [];
+      spouseRelations = [];
     }
 
     // 2. Nếu yêu cầu lấy danh sách thành viên cho bộ chọn giao diện

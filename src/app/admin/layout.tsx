@@ -63,7 +63,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   return (
-    <AdminShell clanName={clanName || 'DÒNG HỌ NGUYỄN VĂN'}>
+    <AdminShell clanName={clanName || 'GIA PHẢ PHẠM VĂN'}>
       {children}
     </AdminShell>
   );

@@ -358,8 +358,25 @@ sequenceDiagram
       ```
     - Ý nghĩa gia phả: Khi nhìn vào sơ đồ cây phân nhánh, người xem nhận biết ngay lập tức cha/mẹ của hai bên đứng thứ mấy trong gia đình (`Con cả` vs `Con thứ 2` vs `Con thứ 3`...), giải thích trực quan và rõ ràng tại sao nhánh này là cành Bác (trên) và nhánh kia là cành Chú (dưới) khi so sánh cùng thế hệ.
 
----
+### 5.8. Triệt Tiêu Dữ Liệu Tạm (Mock/Sample Data) & Chuẩn Hóa Skeleton Loading (Zero Mock Normalization)
 
+- **5.8.1. Triệt Tiêu Initial State Mock Trong Component Runtime:**
+  - Khởi tạo ban đầu tại `src/app/kinship/page.tsx`:
+    - `members = []`, `membersMap = new Map()`, `spouseMap = new Map()`, `personAId = ''`, `personBId = ''`, `result = null`.
+    - Cắt đứt 100% import `MOCK_CLAN_MEMBERS` và `MOCK_SPOUSE_RELATIONS` trong mã nguồn trang giao diện.
+    - Xóa bỏ các hằng số gán cứng `DEFAULT_A` và `DEFAULT_B` mang UUID của họ Nguyễn Văn.
+- **5.8.2. Skeleton Loading State Trang Nhã & Empty State Minh Bạch:**
+  - Khi `isLoading === true`: Hiển thị Skeleton loading (khung xám mờ animation pulse) cho 2 bộ chọn người A, B và khu vực sơ đồ kết quả. Tuyệt đối không phơi bày tên giả định của bất kỳ ai trong lúc đang tải.
+  - Khi `!isLoading && members.length === 0`: Hiển thị Empty State thông báo *"Chưa có dữ liệu thành viên phả hệ. Vui lòng liên hệ Quản trị viên cập nhật danh sách."*
+- **5.8.3. Thanh Lọc 8 Nút Kịch Bản Mẫu Cũ:**
+  - Loại bỏ hoàn toàn 8 nút chip kịch bản mẫu gắn chết tên họ Nguyễn Văn (`Khởi & Bình`, `Hải & Minh`, `Hùng & Hải`, `Nam & Tâm`, `Huệ & Cường`...).
+  - Thay bằng cơ chế gợi ý động: Tự động phát hiện Cụ Tổ và thành viên đời kế cận từ CSDL thật của dòng họ Phạm Văn để hiển thị gợi ý, hoặc ẩn cụm kịch bản mẫu nếu dữ liệu chưa đủ.
+- **5.8.4. Triệt Tiêu 100% Mock Fallback Trong API Routes & Chuẩn Hóa Fallback Thương Hiệu:**
+  - Trong các API routes (`/api/kinship`, `/api/tree`, `/api/anniversaries`, `/api/members`, `/api/spouse-relations`, `/api/cron`):
+    - Khi CSDL trống hoặc truy vấn thất bại: Trả về mảng rỗng `[]` và mã lỗi minh bạch. Tuyệt đối cấm fallback âm thầm sang `SAMPLE_MEMBERS_28` hoặc `MOCK_CLAN_MEMBERS`.
+  - Chuẩn hóa fallback tên thương hiệu trên 100% file runtime thành `DEFAULT_CLAN_NAME = 'GIA PHẢ PHẠM VĂN'` (thay vì `'DÒNG HỌ NGUYỄN VĂN'`).
+
+---
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
 
@@ -368,8 +385,9 @@ sequenceDiagram
    - UI hiển thị Warning Box màu vàng: *"Hai thành viên này chưa tìm thấy mối liên kết phả hệ hoặc thuộc các nhánh chưa kết nối."*
 2. **Chọn trùng Người A và Người B:**
    - Dropdown tự động hiển thị lỗi cảnh báo: *"Vui lòng chọn 2 thành viên khác nhau để tra cứu vai vế."* Nút tính toán bị vô hiệu hóa (`disabled`).
-3. **Mạng chậm hoặc lỗi kết nối Supabase:**
-   - Fallback sang dữ liệu Local Cache / Mock Data dự phòng, hiển thị Toast cảnh báo nhẹ ở góc màn hình mà không chặn trải nghiệm người dùng.
+3. **Mạng chậm hoặc lỗi kết nối Supabase (Zero Mock Leak):**
+   - Tuyệt đối không fallback sang dữ liệu mock họ Nguyễn Văn.
+   - Hiển thị Skeleton Loading khi đang chờ và Error Banner/Toast cảnh báo rõ ràng khi request thất bại, bảo đảm tính liêm chính 100% của dữ liệu di sản dòng họ.
 
 ---
 
@@ -480,6 +498,12 @@ sequenceDiagram
 - [x] **AC48:** Thẻ thành viên trên cả Sơ đồ Dòng Trực Hệ Dọc (`#direct-lineage-tree`) và Sơ đồ Cây Chữ V (`LineageNodeCard`) hiển thị chuẩn xác `Con cả`, `Con thứ 2`, `Con thứ 3`... dựa trên thứ tự sinh `birth_order`.
 - [x] **AC49:** Loại bỏ hoàn toàn nhãn `· Chi Thứ` và `· Chi Trưởng` trên tất cả các thẻ node của sơ đồ cây trực quan, trả lại giao diện thanh thoát và sạch sẽ.
 - [x] **AC50:** Thẻ người phối ngẫu ngoài tộc (`isSpouse: true`, mang badge `💍 Hôn phối`) không hiển thị nhãn "Con cả / Con thứ N" của nhánh gia đình đối tác.
+- [x] **AC51 (Kinship Zero Mock Initial State):** `src/app/kinship/page.tsx` không import `MOCK_CLAN_MEMBERS` / `MOCK_SPOUSE_RELATIONS` và không khởi tạo state với dữ liệu họ Nguyễn Văn. Ban đầu `members = []`, `personAId = ''`, `personBId = ''`, `result = null`.
+- [x] **AC52 (Kinship Skeleton Loading & Empty State):** Khi `isLoading === true`, trang `/kinship` hiển thị Skeleton loading mờ (animated pulse) cho các bộ chọn và kết quả, tuyệt đối không hiển thị tên người giả định. Khi `!isLoading && members.length === 0`, hiển thị Empty State sạch sẽ, không crash.
+- [x] **AC53 (Kinship Purge Hardcoded Nguyen Scenarios):** Loại bỏ hoàn toàn 8 nút chip kịch bản mẫu gán cứng tên họ Nguyễn Văn (`Khởi & Bình`, `Hải & Minh`, `Hùng & Hải`, `Nam & Tâm`, `Huệ & Cường`...) khỏi giao diện `/kinship`. Thay bằng cơ chế gợi ý động theo dữ liệu họ Phạm thật hoặc ẩn đi khi chưa đủ điều kiện.
+- [x] **AC54 (API Routes Zero Mock Fallback):** Các API routes `/api/kinship`, `/api/tree`, `/api/anniversaries`, `/api/members`, `/api/spouse-relations`, `/api/cron` không fallback sang `SAMPLE_MEMBERS_28` hoặc `MOCK_CLAN_MEMBERS` khi DB trống hoặc lỗi; trả về mảng rỗng `[]` và mã lỗi minh bạch.
+- [x] **AC55 (Unified Clan Name Fallback):** Thay thế toàn bộ chuỗi fallback `'DÒNG HỌ NGUYỄN VĂN'` thành `'GIA PHẢ PHẠM VĂN'` trên 100% các file runtime (Trang chủ, Tree, Admin Portal, Clan Settings API).
+- [x] **AC56 (Runtime Import AST Guard):** Toàn bộ các file trong `src/app/` và `src/components/` tuyệt đối không import `src/lib/kinship-engine/mock-data` hoặc `src/lib/tree-layout/sample-data`.
 
 ### 7.3. Human Visual UAT Matrix (Nghiệm Thu Thị Giác Dành Cho User)
 
@@ -496,6 +520,9 @@ sequenceDiagram
 | **UAT_SSOT_05** | Nghiệm thu Sơ đồ Trực hệ dọc Chiến $\leftrightarrow$ Hiến | Chọn `Phạm Văn Chiến` & `Nguyễn Thị Hiến` | Trục nối giữa Chức (Đời 3) và Tường (Đời 4) là đường xanh ngọc bích nét liền. Chỉ có trục giữa Tường và Hiến là `═(Hôn phối)═`. Thẻ của Tường không có badge `💍 Hôn phối`, chỉ thẻ của Hiến có badge. |
 | **UAT_SSOT_06** | Nghiệm thu Lịch Giỗ SSOT Vùng miền & Tùy biến | Đổi vùng miền sang Miền Trung hoặc sửa tùy biến xưng hô tại `/admin/kinship` | Mở `/anniversaries` khi đã liên kết tài khoản $\rightarrow$ Danh xưng người mất phản ánh chuẩn xác danh xưng vùng miền/tùy biến. |
 | **UAT_SSOT_07** | Nghiệm thu Thứ bậc sinh "Con cả / Con thứ N" trên Cây Chữ V | Chọn `Bùi Trường Minh` & `Phạm Tiến Giáp` | Thẻ Khương và Cường hiển thị rõ thứ bậc sinh (`Con thứ ...`); thẻ Dung và Giáp hiển thị `Con cả`; thẻ Minh chỉ có badge `💍 Hôn phối` và năm sinh, KHÔNG CÒN chữ "Chi Thứ" hay "Chi Trưởng" nào. |
+| **UAT_ZERO_MOCK_01** | Nghiệm thu Màn hình Loading trên `/kinship` | Mở `/kinship` và quan sát trong khi mạng đang tải | Hiển thị Skeleton loading mờ trang nhã; tuyệt đối không thấy tên "Nguyễn Văn Hải" hay "Nguyễn Văn Hùng". |
+| **UAT_ZERO_MOCK_02** | Nghiệm thu Loại bỏ kịch bản mẫu giả | Quan sát khu vực kịch bản mẫu trên `/kinship` | Hoàn toàn biến mất các nút chip chứa tên họ Nguyễn Văn (Khởi & Bình, Cụ Bà Huệ & Cụ Cường...). |
+| **UAT_ZERO_MOCK_03** | Nghiệm thu Tên thương hiệu chuẩn | Kiểm tra Trang Chủ, Cây phả hệ, Admin Portal khi DB chưa tải | Tên dòng họ hiển thị mặc định là "GIA PHẢ PHẠM VĂN", tuyệt đối không bao giờ xuất hiện chữ "NGUYỄN VĂN". |
 
 ---
 
@@ -528,10 +555,14 @@ sequenceDiagram
 - [x] **RG25 (Toàn vẹn 303 tests hiện có):** 100% 303 tests hiện có tiếp tục pass, không phát sinh bất kỳ regression nào.
 - [x] **RG26 (Tính đúng đắn thuật toán LCA):** Các hàm `compareSeniority`, `determineSeniorBranch`, `findLowestCommonAncestor` giữ nguyên logic phân định vai vế ngầm.
 - [x] **RG27 (Compile & Build sạch sẽ):** `npm.cmd run typecheck` và `npm.cmd run build` đạt 0 lỗi.
+- [x] **RG28 (Kinship LCA Logic Preserved):** Toàn bộ các test case thuật toán tính vai xưng hô (`tests/kinship.test.ts`, `tests/kinship-inlaw.test.ts`) tiếp tục PASS 100%.
+- [x] **RG29 (Build & Typecheck Clean):** `npm.cmd run typecheck` và `npm.cmd run build` đạt 0 lỗi.
+- [x] **RG30 (Full Suite 311+ Pass):** Toàn bộ test suite không có bất kỳ failure nào mới so với baseline (311 tests pass).
 
 ---
 
 ## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
+
 
 > "AI ơi, hãy đọc kỹ đặc tả `docs/10_Micro-Spec_Milestone_2_Kinship_Lunar.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn lõi thuật toán Kinship Engine, Lịch Âm, API Route và trang Tra Cứu Vai Vế `/kinship`. Thực thi Vòng lặp Kiểm thử 3 Tầng (Build, Unit Test, Browser Test) và chỉ được tick `[x]` khi có bằng chứng test Pass 100%."
 

@@ -31,7 +31,7 @@ export default function ClanDashboard() {
   const [isUnlinkedDrawerOpen, setIsUnlinkedDrawerOpen] = useState(false);
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [featureFlags, setFeatureFlags] = useState<any>(null);
-  const [clanName, setClanName] = useState('DÒNG HỌ NGUYỄN VĂN');
+  const [clanName, setClanName] = useState('GIA PHẢ PHẠM VĂN');
   const [isLoading, setIsLoading] = useState(true);
 
   const loadDashboardData = useCallback(async () => {
@@ -137,7 +137,7 @@ export default function ClanDashboard() {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              BÀN ĐIỀU HÀNH TÔNG TỘC
+              Bàn Điều Hành
             </span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
               Hệ Thống Trực Tuyến
