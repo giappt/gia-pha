@@ -627,6 +627,31 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
     - **Nút hành động nổi bật:** Nút bấm màu ngọc bích `bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-3.5 rounded-lg shadow-xs active:scale-95`, nhãn responsive thông minh (*"Cài đặt ứng dụng"* trên Desktop / *"Cài đặt ứng dụng điện thoại"* trên Mobile).
   - Tự động ẩn 100% khi ứng dụng đang chạy ở chế độ Standalone.
 
+### 5.15. Đồng Bộ Hóa Toàn Diện Cơ Chế Kích Hoạt PWA Install & Phản Hồi Tiến Trình Cài Đặt (PWA Install Flow Parity & Feedback)
+- **1. Cơ Chế Đón Bắt Sớm Sự Kiện Tại `<head>` (`src/app/layout.tsx`):**
+  - Ngăn chặn triệt để tình trạng mất sự kiện `beforeinstallprompt` do bất đồng bộ thời gian React Hydration:
+  - Thêm inline script tối ưu ở thẻ `<head>`:
+    ```javascript
+    (function() {
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__fat_deferred_prompt = e;
+        if (window.__fat_pwa_on_prompt) window.__fat_pwa_on_prompt(e);
+      });
+    })();
+    ```
+  - `src/lib/pwa/pwa-store.ts` tự động khôi phục ngay `globalDeferredPrompt = window.__fat_deferred_prompt` khi module khởi tạo.
+- **2. Đồng Đẳng Kích Hoạt Prompt Native Giữa Login Gate và Trang Chủ:**
+  - Bấm nút cài đặt trên `PwaMiniBanner` tại `/login-gate` kích hoạt trực tiếp hộp thoại cài đặt native của Chromium y hệt như Banner Trang Chủ (`variant="banner"`).
+- **3. Phản Hồi Trạng Thái Tiến Trình Cài Đặt (Installing Feedback & Notifications):**
+  - Quản lý trạng thái `isInstalling: boolean` trong component và PWA Store.
+  - Khi người dùng nhấn nút cài đặt:
+    - Nút hiển thị spinner `Loader2 animate-spin shrink-0` kèm nhãn *"Đang cài đặt..."*.
+    - Kích hoạt Toast / thông báo thị giác:
+      * Bắt đầu: *"Đang mở hộp thoại cài đặt ứng dụng..."*
+      * Người dùng chọn Install trên dialog: *"Đang tiến hành cài đặt ứng dụng..."*
+      * Khi sự kiện `appinstalled` phát tín hiệu: Thông báo chúc mừng *"Cài đặt ứng dụng Gia Phả thành công! Bạn có thể mở từ màn hình chính."*
+
 ---
 
 ## 7. MA TRẬN TEST CASES & TIÊU CHÍ NGHIỆM THU (TEST SPECIFICATION)
@@ -649,7 +674,6 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_PWA_MANIFEST_VALID** | Kiểm tra tính hợp lệ của Web App Manifest | `tests/pwa-manifest.test.ts` | File `public/manifest.json` trong dự án | Đọc và parse cú pháp JSON | Có đầy đủ các thuộc tính bắt buộc: `name`, `short_name`, `start_url`, `display: "standalone"`, `icons` | PWA Compliance | `[x] PASS` |
 | **TC_UT_AVATAR_MULTI_WORD** | Trích xuất 2 chữ cái initials (Đệm + Tên) cho tên tiếng Việt $\ge 2$ từ | `tests/avatar-utils.test.ts` | Tên "Nguyễn Văn Trưởng", "Lê Thị Hoa", "Phạm Chiến" | Gọi `getMemberInitials(name)` | Trả về chuẩn xác "VT", "TH", "PC" (in hoa 2 chữ cái) | Happy Path | `[x] PASS` |
 | **TC_UT_AVATAR_EDGE_CASES** | Xử lý tên 1 từ, Khuyết danh và fallback chuỗi rỗng | `tests/avatar-utils.test.ts` | Tên "Trưởng", Khuyết danh `is_anonymous: true`, chuỗi null/rỗng | Gọi `getMemberInitials(...)` | "Trưởng" $\rightarrow$ "TR", Khuyết danh $\rightarrow$ "KD", null/rỗng $\rightarrow$ "TV" | Edge Case | `[x] PASS` |
-| **TC_UT_ANNIV_DEDUP_INFO** | Dòng thành viên không lặp lại chuỗi ngày âm, tính đúng tuổi thọ | `tests/anniversary.test.ts` | Thành viên có `birth_year: 1935, death_year: 2005` | Tính toán thông tin hiển thị dòng người giỗ | Tuổi thọ đạt 71 tuổi (`2005 - 1935 + 1`), không chứa chuỗi ngày âm lặp lại | Happy Path | `[x] PASS` |
 | **TC_UT_HOMEPAGE_CLEAN_NO_REDUNDANT_CARDS** | Loại bỏ hoàn toàn khối 3 thẻ tính năng thừa trên trang chủ, tiêu đề Ngày Giỗ Gần Nhất tinh gọn | `tests/theme-and-layout.test.ts` | Đọc mã nguồn `src/app/page.tsx` | Kiểm tra các chuỗi và thẻ điều hướng | Không chứa 3 thẻ thừa; chứa đúng tiêu đề "Ngày Giỗ Gần Nhất" | Architecture / UX | `[x] PASS` |
 | **TC_UT_SOLAR_DAY_OF_WEEK** | Tính đúng Thứ trong tuần (Thứ Hai $\rightarrow$ Chủ Nhật) và format Dương lịch đầy đủ | `tests/anniversary.test.ts` | Ngày 18/10/2026 (Chủ Nhật), Ngày 19/10/2026 (Thứ Hai) | Gọi `formatSolarDateWithDayOfWeek(year, month, day)` | Trả về chuỗi có chứa tên Thứ chuẩn tiếng Việt | Helper | `[x] PASS` |
 | **TC_UT_FAVICON_AND_ICONS_EXIST** | Bộ nhận diện Favicon, Apple Touch Icon và PWA Icons tồn tại và được khai báo chuẩn | `tests/theme-and-layout.test.ts` | Thư mục `public/` và file `src/app/layout.tsx` | Kiểm tra sự tồn tại của files và metadata.icons | Tồn tại `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192x192.png`, `icon-512x512.png` và metadata có trường icons | Brand Assets | `[x] PASS` |
@@ -672,6 +696,9 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_LOGIN_GATE_INSTALL_PWA_TITLE** | Cả Trang Chủ và Login Gate đều hiển thị tiêu đề chuẩn "Cài đặt ứng dụng Gia Phả lên màn hình chính" | `tests/theme-and-layout.test.ts` | Files `src/app/page.tsx`, `src/app/login-gate/page.tsx`, `src/components/pwa/InstallPwaButton.tsx` | Đọc mã nguồn kiểm tra chuỗi tiêu đề | Cả hai màn hình đều chứa chuỗi "Cài đặt ứng dụng Gia Phả lên màn hình chính" | UI Synchronization | `[x] PASS` |
 | **TC_UT_NO_RAW_ALERT_IN_PWA_BUTTON** | InstallPwaButton tuyệt đối không chứa hàm alert native, thay thế bằng modal hướng dẫn | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Quét mã nguồn tìm kiếm `alert(` | Không chứa bất kỳ lệnh `alert(` nào | UX Quality | `[x] PASS` |
 | **TC_UT_PWA_MINI_BANNER_LOGIN_GATE** | Login Gate nhúng Mini Banner PWA với đầy đủ mô tả ngày giỗ và nút bấm | `tests/theme-and-layout.test.ts` | File `src/app/login-gate/page.tsx` | Đọc mã nguồn kiểm tra JSX tại chân Auth Card | Chứa tiêu đề cài đặt, mô tả ngày giỗ và component InstallPwaButton | Component Integration | `[x] PASS` |
+| **TC_UT_PWA_HEAD_EARLY_CAPTURE** | layout.tsx chứa script inline trong head đón bắt beforeinstallprompt vào window.__fat_deferred_prompt | `tests/theme-and-layout.test.ts` | File `src/app/layout.tsx` | Phân tích thẻ `<head>` | Chứa inline script lắng nghe `beforeinstallprompt` sớm, không bị race condition | PWA Resilience | `[x] PASS` |
+| **TC_UT_PWA_INSTALLING_FEEDBACK** | InstallPwaButton hiển thị trạng thái isInstalling và spinner khi click | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Kiểm tra state và logic phản hồi khi click | Chứa logic `isInstalling`, icon `Loader2 animate-spin shrink-0`, thông báo tiến trình | UX Feedback | `[x] PASS` |
+| **TC_UT_LOGIN_GATE_NATIVE_PROMPT_PARITY** | Login Gate kích hoạt triggerPwaInstall đồng đẳng với Trang Chủ khi có prompt | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx`, `login-gate/page.tsx` | Phân tích hàm triggerPwaInstall và variant mini-banner | Đảm bảo mini-banner gọi trực tiếp `triggerPwaInstall()` khi có prompt | Functional Parity | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -712,6 +739,7 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_34 (Hiển Thị Tiền Tố Âm Lịch Đồng Bộ):** Mở `/anniversaries` $\rightarrow$ Header các khối ngày hiển thị rõ ràng `Âm lịch: Ngày 12/08` màu ngọc bích, đồng bộ 100% với Thẻ Ngày Giỗ Gần Nhất trên Trang Chủ. Thẻ Hôm Nay hiển thị `Âm lịch: Ngày 07 tháng 08` không lặp chữ.
 - [ ] **UAT_35 (Header Lịch Giỗ Tinh Gọn):** Mở `/anniversaries` $\rightarrow$ Phần đầu trang sạch sẽ, không còn badge `Hiếu Nghĩa Truyền Gia`, tập trung trực tiếp vào tiêu đề Lịch Giỗ Gia Tộc và Thẻ Ngày Hiện Tại.
 - [ ] **UAT_36 (Đồng Bộ Vận Hành PWA Install Trang Chủ & Login Gate):** Mở Trang Chủ (`/`) và Cổng Đăng Nhập (`/login-gate`): Cả hai đều có tiêu đề *"Cài đặt ứng dụng Gia Phả lên màn hình chính"*, mô tả ngày giỗ rõ ràng. Bấm cài đặt trên cả 2 màn hình đều kích hoạt hộp thoại cài đặt native của trình duyệt (hoặc mở modal hướng dẫn trực quan chuyên nghiệp), tuyệt đối không xuất hiện popup `alert()` native thô sơ, console sạch 0 lỗi.
+- [ ] **UAT_37 (Phản Hồi Tiến Trình Cài Đặt & Native Parity Tại Login Gate):** Mở `/login-gate` trên điện thoại Android Chrome (chưa cài app). Bấm nút cài đặt: Nút chuyển sang trạng thái spinner `Loader2` xoay nhẹ và chữ "Đang cài đặt..."; hiển thị thông báo "Đang mở hộp thoại cài đặt ứng dụng...". Hộp thoại native Chrome "Install app - Gia Phả Phạm Văn" lập tức xuất hiện (y hệt Trang Chủ). Sau khi bấm Install, nhận được thông báo "Cài đặt ứng dụng Gia Phả thành công!".
 
 ---
 
@@ -747,6 +775,8 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG28 (Offline / Fallback Safety):** Khi chạy ở môi trường không có SW (như localhost HTTP không an toàn hoặc Private mode), nút Cài đặt ứng dụng fallback an toàn, không gây crash ứng dụng.
 - [x] **RG29 (PWA Standalone Disappearance on Login Gate):** Khi ứng dụng chạy trong chế độ Standalone, Mini Banner trên Login Gate tự động ẩn 100%, không để lại khoảng trống thừa.
 - [x] **RG30 (Zero Breakage on Login Flow):** Các thay đổi PWA trên Login Gate không ảnh hưởng đến nút đăng nhập Google OAuth và nút Dev Bypass.
+- [ ] **RG31 (PWA Head Script Zero-Crash & SSR Safe):** Script inline `<head>` phải tự đóng gói an toàn (IIFE, try/catch hoặc safe window check), không gây FOUC hoặc lỗi console.
+- [ ] **RG32 (Toast Notification Timing & Auto-dismiss):** Thông báo tiến trình cài đặt PWA tự động biến mất sau 3-4 giây, không che khuất nút Đăng nhập hay form chính.
 
 ---
 

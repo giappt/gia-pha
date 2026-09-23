@@ -1,4 +1,5 @@
 import React from 'react';
+import SyncLoadingBadge from '@/components/ui/SyncLoadingBadge';
 
 export default function AnniversariesLoading() {
   return (
@@ -9,7 +10,7 @@ export default function AnniversariesLoading() {
           <div className="h-7 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
           <div className="h-4 w-72 bg-slate-100 dark:bg-slate-800/60 rounded mt-2 animate-pulse" />
         </div>
-        <div className="h-10 w-36 bg-slate-100 dark:bg-slate-800/80 rounded-xl animate-pulse" />
+        <SyncLoadingBadge />
       </div>
 
       {/* Banner Hôm Nay Skeleton */}

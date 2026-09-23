@@ -416,3 +416,18 @@
      - **Cắt tỉa khung nhìn (Viewport Virtualization):** Kích hoạt `onlyRenderVisibleElements={true}` trong React Flow để DOM chỉ gánh các node trong tầm mắt (< 100 nodes), tiết kiệm 95% RAM, chống sập OOM và giữ vững 60fps trên điện thoại.
      - **Trải nghiệm Khách / Unlinked:** Người chưa liên kết được đón nhận bằng giao diện Thủy Tổ + 3 đời đầu gọn gàng (~15 người) kèm nút cành thu gọn `[ + Chi 1 ]` và banner gợi ý nhận node / chọn tâm điểm 5 đời.
 
+
+- **Chuẩn Hóa Trạng Thái Tải Dữ Liệu `[R-UI.LOADING]` & Đồng Bộ Phản Hồi Cài Đặt PWA Đón Bắt Sớm (Loading Standardization & PWA Early Capture Parity):**
+  1. *Căn nguyên méo spinner và phân mảnh câu chữ loading:* Việc dùng thẻ `div` với `border-4 border-t-transparent animate-spin rounded-full` trên thiết bị di động (đặc biệt trong container flex-col hoặc có flex-shrink) rất dễ bị co ép tỷ lệ co giãn (aspect-ratio) dẫn đến vòng tròn bị biến dạng thành hình bầu dục (oval/elip) méo mó. Đồng thời, mỗi route tự phát sinh câu chữ khác nhau ("Đang tải cây phả hệ...", "Đang tính toán quan hệ...", "Đang tải danh sách...", "Đang tải dữ liệu...") gây cảm giác thiếu chuyên nghiệp và phân mảnh. Giải pháp cốt lõi:
+     - Tạo component chuẩn hóa `SyncLoadingBadge` (`src/components/ui/SyncLoadingBadge.tsx`) sử dụng Lucide SVG `Loader2` với các class bất biến `shrink-0 aspect-square text-emerald-600 animate-spin` bảo đảm 100% không bao giờ méo trên bất kỳ kích thước màn hình nào.
+     - Thống nhất duy nhất một thông điệp chuẩn hóa: `"Đang tải dữ liệu..."` trên toàn bộ 6 route chính (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`, `/login-gate`).
+     - Bổ sung `loading.tsx` cho Cổng Đăng Nhập (`/login-gate`) đồng đẳng với 5 route còn lại.
+  2. *Đón bắt sớm sự kiện beforeinstallprompt ở thẻ `<head>` chống Race Condition:*
+     - Khi người dùng truy cập trang, trình duyệt có thể kích hoạt sự kiện `beforeinstallprompt` rất sớm, ngay cả trước khi React bundles hay client-side hooks tải xong. Nếu chỉ lắng nghe trong `useEffect`, sự kiện đã bị bỏ lỡ (missed event) và không bao giờ xuất hiện lại.
+     - Giải pháp: Chèn inline script IIFE trực tiếp vào thẻ `<head>` trong `src/app/layout.tsx` đón bắt sự kiện và lưu trữ vào `window.__fat_deferred_prompt`.
+     - Singleton `pwa-store.ts` nạp ngay prompt từ `window` khi module khởi tạo và đăng ký hook `window.__fat_pwa_on_prompt`.
+  3. *Phản hồi cài đặt PWA (Installing Feedback) & Toast tiến trình tự ẩn (RG32):*
+     - Khi người dùng nhấn nút cài đặt PWA (cả tại Trang Chủ và Login Gate), nếu không có phản hồi tức thì, người dùng sẽ nhấn liên tục.
+     - Giải pháp: Quản lý vòng đời `isInstalling` (nút bị vô hiệu hóa `disabled={isInstalling}`, thay đổi icon thành `Loader2 animate-spin` và nhãn `"Đang cài đặt..."`).
+     - Đồng thời hiển thị Toast thông báo tiến trình định vị cố định ở đáy màn hình (`fixed bottom-6 z-50 left-1/2 -translate-x-1/2`), tự ẩn sau 3.5 giây (`RG32`), không che khuất form đăng nhập hay nút thao tác chính.
+     - Nút cài đặt tại `/login-gate` gọi trực tiếp `triggerPwaInstall()`, mang lại trải nghiệm cài đặt PWA native trên Android/Chromium đồng đẳng 100% với Trang Chủ.

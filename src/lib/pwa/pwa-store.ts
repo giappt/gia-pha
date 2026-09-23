@@ -16,11 +16,13 @@ export interface PwaState {
   isStandalone: boolean;
   isIOS: boolean;
   isMounted: boolean;
+  isInstalling: boolean;
 }
 
 declare global {
   interface Window {
     __fat_deferred_prompt?: BeforeInstallPromptEvent | null;
+    __fat_pwa_on_prompt?: ((e: BeforeInstallPromptEvent) => void) | null;
     __fat_pwa_initialized?: boolean;
   }
 }
@@ -30,6 +32,12 @@ let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
 let globalIsStandalone = false;
 let globalIsIOS = false;
 let globalIsMounted = false;
+let globalIsInstalling = false;
+
+// Khôi phục prompt sớm nhất nếu window đã được head inline script hứng trước khi module nạp
+if (typeof window !== 'undefined' && window.__fat_deferred_prompt) {
+  globalDeferredPrompt = window.__fat_deferred_prompt;
+}
 
 type PwaListener = (state: PwaState) => void;
 const listeners = new Set<PwaListener>();
@@ -51,7 +59,13 @@ export function getPwaState(): PwaState {
     isStandalone: globalIsStandalone,
     isIOS: globalIsIOS,
     isMounted: globalIsMounted,
+    isInstalling: globalIsInstalling,
   };
+}
+
+export function setIsInstalling(value: boolean): void {
+  globalIsInstalling = value;
+  notifyListeners();
 }
 
 export function subscribePwa(listener: PwaListener): () => void {
@@ -90,6 +104,13 @@ export function initPwaListeners(): void {
   if (window.__fat_deferred_prompt) {
     globalDeferredPrompt = window.__fat_deferred_prompt;
   }
+
+  // Hook nhận diện sự kiện đón bắt sớm từ layout inline script
+  window.__fat_pwa_on_prompt = (e: BeforeInstallPromptEvent) => {
+    globalDeferredPrompt = e;
+    window.__fat_deferred_prompt = e;
+    notifyListeners();
+  };
 
   // Tránh đăng ký lặp listeners trên window
   if (window.__fat_pwa_initialized) {
@@ -141,6 +162,7 @@ export async function triggerPwaInstall(): Promise<{
   }
 
   try {
+    setIsInstalling(true);
     await globalDeferredPrompt.prompt();
     const choice = await globalDeferredPrompt.userChoice;
     if (choice.outcome === 'accepted') {
@@ -155,5 +177,7 @@ export async function triggerPwaInstall(): Promise<{
   } catch (err) {
     console.error('[PwaStore] Error during prompt():', err);
     return { outcome: 'unsupported' };
+  } finally {
+    setIsInstalling(false);
   }
 }

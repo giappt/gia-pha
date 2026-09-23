@@ -1,4 +1,5 @@
 import React from 'react';
+import SyncLoadingBadge from '@/components/ui/SyncLoadingBadge';
 
 export default function KinshipLoading() {
   return (
@@ -7,6 +8,7 @@ export default function KinshipLoading() {
       <div className="text-center mb-8 flex flex-col items-center">
         <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
         <div className="h-4 w-96 max-w-full bg-slate-100 dark:bg-slate-800/60 rounded mt-2.5 animate-pulse" />
+        <SyncLoadingBadge className="mt-3.5" />
       </div>
 
       {/* Hai Hộp Chọn Người A & B Skeleton */}

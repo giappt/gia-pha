@@ -220,13 +220,18 @@ Triệt tiêu 100% hiện tượng "bấm chuyển màn không có phản hồi"
   - Viền sáng ngọc bích pulse xoay nhẹ báo hiệu *"Hệ thống đã nhận lệnh và đang tải"*.
 - **PC Navbar:** Tab được click hiển thị vệt sáng indicator chuyển động ngay dưới link.
 
-#### 5.3.3. Bộ Màn Hình Loading Skeleton Toàn Diện Cho TẤT CẢ Các Route (All-Route Skeletons):
-Thay vì để màn hình trắng hoặc đứng im trong lúc Server Component fetch dữ liệu, toàn bộ 5 route chính đều có file `loading.tsx` chuẩn Next.js App Router:
+#### 5.3.3. Bộ Màn Hình Loading Skeleton Toàn Diện & Chuẩn Hóa [R-UI.LOADING] Cho TẤT CẢ 6 Route:
+Tuân thủ tuyệt đối quy định cứng `[R-UI.LOADING]` trong `.agents/AGENTS.md`, toàn bộ 6 route chính đều bắt buộc phải có file `loading.tsx` chuẩn Next.js App Router và tích hợp component chuẩn hóa `SyncLoadingBadge`:
 1. `src/app/loading.tsx`: **Global Root Skeleton** (Cho Trang Chủ `/` và fallback toàn hệ thống).
-2. `src/app/tree/loading.tsx`: **Cây Phả Hệ Skeleton** (Toolbar skeleton, lưới chấm canvas mờ ảo, hiệu ứng shimmer card gia phả, thông báo: *"Đang đồng bộ phả hệ dòng tộc..."*).
+2. `src/app/tree/loading.tsx`: **Cây Phả Hệ Skeleton** (Toolbar skeleton, lưới chấm canvas mờ ảo, hiệu ứng shimmer card gia phả).
 3. `src/app/anniversaries/loading.tsx`: **Lịch Giỗ Skeleton** (Thanh tab tháng âm lịch, danh sách thẻ ngày giỗ skeleton).
 4. `src/app/kinship/loading.tsx`: **Tra Cứu Xưng Hô Skeleton** (2 ô dropdown chọn người, khung card kết quả vai vế).
 5. `src/app/admin/loading.tsx`: **Cổng Quản Trị Skeleton** (Sidebar skeleton, các card thống kê số liệu, khung bảng dữ liệu).
+6. `src/app/login-gate/loading.tsx`: **Cổng Đăng Nhập Skeleton** (Emblem card, khung đăng nhập shimmer).
+
+- **Quy chuẩn Component `SyncLoadingBadge`:**
+  - **Thông điệp thống nhất 100%:** Chỉ sử dụng duy nhất một thông điệp chuẩn hóa: `"Đang tải dữ liệu..."`, triệt tiêu hoàn toàn sự phân mảnh câu chữ giữa các trang.
+  - **Vòng xoay spinner chuẩn Lucide SVG:** Dùng `Loader2` với thuộc tính `shrink-0 aspect-square text-emerald-600 animate-spin` để đảm bảo 100% không bao giờ bị méo hình (oval/elip) trên bất kỳ thiết bị di động nào. Tuyệt đối cấm tự chế thẻ div border spinner méo mó.
 
 ---
 
@@ -279,7 +284,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 | **TC_UT10** | Tùy chọn ẩn Ghost Node Rể nội tộc (`showInternalHusbands = false`) | `tests/tree-layout.test.ts` | Fixture 28 thành viên, `showInternalHusbands: false` | Gọi `calculateTreeLayout(..., { showInternalHusbands: false })` | Không sinh Ghost Node Tuấn ở Chi 2, thẻ Mai hiển thị footer điều hướng gọn gàng | Unit Test |
 | **TC_INT01** | Contract API `GET /api/tree` | `tests/tree-api.test.ts` | Dữ liệu mẫu 28 thành viên | Gửi request `GET /api/tree` | HTTP 200, JSON DTO đầy đủ | Integration Test |
 | **TC_UT11** | Top Progress Bar Theme Tokenized | `tests/theme-and-layout.test.ts` | TopProgressBar Component | Đọc cấu hình style và classes | Sử dụng CSS variables / Design Tokens, không hardcode mã hex tĩnh | Unit Test |
-| **TC_UT12** | Toàn bộ 5 file Loading Skeletons tồn tại & hợp lệ | `tests/theme-and-layout.test.ts` | 5 file `loading.tsx` | Quét AST và kiểm tra export default | Đủ 5 route (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`) với cấu trúc Skeleton hợp lệ | Unit Test |
+| **TC_UT12** | Toàn bộ 6 file Loading Skeletons tồn tại, dùng SyncLoadingBadge & spinner chuẩn | `tests/theme-and-layout.test.ts` | 6 file `loading.tsx` | Quét AST, kiểm tra export default, kiểm tra import SyncLoadingBadge | Đủ 6 route (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`, `/login-gate`) tuân thủ `[R-UI.LOADING]`, dùng duy nhất thông điệp "Đang tải dữ liệu..." | Unit Test |
 | **TC_UT13** | Phản hồi xúc giác / Pending feedback trên MobileBottomNav | `tests/theme-and-layout.test.ts` | `MobileBottomNav.tsx` | Phân tích mã nguồn và trạng thái tap | Chứa class/logic phản hồi chuyển trang `active:scale-95`, pending ring | Unit Test |
 | **TC_UT14** | Viewport Virtualization trong FamilyTreeCanvas | `tests/theme-and-layout.test.ts` | `FamilyTreeCanvas.tsx` | Phân tích props của `<ReactFlow>` | Chứa cấu hình `onlyRenderVisibleElements={true}` | Unit Test |
 | **TC_UT15** | Trải nghiệm phả hệ mặc định cho người chưa liên kết node | `tests/theme-and-layout.test.ts` | `FamilyTreeCanvas.tsx` / `TreeToolbar.tsx` | Kiểm tra logic banner và nhánh mặc định | Có cơ chế gợi ý nhận node và xem theo cội nguồn | Unit Test |
@@ -297,7 +302,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 - [x] **AC_UT10 (Toggle Internal Husband Option):** Khi `showInternalHusbands = false`, ẩn Ghost Node của chồng tại Chi 2, thẻ vợ hiển thị footer điều hướng gọn gàng.
 - [x] **AC_INT01 (Tree API DTO Contract):** Endpoint `GET /api/tree` trả về đầy đủ DTO với HTTP status 200.
 - [x] **AC11_TOP_PROGRESS_BAR_THEMED:** Thanh tiến trình đỉnh trang kích hoạt tức thì khi click, sử dụng màu động theo theme CSS token.
-- [x] **AC12_ALL_ROUTES_LOADING_SKELETONS:** Toàn bộ 5 route (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`) có file `loading.tsx` hiển thị skeleton trang trọng, loại bỏ hoàn toàn độ trễ vô hình.
+- [x] **AC12_ALL_ROUTES_LOADING_SKELETONS:** Toàn bộ 6 route (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`, `/login-gate`) có file `loading.tsx` tích hợp `SyncLoadingBadge`, hiển thị thông điệp thống nhất `"Đang tải dữ liệu..."`, spinner `Loader2` tròn 100% không méo.
 - [x] **AC13_MOBILE_NAV_ACTIVE_FEEDBACK:** Khi tap vào tab di động hoặc navbar, có phản hồi thị giác tức thì (active/pending ring).
 - [x] **AC14_TREE_1500_VIEWPORT_VIRTUALIZATION:** Canvas cây phả hệ kích hoạt `onlyRenderVisibleElements`, cắt tỉa $90\%+$ DOM node ngoài viewport giúp mobile không bị lag/OOM.
 - [x] **AC15_UNLINKED_MEMBER_TREE_EXPERIENCE:** Khách/người chưa liên kết được đón nhận bằng giao diện 3 đời trang nghiêm kèm nút mở rộng chi và banner hướng dẫn nhận node/chọn tâm điểm 5 đời.

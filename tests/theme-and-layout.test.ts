@@ -1382,13 +1382,14 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
       );
     });
 
-    it('TC_UT12: Đầy đủ 5 file Loading Skeletons chuẩn Next.js App Router cho tất cả các màn hình chính', () => {
+    it('TC_UT12: Đầy đủ 6 file Loading Skeletons chuẩn Next.js App Router cho tất cả các màn hình chính và SyncLoadingBadge', () => {
       const requiredSkeletons = [
         'src/app/loading.tsx',
         'src/app/tree/loading.tsx',
         'src/app/anniversaries/loading.tsx',
         'src/app/kinship/loading.tsx',
         'src/app/admin/loading.tsx',
+        'src/app/login-gate/loading.tsx',
       ];
 
       for (const relPath of requiredSkeletons) {
@@ -1403,7 +1404,24 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
           content.includes('animate-pulse'),
           `${relPath} phải có animation pulse shimmer trực quan`
         );
+        assert.ok(
+          content.includes('SyncLoadingBadge'),
+          `${relPath} phải sử dụng SyncLoadingBadge chuẩn hóa theo [R-UI.LOADING]`
+        );
       }
+
+      // Kiểm tra component SyncLoadingBadge chuẩn hóa
+      const badgePath = path.resolve(process.cwd(), 'src/components/ui/SyncLoadingBadge.tsx');
+      assert.ok(fs.existsSync(badgePath), 'SyncLoadingBadge.tsx phải tồn tại');
+      const badgeContent = fs.readFileSync(badgePath, 'utf8');
+      assert.ok(
+        badgeContent.includes('Loader2') && badgeContent.includes('shrink-0 aspect-square text-emerald-600 animate-spin'),
+        'SyncLoadingBadge phải dùng Lucide Loader2 chống méo 100% trên thiết bị di động'
+      );
+      assert.ok(
+        badgeContent.includes('Đang tải dữ liệu...'),
+        'SyncLoadingBadge phải có thông điệp thống nhất "Đang tải dữ liệu..."'
+      );
     });
 
     it('TC_UT13: MobileBottomNav hỗ trợ phản hồi xúc giác và thị giác tức thì (Active & Pending feedback)', () => {
@@ -1448,6 +1466,97 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
       assert.ok(
         content.includes('Chưa nhận vị trí trong cây?') && content.includes('/login-gate'),
         'FamilyTreeCanvas.tsx phải hướng dẫn người chưa nhận node liên kết với hệ thống'
+      );
+    });
+
+    it('TC_UT_PWA_HEAD_EARLY_CAPTURE: Layout inline script đón bắt sớm beforeinstallprompt và lưu vào window.__fat_deferred_prompt', () => {
+      const layoutPath = path.resolve(process.cwd(), 'src/app/layout.tsx');
+      assert.ok(fs.existsSync(layoutPath), 'src/app/layout.tsx phải tồn tại');
+
+      const content = fs.readFileSync(layoutPath, 'utf8');
+      assert.ok(
+        content.includes('beforeinstallprompt'),
+        'layout.tsx phải chứa listener sự kiện beforeinstallprompt sớm trong thẻ head'
+      );
+      assert.ok(
+        content.includes('window.__fat_deferred_prompt'),
+        'layout.tsx phải lưu deferred prompt vào window.__fat_deferred_prompt'
+      );
+      assert.ok(
+        content.includes('window.__fat_pwa_on_prompt'),
+        'layout.tsx phải kích hoạt hook window.__fat_pwa_on_prompt nếu đã được đăng ký'
+      );
+    });
+
+    it('TC_UT_PWA_INSTALLING_FEEDBACK: PWA Store và InstallPwaButton hỗ trợ trạng thái isInstalling, spinner Loader2 và Toast tiến trình', () => {
+      const storePath = path.resolve(process.cwd(), 'src/lib/pwa/pwa-store.ts');
+      const buttonPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+
+      assert.ok(fs.existsSync(storePath), 'src/lib/pwa/pwa-store.ts phải tồn tại');
+      assert.ok(fs.existsSync(buttonPath), 'src/components/pwa/InstallPwaButton.tsx phải tồn tại');
+
+      const storeContent = fs.readFileSync(storePath, 'utf8');
+      const buttonContent = fs.readFileSync(buttonPath, 'utf8');
+
+      // 1. Kiểm tra pwa-store
+      assert.ok(
+        storeContent.includes('isInstalling: boolean'),
+        'PwaState phải có trường isInstalling: boolean'
+      );
+      assert.ok(
+        storeContent.includes('export function setIsInstalling'),
+        'pwa-store.ts phải export hàm setIsInstalling'
+      );
+      assert.ok(
+        storeContent.includes('setIsInstalling(true)') && storeContent.includes('setIsInstalling(false)'),
+        'triggerPwaInstall phải quản lý vòng đời setIsInstalling(true) và setIsInstalling(false) an toàn qua try/finally'
+      );
+
+      // 2. Kiểm tra InstallPwaButton
+      assert.ok(
+        buttonContent.includes('isInstalling') && buttonContent.includes('setIsInstalling'),
+        'InstallPwaButton.tsx phải quản lý state isInstalling'
+      );
+      assert.ok(
+        buttonContent.includes('Loader2') && buttonContent.includes('animate-spin'),
+        'InstallPwaButton.tsx phải render spinner Loader2 animate-spin khi đang cài đặt'
+      );
+      assert.ok(
+        buttonContent.includes('Đang cài đặt...'),
+        'InstallPwaButton.tsx phải hiển thị nhãn "Đang cài đặt..." khi isInstalling'
+      );
+      assert.ok(
+        buttonContent.includes('disabled={isInstalling}'),
+        'Nút cài đặt PWA phải bị vô hiệu hóa (disabled) khi đang tiến hành cài đặt'
+      );
+      assert.ok(
+        buttonContent.includes('toastMessage') && buttonContent.includes('3500'),
+        'InstallPwaButton.tsx phải hiển thị Toast thông báo tiến trình tự ẩn sau 3.5s (RG32)'
+      );
+    });
+
+    it('TC_UT_LOGIN_GATE_NATIVE_PROMPT_PARITY: Cổng đăng nhập (/login-gate) tích hợp PwaMiniBanner và kích hoạt triggerPwaInstall đồng đẳng Trang Chủ', () => {
+      const loginGatePath = path.resolve(process.cwd(), 'src/app/login-gate/page.tsx');
+      const buttonPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+
+      assert.ok(fs.existsSync(loginGatePath), 'src/app/login-gate/page.tsx phải tồn tại');
+      const loginGateContent = fs.readFileSync(loginGatePath, 'utf8');
+      const buttonContent = fs.readFileSync(buttonPath, 'utf8');
+
+      // 1. Kiểm tra login-gate render PwaMiniBanner
+      assert.ok(
+        loginGateContent.includes('PwaMiniBanner'),
+        'src/app/login-gate/page.tsx phải import và render PwaMiniBanner'
+      );
+
+      // 2. Kiểm tra PwaMiniBanner có testid pwa-mini-banner và gọi triggerPwaInstall
+      assert.ok(
+        buttonContent.includes('data-testid="pwa-mini-banner"'),
+        'PwaMiniBanner phải có data-testid="pwa-mini-banner"'
+      );
+      assert.ok(
+        buttonContent.includes('triggerPwaInstall()') && buttonContent.includes('handleInstallClick'),
+        'PwaMiniBanner phải gọi triggerPwaInstall qua handleInstallClick kích hoạt native prompt Chromium/Android'
       );
     });
   });

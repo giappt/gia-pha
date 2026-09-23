@@ -137,6 +137,24 @@ export default async function RootLayout({
             `,
           }}
         />
+        {/* Script đón bắt sớm sự kiện beforeinstallprompt chống Race Condition khi React Hydration [RG31] */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  window.addEventListener('beforeinstallprompt', function(e) {
+                    e.preventDefault();
+                    window.__fat_deferred_prompt = e;
+                    if (typeof window.__fat_pwa_on_prompt === 'function') {
+                      window.__fat_pwa_on_prompt(e);
+                    }
+                  });
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="antialiased min-h-screen flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900">
         <TopProgressBar />

@@ -260,7 +260,7 @@ flowchart TD
 #### A. Phản Hồi Chuyển Màn Toàn Diện:
 - **Thanh Tiến Trình Đỉnh Trang (Top Progress Bar):** Chiều cao 3px, vệt sáng shimmer chạy ngang, đồng bộ màu theo theme token `--brand-primary`. Kích hoạt ngay trong 50ms sau khi bấm chuyển trang.
 - **Phản Hồi Thị Giác Trên Navbar & Bottom Nav:** Nút/tab được bấm lập tức nảy nhẹ (scale bounce `active:scale-95`), viền phát sáng ngọc bích pulse xoay nhẹ báo hiệu hệ thống đã nhận thao tác.
-- **Bộ 5 Màn Hình Loading Skeleton Chuẩn Next.js App Router:** Trang bị file `loading.tsx` cho `/`, `/tree`, `/anniversaries`, `/kinship`, `/admin` để triệt tiêu hoàn toàn màn hình trắng hoặc cảm giác chờ đợi vô hình.
+- **Bộ 6 Màn Hình Loading Skeleton Chuẩn Hóa [R-UI.LOADING]:** Trang bị file `loading.tsx` chuẩn Next.js App Router cho cả 6 route (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`, `/login-gate`), tích hợp component chuẩn hóa `SyncLoadingBadge` với spinner `Loader2` chống méo và duy nhất một thông điệp thống nhất: *"Đang tải dữ liệu..."*.
 
 #### B. Trải Nghiệm Cây Phả Hệ 1.500 Người:
 - **Phân Tầng Theo Chi/Nhánh & Breadcrumbs:** Lọc nhanh từng Chi (Chi Trưởng, Chi 2...) và breadcrumb điều hướng `Gia tộc Phạm Văn > Chi 1 > Nhánh Cụ Chiến`.

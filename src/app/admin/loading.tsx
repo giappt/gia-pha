@@ -1,4 +1,5 @@
 import React from 'react';
+import SyncLoadingBadge from '@/components/ui/SyncLoadingBadge';
 
 export default function AdminLoading() {
   return (
@@ -11,7 +12,7 @@ export default function AdminLoading() {
         </div>
         <div className="flex items-center gap-3">
           <div className="h-9 w-28 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
-          <div className="h-9 w-32 bg-emerald-100 dark:bg-emerald-950/60 rounded-lg animate-pulse" />
+          <SyncLoadingBadge />
         </div>
       </div>
 

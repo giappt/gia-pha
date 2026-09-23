@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Download, Smartphone, X, Share, PlusSquare, Monitor, MoreVertical } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Download, Smartphone, X, Share, PlusSquare, Monitor, MoreVertical, Loader2, CheckCircle2 } from 'lucide-react';
 import {
   type BeforeInstallPromptEvent,
   subscribePwa,
@@ -30,6 +30,19 @@ export default function InstallPwaButton({
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [showFallbackModal, setShowFallbackModal] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -40,11 +53,12 @@ export default function InstallPwaButton({
       navigator.serviceWorker.register('/sw.js').catch(() => { });
     }
 
-    // Đăng ký lắng nghe Global PWA Store (hỗ trợ beforeinstallprompt, appinstalled, display-mode: standalone)
+    // Đăng ký lắng nghe Global PWA Store (hỗ trợ beforeinstallprompt, appinstalled, display-mode: standalone, isInstalling)
     const unsubscribe = subscribePwa((state) => {
       setDeferredPrompt(state.deferredPrompt);
       setIsStandalone(state.isStandalone);
       setIsIOS(state.isIOS);
+      setIsInstalling(Boolean(state.isInstalling));
     });
 
     // 1. Kiểm tra standalone mode tại chỗ
@@ -72,6 +86,9 @@ export default function InstallPwaButton({
     return () => {
       unsubscribe();
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
     };
   }, []);
 
@@ -86,11 +103,17 @@ export default function InstallPwaButton({
     }
 
     if (deferredPrompt) {
-      const result = await triggerPwaInstall();
-      if (result.outcome === 'accepted') {
-        setIsStandalone(true);
-        setDeferredPrompt(null);
-      } else if (result.outcome === 'unsupported') {
+      showToast('Đang mở hộp thoại cài đặt ứng dụng...');
+      try {
+        const result = await triggerPwaInstall();
+        if (result.outcome === 'accepted') {
+          setIsStandalone(true);
+          setDeferredPrompt(null);
+          showToast('Cài đặt ứng dụng Gia Phả thành công! Bạn có thể mở từ màn hình chính.');
+        } else if (result.outcome === 'unsupported') {
+          setShowFallbackModal(true);
+        }
+      } catch {
         setShowFallbackModal(true);
       }
     } else {
@@ -110,6 +133,30 @@ export default function InstallPwaButton({
       <>
         <span className="hidden sm:inline">{desktopText}</span>
         <span className="inline sm:hidden">{mobileText}</span>
+      </>
+    );
+  };
+
+  const renderButtonContent = (iconSizeClass = 'w-3.5 h-3.5') => {
+    if (isInstalling) {
+      return (
+        <>
+          <Loader2 className={`${iconSizeClass} shrink-0 aspect-square text-white animate-spin`} />
+          <span>Đang cài đặt...</span>
+        </>
+      );
+    }
+
+    return (
+      <>
+        {showIcon && (
+          isIOS ? (
+            <Smartphone className={`${iconSizeClass} ${variant === 'primary' || variant === 'banner' || variant === 'mini-banner' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
+          ) : (
+            <Download className={`${iconSizeClass} ${variant === 'primary' || variant === 'banner' || variant === 'mini-banner' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
+          )
+        )}
+        {renderLabel()}
       </>
     );
   };
@@ -290,10 +337,26 @@ export default function InstallPwaButton({
     </div>
   );
 
+  const toastElement = toastMessage && (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-6 z-50 left-1/2 -translate-x-1/2 max-w-sm w-[90%] px-4 py-2.5 rounded-xl bg-slate-900/95 text-white text-xs border border-emerald-500/40 shadow-xl flex items-center gap-2.5 backdrop-blur-xs animate-in fade-in slide-in-from-bottom-2 duration-200"
+    >
+      {isInstalling ? (
+        <Loader2 className="w-4 h-4 shrink-0 aspect-square text-emerald-400 animate-spin" />
+      ) : (
+        <CheckCircle2 className="w-4 h-4 shrink-0 aspect-square text-emerald-400" />
+      )}
+      <span className="flex-1 leading-snug font-medium">{toastMessage}</span>
+    </div>
+  );
+
   const modals = (
     <>
       {iosModalElement}
       {fallbackModalElement}
+      {toastElement}
     </>
   );
 
@@ -323,11 +386,12 @@ export default function InstallPwaButton({
             <button
               type="button"
               onClick={handleInstallClick}
+              disabled={isInstalling}
               data-testid="pwa-install-button"
               aria-label="Cài đặt ứng dụng PWA"
-              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 shadow-xs transition-all cursor-pointer select-none"
+              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer select-none"
             >
-              {renderLabel()}
+              {renderButtonContent('w-3.5 h-3.5')}
             </button>
           </div>
         </div>
@@ -360,11 +424,12 @@ export default function InstallPwaButton({
           <button
             type="button"
             onClick={handleInstallClick}
+            disabled={isInstalling}
             data-testid="pwa-install-button"
             aria-label="Cài đặt ứng dụng PWA"
-            className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 shadow-xs transition-all cursor-pointer select-none"
+            className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer select-none"
           >
-            {renderLabel()}
+            {renderButtonContent('w-4 h-4')}
           </button>
         </div>
         {modals}
@@ -378,18 +443,12 @@ export default function InstallPwaButton({
       <button
         type="button"
         onClick={handleInstallClick}
+        disabled={isInstalling}
         data-testid="pwa-install-button"
         aria-label="Cài đặt ứng dụng PWA lên màn hình chính"
-        className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer select-none active:scale-95 ${getVariantStyles()} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer select-none active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed ${getVariantStyles()} ${className}`}
       >
-        {showIcon && (
-          isIOS ? (
-            <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          ) : (
-            <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          )
-        )}
-        {renderLabel()}
+        {renderButtonContent('w-4 h-4')}
       </button>
       {modals}
     </>

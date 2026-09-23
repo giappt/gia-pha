@@ -36,6 +36,10 @@ Dưới đây là các nguyên tắc TỐI THƯỢNG mà AI Agent BẮT BUỘC P
   - Mặc định ngày giỗ được tính theo lịch âm. Thuật toán quy đổi âm - dương phải chuẩn xác theo múi giờ Việt Nam (UTC+7).
 - **Claim Profile & Approval Gate (Kiểm soát Gán Node):**
   - Người dùng đăng nhập Google chỉ được gửi yêu cầu nhận node ("Claim Node"). Bắt buộc phải có Admin phê duyệt (Approve) mới được chính thức liên kết tài khoản với node gia phả.
+- **[R-UI.LOADING] Mandatory Unified Loading State Policy (Quy định bắt buộc về Loading trên mọi Route):**
+  - Mọi route page chính trong `src/app/` (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`, `/login-gate`) **BẮT BUỘC PHẢI CÓ** file `loading.tsx`.
+  - Component `loading.tsx` bắt buộc phải sử dụng component chuẩn hóa `SyncLoadingBadge` với duy nhất một thông điệp thống nhất: `"Đang tải dữ liệu..."`. Tuyệt đối CẤM phân mảnh các câu chữ khác nhau giữa các trang.
+  - Vòng tròn xoay (spinner) bắt buộc dùng Lucide SVG (`Loader2`) với thuộc tính `shrink-0 aspect-square text-emerald-600 animate-spin` để đảm bảo 100% không bao giờ bị méo hình (oval/elip) trên bất kỳ thiết bị di động nào. Tuyệt đối CẤM tự chế thẻ div border spinner méo mó.
 
 ## 4. [R-SPEC] STRICT EXECUTION & REVERSE SYNC
 - **No Hallucination:** Khi code tính năng, phải bám sát **100%** vào file Đặc tả Vi mô (`Micro-Spec`). Không tự ý bịa thêm tính năng không có trong tài liệu.
