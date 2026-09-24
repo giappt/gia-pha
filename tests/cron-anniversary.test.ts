@@ -9,6 +9,7 @@ import {
   getLineageMemberIds,
   getExtendedFamilyMemberIds,
   computeDeceasedHonorificPrefix,
+  buildAggregatedDigestPayload,
 } from '../src/lib/anniversaries/anniversary-engine';
 import { findLowestCommonAncestor } from '../src/lib/kinship-engine/lca-finder';
 import { resolveKinshipTerms } from '../src/lib/kinship-engine/regional-dictionaries';
@@ -375,41 +376,103 @@ describe('Vercel Cron Anniversary Reminder Test Suite (Milestone 5)', () => {
     assert.strictEqual(scope.has('tuan'), false, 'Không bao gồm Tuấn chi khác');
   });
 
-  // TC_INT_CRON_SENDS_BOTH_TODAY_AND_TOMORROW_FOR_EXTENDED_FAMILY: Gửi đủ 2 thông báo khi có giỗ Bà nội (Hôm nay) và giỗ Bác (Ngày mai)
-  it('TC_INT_CRON_SENDS_BOTH_TODAY_AND_TOMORROW_FOR_EXTENDED_FAMILY: Route Cron hỗ trợ gửi song song 2 thông báo cho phạm vi mở rộng', async () => {
+  // TC_UT_CRON_AGGREGATED_TITLE_AND_BODY: Thuật toán sinh tiêu đề ưu tiên Hôm nay và body đa dòng \n\n chuẩn phong cách MB/Uniqlo
+  it('TC_UT_CRON_AGGREGATED_TITLE_AND_BODY: buildAggregatedDigestPayload sinh tiêu đề ưu tiên Hôm nay và body đa dòng phân tách bởi \\n\\n', () => {
+    const mockTodayMembers: MemberRecord[] = [
+      { id: 'cham', full_name: 'Nguyễn Thị Chăm', gender: 'female', death_lunar_day: 14, death_lunar_month: 8, life_status: 'deceased', generation_level: 11, is_root: false },
+    ];
+    const mockTomorrowMembers: MemberRecord[] = [
+      { id: 'cuong', full_name: 'Phạm Văn Cường', gender: 'male', death_lunar_day: 15, death_lunar_month: 8, life_status: 'deceased', generation_level: 12, is_root: false },
+    ];
+
+    const mockFormatName = (viewerId: string, deceased: MemberRecord) => {
+      if (deceased.id === 'cham') return 'Bà nội Nguyễn Thị Chăm';
+      if (deceased.id === 'cuong') return 'Bác Phạm Văn Cường';
+      return deceased.full_name;
+    };
+
+    // 1. Kịch bản có cả Hôm nay & Ngày mai (Phổ biến nhất):
+    const digestBoth = buildAggregatedDigestPayload('giap', mockTodayMembers, mockTomorrowMembers, mockFormatName);
+    assert.ok(digestBoth, 'Digest phải tồn tại');
+    assert.strictEqual(digestBoth.title, 'Hôm nay là Ngày Giỗ của Bà nội Nguyễn Thị Chăm', 'Tiêu đề collapsed phải ưu tiên sự kiện Hôm nay');
+    assert.ok(digestBoth.body.includes('Hôm nay là Ngày Giỗ của Bà nội Nguyễn Thị Chăm\nTức ngày 14/8 Âm lịch!'), 'Body phải có khối Hôm nay');
+    assert.ok(digestBoth.body.includes('Ngày mai có Ngày Giỗ của Bác Phạm Văn Cường\nTức ngày 15/8 Âm lịch.'), 'Body phải có khối Ngày mai');
+    assert.ok(digestBoth.body.includes('\n\n'), 'Các khối phải phân tách nhau bằng dòng trống \\n\\n');
+    assert.strictEqual(digestBoth.badge, '/icons/badge-72x72.png', 'Badge phải trỏ về badge-72x72.png');
+    assert.strictEqual(digestBoth.tag, 'anniversary-daily-digest', 'Tag phải là anniversary-daily-digest cố định');
+    assert.strictEqual((digestBoth as any).icon, undefined, 'Tuyệt đối KHÔNG có thuộc tính icon trong digest để tránh large thumbnail lệch phải');
+
+    // 2. Kịch bản chỉ có giỗ Hôm nay:
+    const digestTodayOnly = buildAggregatedDigestPayload('giap', mockTodayMembers, [], mockFormatName);
+    assert.ok(digestTodayOnly);
+    assert.strictEqual(digestTodayOnly.title, 'Hôm nay là Ngày Giỗ của Bà nội Nguyễn Thị Chăm');
+    assert.ok(digestTodayOnly.body.includes('Hôm nay là Ngày Giỗ của'));
+    assert.strictEqual(digestTodayOnly.body.includes('Ngày mai có Ngày Giỗ của'), false, 'Không được có khối Ngày mai khi không có sự kiện ngày mai');
+
+    // 3. Kịch bản chỉ có giỗ Ngày mai:
+    const digestTomorrowOnly = buildAggregatedDigestPayload('giap', [], mockTomorrowMembers, mockFormatName);
+    assert.ok(digestTomorrowOnly);
+    assert.strictEqual(digestTomorrowOnly.title, 'Ngày mai có Ngày Giỗ của Bác Phạm Văn Cường', 'Khi chỉ có ngày mai thì tiêu đề lấy ngày mai');
+    assert.strictEqual(digestTomorrowOnly.body.includes('Hôm nay là Ngày Giỗ của'), false, 'Không được có khối Hôm nay');
+    assert.ok(digestTomorrowOnly.body.includes('Ngày mai có Ngày Giỗ của Bác Phạm Văn Cường\nTức ngày 15/8 Âm lịch.'));
+
+    // 4. Kịch bản trùng ngày nhiều hơn 1 người (vd 2 Cụ cùng giỗ hôm nay):
+    const multiToday: MemberRecord[] = [
+      mockTodayMembers[0],
+      { id: 'ong_to', full_name: 'Cụ Tổ', gender: 'male', death_lunar_day: 14, death_lunar_month: 8, life_status: 'deceased', generation_level: 10, is_root: true },
+    ];
+    const digestMultiToday = buildAggregatedDigestPayload('giap', multiToday, [], mockFormatName);
+    assert.ok(digestMultiToday);
+    assert.strictEqual(digestMultiToday.title, 'Hôm nay là Ngày Giỗ của Bà nội Nguyễn Thị Chăm (+1 người khác)', 'Nhiều người phải có hậu tố (+N người khác)');
+    assert.ok(digestMultiToday.body.includes('Hôm nay là Ngày Giỗ của Bà nội Nguyễn Thị Chăm'));
+    assert.ok(digestMultiToday.body.includes('Hôm nay là Ngày Giỗ của Cụ Tổ'));
+
+    // 5. Kịch bản không có giỗ nào:
+    const digestEmpty = buildAggregatedDigestPayload('giap', [], [], mockFormatName);
+    assert.strictEqual(digestEmpty, null, 'Không có giỗ trả về null');
+  });
+
+  // TC_INT_CRON_SENDS_SINGLE_AGGREGATED_PUSH: Cron gửi đúng 1 push duy nhất dạng gộp cho người nhận có cả giỗ hôm nay và ngày mai
+  it('TC_INT_CRON_SENDS_SINGLE_AGGREGATED_PUSH: Route Cron tích hợp buildAggregatedDigestPayload và chỉ bắn 1 push duy nhất per recipient', async () => {
     const fs = await import('fs');
     const path = await import('path');
     const routePath = path.resolve(process.cwd(), 'src/app/api/cron/anniversary-reminder/route.ts');
     const routeContent = fs.readFileSync(routePath, 'utf8');
 
-    // 1. Route phải sử dụng getExtendedFamilyMemberIds để lấy phạm vi nhận tin
+    // 1. Route phải gọi buildAggregatedDigestPayload
+    assert.ok(
+      routeContent.includes('buildAggregatedDigestPayload('),
+      'Route Cron phải gọi buildAggregatedDigestPayload để gộp thông báo'
+    );
+
+    // 2. Route phải sử dụng getExtendedFamilyMemberIds để lấy phạm vi nhận tin
     assert.ok(
       routeContent.includes('getExtendedFamilyMemberIds('),
-      'Route Cron phải gọi getExtendedFamilyMemberIds để bao gồm anh chị em bố mẹ và con cháu'
+      'Route Cron phải gọi getExtendedFamilyMemberIds'
     );
 
-    // 2. Route phải định dạng danh xưng cá nhân hóa
+    // 3. Route phải có formatPersonalizedDisplayName
     assert.ok(
-      routeContent.includes('formatPersonalizedDisplayName('),
-      'Route Cron phải có hàm formatPersonalizedDisplayName tính danh xưng cá nhân hóa'
+      routeContent.includes('formatPersonalizedDisplayName'),
+      'Route Cron phải dùng formatPersonalizedDisplayName'
     );
 
-    // 3. Route phải hỗ trợ cả matchingToday và matchingTomorrow độc lập
-    assert.ok(
-      routeContent.includes('matchingToday') && routeContent.includes('matchingTomorrow'),
-      'Route Cron phải duyệt riêng matchingToday và matchingTomorrow'
+    // 4. Không còn lặp gửi 2 vòng lặp push riêng lẻ cho today và tomorrow
+    assert.strictEqual(
+      routeContent.includes('tag: `anniversary-today-${ancestor.id}`'),
+      false,
+      'Route Cron không còn sử dụng tag riêng lẻ anniversary-today-${ancestor.id}'
+    );
+    assert.strictEqual(
+      routeContent.includes('tag: `anniversary-tomorrow-${ancestor.id}`'),
+      false,
+      'Route Cron không còn sử dụng tag riêng lẻ anniversary-tomorrow-${ancestor.id}'
     );
 
-    // 4. Tag thông báo phải phân biệt rõ today và tomorrow
+    // 5. Gửi JSON digest nguyên khối
     assert.ok(
-      routeContent.includes('anniversary-today-') && routeContent.includes('anniversary-tomorrow-'),
-      'Payload phải chứa tag anniversary-today- và anniversary-tomorrow-'
-    );
-
-    // 5. Tiêu đề đúng chuẩn
-    assert.ok(
-      routeContent.includes('Hôm nay là Ngày Giỗ ') && routeContent.includes('Ngày mai có Ngày Giỗ '),
-      'Tiêu đề thông báo phải có tiền tố icon và cấu trúc chuẩn'
+      routeContent.includes('const payload = JSON.stringify(digest);'),
+      'Route Cron phải gửi payload đã được serialize từ digest'
     );
   });
 });

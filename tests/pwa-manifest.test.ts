@@ -138,4 +138,32 @@ describe('PWA Manifest & Service Worker Compliance Test Suite (Milestone 5)', ()
       'showNotification options phải cấu hình renotify để hiển thị song song không bị ghi đè'
     );
   });
+
+  // TC_UT_SW_NO_LARGE_ICON_WHEN_OMITTED: public/sw.js không gán options.icon khi payload không truyền icon
+  it('TC_UT_SW_NO_LARGE_ICON_WHEN_OMITTED: public/sw.js không tự ý gán icon vào showNotification options để giữ thẻ thông báo phẳng (MB/Uniqlo Style)', () => {
+    const swPath = path.join(process.cwd(), 'public', 'sw.js');
+    assert.ok(fs.existsSync(swPath), 'public/sw.js phải tồn tại');
+
+    const swContent = fs.readFileSync(swPath, 'utf-8');
+
+    // 1. Kiểm tra đối tượng data mặc định không còn chứa icon: '/icons/icon-192x192.png'
+    assert.strictEqual(
+      swContent.includes("icon: '/icons/icon-192x192.png'"),
+      false,
+      'sw.js không được gán icon mặc định trong let data để tránh Android ép Large Icon sang mép phải'
+    );
+
+    // 2. Kiểm tra điều kiện bảo vệ chỉ gán options.icon khi data.icon có giá trị
+    assert.ok(
+      swContent.includes('if (data.icon)') && swContent.includes('options.icon = new URL('),
+      'sw.js phải có điều kiện if (data.icon) mới gán options.icon'
+    );
+
+    // 3. Đảm bảo badge vẫn được duy trì cho status bar và header
+    assert.ok(
+      swContent.includes('badge: badgeUrl'),
+      'sw.js vẫn duy trì badge: badgeUrl cho icon trên status bar và notification header'
+    );
+  });
 });
+

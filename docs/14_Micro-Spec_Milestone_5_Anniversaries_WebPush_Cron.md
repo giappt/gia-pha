@@ -764,6 +764,44 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - **Native Splash Icon (`purpose: "any"`):** Sử dụng `public/icons/icon-512x512.png` và `icon-192x192.png` là chữ Hán "范" thư pháp xanh ngọc bích trên nền trắng/trong suốt, hòa quyện tuyệt đối với `background_color: "#ffffff"`.
   - **Trải nghiệm iOS (Safari PWA):** Metadata `appleWebApp` với `statusBarStyle: 'default'` giữ thanh trạng thái chữ đen sắc nét trên nền trắng, đảm bảo tính đồng nhất 100% giữa Android và iOS.
 
+### 5.19. Gom Nhóm Thông Báo Web Push Dạng Phẳng Kiểu MB Bank & Uniqlo (Single Aggregated Digest per Recipient & Flat Clean Notification Cards)
+
+- **1. Căn Nguyên Từ Kiểm Thử Thực Tế (Android Notification Grouping vs Web Push API):**
+  - **Hiện trạng:** Khi một người nhận có cả ngày giỗ Hôm nay và Ngày mai (hoặc nhiều hơn 1 người mất), backend Cron gửi N thông báo mạng với các `tag` khác nhau (`anniversary-today-...`, `anniversary-tomorrow-...`).
+  - **Hệ quả trên Android:** Hệ điều hành tự gom các thông báo theo ứng dụng, nhưng bên trong bị xé thành N hàng riêng biệt có viền phân cách, timestamp riêng và domain site (`• gia-pha-pha... • 18m`).
+  - **Vấn đề Large Icon mép phải:** Việc truyền `icon: '/icons/icon-192x192.png'` khiến Android coi đây là Large Icon (Thumbnail) và cố định hiển thị ở mép phải của thẻ; đồng thời tạo một vòng tròn xám bên trái.
+  - **Giải pháp:**
+    - Backend Cron gom toàn bộ các sự kiện giỗ trong phạm vi gia đình của một người nhận thành **1 thông báo mạng duy nhất** (`tag: 'anniversary-daily-digest'`).
+    - Service Worker không gán `options.icon` khi payload không truyền `icon`, triệt tiêu hoàn toàn thumbnail mép phải và vòng tròn xám bên trái.
+
+- **2. Quy Chuẩn Hiển Thị Hai Trạng Thái (Collapsed vs Expanded):**
+  - **Trạng thái đóng (Collapsed - Lúc chưa mở rộng):**
+    - Nếu có giỗ Hôm nay: hiển thị Tiêu đề `"Hôm nay là Ngày Giỗ của ${displayNameToday}"` (nếu $>1$ Cụ thì kèm `(+${count - 1} người khác)`).
+    - Nếu chỉ có giỗ Ngày mai: hiển thị Tiêu đề `"Ngày mai có Ngày Giỗ của ${displayNameTomorrow}"` (nếu $>1$ Cụ thì kèm `(+${count - 1} người khác)`).
+  - **Trạng thái mở rộng (Expanded - Khi kéo xuống xem chi tiết):**
+    - Bung toàn bộ nội dung gồm các khối ngày cách nhau bởi 1 dòng trống `\n\n`:
+      ```text
+      Hôm nay là Ngày Giỗ của [Danh xưng + Tên Cụ]
+      Tức ngày [DD/MM] Âm lịch!
+
+      Ngày mai có Ngày Giỗ của [Danh xưng + Tên Cụ]
+      Tức ngày [DD/MM] Âm lịch.
+      ```
+      *(Nếu ngày nào không có giỗ thì tự động ẩn phần của ngày đó).*
+
+- **3. Payload Web Push Tinh Gọn:**
+  ```json
+  {
+    "title": "Hôm nay là Ngày Giỗ của ...",
+    "body": "Hôm nay là Ngày Giỗ của ...\nTức ngày ... Âm lịch!\n\nNgày mai có Ngày Giỗ của ...\nTức ngày ... Âm lịch.",
+    "badge": "/icons/badge-72x72.png",
+    "tag": "anniversary-daily-digest",
+    "url": "/anniversaries?scope=my_lineage"
+  }
+  ```
+  *(Thuộc tính `icon` không được truyền trong payload để Service Worker không gán vào `options.icon`).*
+
+
 ---
 
 ## 7. MA TRẬN TEST CASES & TIÊU CHÍ NGHIỆM THU (TEST SPECIFICATION)
@@ -833,6 +871,10 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_EXTENDED_FAMILY_LINEAGE_SCOPE** | Thuật toán mở rộng nhánh gia đình bao gồm Bác, Chú, Cô, Vợ/Chồng, Con cái, Cháu chắt từ đời Ông Bà/Cụ | `tests/cron-anniversary.test.ts` | Cây gia phả mẫu có nhánh anh em của bố mẹ | Gọi `getExtendedFamilyMemberIds(targetId, members, spouseMap)` | Set trả về chứa cả Bác/Chú/Cô, vợ chồng và con cháu của họ | Extended Family Scope | `[x] PASS` |
 | **TC_UT_SW_ABSOLUTE_URL_AND_TAG_OPTIONS** | public/sw.js nạp URL tuyệt đối cho icon/badge và hỗ trợ tag: data.tag kèm renotify: true | `tests/pwa-manifest.test.ts` | File `public/sw.js` | Đọc mã nguồn kiểm tra showNotification options | Chứa `tag: data.tag`, `renotify: true`, và `new URL(..., self.location.origin).href` | SW Notification Parity | `[x] PASS` |
 | **TC_INT_CRON_SENDS_BOTH_TODAY_AND_TOMORROW_FOR_EXTENDED_FAMILY** | Kích hoạt Cron gửi đủ 2 thông báo khi người nhận có giỗ Bà nội (Hôm nay) và giỗ Bác/Chú (Ngày mai) | `tests/cron-anniversary.test.ts` | DB có giỗ Cụ Chăm hôm nay và Cụ Cường ngày mai, subscriber là Giáp | Gọi GET `/api/cron/anniversary-reminder` với secret hợp lệ | Bắn 2 Web Push riêng biệt cho Giáp với đúng danh xưng thân tộc và tag độc lập | Dual Extended Family Push | `[x] PASS` |
+| **TC_UT_CRON_AGGREGATED_TITLE_AND_BODY** | Thuật toán sinh tiêu đề ưu tiên Hôm nay và body đa dòng \n\n chuẩn phong cách MB/Uniqlo | `tests/cron-anniversary.test.ts` | Có người giỗ hôm nay và/hoặc ngày mai | Gọi hàm sinh payload gộp | Trả về title đúng quy tắc ưu tiên Hôm nay, body phân tách bằng `\n\n` | Digest Formatting | `[x] PASS` |
+| **TC_UT_SW_NO_LARGE_ICON_WHEN_OMITTED** | public/sw.js không gán options.icon khi payload không truyền icon | `tests/pwa-manifest.test.ts` | File `public/sw.js` | Kiểm tra logic gán options trong push listener | `options.icon` là undefined (không truyền) khi data.icon không có | Clean Notification | `[x] PASS` |
+| **TC_INT_CRON_SENDS_SINGLE_AGGREGATED_PUSH** | Cron gửi đúng 1 push duy nhất dạng gộp cho người nhận có cả giỗ hôm nay và ngày mai | `tests/cron-anniversary.test.ts` | Người nhận có giỗ Bà nội (Hôm nay) và giỗ Bác/Chú (Ngày mai) | Kích hoạt Cron với secret hợp lệ | Chỉ gửi đúng 1 web push (sent = 1) với tag `anniversary-daily-digest` và body chứa cả 2 sự kiện | Aggregated Push Dispatch | `[x] PASS` |
+
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -888,6 +930,9 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_49 (Danh Xưng Thân Tộc Cá Nhân Hóa Chuẩn Thuần Phong Mỹ Tục):** Thông báo trên điện thoại hiển thị đúng ngôi xưng hô của người nhận với người quá cố (VD: `Bà nội Nguyễn Thị Chăm`, `Bác Phạm Văn Cường`), không bị gọi "Cụ" hay "Bà" chung chung.
 - [ ] **UAT_50 (Nhận Đủ Cả 2 Thông Báo Trong Nhánh Gia Đình Mở Rộng):** Khi CSDL có giỗ của Bà nội (Hôm nay) và giỗ của Bác ruột/Chú ruột (Ngày mai) $\rightarrow$ Điện thoại nhận đầy đủ 2 thông báo song song trên màn hình khóa.
 - [ ] **UAT_51 (Icon App Hiển Thị Chuẩn Xác, Không Fallback Chữ G):** Thông báo Web Push trên Android hiển thị Logo dòng họ chữ Hán "范" màu ngọc bích sắc nét, không bị fallback về chữ G của Google.
+- [ ] **UAT_52 (Thẻ Thông Báo Web Push Dạng Phẳng Kiểu MB Bank / Uniqlo):** Nhận thông báo trên điện thoại Android $\rightarrow$ Thẻ thông báo phẳng, liền khối, hoàn toàn không xuất hiện ô thumbnail chữ 范 mép phải và không có vòng tròn xám bên trái.
+- [ ] **UAT_53 (Hiển Thị Hai Trạng Thái Collapsed & Expanded):** Khi thông báo vừa tới: Chỉ hiện 1 dòng tiêu đề ngắn gọn (ưu tiên Hôm nay). Khi kéo vuốt mở rộng: Bung đầy đủ 2 khối Hôm nay và Ngày mai cách nhau bằng 1 dòng trống `\n\n`.
+
 
 
 ---
@@ -939,6 +984,10 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG43 (Reusability of Clan Calligraphy Assets):** Các component và dữ liệu vector thư pháp `ClanHanCalligraphyWriter.tsx`, `CLAN_HAN_CALLIGRAPHY_PATH`, `hanzi-fan-data.ts` vẫn được bảo toàn nguyên vẹn trong codebase, sẵn sàng tái sử dụng cho các phân hệ văn hóa dòng họ.
 - [x] **RG44 (Bảo Vệ Xác Thực & Feature Flag Cron):** Đảm bảo cơ chế kiểm tra `CRON_SECRET` và cờ `enable_push_notifications` trong `clan_settings` vẫn hoạt động nguyên vẹn 100% khi chuyển sang Recipient-Centric Batching.
 - [x] **RG45 (Dọn Dẹp Endpoint Hỏng Cho Cả 2 Luồng Hôm Nay & Ngày Mai):** Khi Push Service trả về 404/410 ở bất kỳ luồng gửi nào (hôm nay hoặc ngày mai), endpoint hỏng vẫn được gom và xóa sạch khỏi `push_subscriptions`.
+- [x] **RG46 (Single Push Aggregation Integrity):** Đảm bảo việc gộp vào 1 push không làm thất thoát thông tin ngày giỗ nào của Hôm nay hoặc Ngày mai trong phạm vi gia đình mở rộng.
+- [x] **RG47 (Service Worker Icon Backward Compatibility):** Đảm bảo nếu có push notification từ nguồn khác gửi kèm `icon`, Service Worker vẫn hiển thị bình thường; chỉ khi `icon` khuyết/rỗng thì mới không gán `options.icon`.
+- [x] **RG48 (Dead Endpoint Cleanup with Aggregated Push):** Khi gửi tin gộp thất bại với mã lỗi 404/410, endpoint hỏng vẫn được gom và xóa sạch khỏi `push_subscriptions`.
+
 
 ---
 

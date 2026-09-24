@@ -613,3 +613,66 @@ export function getExtendedFamilyMemberIds(
   return family;
 }
 
+export interface AggregatedDigestPayload {
+  title: string;
+  body: string;
+  badge: string;
+  tag: string;
+  url: string;
+}
+
+/**
+ * Xây dựng payload thông báo Web Push dạng phẳng gộp chung (MB Bank / Uniqlo Style)
+ * - Title: Ưu tiên sự kiện Hôm nay, nếu chỉ có Ngày mai thì lấy Ngày mai
+ * - Body: Các sự kiện hôm nay và ngày mai phân tách bởi dòng trống \n\n
+ * - Không gửi kèm thuộc tính `icon` để tránh bị Android chèn Large Icon thumbnail góc phải
+ */
+export function buildAggregatedDigestPayload(
+  linkedMemberId: string,
+  matchingToday: MemberRecord[],
+  matchingTomorrow: MemberRecord[],
+  formatNameFn: (viewerId: string, deceased: MemberRecord) => string
+): AggregatedDigestPayload | null {
+  if (matchingToday.length === 0 && matchingTomorrow.length === 0) {
+    return null;
+  }
+
+  let title = '';
+  if (matchingToday.length > 0) {
+    const primaryToday = matchingToday[0];
+    const displayName = formatNameFn(linkedMemberId, primaryToday);
+    const extraCount = matchingToday.length - 1;
+    title = extraCount > 0
+      ? `Hôm nay là Ngày Giỗ của ${displayName} (+${extraCount} người khác)`
+      : `Hôm nay là Ngày Giỗ của ${displayName}`;
+  } else {
+    const primaryTomorrow = matchingTomorrow[0];
+    const displayName = formatNameFn(linkedMemberId, primaryTomorrow);
+    const extraCount = matchingTomorrow.length - 1;
+    title = extraCount > 0
+      ? `Ngày mai có Ngày Giỗ của ${displayName} (+${extraCount} người khác)`
+      : `Ngày mai có Ngày Giỗ của ${displayName}`;
+  }
+
+  const todayBlocks = matchingToday.map((ancestor) => {
+    const displayName = formatNameFn(linkedMemberId, ancestor);
+    return `Hôm nay là Ngày Giỗ của ${displayName}\nTức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch!`;
+  });
+
+  const tomorrowBlocks = matchingTomorrow.map((ancestor) => {
+    const displayName = formatNameFn(linkedMemberId, ancestor);
+    return `Ngày mai có Ngày Giỗ của ${displayName}\nTức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch.`;
+  });
+
+  const body = [...todayBlocks, ...tomorrowBlocks].join('\n\n');
+
+  return {
+    title,
+    body,
+    badge: '/icons/badge-72x72.png',
+    tag: 'anniversary-daily-digest',
+    url: '/anniversaries?scope=my_lineage',
+  };
+}
+
+

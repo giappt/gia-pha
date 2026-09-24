@@ -19,7 +19,6 @@ self.addEventListener('push', (event) => {
   let data = {
     title: 'Thông Báo Ngày Giỗ Gia Tộc',
     body: 'Hôm nay dòng họ có ngày giỗ, kính mời con cháu tưởng nhớ tổ tiên.',
-    icon: '/icons/icon-192x192.png',
     badge: '/icons/badge-72x72.png',
     url: '/anniversaries',
   };
@@ -34,12 +33,10 @@ self.addEventListener('push', (event) => {
   }
 
   const origin = self.location.origin;
-  const iconUrl = data.icon ? new URL(data.icon, origin).href : new URL('/icons/icon-192x192.png', origin).href;
   const badgeUrl = data.badge ? new URL(data.badge, origin).href : new URL('/icons/badge-72x72.png', origin).href;
 
   const options = {
     body: data.body,
-    icon: iconUrl,
     badge: badgeUrl,
     vibrate: [200, 100, 200],
     tag: data.tag || undefined,
@@ -48,6 +45,10 @@ self.addEventListener('push', (event) => {
       url: data.url || '/anniversaries',
     },
   };
+
+  if (data.icon) {
+    options.icon = new URL(data.icon, origin).href;
+  }
 
   event.waitUntil(self.registration.showNotification(data.title, options));
 });

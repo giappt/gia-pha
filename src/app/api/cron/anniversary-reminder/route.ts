@@ -10,6 +10,7 @@ import {
   getDescendantMemberIds,
   getExtendedFamilyMemberIds,
   computeDeceasedHonorificPrefix,
+  buildAggregatedDigestPayload,
 } from '@/lib/anniversaries/anniversary-engine';
 import { findLowestCommonAncestor } from '@/lib/kinship-engine/lca-finder';
 import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
@@ -244,82 +245,42 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      // Gửi thông báo giỗ Hôm nay
-      for (const ancestor of matchingToday) {
-        const displayName = formatPersonalizedDisplayName(linkedMemberId, ancestor);
-        const title = `Hôm nay là Ngày Giỗ ${displayName}`;
-        const body = `Tức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch!`;
-        const payload = JSON.stringify({
-          title,
-          body,
-          icon: '/icons/icon-192x192.png',
-          badge: '/icons/badge-72x72.png',
-          tag: `anniversary-today-${ancestor.id}`,
-          url: '/anniversaries?scope=my_lineage',
-        });
+      // Gom toàn bộ sự kiện giỗ trong ngày thành 1 thông báo mạng duy nhất (MB Bank / Uniqlo Style)
+      const digest = buildAggregatedDigestPayload(
+        linkedMemberId,
+        matchingToday,
+        matchingTomorrow,
+        formatPersonalizedDisplayName
+      );
 
-        if (canSendPush) {
-          sendPromises.push(
-            (async () => {
-              try {
-                await webpush.sendNotification(
-                  {
-                    endpoint: sub.endpoint,
-                    keys: { p256dh: sub.p256dh_key, auth: sub.auth_key },
-                  },
-                  payload
-                );
-                totalSent++;
-              } catch (pushErr: any) {
-                totalFailed++;
-                if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
-                  deadEndpoints.push(sub.endpoint);
-                }
-              }
-            })()
-          );
-        } else {
-          totalSent++;
-        }
+      if (!digest) {
+        continue;
       }
 
-      // Gửi thông báo giỗ Ngày mai
-      for (const ancestor of matchingTomorrow) {
-        const displayName = formatPersonalizedDisplayName(linkedMemberId, ancestor);
-        const title = `Ngày mai có Ngày Giỗ ${displayName}`;
-        const body = `Tức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch.`;
-        const payload = JSON.stringify({
-          title,
-          body,
-          icon: '/icons/icon-192x192.png',
-          badge: '/icons/badge-72x72.png',
-          tag: `anniversary-tomorrow-${ancestor.id}`,
-          url: '/anniversaries?scope=my_lineage',
-        });
+      const payload = JSON.stringify(digest);
 
-        if (canSendPush) {
-          sendPromises.push(
-            (async () => {
-              try {
-                await webpush.sendNotification(
-                  {
-                    endpoint: sub.endpoint,
-                    keys: { p256dh: sub.p256dh_key, auth: sub.auth_key },
-                  },
-                  payload
-                );
-                totalSent++;
-              } catch (pushErr: any) {
-                totalFailed++;
-                if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
-                  deadEndpoints.push(sub.endpoint);
-                }
+      if (canSendPush) {
+        sendPromises.push(
+          (async () => {
+            try {
+              await webpush.sendNotification(
+                {
+                  endpoint: sub.endpoint,
+                  keys: { p256dh: sub.p256dh_key, auth: sub.auth_key },
+                },
+                payload
+              );
+              totalSent++;
+            } catch (pushErr: any) {
+              totalFailed++;
+              if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
+                deadEndpoints.push(sub.endpoint);
               }
-            })()
-          );
-        } else {
-          totalSent++;
-        }
+            }
+          })()
+        );
+      } else {
+        totalSent++;
       }
     }
 
