@@ -139,24 +139,23 @@ describe('PWA Manifest & Service Worker Compliance Test Suite (Milestone 5)', ()
     );
   });
 
-  // TC_UT_SW_NO_LARGE_ICON_WHEN_OMITTED: public/sw.js không gán options.icon khi payload không truyền icon
-  it('TC_UT_SW_NO_LARGE_ICON_WHEN_OMITTED: public/sw.js không tự ý gán icon vào showNotification options để giữ thẻ thông báo phẳng (MB/Uniqlo Style)', () => {
+  // TC_UT_SW_CALLIGRAPHY_ICON_FALLBACK: public/sw.js luôn đảm bảo options.icon trỏ về icon chữ 范, xóa bỏ hoàn toàn fallback chữ G
+  it('TC_UT_SW_CALLIGRAPHY_ICON_FALLBACK: public/sw.js luôn gán options.icon trỏ về icon chữ 范 để Android không fallback về chữ G xám', () => {
     const swPath = path.join(process.cwd(), 'public', 'sw.js');
     assert.ok(fs.existsSync(swPath), 'public/sw.js phải tồn tại');
 
     const swContent = fs.readFileSync(swPath, 'utf-8');
 
-    // 1. Kiểm tra đối tượng data mặc định không còn chứa icon: '/icons/icon-192x192.png'
-    assert.strictEqual(
+    // 1. Kiểm tra đối tượng data mặc định chứa icon: '/icons/icon-192x192.png'
+    assert.ok(
       swContent.includes("icon: '/icons/icon-192x192.png'"),
-      false,
-      'sw.js không được gán icon mặc định trong let data để tránh Android ép Large Icon sang mép phải'
+      'sw.js phải có icon mặc định trỏ về icon-192x192.png'
     );
 
-    // 2. Kiểm tra điều kiện bảo vệ chỉ gán options.icon khi data.icon có giá trị
+    // 2. Kiểm tra options.icon luôn được tạo qua new URL từ data.icon hoặc fallback tới icon-192x192.png
     assert.ok(
-      swContent.includes('if (data.icon)') && swContent.includes('options.icon = new URL('),
-      'sw.js phải có điều kiện if (data.icon) mới gán options.icon'
+      swContent.includes('const iconUrl = new URL(data.icon ||') && swContent.includes('icon: iconUrl'),
+      'sw.js phải luôn truyền options.icon = iconUrl để Chrome Android không tự chèn chữ G xám'
     );
 
     // 3. Đảm bảo badge vẫn được duy trì cho status bar và header

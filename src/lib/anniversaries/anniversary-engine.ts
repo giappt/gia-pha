@@ -616,16 +616,86 @@ export function getExtendedFamilyMemberIds(
 export interface AggregatedDigestPayload {
   title: string;
   body: string;
+  icon: string;
+  badge: string;
+  tag: string;
+  url: string;
+}
+
+export interface AnniversaryNotificationPayload {
+  title: string;
+  body: string;
+  icon: string;
   badge: string;
   tag: string;
   url: string;
 }
 
 /**
- * Xây dựng payload thông báo Web Push dạng phẳng gộp chung (MB Bank / Uniqlo Style)
- * - Title: Ưu tiên sự kiện Hôm nay, nếu chỉ có Ngày mai thì lấy Ngày mai
- * - Body: Các sự kiện hôm nay và ngày mai phân tách bởi dòng trống \n\n
- * - Không gửi kèm thuộc tính `icon` để tránh bị Android chèn Large Icon thumbnail góc phải
+ * Sinh payload Web Push thông báo giỗ Hôm nay (MB Bank / Uniqlo Grouping Style)
+ * - Title cố định: 'Lịch giỗ'
+ * - Body: Danh sách các Cụ giỗ hôm nay kèm ngày âm lịch
+ * - Tag: 'anniversary-today' để Android phân biệt với Ngày mai
+ */
+export function buildTodayAnniversaryPayload(
+  linkedMemberId: string,
+  matchingToday: MemberRecord[],
+  formatNameFn: (viewerId: string, deceased: MemberRecord) => string
+): AnniversaryNotificationPayload | null {
+  if (matchingToday.length === 0) return null;
+
+  const todayBlocks = matchingToday.map((ancestor) => {
+    const displayName = formatNameFn(linkedMemberId, ancestor);
+    return `Hôm nay là Ngày Giỗ của ${displayName}\nTức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch!`;
+  });
+
+  return {
+    title: 'Lịch giỗ',
+    body: todayBlocks.join('\n'),
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'anniversary-today',
+    url: '/anniversaries?scope=my_lineage',
+  };
+}
+
+/**
+ * Sinh payload Web Push thông báo giỗ Ngày mai (MB Bank / Uniqlo Grouping Style)
+ * - Title cố định: 'Lịch giỗ'
+ * - Body: Danh sách các Cụ giỗ ngày mai kèm ngày âm lịch
+ * - Tag: 'anniversary-tomorrow' để Android phân biệt với Hôm nay
+ */
+export function buildTomorrowAnniversaryPayload(
+  linkedMemberId: string,
+  matchingTomorrow: MemberRecord[],
+  formatNameFn: (viewerId: string, deceased: MemberRecord) => string
+): AnniversaryNotificationPayload | null {
+  if (matchingTomorrow.length === 0) return null;
+
+  const tomorrowBlocks = matchingTomorrow.map((ancestor) => {
+    const displayName = formatNameFn(linkedMemberId, ancestor);
+    return `Ngày mai có Ngày Giỗ của ${displayName}\nTức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch.`;
+  });
+
+  return {
+    title: 'Lịch giỗ',
+    body: tomorrowBlocks.join('\n'),
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'anniversary-tomorrow',
+    url: '/anniversaries?scope=my_lineage',
+  };
+}
+
+/**
+ * Xây dựng payload thông báo Web Push dạng gộp 1 thẻ duy nhất (Option 1: Single Aggregated Digest)
+ * - Title cố định: 'Lịch giỗ' (ngắn gọn, trang trọng, không trùng lặp dòng đầu thân bài)
+ * - Thân bài phân đoạn trực quan:
+ *   + Nếu có cả Hôm nay & Ngày mai: phân tách bằng đường kẻ ngang '───────────────────────'
+ *   + Nếu chỉ có 1 ngày: hiển thị đúng 2 dòng của ngày đó
+ * - icon: '/icons/icon-192x192.png' (chữ 范 xanh ngọc bích sắc nét, triệt tiêu fallback chữ G xám)
+ * - badge: '/icons/badge-72x72.png' (chuẩn alpha mask cho status bar Android)
+ * - tag: 'anniversary-daily-digest'
  */
 export function buildAggregatedDigestPayload(
   linkedMemberId: string,
@@ -635,23 +705,6 @@ export function buildAggregatedDigestPayload(
 ): AggregatedDigestPayload | null {
   if (matchingToday.length === 0 && matchingTomorrow.length === 0) {
     return null;
-  }
-
-  let title = '';
-  if (matchingToday.length > 0) {
-    const primaryToday = matchingToday[0];
-    const displayName = formatNameFn(linkedMemberId, primaryToday);
-    const extraCount = matchingToday.length - 1;
-    title = extraCount > 0
-      ? `Hôm nay là Ngày Giỗ của ${displayName} (+${extraCount} người khác)`
-      : `Hôm nay là Ngày Giỗ của ${displayName}`;
-  } else {
-    const primaryTomorrow = matchingTomorrow[0];
-    const displayName = formatNameFn(linkedMemberId, primaryTomorrow);
-    const extraCount = matchingTomorrow.length - 1;
-    title = extraCount > 0
-      ? `Ngày mai có Ngày Giỗ của ${displayName} (+${extraCount} người khác)`
-      : `Ngày mai có Ngày Giỗ của ${displayName}`;
   }
 
   const todayBlocks = matchingToday.map((ancestor) => {
@@ -664,11 +717,19 @@ export function buildAggregatedDigestPayload(
     return `Ngày mai có Ngày Giỗ của ${displayName}\nTức ngày ${ancestor.death_lunar_day}/${ancestor.death_lunar_month} Âm lịch.`;
   });
 
-  const body = [...todayBlocks, ...tomorrowBlocks].join('\n\n');
+  let body = '';
+  if (todayBlocks.length > 0 && tomorrowBlocks.length > 0) {
+    body = `${todayBlocks.join('\n')}\n───────────────────────\n${tomorrowBlocks.join('\n')}`;
+  } else if (todayBlocks.length > 0) {
+    body = todayBlocks.join('\n');
+  } else {
+    body = tomorrowBlocks.join('\n');
+  }
 
   return {
-    title,
+    title: 'Lịch giỗ',
     body,
+    icon: '/icons/icon-192x192.png',
     badge: '/icons/badge-72x72.png',
     tag: 'anniversary-daily-digest',
     url: '/anniversaries?scope=my_lineage',

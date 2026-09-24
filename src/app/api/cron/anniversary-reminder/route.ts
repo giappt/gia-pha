@@ -11,6 +11,8 @@ import {
   getExtendedFamilyMemberIds,
   computeDeceasedHonorificPrefix,
   buildAggregatedDigestPayload,
+  buildTodayAnniversaryPayload,
+  buildTomorrowAnniversaryPayload,
 } from '@/lib/anniversaries/anniversary-engine';
 import { findLowestCommonAncestor } from '@/lib/kinship-engine/lca-finder';
 import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
@@ -245,42 +247,46 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      // Gom toàn bộ sự kiện giỗ trong ngày thành 1 thông báo mạng duy nhất (MB Bank / Uniqlo Style)
-      const digest = buildAggregatedDigestPayload(
+      // Cấu hình RFC 8030 Urgency High để Google FCM đánh thức Android tức thì (< 2s) kể cả khi máy đang ngủ (Doze Mode)
+      const pushOptions = {
+        TTL: 86400,
+        urgency: 'high' as const,
+      };
+
+      // Gộp toàn bộ sự kiện giỗ trong ngày (Hôm nay & Ngày mai) vào 1 thông báo duy nhất (Option 1: Single Aggregated Digest)
+      const digestPayloadObj = buildAggregatedDigestPayload(
         linkedMemberId,
         matchingToday,
         matchingTomorrow,
         formatPersonalizedDisplayName
       );
 
-      if (!digest) {
-        continue;
-      }
-
-      const payload = JSON.stringify(digest);
-
-      if (canSendPush) {
-        sendPromises.push(
-          (async () => {
-            try {
-              await webpush.sendNotification(
-                {
-                  endpoint: sub.endpoint,
-                  keys: { p256dh: sub.p256dh_key, auth: sub.auth_key },
-                },
-                payload
-              );
-              totalSent++;
-            } catch (pushErr: any) {
-              totalFailed++;
-              if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
-                deadEndpoints.push(sub.endpoint);
+      if (digestPayloadObj) {
+        const payloadStr = JSON.stringify(digestPayloadObj);
+        if (canSendPush) {
+          sendPromises.push(
+            (async () => {
+              try {
+                await webpush.sendNotification(
+                  {
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh_key, auth: sub.auth_key },
+                  },
+                  payloadStr,
+                  pushOptions
+                );
+                totalSent++;
+              } catch (pushErr: any) {
+                totalFailed++;
+                if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
+                  deadEndpoints.push(sub.endpoint);
+                }
               }
-            }
-          })()
-        );
-      } else {
-        totalSent++;
+            })()
+          );
+        } else {
+          totalSent++;
+        }
       }
     }
 

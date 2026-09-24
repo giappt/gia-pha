@@ -170,6 +170,20 @@ describe('PWA Assets & Calligraphy Stroke Animation Test Suite (Milestone 5 - Se
     assert.ok(fs.statSync(iconMaskablePath).size > 5000, 'icon-512x512-maskable.png phải có dung lượng ảnh nét cao');
   });
 
+  // TC_UT_BADGE_MONOCHROME_ALPHA: File badge-72x72.png tồn tại, là ảnh PNG chuẩn với nền trong suốt alpha silhouette
+  it('TC_UT_BADGE_MONOCHROME_ALPHA: File badge-72x72.png tồn tại, là PNG chuẩn hỗ trợ alpha mask cho Android Notification', () => {
+    const badgePath = path.resolve(process.cwd(), 'public/icons/badge-72x72.png');
+    assert.ok(fs.existsSync(badgePath), 'badge-72x72.png phải tồn tại');
+
+    const stat = fs.statSync(badgePath);
+    assert.ok(stat.size > 200, 'badge-72x72.png phải có dung lượng hợp lệ (>200 bytes)');
+
+    const buffer = fs.readFileSync(badgePath);
+    // Kiểm tra PNG magic bytes: 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A
+    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+    assert.ok(isPng, 'badge-72x72.png phải là định dạng PNG hợp lệ');
+  });
+
   // RG36: Chữ 范 chạy hoàn toàn offline không gọi CDN
   it('RG36: Zero-CDN Overhead - Dữ liệu chữ 范 hoàn toàn độc lập với cdn.jsdelivr.net', () => {
     const dataPath = path.resolve(process.cwd(), 'src/lib/pwa/hanzi-fan-data.ts');

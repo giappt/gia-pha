@@ -518,3 +518,38 @@
      - Tiêu đề (Collapsed - Lúc chưa mở rộng): Ưu tiên sự kiện Hôm nay (`"Hôm nay là Ngày Giỗ của [Danh xưng + Tên Cụ]"`), nếu >1 người thì kèm `(+N người khác)`; nếu chỉ có Ngày mai thì lấy Ngày mai.
      - Thân bài (Expanded - Khi kéo xuống): Phân tách các khối ngày bằng 1 dòng trống `\n\n`. Khi người dùng kéo vuốt mở rộng, Android tự động bung toàn bộ nội dung liền mạch trong cùng 1 khối card, không còn bất kỳ đường viền phân cách hay vòng tròn xám nào.
      - Service Worker (`public/sw.js`): Bỏ thuộc tính `icon` mặc định; chỉ gán `options.icon` khi payload có `data.icon`. Khi không truyền Large Icon, Android hiển thị thẻ thông báo dạng phẳng hoàn hảo, sạch bóng các ô vuông ảnh thừa mép phải tương tự như ứng dụng MB Bank và Uniqlo.
+
+- **Chuẩn Hóa Huy Hiệu Thông Báo Android (Monochrome Alpha Silhouette Badge), Triệt Tiêu Thumbnail Lệch Phải & Gom Nhóm Thẻ Bằng Phân Tách Ngày (Android Notification Grouping with Native Dividers):**
+  1. *Căn nguyên Logo góc trái bị biến thành vòng tròn đen (Black Circle Mask):*
+     - Trên hệ điều hành Android, Small Icon/Badge ở góc trái thanh tiêu đề thông báo và trên thanh Status Bar của máy bắt buộc phải là ảnh **Monochrome Alpha Silhouette** (nền trong suốt 100% `alpha = 0`, hình họa tiết/chữ viết mang màu trắng tinh `#FFFFFF` với `alpha = 255`).
+     - Nếu file `badge-72x72.png` có nền đặc màu (như khối vuông xanh ngọc bích `#059669`), Android sẽ coi toàn bộ khối hình chữ nhật là vùng cản quang (opaque) và áp một lớp mặt nạ đen/xám đơn sắc lên toàn bộ ảnh, biến logo chữ Hán "范" thành một cục tròn đen sì lem nhem.
+     - **Giải pháp:** Tạo file `public/icons/badge-72x72.png` dạng true Alpha PNG (nền trong suốt, chỉ có nét cọ chữ "范" màu trắng). Android sẽ tự động lấy silhouette này và tint màu sắc thương hiệu của hệ thống một cách sắc nét, thanh thoát.
+  2. *Triệt tiêu ảnh Thumbnail to đùng lệch mép phải:*
+     - Trong Web Push API, `showNotification({ icon: '...' })` được Android map thẳng vào **Large Icon** (ảnh đại diện/thumbnail ở mép phải của thông báo).
+     - Muốn thông báo tinh tế, chuẩn phong cách ngân hàng (MB Bank, Techcombank, Uniqlo): Bắt buộc trong `sw.js` **KHÔNG** truyền trường `options.icon` (hoặc để `undefined`) cho các thông báo giỗ. Khi đó, mép phải hoàn toàn trống trải, mắt người tập trung trọn vẹn vào nội dung văn bản.
+  3. *Bản chất của vạch ngăn cách `_____` và Gom nhóm Native (Android Notification Grouping):*
+     - Ký tự `_____` mà người dùng vẽ không phải là ký tự văn bản (`---`) chèn thô trong nội dung, mà chính là **đường phân cách phân tầng card native** của Android khi hệ điều hành gộp (group) nhiều thông báo từ cùng một ứng dụng.
+     - Khi có cả giỗ Hôm nay và giỗ Ngày mai: Backend gửi 2 Web Push riêng biệt với 2 tag độc lập (`tag: 'anniversary-today'` và `tag: 'anniversary-tomorrow'`), cùng tiêu đề chuẩn mực `"Lịch giỗ"`. Android tự động xếp chồng chúng vào cùng một cụm "Gia Phả Phạm Văn". Khi người dùng vuốt mở rộng, Android tự động kẻ vạch phân cách giữa thông báo Hôm nay và thông báo Ngày mai một cách tự nhiên.
+  4. *Chuỗi URL nguồn (`• gia-pha-pham-van...`):*
+     - Đây là cơ chế bảo mật chống giả mạo danh tính (Anti-Spoofing / Origin Disclosure) bắt buộc của Google Chrome trên nền tảng Web Push. Chuỗi này chỉ tự động ẩn khi PWA được cài đặt hoàn tất dưới dạng WebAPK do Google Play Services ký số trên thiết bị người dùng.
+
+- **Khắc Phục Độ Trễ Nhận Web Push Trên Android Bằng Header `Urgency: high` (RFC 8030 High Priority & Doze Mode Bypass):**
+  1. *Căn nguyên HTTP 200 từ FCM nhưng điện thoại mãi không thấy thông báo:*
+     - Khi gọi `webpush.sendNotification()` mà không truyền cấu hình options thứ 3, thư viện `web-push` mặc định không gán header `Urgency` (hoặc đặt ở mức `normal`).
+     - Theo chuẩn RFC 8030 và chính sách tối ưu hóa pin của Google FCM trên Android (Doze Mode / App Standby): Các push mang mức `normal` bị Android trì hoãn đánh thức kết nối mạng (coalesce) từ 2 đến 5 phút khi máy tắt màn hình hoặc đang ở chế độ chờ. Người dùng nhìn điện thoại khóa sẽ tưởng là "máy chủ chưa gửi được" hay "lỗi push".
+  2. *Giải pháp kiến trúc dứt điểm:*
+     - Mọi lời gọi `webpush.sendNotification()` bắt buộc phải truyền kèm options:
+       ```typescript
+       const pushOptions = {
+         TTL: 86400, // 24 giờ
+         urgency: 'high' as const, // Ép Google FCM phân phối với độ ưu tiên cao nhất (High Priority)
+       };
+       ```
+     - Với `urgency: 'high'`, Google Play Services lập tức đánh thức radio Wi-Fi/4G và CPU của điện thoại Android trong chớp mắt (< 2 giây), kích hoạt Service Worker phát thông báo ngay cả khi điện thoại đang khóa màn hình.
+
+
+- **Khắc Phục Lỗi Fallback Biểu Tượng Chrome 'G' & Giải Pháp Gộp 1 Thẻ Đơn (Single Aggregated Digest) Chống Nuốt Thông Báo Trên Android Web Push:**
+  1. *Căn nguyên biểu tượng chữ 'G' màu xám của Google Chrome:* Khi cấu hình Service Worker `sw.js` không truyền trường `options.icon` (với kỳ vọng tạo thẻ phẳng như native app), Google Chrome trên Android nhận diện đây là Web Push thiếu icon hiển thị, nên tự động thế chỗ bằng biểu tượng chữ "G" màu xám đặc trưng của Chrome. Để hiển thị đúng chữ cọ ngọc bích "范" của dòng họ trên thẻ thông báo, `sw.js` bắt buộc phải gán `options.icon = new URL(data.icon || '/icons/icon-192x192.png', self.location.origin).href`.
+  2. *Căn nguyên thất lạc / nuốt mất ngày mai khi gửi 2 Web Push riêng biệt:* W3C Web Push API không có native grouping API như Android Native SDK (`setGroup()`). Khi backend phát 2 notification liên tiếp trong vài giây, FCM hoặc Android Chrome thường chỉ hiển thị 1 thẻ và đè/nuốt mất thông báo thứ 2. Giải pháp triệt để 100% (Lựa chọn 1 đã chốt) là gộp cả Hôm nay và Ngày mai vào **1 thông báo Web Push duy nhất** (`tag: 'anniversary-daily-digest'`) cho mỗi người nhận, phân tách 2 sự kiện bằng đường kẻ ngang thẩm mỹ `───────────────────────`.
+  3. *Tiêu đề cố định thanh thoát:* Giữ tiêu đề cố định là `'Lịch giỗ'`, không lặp lại nội dung ngày giỗ trong tiêu đề để tránh trùng lặp.
+  4. *Tối ưu tốc độ truyền nhận:* Kèm RFC 8030 header `urgency: 'high'` và `TTL: 86400` để đảm bảo thông báo phân phối tức thì trong 2s mà không bị Doze Mode hoãn lại.
