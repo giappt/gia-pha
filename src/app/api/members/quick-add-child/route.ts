@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { extractUserProfileFromRequest } from '@/lib/auth/permissions';
+import { extractUserProfileFromRequest, extractFeatureFlagsFromRequest } from '@/lib/auth/permissions';
 import { canUserManageMember } from '@/lib/claims/claim-engine';
 import { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import { BranchNode } from '@/types/database';
@@ -100,6 +100,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Xác thực quyền: canUserManageMember
+    if (userProfile.user_role === 'claimed_member') {
+      const featureFlags = await extractFeatureFlagsFromRequest(request);
+      if (!featureFlags.allow_member_self_edit) {
+        return NextResponse.json(
+          { success: false, error: 'Tính năng tự chỉnh sửa thông tin gia đình đang tạm thời bị khóa bởi Ban Quản Trị' },
+          { status: 403 }
+        );
+      }
+    }
+
     const canManage = canUserManageMember(
       userProfile,
       parentId,

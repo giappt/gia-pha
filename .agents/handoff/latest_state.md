@@ -3,7 +3,7 @@
 - Dự án: FAT - Family Tree Management System (Next.js 14 App Router, TypeScript, TailwindCSS, Supabase PostgreSQL).
 - Milestone 8: Member Onboarding & Decentralized Approval.
   + Phase 1: Onboarding, Form Nhận/Nối Người Thân & Refinement UX (Hoàn thành 100%).
-  + Phase 2: Quyền Tự Quản Tiểu Gia Đình & Ngữ Cảnh Thao Tác Trong Drawer (Anti-Pill & Contextual Actions, Hoàn thành 100%).
+  + Phase 2: Quyền Tự Quản Gia Đình Của Bạn & Ngữ Cảnh Thao Tác Trong Drawer (Anti-Pill & Contextual Actions, Hoàn thành 100%).
   + Phase 2.5: Quản Trị Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc Drawer (Hoàn thành 100%):
     * Lõi RBAC Tam Đại: Mở rộng `canUserManageMember` trong `src/lib/claims/claim-engine.ts` cho phép ông bà ($F_0$) quản lý/sửa hồ sơ cháu trực hệ ($F_2$).
     * Edge Case 9: Tự động thu hồi quyền sửa của $F_0$ khi cháu ($F_2$) hoặc cha/mẹ ($F_1$) đã tự nhận tài khoản riêng (`linked_user_id` / `claimed_by`).
@@ -25,7 +25,7 @@
 
 ### 2. Task Checklist
 - [x] Phase 1: Onboarding, Form Nhận/Nối Người Thân & Refinement UX
-- [x] Phase 2: Quyền Tự Quản Tiểu Gia Đình & Ngữ Cảnh Thao Tác Trong Drawer (Anti-Pill & Contextual Actions)
+- [x] Phase 2: Quyền Tự Quản Gia Đình Của Bạn & Ngữ Cảnh Thao Tác Trong Drawer (Anti-Pill & Contextual Actions)
 - [x] Phase 2.5: Quản Trị Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc Drawer
 - [ ] Phase 3: Phê Duyệt Phân Tán (3 tầng), Cơ Chế Ủy Quyền Cho Trưởng Chi & Cổng Quản Trị Chi Nhánh (`/branch`)
 

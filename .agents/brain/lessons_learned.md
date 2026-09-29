@@ -1,5 +1,25 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
+- **Đồng Bộ Ma Trận Phân Quyền & Cờ Tính Năng Kill Switch Quản Trị Rủi Ro Dữ Liệu Gia Tộc (Role Matrix Sync & Risk Governance Kill Switch):**
+  1. *Căn nguyên rủi ro (Data Sprawl & Governance Dilemma):* Khi trao quyền cho con cháu (`claimed_member`) tự quản lý gia đình của mình (thêm vợ con, sửa hồ sơ), hệ thống đối mặt với nguy cơ mất kiểm soát dữ liệu nếu có sự cố nhập liệu sai lệch hàng loạt hoặc trong thời gian dòng họ cần "chốt sổ phả hệ" để in ấn, đối soát. Nếu chỉ dựa vào quyền RBAC cứng, BQT buộc phải hạ quyền từng tài khoản rất phức tạp.
+  2. *Giải pháp Kill Switch 2 Tầng (Feature Flag + RBAC Synergy):*
+     - Bổ sung Cờ Tính Năng `allow_member_self_edit` (mặc định `true`) tại `/admin/features`. Khi BQT tắt cờ này:
+       * Ở Backend API (`POST /api/members`, `PUT /api/members/[id]`, `POST /api/members/quick-add-child`): Chặn tức thì các yêu cầu ghi từ `claimed_member` với mã HTTP 403 Forbidden kèm thông báo rõ ràng "Ban Quản Trị đang tạm đóng tính năng tự sửa thông tin gia đình để đối soát dữ liệu phả hệ". Các vai trò `super_admin` và `branch_editor` vẫn thực hiện tác vụ bình thường theo thẩm quyền.
+       * Ở Frontend (`MemberDetailDrawer.tsx`): Ẩn toàn bộ nút thêm/sửa của `claimed_member` và hiển thị Banner thông báo tạm khóa với icon `Lock` trang nhã.
+  3. *Đồng bộ Ma Trận Phân Quyền (`/admin/roles`):*
+     - Ma trận quyền bắt buộc phản ánh chuẩn xác thực tế: `manage_own_family` (Gia Đình Của Bạn) và `review_family_claims` (Duyệt con cháu) bật `true` cho `claimed_member`, trong khi các quyền quản lý toàn chi / toàn tộc được bảo vệ nghiêm ngặt.
+     - Mô tả vai trò `ROLES_META` phải nằm trong tầng lib (`admin-engine.ts`) để Next.js App Router không báo lỗi Typecheck khi build (tránh vi phạm quy ước export của Next.js App Router `page.tsx`).
+  4. *Chuẩn hóa Thuật Ngữ Văn Hóa Gia Tộc (Cultural Terminology Harmony):*
+     - Thay thế hoàn toàn cụm từ mang tính hành chính cứng nhắc *"Tiểu Gia Đình"* bằng *"Gia Đình Của Bạn"* trên toàn bộ hệ thống (Sidebar, Header, Claims Client, Thông báo Drawer, Test Suite), mang lại cảm giác ấm áp, tôn kính và gần gũi với con cháu dòng họ.
+
+- **Bảo Vệ Tính Bất Biến Kiến Trúc & Chống Thoái Lui Thiết Kế (Anti-Drift Architectural Invariant & Zero Tab Mutation):**
+  1. *Căn nguyên thoái lui (Local Optimization Trap):* Khi thiết kế tính năng mới (như Milestone 8 Phê duyệt phân tán), thói quen tạo route con độc lập (`/branch`) với container `max-w-5xl` và thanh Tab ngang (`activeTab`) đã phá vỡ toàn bộ cấu trúc chuẩn mực của `AdminShell` (Sidebar 256px + Fluid Canvas 100%) mà Milestone 7 đã chốt. Việc chuyển đổi giữa 2 tab (bảng 4 cột vs dropdown + empty box) gây co giật kích thước, méo mó thị giác và làm đứt gãy trải nghiệm quản trị dòng họ.
+  2. *Giải pháp kiến trúc nhất quán:*
+     - Mọi chức năng quản lý/xét duyệt bắt buộc dùng `AdminShell` tại route chính thức `/admin/claims`, điều hướng bằng Menu Items trên `AdminSidebar` (nhóm Thành Viên & Tài Khoản).
+     - Phân quyền (Super Admin, Trưởng Chi, Bố Mẹ) là cơ chế scoping/filtering dữ liệu, không được đẻ ra các trang web "nhái" cô lập ngoài hệ thống.
+     - Triệt tiêu hoàn toàn Tab ngang làm nhảy lề; sử dụng Filter Bar phẳng có Branch Selector cho Super Admin; Bố Mẹ duyệt con cái qua Drawer ngữ cảnh trên Cây.
+  3. *Quy tắc Chống Lệch Tài Liệu (Anti-Drift Rule):* Thiết lập luật `[R-SPEC.INVARIANT]` và Bước 2 Invariant Audit Gate trong `/feature-spec` (đã đồng bộ vào Global Profile `software-engineer` v8). Mọi bản Spec bắt buộc phải đối chiếu chéo 5 System Invariants trước khi sinh test và code.
+
 - **Tieu Chuan The Lich Gio Mobile 3 Dong & Icon Cham Vien (Mobile Flush Calendar Icon & 3-Line Header):**
   1. *Icon cham vien the ngoai:* Tren mobile, icon lich thu nho (58px) cham khit mep tren va mep trai cua the ngoai (tuong tu nhu the PC), bo theo goc rounded-2xl cua the ngoai nho overflow-hidden, khong bi lo lung boi padding.
   2. *Header 3 dong ro rang:* Ben phai icon gom chinh xac 3 dong: (1) Nhan trang thai (Hom nay / Ngay mai / Con X ngay); (2) Ngay am lich (19/8 Am Lich); (3) So nguoi gio (X nguoi gio). Toan bo phan duoi danh tron 100% be ngang cho Ho ten va nut Xem Cay o mep phai.
@@ -33,7 +53,7 @@
      - *Dòng 3 (Trạng thái sinh tử, Niên kỷ & Hôn nhân):* Điểm chấm màu hoặc icon tối giản (`● Còn sống` xanh ngọc bích pulse / `● Đã mất` màu đá) kết hợp tuổi đời (`Hưởng thọ 78 tuổi`) và trạng thái hôn phối (`· Tái giá (2018)`).
      - *Kết quả:* Không gian thoáng đãng, phân cấp thông tin mạch lạc, bảo tồn nguyên vẹn tinh thần Modern Vietnamese Heritage trang trọng và đĩnh đạc.
 
-- **Ủy Quyền Quản Lý Tiểu Gia Đình Bán Tập Trung & Rào Chắn Con Tự Lập (Decentralized Household Governance & Autonomous Child Guard):**
+- **Ủy Quyền Quản Lý Gia Đình Của Bạn Bán Tập Trung & Rào Chắn Con Tự Lập (Decentralized Household Governance & Autonomous Child Guard):**
   1. *Ranh giới quyền hạn hạt nhân (Household-level Scope):* Người dùng đã nhận hồ sơ (`claimed_member`) được trao quyền tự động cập nhật bản thân, người phối ngẫu và thêm con đẻ trực tiếp (`canUserManageMember`) mà không cần trải qua cổng phê duyệt rườm rà.
   2. *Bảo vệ cấu trúc bất biến (Immutable Structural Integrity):* Khi `claimed_member` gọi API cập nhật (`PUT /api/members/[id]`), backend server bắt buộc phải lọc bỏ/xóa triệt để các trường cấu trúc (`generation_level`, `branch_name`, `father_id`, `mother_id`). Người dùng chỉ được sửa đổi thông tin nhân khẩu (họ tên, bí danh, năm sinh, nơi an táng, tiểu sử, avatar), tuyệt đối không thể tự ý đổi thế hệ hay nhảy nhánh.
   3. *Khóa vĩnh viễn quyền Xóa với Chủ hộ (Strict Restrict Deletion):* `claimed_member` tuyệt đối không có quyền xóa bất kỳ thành viên nào (kể cả con đẻ vừa tạo). Thao tác xóa node có nguy cơ gãy cành đồ thị, chỉ `super_admin` và `branch_editor` mới có quyền xóa các node lá an toàn.
@@ -663,7 +683,7 @@
   1. *Phân quyền Phê duyệt 3 Tầng theo Huyết Thống (`canUserReviewClaim`):*
      - **Tầng 1 (Super Admin):** Toàn quyền xử lý, duyệt, từ chối và ủy quyền (`assign`) bất kỳ phiếu nào trên toàn hệ thống.
      - **Tầng 2 (Branch Editor / Trưởng Chi):** Được phân quyền kiểm duyệt hàng đợi scoped theo chi nhánh (`assigned_branch_code`) hoặc khi được Super Admin phân công đích danh (`assigned_to`). Kiểm tra huyết thống cây con phụ hệ thông qua `resolveMemberBranchHierarchy` để cho phép Trưởng Chi (dù ở đời thấp) vẫn quản lý và duyệt toàn diện con cháu trong Chi phụ trách.
-     - **Tầng 3 (Bố Mẹ / Chủ Hộ `claimed_member`):** Nhận diện điểm chạm gia đình tức thì ngay tại trang chủ (`IdentityContextWidget`). Bố Mẹ có quyền duyệt 1-chạm chấp thuận hoặc từ chối phiếu con ruột xin nối vào tiểu gia đình mình mà không cần chờ Ban Quản Trị can thiệp.
+     - **Tầng 3 (Bố Mẹ / Chủ Hộ `claimed_member`):** Nhận diện điểm chạm gia đình tức thì ngay tại trang chủ (`IdentityContextWidget`). Bố Mẹ có quyền duyệt 1-chạm chấp thuận hoặc từ chối phiếu con ruột xin nối vào Gia Đình Của Bạn mình mà không cần chờ Ban Quản Trị can thiệp.
   2. *Kỷ Luật Thiết Kế Anti-Pill Trong Giao Diện Quản Trị & Cổng Chi Nhánh:*
      - Tuyệt đối CẤM lạm dụng `rounded-full` làm pill badges sặc sỡ bọc trạng thái, đời, chi hay nút bấm (gây cảm giác đồ chơi, đại trà).
      - Thay thế bằng **Typography Phân Cấp (Typography Hierarchy)**: Tên thành viên/chi nhánh in đậm, đời và chi dùng text mộc thanh mảnh ngăn cách bằng dấu chấm trung tâm (`·`).
@@ -681,3 +701,33 @@
      - **Bố cục 2 Nửa Liền Mạch trên PC (Desktop Horizontal Layout):** Nửa bên trái là tờ lịch bloc nguyên bản (rộng 185px); nửa bên phải là thông tin người giỗ (trắng ngà, vừa khít chiều cao, không có hố đen khoảng trống thừa).
      - **Tờ Lịch Dọc Tự Nhiên trên Mobile (Mobile Vertical Flow):** Trên điện thoại di động, bảo toàn 100% hình hài tờ lịch bloc đứng truyền thống. Người dùng cầm máy dọc đọc thông tin liền mạch từ trên xuống dưới, tên thành viên dàn thẳng hàng trên 1 dòng, tuyệt đối không bị rớt chữ.
      - **Danh Sách Lịch Giỗ Phẳng Tinh Giản (Clean Agenda List):** Loại bỏ toàn bộ border-l-4 bôi mép. Mỗi ngày là một dòng phẳng thanh lịch: bên trái là con dấu lịch bloc thu nhỏ (68px), bên phải là danh sách các cụ giỗ thẳng thớm, ngăn cách bằng đường hairline siêu mảnh 1px.
+
+- **Đồng Nhất Điểm Chạm Phê Duyệt (Unified Entry Point), Bảng Phẳng Zero Layout Shift, và Deep Zoom Camera (Milestone 8 - Phase 3.2-3.5):**
+  1. *Đồng nhất Entry Point & Tinh gọn Navbar:* Phê duyệt hồ sơ bản chất là một nghiệp vụ chung duy nhất, chỉ khác nhau về phạm vi (Scope). Việc phân mảnh liên kết trên Navbar làm rác thanh điều hướng công cộng của toàn phả. Dọn sạch Navbar chỉ giữ 3 tính năng công cộng (`Cây Gia Phả`, `Lịch Giỗ`, `Xưng hô`) và quy tụ mục `[ 📋 Phê Duyệt Hồ Sơ ]` vào Dropdown Avatar của người dùng (`AuthButton.tsx`), kèm badge số lượng chờ duyệt. Cả Bố Mẹ, Trưởng Chi và Super Admin đều vào cùng một điểm chạm này để xử lý công việc.
+  2. *Cổng Phê Duyệt Phẳng Chuẩn Settings & Triệt Tiêu Co Giật Trang (Zero Layout Shift):*
+     - Triệt tiêu card viền xám trôi nổi và tab gạch chân làm nhảy lề. Dùng khung cố định `max-w-5xl mx-auto`, icon bo góc `rounded-xl` viền mảnh hairline.
+     - Cấu trúc bảng cố định chiều rộng (`table-fixed` với tỷ lệ chuẩn `w-[38%]`, `w-[22%]`, `w-[15%]`, `w-[25%]`) ngăn chặn 100% hiện tượng co giật lề hoặc rung lắc cột khi chuyển tab hoặc lọc dữ liệu.
+     - Khử Anti-Pill: Tuyệt đối không dùng `rounded-full` làm button hay badge; nút bấm dùng `rounded-lg`, badge dùng `rounded px-1.5 py-0.2`, dùng dấu chấm trung tâm `·` để phân cấp typography.
+  3. *Chống Xả Rác 52 Người Cho Super Admin (Branch Selector):*
+     - Với tài khoản Quản trị toàn tộc, việc xả phẳng hàng chục/hàng trăm thành viên ra màn hình gây rác mắt và quá tải nhận thức.
+     - Mặc định: Chỉ hiển thị danh sách các phiếu CẦN DUYỆT.
+     - Khi muốn tra cứu nhân khẩu theo Chi: Super Admin chủ động chọn Chi từ Dropdown (`super-admin-branch-selector`) để hiển thị con cháu thuộc Chi đó kèm bộ lọc theo đời và ô tìm kiếm tức thì.
+  4. *Tương tác Deep Zoom Camera & Highlight Node Trên Cây Phả Hệ (`/tree?focus=...`):*
+     - Nhấp nút `[🎯 Cây]` từ Cổng Phê Duyệt dẫn tới `/tree?focus={member_id}`.
+     - Next.js PageProps type constraint: Khi nhận `searchParams` trong Next.js App Router Page, kiểu bắt buộc phải là `{ [key: string]: string | string[] | undefined }` (không gán giá trị mặc định `= {}` vì Next.js type check coi `undefined` là vi phạm `PageProps`).
+     - `FamilyTreeCanvas` lắng nghe `initialFocusMemberId`: tự động bỏ qua `fitView` toàn phả đồ, lia camera mượt mà vào đúng tâm node `setCenter(node.x + 100, node.y + 48, { zoom: 1.15, duration: 800 })`, mở `MemberDetailDrawer`, và kích hoạt hiệu ứng viền phát sáng `animate-pulse shadow-emerald-500/50 shadow-lg` trong 2.5s rồi tự tắt.
+
+- **Thêm Vợ/Chồng Gia Đình Của Bạn Cho Claimed Member & Cách Ly Sidebar Cổng Phê Duyệt (Milestone 8 - Phase 3.6):**
+  1. *Căn nguyên lỗi thêm vợ/chồng 403 & Lệch đời:*
+     - Khi thành viên đã gắn node (`claimed_member`, ví dụ Đời 13) bấm `+ Thêm vợ` trên Drawer, frontend gửi `spouse_id = A`.
+     - Tuy nhiên backend trước đó chỉ kiểm tra `parentId`, khiến `targetManageId` bị `undefined`, dẫn đến lỗi HTTP 403 *"Thành viên chỉ có quyền thêm con hoặc vợ/chồng cho Gia Đình Của Bạn của mình"*.
+     - Đồng thời, khi không có `parentId`, nếu không kiểm tra `spouse_id`, thế hệ của người mới bị rơi vào fallback `generation_level = 1`, làm người vợ Đời 13 biến thành Đời 1 (bậc Cụ Thủy Tổ).
+     - *Giải pháp:* Nhận diện `const targetManageId = parentId || body.spouse_id || (body as any).current_spouse_id;` và gán thế hệ kế thừa chính xác theo bạn đời: `generationLevel = spouse.generation_level || 1;` (Generation Parity).
+  2. *Căn nguyên lỗi kẹt cửa Cổng Phê Duyệt & Cô Lập Sidebar (Sidebar Isolation):*
+     - Khi `claimed_member` bấm lối tắt `[ 📋 Phê Duyệt Hồ Sơ ]` từ Dropdown Avatar trỏ tới `/admin/claims`, họ bị `AdminLayout` chặn cửa và đá về trang chủ với thông báo *"Bạn không có quyền Super Admin"*.
+     - Đồng thời, nếu mở toang cửa admin thì `AdminSidebar` lại hiển thị toàn bộ 4 nhóm quản trị nhạy cảm (Căn cước dòng họ, Quản lý tài khoản, Nạp dữ liệu Excel...) vốn chỉ dành cho Super Admin.
+     - *Giải pháp:*
+       - Trong `middleware.ts`: Forward header `x-pathname` vào request và response headers.
+       - Trong `AdminLayout`: Cho phép `claimed_member` truy cập nếu đường dẫn bắt đầu bằng `/admin/claims`. Nếu họ cố truy cập các trang quản trị khác ngoài khu vực này, lập tức chuyển hướng về trang chủ.
+       - Truyền `userRole` từ Server Component layout xuống `AdminShell` và `AdminSidebar`.
+       - Trong `AdminSidebar`: Khi `userRole === 'claimed_member'`, kích hoạt chế độ cô lập Sidebar (Sidebar Isolation): ẩn sạch 4 nhóm quản trị hệ thống, chỉ hiển thị duy nhất nhóm **`Gia Đình Của Bạn`** với mục **`[ 📋 Phê Duyệt Hồ Sơ Con Cháu ]`** (kèm badge số lượng chờ duyệt) và chân sidebar **`[ ⬅️ Về Cây Gia Phả ]`**, huy hiệu hiển thị trang trọng `Con Cháu`.

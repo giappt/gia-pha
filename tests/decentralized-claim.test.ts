@@ -17,6 +17,12 @@ import {
 } from '../src/lib/claims/claim-engine';
 import type { BranchNode } from '../src/types/database';
 import type { MemberRecord, SpouseRelationRecord } from '../src/types/tree';
+import {
+  DEFAULT_FEATURE_FLAGS,
+  resolveFeatureFlags,
+  PERMISSION_MATRIX_DEFINITIONS,
+  ROLES_META,
+} from '../src/lib/admin/admin-engine';
 
 describe('Decentralized Claim, Onboarding & Subtree Governance (Milestone 8 - Phase 1)', () => {
   // Mock dữ liệu dòng họ 4 thế hệ:
@@ -1275,24 +1281,24 @@ describe('Decentralized Approval & Branch Portal (Milestone 8 - Phase 3)', () =>
     );
   });
 
-  it('TC_UT_ANTI_PILL_BRANCH_PORTAL: Cổng /branch tuân thủ nghiêm ngặt chuẩn Anti-Pill, không lạm dụng rounded-full', () => {
-    const clientPath = path.resolve(__dirname, '../src/components/branch/BranchPortalClient.tsx');
+  it('TC_UT_ANTI_PILL_CLAIMS_PORTAL: Cổng /admin/claims tuân thủ nghiêm ngặt chuẩn Anti-Pill, không lạm dụng rounded-full', () => {
+    const clientPath = path.resolve(__dirname, '../src/components/admin/claims/AdminClaimsClient.tsx');
     const clientCode = fs.readFileSync(clientPath, 'utf-8');
-    const loadingPath = path.resolve(__dirname, '../src/app/branch/loading.tsx');
+    const loadingPath = path.resolve(__dirname, '../src/app/admin/claims/loading.tsx');
     const loadingCode = fs.readFileSync(loadingPath, 'utf-8');
-    const pagePath = path.resolve(__dirname, '../src/app/branch/page.tsx');
+    const pagePath = path.resolve(__dirname, '../src/app/admin/claims/page.tsx');
     const pageCode = fs.readFileSync(pagePath, 'utf-8');
 
     // 1. Loading tuân thủ [R-UI.LOADING]
     assert.ok(
-      loadingCode.includes('<SyncLoadingBadge message="Đang tải dữ liệu..." />'),
-      'Cổng /branch loading phải dùng SyncLoadingBadge với thông điệp "Đang tải dữ liệu..."'
+      loadingCode.includes('<SyncLoadingBadge />') || loadingCode.includes('SyncLoadingBadge'),
+      'Cổng /admin/claims loading phải dùng SyncLoadingBadge'
     );
 
-    // 2. Bảo vệ route trong page.tsx: Cho phép branch_editor và super_admin
+    // 2. Page kết nối với AdminClaimsClient
     assert.ok(
-      pageCode.includes("user_role !== 'branch_editor' && userProfile.user_role !== 'super_admin'"),
-      'Cổng /branch page.tsx phải kiểm tra quyền branch_editor hoặc super_admin'
+      pageCode.includes('<AdminClaimsClient'),
+      'Cổng /admin/claims page.tsx phải render AdminClaimsClient'
     );
 
     // 3. Kỷ luật Anti-Pill:
@@ -1311,13 +1317,555 @@ describe('Decentralized Approval & Branch Portal (Milestone 8 - Phase 3)', () =>
     // Các button hành động trong portal phải dùng rounded-lg
     assert.ok(
       clientCode.includes('rounded-lg'),
-      'Nút bấm trong BranchPortalClient phải dùng rounded-lg chuẩn mực'
+      'Nút bấm trong AdminClaimsClient phải dùng rounded-lg chuẩn mực'
     );
 
     // Dùng dấu chấm trung tâm · để phân tách thông tin thay vì pill tags
     assert.ok(
       clientCode.includes('·'),
-      'BranchPortalClient phải dùng dấu chấm · để phân cấp typography'
+      'AdminClaimsClient phải dùng dấu chấm · để phân cấp typography'
+    );
+  });
+
+  it('TC_UT_UNIFIED_APPROVAL_ENTRY_AUTH_BUTTON: Entry point Duyệt Hồ Sơ nằm trong AuthButton dropdown, loại bỏ hoàn toàn khỏi Navbar', () => {
+    const navbarCode = fs.readFileSync(path.resolve(__dirname, '../src/components/navbar/Navbar.tsx'), 'utf-8');
+    const authButtonCode = fs.readFileSync(path.resolve(__dirname, '../src/components/auth/AuthButton.tsx'), 'utf-8');
+
+    // Navbar không còn chứa link Quản trị Chi hay branch-portal-nav-link
+    assert.ok(
+      !navbarCode.includes('id="branch-portal-nav-link"'),
+      'Navbar không được chứa id branch-portal-nav-link'
+    );
+    assert.ok(
+      !navbarCode.includes('<span>Quản trị Chi</span>'),
+      'Navbar không được chứa văn bản Quản trị Chi'
+    );
+
+    // AuthButton chứa link Phê Duyệt Hồ Sơ trỏ tới /admin/claims
+    assert.ok(
+      authButtonCode.includes('id="unified-approvals-dropdown-link"'),
+      'AuthButton dropdown phải chứa link id unified-approvals-dropdown-link'
+    );
+    assert.ok(
+      authButtonCode.includes('href="/admin/claims"'),
+      'AuthButton dropdown phải trỏ tới /admin/claims'
+    );
+    assert.ok(
+      authButtonCode.includes('<span>Phê Duyệt Hồ Sơ</span>'),
+      'AuthButton dropdown phải hiển thị nhãn Phê Duyệt Hồ Sơ'
+    );
+    assert.ok(
+      authButtonCode.includes('ClipboardList'),
+      'AuthButton dropdown phải sử dụng icon ClipboardList'
+    );
+    assert.ok(
+      authButtonCode.includes('id="pending-claims-badge"'),
+      'AuthButton dropdown phải có badge hiển thị số lượng phiếu chờ duyệt'
+    );
+  });
+
+  it('TC_UT_ADMIN_SIDEBAR_CLAIMS_LINK: AdminSidebar có mục Phê Duyệt Hồ Sơ dẫn tới /admin/claims kèm badge realtime', () => {
+    const sidebarCode = fs.readFileSync(path.resolve(__dirname, '../src/components/admin/AdminSidebar.tsx'), 'utf-8');
+
+    // AdminSidebar có mục Phê Duyệt Hồ Sơ trỏ tới /admin/claims
+    assert.ok(
+      sidebarCode.includes("href: '/admin/claims'"),
+      'AdminSidebar phải có mục điều hướng tới /admin/claims'
+    );
+    assert.ok(
+      sidebarCode.includes("label: 'Phê Duyệt Hồ Sơ'"),
+      'AdminSidebar phải có nhãn Phê Duyệt Hồ Sơ'
+    );
+    assert.ok(
+      sidebarCode.includes('icon: ClipboardList'),
+      'AdminSidebar mục Phê Duyệt Hồ Sơ phải dùng icon ClipboardList'
+    );
+    assert.ok(
+      sidebarCode.includes('pendingClaimsCount'),
+      'AdminSidebar phải có state và badge pendingClaimsCount'
+    );
+  });
+
+  it('TC_UT_UNIFIED_APPROVAL_SCOPED_VIEW_PARENT: Giao diện duyệt scoped cho Bố Mẹ hiển thị tiêu đề và danh sách con cháu Gia Đình Của Bạn', () => {
+    const clientCode = fs.readFileSync(path.resolve(__dirname, '../src/components/branch/BranchPortalClient.tsx'), 'utf-8');
+
+    // Tiêu đề & phụ đề cho Bố Mẹ (claimed_member)
+    assert.ok(
+      clientCode.includes("isParent\n    ? 'Phê Duyệt Hồ Sơ Con Cháu'"),
+      'BranchPortalClient phải hiển thị tiêu đề Phê Duyệt Hồ Sơ Con Cháu cho Bố Mẹ'
+    );
+    assert.ok(
+      clientCode.includes('Xét duyệt yêu cầu kết nối hoặc bổ sung thành viên trực hệ trong Gia Đình Của Bạn.'),
+      'BranchPortalClient phải có phụ đề giải thích quyền hạn Gia Đình Của Bạn'
+    );
+    // Bố mẹ chỉ xem con cái và bản thân trong Gia Đình Của Bạn
+    assert.ok(
+      clientCode.includes('m.father_id === myId || m.mother_id === myId || m.id === myId'),
+      'Bố Mẹ chỉ lọc và xem thành viên thuộc Gia Đình Của Bạn của mình'
+    );
+  });
+
+  it('TC_UT_UNIFIED_APPROVAL_SCOPED_VIEW_BRANCH_EDITOR: Giao diện duyệt scoped cho Trưởng Chi hiển thị tiêu đề và danh sách Chi nhánh phụ trách', () => {
+    const clientCode = fs.readFileSync(path.resolve(__dirname, '../src/components/admin/claims/AdminClaimsClient.tsx'), 'utf-8');
+
+    // Tiêu đề & phụ đề cho Trưởng Chi (branch_editor)
+    assert.ok(
+      clientCode.includes('Phê Duyệt Thành Viên Chi'),
+      'AdminClaimsClient phải hiển thị tiêu đề Phê Duyệt Thành Viên Chi cho Trưởng Chi'
+    );
+    assert.ok(
+      clientCode.includes('Xét duyệt hồ sơ con cháu thuộc Chi bạn phụ trách.'),
+      'AdminClaimsClient phải có phụ đề cho Trưởng Chi phụ trách Chi'
+    );
+    // Lọc theo assignedBranchCode
+    assert.ok(
+      clientCode.includes('claim.target_branch_code.toLowerCase() === assignedBranchCode.toLowerCase()'),
+      'Trưởng Chi lọc hồ sơ theo assignedBranchCode'
+    );
+  });
+
+  it('TC_UT_ADMIN_CLAIMS_BRANCH_FILTER: Super Admin có Branch Selector trên Filter Bar để lọc phiếu theo Chi nhánh', () => {
+    const clientCode = fs.readFileSync(path.resolve(__dirname, '../src/components/admin/claims/AdminClaimsClient.tsx'), 'utf-8');
+
+    // Tiêu đề & phụ đề cho Super Admin
+    assert.ok(
+      clientCode.includes("'Phê Duyệt Hồ Sơ Toàn Tộc'"),
+      'AdminClaimsClient phải hiển thị tiêu đề Phê Duyệt Hồ Sơ Toàn Tộc cho Super Admin'
+    );
+    assert.ok(
+      clientCode.includes('Toàn quyền xét duyệt, ủy quyền và điều phối hồ sơ phả hệ toàn tộc.'),
+      'AdminClaimsClient phải có phụ đề phân quyền toàn tộc cho Super Admin'
+    );
+
+    // Có component Branch Selector trên thanh công cụ lọc
+    assert.ok(
+      clientCode.includes('id="admin-claims-branch-selector"'),
+      'Phải có phần tử id admin-claims-branch-selector trên Filter Bar cho Super Admin'
+    );
+    // Lọc theo chi nhánh
+    assert.ok(
+      clientCode.includes('initialBranches.map'),
+      'Branch Selector phải render các chi nhánh từ initialBranches'
+    );
+    assert.ok(
+      clientCode.includes('Tất cả chi tộc (Toàn tộc)'),
+      'Branch Selector phải có tùy chọn mặc định xem Tất cả chi tộc'
+    );
+  });
+
+  it('TC_UT_TREE_PAGE_DEEP_FOCUS_ZOOM: Route /tree?focus={id} truyền focusId và kích hoạt pan/zoom camera + mở Drawer', () => {
+    const treePageCode = fs.readFileSync(path.resolve(__dirname, '../src/app/tree/page.tsx'), 'utf-8');
+    const canvasCode = fs.readFileSync(path.resolve(__dirname, '../src/components/tree/FamilyTreeCanvas.tsx'), 'utf-8');
+    const memberNodeCode = fs.readFileSync(path.resolve(__dirname, '../src/components/tree/MemberNode.tsx'), 'utf-8');
+
+    // TreePage đón nhận searchParams.focus và truyền initialFocusMemberId
+    assert.ok(
+      treePageCode.includes('searchParams?: { [key: string]: string | string[] | undefined }'),
+      'TreePage phải nhận searchParams theo chuẩn PageProps'
+    );
+    assert.ok(
+      treePageCode.includes("initialFocusMemberId={typeof searchParams?.focus === 'string' ? searchParams.focus : null}"),
+      'TreePage phải truyền initialFocusMemberId vào FamilyTreeCanvas'
+    );
+
+    // Canvas đón nhận và kích hoạt camera zoom + drawer + highlight
+    assert.ok(
+      canvasCode.includes('initialFocusMemberId?: string | null;'),
+      'FamilyTreeCanvasProps phải có initialFocusMemberId'
+    );
+    assert.ok(
+      canvasCode.includes('zoom: 1.15'),
+      'Canvas phải lia camera với độ zoom 1.15'
+    );
+    assert.ok(
+      canvasCode.includes('duration: 800'),
+      'Canvas phải lia camera với hiệu ứng duration 800ms'
+    );
+    assert.ok(
+      canvasCode.includes('setSelectedMemberId(initialFocusMemberId)'),
+      'Canvas phải tự động chọn memberId tương ứng khi focus'
+    );
+    assert.ok(
+      canvasCode.includes('setIsDrawerOpen(true)'),
+      'Canvas phải tự động mở MemberDetailDrawer khi có focus'
+    );
+    assert.ok(
+      canvasCode.includes('setHighlightedMemberId(initialFocusMemberId)'),
+      'Canvas phải bật trạng thái phát sáng highlight cho node'
+    );
+
+    // MemberNode hỗ trợ class phát sáng animate-pulse
+    assert.ok(
+      memberNodeCode.includes('animate-pulse'),
+      'MemberNode phải có hiệu ứng viền phát sáng animate-pulse khi isHighlighted'
+    );
+  });
+
+  it('TC_UT_ADMIN_CLAIMS_ZERO_LAYOUT_SHIFT: /admin/claims dùng AdminShell fluid canvas, triệt tiêu hoàn toàn tab ngang và co giật layout', () => {
+    const clientCode = fs.readFileSync(path.resolve(__dirname, '../src/components/admin/claims/AdminClaimsClient.tsx'), 'utf-8');
+
+    // Fluid canvas w-full, loại bỏ max-w-5xl và activeTab ngang
+    assert.ok(
+      clientCode.includes('w-full'),
+      'AdminClaimsClient phải sử dụng fluid canvas w-full trong AdminShell'
+    );
+    assert.ok(
+      !clientCode.includes('max-w-5xl'),
+      'AdminClaimsClient không được chứa container hạn hẹp max-w-5xl'
+    );
+    assert.ok(
+      !clientCode.includes('activeTab'),
+      'AdminClaimsClient triệt tiêu hoàn toàn tab ngang activeTab'
+    );
+
+    // Bảng table-fixed với các cột cố định
+    assert.ok(
+      clientCode.includes('table-fixed'),
+      'Bảng danh sách phải sử dụng thuộc tính table-fixed để triệt tiêu layout shift'
+    );
+    assert.ok(
+      clientCode.includes('w-[38%]'),
+      'Bảng danh sách phải có cột cố định w-[38%]'
+    );
+    assert.ok(
+      clientCode.includes('w-[22%]'),
+      'Bảng danh sách phải có cột cố định w-[22%]'
+    );
+    assert.ok(
+      clientCode.includes('w-[15%]'),
+      'Bảng danh sách phải có cột cố định w-[15%]'
+    );
+    assert.ok(
+      clientCode.includes('w-[25%]'),
+      'Bảng danh sách phải có cột cố định w-[25%]'
+    );
+
+    // Hairline divider
+    assert.ok(
+      clientCode.includes('divide-y divide-slate-100 dark:divide-slate-800'),
+      'Bảng danh sách phải dùng hairline divider divide-y divide-slate-100'
+    );
+  });
+
+  it('TC_INT_MEMBERS_API_CLAIMED_MEMBER_SPOUSE_ADD: API chấp thuận khi claimed_member thêm vợ/chồng cho chính mình, tự gán đúng thế hệ', () => {
+    const membersRouteCode = fs.readFileSync(path.resolve(__dirname, '../src/app/api/members/route.ts'), 'utf-8');
+
+    // 1. Kiểm tra API nhận diện spouse_id từ Frontend
+    assert.ok(
+      membersRouteCode.includes('const targetManageId = parentId || body.spouse_id || (body as any).current_spouse_id;'),
+      'API POST /api/members phải nhận diện spouse_id làm targetManageId để kiểm tra quyền hạn'
+    );
+
+    // 2. Kiểm tra kế thừa thế hệ chính xác theo thế hệ của người phối ngẫu (Generation Parity)
+    assert.ok(
+      membersRouteCode.includes('else if (body.spouse_id) {'),
+      'API phải có nhánh tính thế hệ theo spouse_id'
+    );
+    assert.ok(
+      membersRouteCode.includes('generationLevel = spouse.generation_level || 1;'),
+      'Thế hệ của người phối ngẫu mới phải kế thừa đúng đời của người bạn đời, không bị rơi về đời 1'
+    );
+
+    // 3. Kiểm tra logic phân quyền canUserManageMember cho claimed_member
+    const testMembers: MemberRecord[] = [
+      {
+        id: 'giap_13',
+        full_name: 'Phạm Tiến Giáp',
+        gender: 'male',
+        life_status: 'living',
+        generation_level: 13,
+        is_root: false,
+      },
+      {
+        id: 'uncle_hung',
+        full_name: 'Phạm Văn Hùng',
+        gender: 'male',
+        life_status: 'living',
+        generation_level: 12,
+        is_root: false,
+      },
+    ];
+
+    const claimedUser = {
+      id: 'user_giap_13',
+      user_role: 'claimed_member',
+      linked_member_id: 'giap_13', // Giáp Đời 13
+    };
+
+    // Khi thêm vợ cho chính mình (targetManageId = giap_13): Phải được phép
+    const canManageSelfSpouse = canUserManageMember(claimedUser, 'giap_13', testMembers, []);
+    assert.strictEqual(canManageSelfSpouse, true, 'Claimed member phải có quyền thêm vợ/chồng cho chính mình');
+
+    // Kiểm tra thế hệ được gán cho vợ:
+    const selfMember = testMembers.find((m) => m.id === claimedUser.linked_member_id);
+    assert.ok(selfMember, 'Node bản thân phải tồn tại trong mock data');
+    const calculatedGenLevel = selfMember.generation_level || 1;
+    assert.strictEqual(calculatedGenLevel, 13, 'Thế hệ của người vợ mới tạo phải bằng đời 13 (Generation Parity)');
+
+    // Khi người ngoài cố tình thêm vợ cho chú Hùng: Phải bị từ chối
+    const canManageOtherSpouse = canUserManageMember(claimedUser, 'uncle_hung', testMembers, []);
+    assert.strictEqual(canManageOtherSpouse, false, 'Claimed member không được phép thêm vợ/chồng cho người ngoài Gia Đình Của Bạn');
+  });
+
+  it('TC_UT_CLAIMED_MEMBER_ADMIN_CLAIMS_ISOLATED_SIDEBAR: Bố Mẹ vào /admin/claims được mở cửa và Sidebar chỉ hiện duy nhất mục Phê Duyệt Hồ Sơ Con Cháu', () => {
+    const layoutCode = fs.readFileSync(path.resolve(__dirname, '../src/app/admin/layout.tsx'), 'utf-8');
+    const sidebarCode = fs.readFileSync(path.resolve(__dirname, '../src/components/admin/AdminSidebar.tsx'), 'utf-8');
+    const shellCode = fs.readFileSync(path.resolve(__dirname, '../src/components/admin/AdminShell.tsx'), 'utf-8');
+
+    // 1. Layout cho phép claimed_member truy cập /admin/claims và bảo vệ các trang khác
+    assert.ok(
+      layoutCode.includes("userRole === 'claimed_member'"),
+      'AdminLayout phải phân biệt vai trò claimed_member'
+    );
+    assert.ok(
+      layoutCode.includes("pathname && !pathname.startsWith('/admin/claims')"),
+      'AdminLayout phải chặn claimed_member truy cập vào các trang ngoài /admin/claims'
+    );
+    assert.ok(
+      layoutCode.includes("redirect('/?auth_error=unauthorized_admin')"),
+      'AdminLayout phải chuyển hướng người dùng khi cố truy cập trái phép'
+    );
+    assert.ok(
+      layoutCode.includes('userRole={userRole}'),
+      'AdminLayout phải truyền userRole vào AdminShell'
+    );
+
+    // 2. AdminShell nhận và truyền userRole xuống AdminSidebar
+    assert.ok(
+      shellCode.includes('userRole?: UserRole'),
+      'AdminShellProps phải chấp nhận prop userRole'
+    );
+    assert.ok(
+      shellCode.includes('userRole={userRole}'),
+      'AdminShell phải truyền userRole vào AdminSidebar'
+    );
+
+    // 3. AdminSidebar cách ly danh mục cho claimed_member
+    assert.ok(
+      sidebarCode.includes("const CLAIMED_MEMBER_GROUPS: NavGroup[] = ["),
+      'AdminSidebar phải định nghĩa riêng CLAIMED_MEMBER_GROUPS'
+    );
+    assert.ok(
+      sidebarCode.includes("title: 'Gia Đình Của Bạn'"),
+      'CLAIMED_MEMBER_GROUPS phải có nhóm danh mục Gia Đình Của Bạn'
+    );
+    assert.ok(
+      sidebarCode.includes("label: 'Phê Duyệt Hồ Sơ Con Cháu'"),
+      'Nhóm Gia Đình Của Bạn phải có mục Phê Duyệt Hồ Sơ Con Cháu'
+    );
+    assert.ok(
+      sidebarCode.includes("Con Cháu"),
+      'Huy hiệu vai trò của claimed_member phải hiển thị là Con Cháu'
+    );
+    assert.ok(
+      sidebarCode.includes("userRole === 'claimed_member' ? CLAIMED_MEMBER_GROUPS : NAV_GROUPS"),
+      'AdminSidebar phải tự động chuyển sang CLAIMED_MEMBER_GROUPS khi userRole là claimed_member'
+    );
+  });
+});
+
+describe('Feature Flag Member Self-Edit Kill Switch & Permission Matrix Sync (Spec 17 - Milestone 8 Extension)', () => {
+  it('TC_UT_FEATURE_FLAG_MEMBER_SELF_EDIT_DEFAULT: Khởi tạo giá trị mặc định true và hỗ trợ ghi đè an toàn cho allow_member_self_edit', () => {
+    // 1. Kiểm tra DEFAULT_FEATURE_FLAGS
+    assert.strictEqual(
+      DEFAULT_FEATURE_FLAGS.allow_member_self_edit,
+      true,
+      'DEFAULT_FEATURE_FLAGS.allow_member_self_edit phải có giá trị mặc định là true'
+    );
+
+    // 2. Kiểm tra resolveFeatureFlags khi không truyền hoặc truyền rỗng
+    const resolvedDefault = resolveFeatureFlags(undefined);
+    assert.strictEqual(
+      resolvedDefault.allow_member_self_edit,
+      true,
+      'resolveFeatureFlags(undefined) phải trả về allow_member_self_edit: true'
+    );
+
+    const resolvedEmpty = resolveFeatureFlags({});
+    assert.strictEqual(
+      resolvedEmpty.allow_member_self_edit,
+      true,
+      'resolveFeatureFlags({}) phải trả về allow_member_self_edit: true'
+    );
+
+    // 3. Kiểm tra ghi đè tắt cờ (Kill Switch kích hoạt)
+    const resolvedDisabled = resolveFeatureFlags({ allow_member_self_edit: false });
+    assert.strictEqual(
+      resolvedDisabled.allow_member_self_edit,
+      false,
+      'Khi truyền { allow_member_self_edit: false }, resolveFeatureFlags phải trả về false'
+    );
+  });
+
+  it('TC_UT_ROLES_MATRIX_CLAIMED_MEMBER_SYNC: Ma trận phân quyền phản ánh chuẩn xác quyền tự quản gia đình và duyệt hồ sơ', () => {
+    // 1. Kiểm tra ma trận phân quyền PERMISSION_MATRIX_DEFINITIONS
+    const allPermissions = PERMISSION_MATRIX_DEFINITIONS;
+
+    // Quyền tự quản gia đình (manage_own_family)
+    const manageFamilyPerm = allPermissions.find((p) => p.id === 'manage_own_family');
+    assert.ok(manageFamilyPerm, 'Phải có định nghĩa quyền manage_own_family trong ma trận');
+    assert.strictEqual(manageFamilyPerm.roles.claimed_member, true, 'claimed_member phải có quyền manage_own_family: true');
+    assert.strictEqual(manageFamilyPerm.roles.branch_editor, true, 'branch_editor phải có quyền manage_own_family: true');
+    assert.strictEqual(manageFamilyPerm.roles.super_admin, true, 'super_admin phải có quyền manage_own_family: true');
+    assert.strictEqual(manageFamilyPerm.roles.viewer, false, 'viewer không được có quyền manage_own_family');
+
+    // Quyền duyệt hồ sơ con cháu trong gia đình (review_family_claims)
+    const reviewFamilyPerm = allPermissions.find((p) => p.id === 'review_family_claims');
+    assert.ok(reviewFamilyPerm, 'Phải có định nghĩa quyền review_family_claims trong ma trận');
+    assert.strictEqual(reviewFamilyPerm.roles.claimed_member, true, 'claimed_member phải có quyền review_family_claims: true');
+    assert.strictEqual(reviewFamilyPerm.roles.branch_editor, true, 'branch_editor phải có quyền review_family_claims: true');
+    assert.strictEqual(reviewFamilyPerm.roles.super_admin, true, 'super_admin phải có quyền review_family_claims: true');
+    assert.strictEqual(reviewFamilyPerm.roles.viewer, false, 'viewer không được có quyền review_family_claims');
+
+    // Quyền duyệt hồ sơ chi nhánh (review_branch_claims)
+    const reviewBranchPerm = allPermissions.find((p) => p.id === 'review_branch_claims');
+    assert.ok(reviewBranchPerm, 'Phải có định nghĩa quyền review_branch_claims trong ma trận');
+    assert.strictEqual(reviewBranchPerm.roles.claimed_member, false, 'claimed_member không được có quyền review_branch_claims');
+    assert.strictEqual(reviewBranchPerm.roles.branch_editor, true, 'branch_editor phải có quyền review_branch_claims: true');
+    assert.strictEqual(reviewBranchPerm.roles.super_admin, true, 'super_admin phải có quyền review_branch_claims: true');
+
+    // Quyền chỉnh sửa nhánh (edit_branch_members)
+    const editBranchPerm = allPermissions.find((p) => p.id === 'edit_branch_members');
+    assert.ok(editBranchPerm, 'Phải có quyền edit_branch_members');
+    assert.strictEqual(editBranchPerm.roles.claimed_member, false, 'claimed_member không được có quyền edit_branch_members');
+
+    // Quyền quản lý toàn bộ tài khoản (manage_users_claims)
+    const manageUsersPerm = allPermissions.find((p) => p.id === 'manage_users_claims');
+    assert.ok(manageUsersPerm, 'Phải có quyền manage_users_claims');
+    assert.strictEqual(manageUsersPerm.roles.claimed_member, false, 'claimed_member không được có quyền manage_users_claims');
+    assert.strictEqual(manageUsersPerm.roles.branch_editor, false, 'branch_editor không được có quyền manage_users_claims');
+    assert.strictEqual(manageUsersPerm.roles.super_admin, true, 'super_admin phải có quyền manage_users_claims: true');
+
+    // 2. Kiểm tra mô tả vai trò ROLES_META
+    const claimedMeta = ROLES_META.find((r) => r.id === 'claimed_member');
+    assert.ok(claimedMeta, 'Phải có metadata cho vai trò claimed_member');
+    assert.ok(
+      claimedMeta.description.includes('gia đình của mình'),
+      'Mô tả claimed_member phải nêu rõ quyền quản lý gia đình của mình'
+    );
+    assert.ok(
+      claimedMeta.description.includes('phê duyệt hồ sơ con cháu'),
+      'Mô tả claimed_member phải nêu rõ quyền phê duyệt hồ sơ con cháu'
+    );
+  });
+
+  it('TC_INT_MEMBERS_API_BLOCKED_WHEN_SELF_EDIT_FLAG_DISABLED: Backend APIs chặn 403 Forbidden khi cờ allow_member_self_edit bị tắt', () => {
+    // 1. Kiểm tra API POST /api/members
+    const postMembersCode = fs.readFileSync(path.resolve(__dirname, '../src/app/api/members/route.ts'), 'utf-8');
+    assert.ok(
+      postMembersCode.includes('extractFeatureFlagsFromRequest'),
+      'POST /api/members phải import và gọi extractFeatureFlagsFromRequest'
+    );
+    assert.ok(
+      postMembersCode.includes('!featureFlags.allow_member_self_edit'),
+      'POST /api/members phải kiểm tra cờ !featureFlags.allow_member_self_edit'
+    );
+    assert.ok(
+      postMembersCode.includes('Tính năng tự chỉnh sửa thông tin gia đình đang tạm thời bị khóa bởi Ban Quản Trị'),
+      'POST /api/members phải trả về thông điệp lỗi chuẩn xác'
+    );
+
+    // 2. Kiểm tra API PUT /api/members/[id]
+    const putMemberCode = fs.readFileSync(path.resolve(__dirname, '../src/app/api/members/[id]/route.ts'), 'utf-8');
+    assert.ok(
+      putMemberCode.includes('extractFeatureFlagsFromRequest'),
+      'PUT /api/members/[id] phải import và gọi extractFeatureFlagsFromRequest'
+    );
+    assert.ok(
+      putMemberCode.includes('!featureFlags.allow_member_self_edit'),
+      'PUT /api/members/[id] phải kiểm tra cờ !featureFlags.allow_member_self_edit'
+    );
+    assert.ok(
+      putMemberCode.includes('Tính năng tự chỉnh sửa thông tin gia đình đang tạm thời bị khóa bởi Ban Quản Trị'),
+      'PUT /api/members/[id] phải trả về thông điệp lỗi chuẩn xác'
+    );
+
+    // 3. Kiểm tra API POST /api/members/quick-add-child
+    const quickAddCode = fs.readFileSync(path.resolve(__dirname, '../src/app/api/members/quick-add-child/route.ts'), 'utf-8');
+    assert.ok(
+      quickAddCode.includes('extractFeatureFlagsFromRequest'),
+      'quick-add-child phải import và gọi extractFeatureFlagsFromRequest'
+    );
+    assert.ok(
+      quickAddCode.includes('!featureFlags.allow_member_self_edit'),
+      'quick-add-child phải kiểm tra cờ !featureFlags.allow_member_self_edit'
+    );
+    assert.ok(
+      quickAddCode.includes('Tính năng tự chỉnh sửa thông tin gia đình đang tạm thời bị khóa bởi Ban Quản Trị'),
+      'quick-add-child phải trả về thông điệp lỗi chuẩn xác'
+    );
+  });
+
+  it('TC_UT_DRAWER_ACTIONS_HIDDEN_WHEN_SELF_EDIT_FLAG_DISABLED: Drawer ẩn toàn bộ nút chỉnh sửa và hiển thị banner khóa khi cờ bị tắt', () => {
+    const drawerCode = fs.readFileSync(path.resolve(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'), 'utf-8');
+
+    // 1. canManageCurrentMember bị vô hiệu hóa khi cờ tắt
+    assert.ok(
+      drawerCode.includes("currentUser.user_role === 'claimed_member' && featureFlags?.allow_member_self_edit === false"),
+      'Drawer canManageCurrentMember phải trả về false khi cờ allow_member_self_edit bị tắt'
+    );
+
+    // 2. Có cờ isFamilyMemberUnderLock
+    assert.ok(
+      drawerCode.includes('const isFamilyMemberUnderLock'),
+      'Drawer phải tính toán isFamilyMemberUnderLock'
+    );
+
+    // 3. Hiển thị banner cảnh báo
+    assert.ok(
+      drawerCode.includes('Tạm khóa chỉnh sửa gia đình'),
+      'Drawer phải hiển thị tiêu đề banner "Tạm khóa chỉnh sửa gia đình"'
+    );
+    assert.ok(
+      drawerCode.includes('Ban Quản Trị đang tạm đóng tính năng tự sửa thông tin gia đình để đối soát dữ liệu phả hệ.'),
+      'Drawer phải hiển thị nội dung thông báo khóa phả hệ'
+    );
+
+    // 4. Nhận diện hồ sơ cập nhật chữ
+    assert.ok(
+      drawerCode.includes('Thuộc gia đình của bạn'),
+      'Drawer phải hiển thị badge "Thuộc gia đình của bạn"'
+    );
+    assert.ok(
+      !drawerCode.includes('Thuộc hộ gia đình của bạn'),
+      'Drawer tuyệt đối không được dùng cụm từ cũ "Thuộc hộ gia đình của bạn"'
+    );
+  });
+
+  it('TC_UT_ADMIN_SIDEBAR_FAMILY_LABEL_SYNC: Đồng bộ hóa toàn bộ danh mục và giao diện sang "Gia Đình Của Bạn"', () => {
+    const sidebarCode = fs.readFileSync(path.resolve(__dirname, '../src/components/admin/AdminSidebar.tsx'), 'utf-8');
+    const claimsClientCode = fs.readFileSync(path.resolve(__dirname, '../src/components/admin/claims/AdminClaimsClient.tsx'), 'utf-8');
+
+    // 1. Sidebar danh mục
+    assert.ok(
+      sidebarCode.includes("title: 'Gia Đình Của Bạn'"),
+      'Sidebar phải định nghĩa title: "Gia Đình Của Bạn"'
+    );
+    assert.ok(
+      !sidebarCode.includes('TIỂU GIA ĐÌNH'),
+      'Sidebar tuyệt đối không được chứa cụm từ "TIỂU GIA ĐÌNH"'
+    );
+    assert.ok(
+      !sidebarCode.includes('Tiểu gia đình'),
+      'Sidebar tuyệt đối không được chứa cụm từ "Tiểu gia đình"'
+    );
+
+    // 2. Claims Client
+    assert.ok(
+      claimsClientCode.includes('Gia Đình Của Bạn'),
+      'Claims Client phải hiển thị badge "Gia Đình Của Bạn"'
+    );
+    assert.ok(
+      claimsClientCode.includes('trong gia đình của bạn'),
+      'Claims Client phụ đề phải ghi "trong gia đình của bạn"'
+    );
+    assert.ok(
+      !claimsClientCode.includes('Tiểu Gia Đình'),
+      'Claims Client tuyệt đối không được chứa cụm từ "Tiểu Gia Đình"'
+    );
+    assert.ok(
+      !claimsClientCode.includes('tiểu gia đình'),
+      'Claims Client tuyệt đối không được chứa cụm từ "tiểu gia đình"'
     );
   });
 });

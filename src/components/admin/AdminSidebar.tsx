@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Shield,
   X,
+  ClipboardList,
 } from 'lucide-react';
 import FamilyTreeIcon from '../icons/FamilyTreeIcon';
 
@@ -63,6 +64,11 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'THÀNH VIÊN & TÀI KHOẢN',
     items: [
       {
+        href: '/admin/claims',
+        label: 'Phê Duyệt Hồ Sơ',
+        icon: ClipboardList,
+      },
+      {
         href: '/admin/users',
         label: 'Quản Lý Tài Khoản',
         icon: Users,
@@ -91,16 +97,51 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+const CLAIMED_MEMBER_GROUPS: NavGroup[] = [
+  {
+    title: 'Gia Đình Của Bạn',
+    items: [
+      {
+        href: '/admin/claims',
+        label: 'Phê Duyệt Hồ Sơ Con Cháu',
+        icon: ClipboardList,
+      },
+    ],
+  },
+];
+
+import type { UserRole } from '@/types/database';
+
 interface AdminSidebarProps {
   clanName?: string;
+  userRole?: UserRole;
   onCloseMobileDrawer?: () => void;
 }
 
 export default function AdminSidebar({
   clanName = 'GIA PHẢ PHẠM VĂN',
+  userRole = 'super_admin',
   onCloseMobileDrawer,
 }: AdminSidebarProps) {
   const pathname = usePathname();
+  const [pendingClaimsCount, setPendingClaimsCount] = useState<number>(0);
+
+  const activeNavGroups = userRole === 'claimed_member' ? CLAIMED_MEMBER_GROUPS : NAV_GROUPS;
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/claims/pending')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (isMounted && json?.data) {
+          setPendingClaimsCount(json.data.length);
+        }
+      })
+      .catch(() => { });
+    return () => {
+      isMounted = false;
+    };
+  }, [pathname]);
 
   const isCurrentActive = (href: string) => {
     if (href === '/admin') {
@@ -122,9 +163,19 @@ export default function AdminSidebar({
               <span className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100">
                 KHU VỰC QUẢN TRỊ
               </span>
-              <span className="px-1.5 py-0.2 text-[9px] font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 rounded">
-                Super Admin
-              </span>
+              {userRole === 'claimed_member' ? (
+                <span className="px-1.5 py-0.2 text-[9px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded">
+                  Con Cháu
+                </span>
+              ) : userRole === 'branch_editor' ? (
+                <span className="px-1.5 py-0.2 text-[9px] font-bold text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded">
+                  Ban Biên Tập Chi
+                </span>
+              ) : (
+                <span className="px-1.5 py-0.2 text-[9px] font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 rounded">
+                  Super Admin
+                </span>
+              )}
             </div>
             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
               {clanName}
@@ -146,7 +197,7 @@ export default function AdminSidebar({
 
       {/* Navigation Groups List */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-        {NAV_GROUPS.map((group) => (
+        {activeNavGroups.map((group) => (
           <div key={group.title} className="space-y-1">
             <div className="px-3 text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
               {group.title}
@@ -174,6 +225,11 @@ export default function AdminSidebar({
                         }`}
                     />
                     <span>{item.label}</span>
+                    {item.href === '/admin/claims' && pendingClaimsCount > 0 && (
+                      <span className="ml-auto text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/80">
+                        {pendingClaimsCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

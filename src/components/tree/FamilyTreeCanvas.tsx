@@ -61,6 +61,7 @@ interface FamilyTreeCanvasProps {
     linked_member_id?: string | null;
     assigned_branch_code?: string | null;
   } | null;
+  initialFocusMemberId?: string | null;
 }
 
 const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
@@ -74,10 +75,13 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   canManageTree = false,
   featureFlags,
   currentUser,
+  initialFocusMemberId,
 }) => {
   const { getNode, setCenter, fitView } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
   const { isDark } = useAppTheme();
+
+  const [highlightedMemberId, setHighlightedMemberId] = useState<string | null>(null);
 
   const [currentDataset, setCurrentDataset] = useState<'clan28' | 'polygamy' | 'clan1500'>('clan28');
   const [showMaternalBranches, setShowMaternalBranches] = useState(true);
@@ -209,16 +213,56 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
 
   // Cập nhật lại nodes và edges khi chuyển đổi tùy chọn hoặc chọn Gốc mới
   useEffect(() => {
-    setNodes(currentLayout.nodes as unknown as Node<TreeNodeData>[]);
+    const updatedNodes = currentLayout.nodes.map((n) => {
+      const isHighlighted =
+        highlightedMemberId &&
+        (n.id === highlightedMemberId || (n.data as any)?.originalMemberId === highlightedMemberId);
+      return {
+        ...n,
+        data: {
+          ...n.data,
+          isHighlighted: !!isHighlighted,
+        },
+      };
+    });
+    setNodes(updatedNodes as unknown as Node<TreeNodeData>[]);
     setEdges(currentLayout.edges);
-  }, [currentLayout, setNodes, setEdges]);
+  }, [currentLayout, highlightedMemberId, setNodes, setEdges]);
 
-  // 1. Tự động căn giữa toàn bộ cây khi các nodes hoàn tất đo đạc kích thước
+  // 1. Tự động căn giữa toàn bộ cây khi các nodes hoàn tất đo đạc kích thước (chỉ khi không có initialFocusMemberId)
   useEffect(() => {
-    if (nodesInitialized) {
+    if (nodesInitialized && !initialFocusMemberId) {
       fitView({ padding: 0.25, duration: 400 });
     }
-  }, [nodesInitialized, fitView]);
+  }, [nodesInitialized, initialFocusMemberId, fitView]);
+
+  // Xử lý Deep Zoom Camera & Highlight Node khi có initialFocusMemberId
+  useEffect(() => {
+    if (!initialFocusMemberId || !nodesInitialized) return;
+
+    // Tìm node mục tiêu
+    const targetNode =
+      getNode(initialFocusMemberId) ||
+      nodes.find(
+        (n) => n.id === initialFocusMemberId || (n.data as any)?.originalMemberId === initialFocusMemberId
+      );
+
+    if (targetNode) {
+      setCenter(targetNode.position.x + 100, targetNode.position.y + 48, {
+        zoom: 1.15,
+        duration: 800,
+      });
+      setSelectedMemberId(initialFocusMemberId);
+      setIsDrawerOpen(true);
+      setHighlightedMemberId(initialFocusMemberId);
+
+      const timer = setTimeout(() => {
+        setHighlightedMemberId(null);
+      }, 2500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [initialFocusMemberId, nodesInitialized, getNode, nodes, setCenter]);
 
   // 2. Tự động căn giữa khi chuyển đổi bộ dữ liệu hoặc đổi Gốc hiển thị
   useEffect(() => {

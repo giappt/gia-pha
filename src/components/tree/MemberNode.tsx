@@ -55,10 +55,15 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
       }`.trim()
     : nodeData.branchName || '';
 
+  const isHighlighted = !!nodeData?.isHighlighted;
+  const highlightClass = isHighlighted
+    ? 'ring-4 ring-emerald-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 animate-pulse shadow-emerald-500/50 shadow-lg'
+    : '';
+
   return (
     <div
       className={`group relative w-[200px] h-[96px] rounded-xl border bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-2.5 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex flex-col overflow-hidden cursor-pointer ${isAnonymous ? 'bg-amber-50/30 dark:bg-amber-950/20' : ''
-        } ${borderColor}`}
+        } ${borderColor} ${highlightClass}`}
     >
       {/* Target Handle cho cha mẹ nối xuống (Tàng hình) */}
       <Handle

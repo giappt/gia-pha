@@ -253,12 +253,12 @@ export function canUserManageMember(
       (fatherOfTarget && (fatherOfTarget.father_id === myId || fatherOfTarget.mother_id === myId))
         ? fatherOfTarget
         : (motherOfTarget && (motherOfTarget.father_id === myId || motherOfTarget.mother_id === myId))
-        ? motherOfTarget
-        : null;
+          ? motherOfTarget
+          : null;
 
     if (parentIsMyChild) {
       // Edge Case 9: Nếu cháu (F2) hoặc con (F1 - cha/mẹ của cháu) đã tự liên kết tài khoản riêng
-      // -> Quyền quản lý thuộc về cá nhân / tiểu gia đình đó
+      // -> Quyền quản lý thuộc về cá nhân / Gia Đình Của Bạn đó
       if (target.linked_user_id || target.claimed_by || parentIsMyChild.linked_user_id || parentIsMyChild.claimed_by) {
         return false;
       }

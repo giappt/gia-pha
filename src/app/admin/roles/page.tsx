@@ -20,56 +20,9 @@ import {
 import {
   PERMISSION_MATRIX_DEFINITIONS,
   resolveEffectiveRole,
+  ROLES_META,
   type ImpersonatedRole,
 } from '@/lib/admin/admin-engine';
-
-const ROLES_META = [
-  {
-    id: 'guest',
-    title: 'Khách Vãng Lai',
-    subtitle: 'Chưa Đăng Nhập',
-    badge: 'Guest',
-    badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700',
-    description: 'Người ngoài họ hoặc con cháu truy cập lần đầu qua liên kết chia sẻ mạng xã hội.',
-    canImpersonate: true,
-  },
-  {
-    id: 'viewer',
-    title: 'Thành Viên Mới',
-    subtitle: 'Đã Đăng Nhập Google',
-    badge: 'Viewer',
-    badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-800',
-    description: 'Đã xác thực Google nhưng chưa được Admin phê duyệt gắn vào một node Gia Phả cụ thể.',
-    canImpersonate: true,
-  },
-  {
-    id: 'claimed_member',
-    title: 'Con Cháu Gắn Node',
-    subtitle: 'Chính Thức Trong Họ',
-    badge: 'Member',
-    badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800',
-    description: 'Đã liên kết tài khoản với vị trí trong gia phả. Nhận trọn vẹn thông báo giỗ người thân.',
-    canImpersonate: true,
-  },
-  {
-    id: 'branch_editor',
-    title: 'Biên Tập Viên Chi',
-    subtitle: 'Cán Bộ Gia Phả Nhánh',
-    badge: 'Branch Editor',
-    badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-800',
-    description: 'Phụ trách cập nhật thông tin con cháu, phối ngẫu và ngày mất cho nhánh Gia Phả được phân công.',
-    canImpersonate: true,
-  },
-  {
-    id: 'super_admin',
-    title: 'Quản Trị Tối Cao',
-    subtitle: 'Trưởng Tộc',
-    badge: 'Super Admin',
-    badgeColor: 'bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200 border-purple-300 dark:border-purple-800',
-    description: 'Toàn quyền tối cao với toàn bộ cây Gia Phả, bàn điều hành, phân quyền và dữ liệu dòng tộc.',
-    canImpersonate: false,
-  },
-];
 
 const CATEGORY_NAMES: Record<string, { label: string; icon: any; desc: string }> = {
   visibility: {

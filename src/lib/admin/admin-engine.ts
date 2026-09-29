@@ -6,6 +6,7 @@ export const DEFAULT_FEATURE_FLAGS: ClanFeatureFlags = {
   enable_anniversaries: true,
   enable_push_notifications: true,
   allow_member_claims: true,
+  allow_member_self_edit: true,
   mask_living_member_privacy: true,
   maintenance_mode: false,
 };
@@ -46,6 +47,10 @@ export function resolveFeatureFlags(flags?: Partial<ClanFeatureFlags> | null): C
       typeof flags.allow_member_claims === 'boolean'
         ? flags.allow_member_claims
         : DEFAULT_FEATURE_FLAGS.allow_member_claims,
+    allow_member_self_edit:
+      typeof flags.allow_member_self_edit === 'boolean'
+        ? flags.allow_member_self_edit
+        : DEFAULT_FEATURE_FLAGS.allow_member_self_edit,
     mask_living_member_privacy:
       typeof flags.mask_living_member_privacy === 'boolean'
         ? flags.mask_living_member_privacy
@@ -381,9 +386,16 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
 
   // Nhóm 3: Biên Tập Gia Phả
   {
+    id: 'manage_own_family',
+    name: 'Tự Quản Thông Tin Gia Đình Của Bạn',
+    description: 'Thêm vợ/chồng, thêm con và cập nhật thông tin cá nhân trong gia đình của mình (Có thể tắt/bật qua Cờ Tính Năng)',
+    category: 'editing',
+    roles: { guest: false, viewer: false, claimed_member: true, branch_editor: true, super_admin: true },
+  },
+  {
     id: 'edit_branch_members',
-    name: 'Thêm & Sửa Thành Viên Trong Chi',
-    description: 'Thêm con cái, thêm phối ngẫu, sửa ngày mất/mộ phần cho thành viên Chi phụ trách',
+    name: 'Biên Tập Phả Hệ Toàn Chi Nhánh',
+    description: 'Thêm con cháu, phối ngẫu, sửa ngày mất/mộ phần cho toàn bộ các thành viên thuộc Chi phụ trách',
     category: 'editing',
     roles: { guest: false, viewer: false, claimed_member: false, branch_editor: true, super_admin: true },
   },
@@ -404,6 +416,20 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
 
   // Nhóm 4: Bàn Điều Hành
   {
+    id: 'review_family_claims',
+    name: 'Phê Duyệt Hồ Sơ Con Cháu (Gia Đình Của Bạn)',
+    description: 'Truy cập Cổng Phê Duyệt (/admin/claims) với giao diện cách ly để xét duyệt hồ sơ con cái xin nối vào gia đình mình',
+    category: 'administration',
+    roles: { guest: false, viewer: false, claimed_member: true, branch_editor: true, super_admin: true },
+  },
+  {
+    id: 'review_branch_claims',
+    name: 'Phê Duyệt & Thẩm Định Hồ Sơ Chi Nhánh',
+    description: 'Xét duyệt hoặc tiếp nhận ủy quyền hồ sơ con cháu thuộc Chi nhánh phụ trách (/admin/claims)',
+    category: 'administration',
+    roles: { guest: false, viewer: false, claimed_member: false, branch_editor: true, super_admin: true },
+  },
+  {
     id: 'admin_dashboard',
     name: 'Truy Cập Bàn Điều Hành',
     description: 'Xem các chỉ số sức sống Gia Phả và cảnh báo thành viên chưa nối phả (/admin)',
@@ -412,8 +438,8 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
   },
   {
     id: 'manage_users_claims',
-    name: 'Quản Lý Tài Khoản & Duyệt Gán Node',
-    description: 'Phê duyệt claim node, phân cấp vai trò người dùng trong họ (/admin/users)',
+    name: 'Quản Trị Toàn Tộc, Ủy Quyền & Đổi Vai Trò',
+    description: 'Phê duyệt toàn tộc, ủy quyền cho Trưởng Chi, đổi vai trò người dùng trong họ (/admin/users)',
     category: 'administration',
     roles: { guest: false, viewer: false, claimed_member: false, branch_editor: false, super_admin: true },
   },
@@ -421,6 +447,13 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     id: 'import_excel_data',
     name: 'Nạp Excel Hàng Loạt & Smart Re-map',
     description: 'Nạp cây Gia Phả từ file Excel và tự động bảo tồn liên kết con cháu (/admin/import)',
+    category: 'administration',
+    roles: { guest: false, viewer: false, claimed_member: false, branch_editor: false, super_admin: true },
+  },
+  {
+    id: 'feature_flags',
+    name: 'Quản Trị Cờ Tính Năng (Feature Flags)',
+    description: 'Bật/tắt các phân hệ: Nhận node, Che SĐT, và Kill Switch Tự Quản Gia Đình (/admin/features)',
     category: 'administration',
     roles: { guest: false, viewer: false, claimed_member: false, branch_editor: false, super_admin: true },
   },
@@ -444,5 +477,63 @@ export function maskPhoneNumber(phone: string | null | undefined, canView: boole
   if (cleanPhone.length <= 4) return '****';
   return cleanPhone.slice(0, 4) + ' *** ***';
 }
+
+export interface RoleMeta {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  badgeColor: string;
+  description: string;
+  canImpersonate: boolean;
+}
+
+export const ROLES_META: RoleMeta[] = [
+  {
+    id: 'guest',
+    title: 'Khách Vãng Lai',
+    subtitle: 'Chưa Đăng Nhập',
+    badge: 'Guest',
+    badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700',
+    description: 'Người ngoài họ hoặc con cháu truy cập lần đầu qua liên kết chia sẻ mạng xã hội.',
+    canImpersonate: true,
+  },
+  {
+    id: 'viewer',
+    title: 'Thành Viên Mới',
+    subtitle: 'Đã Đăng Nhập Google',
+    badge: 'Viewer',
+    badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-800',
+    description: 'Đã xác thực Google nhưng chưa được Admin phê duyệt gắn vào một node Gia Phả cụ thể.',
+    canImpersonate: true,
+  },
+  {
+    id: 'claimed_member',
+    title: 'Con Cháu Gắn Node',
+    subtitle: 'Chính Thức Trong Họ',
+    badge: 'Member',
+    badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800',
+    description: 'Đã liên kết tài khoản với vị trí trong gia phả. Có quyền tự quản thông tin gia đình của mình, thêm vợ con và phê duyệt hồ sơ con cháu.',
+    canImpersonate: true,
+  },
+  {
+    id: 'branch_editor',
+    title: 'Biên Tập Viên Chi',
+    subtitle: 'Cán Bộ Gia Phả Nhánh',
+    badge: 'Branch Editor',
+    badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-800',
+    description: 'Phụ trách cập nhật thông tin con cháu, phối ngẫu và ngày mất cho nhánh Gia Phả được phân công.',
+    canImpersonate: true,
+  },
+  {
+    id: 'super_admin',
+    title: 'Super Admin',
+    subtitle: 'Quản Trị Tối Cao',
+    badge: 'Admin',
+    badgeColor: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300 dark:border-rose-800',
+    description: 'Toàn quyền kiểm soát cấu trúc Gia Phả, phân quyền người dùng và thiết lập tham số hệ thống.',
+    canImpersonate: false,
+  },
+];
 
 

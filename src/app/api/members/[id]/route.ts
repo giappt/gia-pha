@@ -9,7 +9,7 @@ import {
   canDeleteMember,
   recalculateGenerations,
 } from '@/lib/tree-layout/graph-validation';
-import { verifyServerRole, extractUserProfileFromRequest } from '@/lib/auth/permissions';
+import { verifyServerRole, extractUserProfileFromRequest, extractFeatureFlagsFromRequest } from '@/lib/auth/permissions';
 import { canUserManageMember } from '@/lib/claims/claim-engine';
 
 export async function GET(
@@ -113,6 +113,14 @@ export async function PUT(
 
     // Kiểm tra phân quyền sửa hồ sơ
     if (userProfile.user_role === 'claimed_member') {
+      const featureFlags = await extractFeatureFlagsFromRequest(request);
+      if (!featureFlags.allow_member_self_edit) {
+        return NextResponse.json(
+          { success: false, error: 'Tính năng tự chỉnh sửa thông tin gia đình đang tạm thời bị khóa bởi Ban Quản Trị' },
+          { status: 403 }
+        );
+      }
+
       const canManage = canUserManageMember(
         userProfile,
         memberId,
@@ -122,7 +130,7 @@ export async function PUT(
       );
       if (!canManage) {
         return NextResponse.json(
-          { success: false, error: 'Bạn chỉ có quyền sửa hồ sơ thuộc tiểu gia đình của mình' },
+          { success: false, error: 'Bạn chỉ có quyền sửa hồ sơ thuộc gia đình của mình' },
           { status: 403 }
         );
       }
@@ -230,11 +238,11 @@ export async function PUT(
     // Dọn trùng birth_order và giải quyết xung đột is_senior với anh chị em
     const siblings = (newFatherId || newMotherId)
       ? existingMembers.filter(
-          (m) =>
-            m.id !== memberId &&
-            ((newFatherId && m.father_id === newFatherId) ||
-              (newMotherId && m.mother_id === newMotherId))
-        )
+        (m) =>
+          m.id !== memberId &&
+          ((newFatherId && m.father_id === newFatherId) ||
+            (newMotherId && m.mother_id === newMotherId))
+      )
       : [];
 
     let oldSeniorId: string | null = null;

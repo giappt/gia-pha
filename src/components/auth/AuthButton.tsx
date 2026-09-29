@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { UserProfile, ClanFeatureFlags } from '@/types/database';
-import { LogIn, LogOut, ShieldCheck, User as UserIcon, Loader2, Sparkles, Settings, Building2 } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck, User as UserIcon, Loader2, Sparkles, Settings, ClipboardList } from 'lucide-react';
 import PersonalSettingsModal from './PersonalSettingsModal';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 
@@ -37,9 +37,43 @@ export default function AuthButton({
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isPersonalSettingsOpen, setIsPersonalSettingsOpen] = useState(false);
+  const [pendingClaimsCount, setPendingClaimsCount] = useState<number>(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
   const pathname = usePathname();
+
+  // Tải số lượng phiếu chờ duyệt cho người có thẩm quyền
+  useEffect(() => {
+    if (!user) {
+      setPendingClaimsCount(0);
+      return;
+    }
+    const canReview =
+      profile?.user_role === 'super_admin' ||
+      profile?.user_role === 'branch_editor' ||
+      profile?.user_role === 'claimed_member';
+    if (!canReview) return;
+
+    let isMounted = true;
+    async function fetchPendingCount() {
+      try {
+        const res = await fetch('/api/claims/pending');
+        if (res.ok) {
+          const json = await res.json();
+          if (isMounted && Array.isArray(json?.data)) {
+            setPendingClaimsCount(json.data.length);
+          }
+        }
+      } catch {
+        // ignore network error
+      }
+    }
+
+    fetchPendingCount();
+    return () => {
+      isMounted = false;
+    };
+  }, [user, profile]);
 
   useEffect(() => {
     let isMounted = true;
@@ -293,16 +327,16 @@ export default function AuthButton({
   const roleTitle = isSuperAdmin
     ? 'Super Admin'
     : profile?.user_role === 'branch_editor'
-    ? 'Trưởng Chi'
-    : profile?.user_role === 'claimed_member'
-    ? 'Con Cháu Họ'
-    : 'Khách Xem';
+      ? 'Trưởng Chi'
+      : profile?.user_role === 'claimed_member'
+        ? 'Con Cháu'
+        : 'Khách Xem';
 
   const roleBadgeStyle = isSuperAdmin
     ? 'bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
     : profile?.user_role === 'branch_editor'
-    ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
-    : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+      ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+      : 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -367,19 +401,31 @@ export default function AuthButton({
             </button>
           </div>
 
-          {(profile?.user_role === 'branch_editor' || isSuperAdmin) && (
-            <div className="py-1 border-b border-slate-100 dark:border-slate-800">
-              <Link
-                href="/branch"
-                onClick={() => setIsOpen(false)}
-                id="branch-portal-dropdown-link"
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors font-medium text-left"
-              >
-                <Building2 className="w-4 h-4 text-emerald-600" />
-                <span>Quản trị Chi Nhánh</span>
-              </Link>
-            </div>
-          )}
+          {(profile?.user_role === 'super_admin' ||
+            profile?.user_role === 'branch_editor' ||
+            profile?.user_role === 'claimed_member') && (
+              <div className="py-1 border-b border-slate-100 dark:border-slate-800">
+                <Link
+                  href="/admin/claims"
+                  onClick={() => setIsOpen(false)}
+                  id="unified-approvals-dropdown-link"
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors font-medium text-left"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ClipboardList className="w-4 h-4 text-emerald-600" />
+                    <span>Phê Duyệt Hồ Sơ</span>
+                  </div>
+                  {pendingClaimsCount > 0 && (
+                    <span
+                      id="pending-claims-badge"
+                      className="text-[11px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/80"
+                    >
+                      {pendingClaimsCount}
+                    </span>
+                  )}
+                </Link>
+              </div>
+            )}
 
           {isSuperAdmin && (
             <div className="py-1 border-b border-slate-100 dark:border-slate-800">

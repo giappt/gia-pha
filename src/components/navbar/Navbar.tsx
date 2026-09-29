@@ -4,7 +4,7 @@ import ThemeToggle from '@/components/theme/ThemeToggle';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 import ClanHanLogoNavbar from '@/components/navbar/ClanHanLogoNavbar';
 import { createClient } from '@/lib/supabase/server';
-import { Calendar, Users, Building2 } from 'lucide-react';
+import { Calendar, Users } from 'lucide-react';
 import { resolveFeatureFlags, type ImpersonatedRole } from '@/lib/admin/admin-engine';
 import type { UserProfile, ClanFeatureFlags } from '@/types/database';
 
@@ -130,17 +130,6 @@ export default async function Navbar({
             >
               <Users className="w-4 h-4 text-emerald-600" />
               <span>Xưng hô</span>
-            </Link>
-          )}
-
-          {!isGuest && (userProfile?.user_role === 'branch_editor' || isSuperAdmin) && (
-            <Link
-              href="/branch"
-              id="branch-portal-nav-link"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
-            >
-              <Building2 className="w-4 h-4 text-emerald-600" />
-              <span>Quản trị Chi</span>
             </Link>
           )}
         </nav>

@@ -1,6 +1,6 @@
 ---
 Parent-Profile: software-engineer
-Profile-Version: 7
+Profile-Version: 8
 ---
 
 # PROJECT-SCOPED RULES (FAT - FAMILY TREE MANAGEMENT SYSTEM)
@@ -44,6 +44,10 @@ Dưới đây là các nguyên tắc TỐI THƯỢNG mà AI Agent BẮT BUỘC P
 ## 4. [R-SPEC] STRICT EXECUTION & REVERSE SYNC
 - **No Hallucination:** Khi code tính năng, phải bám sát **100%** vào file Đặc tả Vi mô (`Micro-Spec`). Không tự ý bịa thêm tính năng không có trong tài liệu.
 - **Reverse Sync (Đồng bộ ngược):** Nếu trong quá trình code hoặc fix bug, bạn buộc phải đổi giải pháp kỹ thuật so với thiết kế ban đầu (do hạn chế của framework) => Bạn **BẮT BUỘC** phải mở lại file `Micro-Spec` (hoặc các file `01~05` liên quan) để cập nhật lại nội dung. Tài liệu luôn phải là Single Source of Truth khớp với code thực tế.
+- **[R-SPEC.INVARIANT] Architectural Invariants & Cross-Spec Consistency (Tính Bất Biến Kiến Trúc & Chống Thoái Lui Thiết Kế):**
+  - Mọi tài liệu Đặc tả (`Micro-Spec`) khi tạo mới hoặc cập nhật BẮT BUỘC phải kế thừa và tuân thủ các quy ước thiết kế/kiến trúc đã được thiết lập ở các Milestone trước đó (Foundation Specs: Layout Shell, Navigation Model, Design Tokens, RBAC Integration).
+  - TUYỆT ĐỐI CẤM: Tự tiện đưa lại các anti-pattern đã bị khai tử (như container hạn hẹp `max-w-5xl` cho trang quản trị, các thanh Tab ngang gây co giật layout, hoặc tự đẻ ra các trang độc lập phá vỡ Navigation Shell).
+  - Trước khi chốt Spec, BẮT BUỘC phải thực hiện kiểm chứng đối chiếu chéo (Cross-Milestone Invariant Audit) tại Bước 2 của `/feature-spec`.
 
 ## 5. [R-VERIFY] CODE-FIRST VERIFICATION LOOP (VÒNG LẶP KIỂM CHỨNG BẰNG CODE THẬT)
 

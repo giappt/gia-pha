@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   description: 'Màn hình trực quan hóa cây Gia Phả gia tộc đa thế hệ, hỗ trợ pan zoom và Ghost Node hôn nhân nội tộc.',
 };
 
-export default async function TreePage() {
+export default async function TreePage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   const cookieStore = cookies();
   let members: MemberRecord[] = [];
   let spouseRelations: SpouseRelationRecord[] = [];
@@ -177,6 +181,7 @@ export default async function TreePage() {
         canManageTree={canManage}
         featureFlags={featureFlags}
         currentUser={effectiveCurrentUser}
+        initialFocusMemberId={typeof searchParams?.focus === 'string' ? searchParams.focus : null}
       />
     </div>
   );

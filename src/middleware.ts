@@ -11,9 +11,11 @@ import type { ClanFeatureFlags } from '@/types/database';
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  request.headers.set('x-pathname', pathname);
 
   // 1. Cập nhật session và lấy trạng thái người dùng
   const { response, user, supabase } = await updateSession(request);
+  response.headers.set('x-pathname', pathname);
 
   // 2. Bypass check nhanh: Tuyến đường admin, api, auth, login-gate và PWA static assets không qua gate
   if (

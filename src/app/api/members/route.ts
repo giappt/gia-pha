@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { MemberFormData, MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import { BranchNode } from '@/types/database';
 import { validateNoCycle, CycleDetectedError } from '@/lib/tree-layout/graph-validation';
-import { verifyServerRole, extractUserProfileFromRequest } from '@/lib/auth/permissions';
+import { verifyServerRole, extractUserProfileFromRequest, extractFeatureFlagsFromRequest } from '@/lib/auth/permissions';
 import { canUserManageMember } from '@/lib/claims/claim-engine';
 
 export async function GET() {
@@ -93,11 +93,19 @@ export async function POST(request: NextRequest) {
 
     // Kiểm tra phân quyền thêm thành viên
     if (userProfile.user_role === 'claimed_member') {
+      const featureFlags = await extractFeatureFlagsFromRequest(request);
+      if (!featureFlags.allow_member_self_edit) {
+        return NextResponse.json(
+          { success: false, error: 'Tính năng tự chỉnh sửa thông tin gia đình đang tạm thời bị khóa bởi Ban Quản Trị' },
+          { status: 403 }
+        );
+      }
+
       const parentId = body.father_id || body.mother_id;
-      const targetManageId = parentId || (body as any).current_spouse_id;
+      const targetManageId = parentId || body.spouse_id || (body as any).current_spouse_id;
       if (!targetManageId) {
         return NextResponse.json(
-          { success: false, error: 'Thành viên chỉ có quyền thêm con hoặc vợ/chồng cho tiểu gia đình của mình' },
+          { success: false, error: 'Thành viên chỉ có quyền thêm con hoặc vợ/chồng cho gia đình của mình' },
           { status: 403 }
         );
       }
@@ -180,10 +188,10 @@ export async function POST(request: NextRequest) {
     // Dọn trùng birth_order và giải quyết xung đột is_senior nếu có cha hoặc mẹ
     const siblings = (body.father_id || body.mother_id)
       ? existingMembers.filter(
-          (m) =>
-            (body.father_id && m.father_id === body.father_id) ||
-            (body.mother_id && m.mother_id === body.mother_id)
-        )
+        (m) =>
+          (body.father_id && m.father_id === body.father_id) ||
+          (body.mother_id && m.mother_id === body.mother_id)
+      )
       : [];
 
     let oldSeniorId: string | null = null;
@@ -210,6 +218,11 @@ export async function POST(request: NextRequest) {
       const parent = existingMembers.find((m) => m.id === parentId);
       if (parent) {
         generationLevel = (parent.generation_level || 1) + 1;
+      }
+    } else if (body.spouse_id) {
+      const spouse = existingMembers.find((m) => m.id === body.spouse_id);
+      if (spouse) {
+        generationLevel = spouse.generation_level || 1;
       }
     } else if (!body.is_root) {
       // Mặc định unlinked member bắt đầu từ đời 1 hoặc tùy chọn

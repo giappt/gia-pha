@@ -82,6 +82,16 @@ const FEATURE_CONFIGS: FeatureFlagConfig[] = [
     tagColor: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
   },
   {
+    key: 'allow_member_self_edit',
+    title: 'Cho Phép Con Cháu Tự Sửa Thông Tin Gia Đình',
+    icon: Users,
+    description: 'Cho phép thành viên đã gắn node (claimed_member) tự thêm vợ/chồng, thêm con và cập nhật thông tin cá nhân trong gia đình mình.',
+    onDesc: 'Đang mở: Bố Mẹ/Thành viên tự thêm vợ con, sửa thông tin nhân khẩu của hộ gia đình mình trên cây.',
+    offDesc: 'Đang khóa: Đóng băng quyền tự sửa của con cháu để chống loạn dữ liệu; chỉ Admin và Trưởng Chi mới có quyền chỉnh sửa.',
+    safetyTag: 'An Toàn',
+    tagColor: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
+  },
+  {
     key: 'mask_living_member_privacy',
     title: 'Lá Chắn Bảo Vệ Thông Tin Người Còn Sống',
     icon: Shield,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import type { UserRole } from '@/types/database';
+import type { UserRole, ClanFeatureFlags } from '@/types/database';
+import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 
 export type PermissionAction =
   | 'tree:view'
@@ -214,4 +215,53 @@ export async function verifyServerRole(
   }
 
   return null;
+}
+
+/**
+ * Trích xuất cấu hình Feature Flags từ Request
+ * Hỗ trợ header test, cookie dev (fat_dev_feature_flags, fat_feature_flags_cache), hoặc Supabase clan_settings
+ */
+export async function extractFeatureFlagsFromRequest(
+  request: NextRequest
+): Promise<ClanFeatureFlags> {
+  // 1. Kiểm tra header test giả lập
+  const headerFlags = request.headers.get('x-feature-flags');
+  if (headerFlags) {
+    try {
+      const parsed = JSON.parse(headerFlags);
+      return resolveFeatureFlags(parsed);
+    } catch {
+      // ignore
+    }
+  }
+
+  // 2. Kiểm tra cookies dev / cache
+  const cookieFlags =
+    request.cookies.get('fat_dev_feature_flags')?.value ||
+    request.cookies.get('fat_feature_flags_cache')?.value;
+  if (cookieFlags) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(cookieFlags));
+      return resolveFeatureFlags(parsed);
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. Tra cứu database clan_settings
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('clan_settings')
+      .select('feature_flags')
+      .limit(1)
+      .maybeSingle();
+    if (data?.feature_flags) {
+      return resolveFeatureFlags(data.feature_flags);
+    }
+  } catch {
+    // fallback
+  }
+
+  return resolveFeatureFlags(undefined);
 }

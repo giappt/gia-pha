@@ -88,6 +88,7 @@ export interface TreeNodeData extends Record<string, any> {
   spouseOrderTitle?: string;
   maritalStatus?: MaritalStatus | null;
   maritalEventYear?: number | null;
+  isHighlighted?: boolean;
 }
 
 export interface ChildrenGroup {

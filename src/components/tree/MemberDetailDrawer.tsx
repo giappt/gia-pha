@@ -117,8 +117,21 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
   // Quyền quản lý thành viên hiện tại (dành cho super_admin, branch_editor, hoặc claimed_member trong hộ)
   const canManageCurrentMember = useMemo(() => {
     if (!currentUser || !target) return false;
+    // NẾU currentUser là claimed_member và allow_member_self_edit === false => BỊ KHÓA
+    if (currentUser.user_role === 'claimed_member' && featureFlags?.allow_member_self_edit === false) {
+      return false;
+    }
     return canUserManageMember(currentUser, target.id, members, spouseRelations, clanBranches);
-  }, [currentUser, target, members, spouseRelations, clanBranches]);
+  }, [currentUser, target, members, spouseRelations, clanBranches, featureFlags]);
+
+  // Kiểm tra xem thành viên này có thuộc gia đình của claimed_member nhưng đang bị khóa quyền tự sửa do Feature Flag hay không
+  const isFamilyMemberUnderLock = useMemo(() => {
+    if (!currentUser || !target) return false;
+    if (currentUser.user_role !== 'claimed_member' || featureFlags?.allow_member_self_edit !== false) {
+      return false;
+    }
+    return canUserManageMember(currentUser, target.id, members, spouseRelations, clanBranches);
+  }, [currentUser, target, members, spouseRelations, clanBranches, featureFlags]);
 
   // Xác định xem target có phải là con trực tiếp của currentUser (người đang đăng nhập đã claim profile) hay không
   const isTargetChildOfCurrentUser = useMemo(() => {
@@ -293,9 +306,9 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                 <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                   <UserCheck className="w-3 h-3" /> Hồ sơ của bạn
                 </div>
-              ) : canManageCurrentMember ? (
+              ) : canManageCurrentMember || isFamilyMemberUnderLock ? (
                 <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">
-                  <UserCheck className="w-3 h-3" /> Thuộc hộ gia đình của bạn
+                  <UserCheck className="w-3 h-3" /> Thuộc gia đình của bạn
                 </div>
               ) : null}
             </div>
@@ -304,6 +317,19 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
 
         {/* Scrollable Content Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 text-sm">
+          {/* BANNER THÔNG BÁO TẠM KHÓA TỰ SỬA GIA ĐÌNH KHI FEATURE FLAG BỊ TẮT */}
+          {isFamilyMemberUnderLock && (
+            <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs leading-relaxed space-y-1">
+              <div className="flex items-center gap-1.5 font-bold">
+                <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Tạm khóa chỉnh sửa gia đình</span>
+              </div>
+              <p>
+                Ban Quản Trị đang tạm đóng tính năng tự sửa thông tin gia đình để đối soát dữ liệu phả hệ.
+              </p>
+            </div>
+          )}
+
           {/* NÚT NHẬN NODE CHO VAI TRÒ VIEWER (Tuân thủ cờ allow_member_claims) */}
           {effectiveRole === 'viewer' && featureFlags.allow_member_claims && !isDeceased && !isAnonymous && !target.linked_user_id && (
             <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-300/80 dark:border-emerald-700/60 shadow-xs space-y-2.5">

@@ -4,13 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { Menu, ShieldCheck, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import AdminSidebar from './AdminSidebar';
+import type { UserRole } from '@/types/database';
 
 interface AdminShellProps {
   children: React.ReactNode;
   clanName?: string;
+  userRole?: UserRole;
 }
 
-export default function AdminShell({ children, clanName = 'GIA PHẢ PHẠM VĂN' }: AdminShellProps) {
+export default function AdminShell({
+  children,
+  clanName = 'GIA PHẢ PHẠM VĂN',
+  userRole = 'super_admin',
+}: AdminShellProps) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // Close drawer on resize to desktop
@@ -68,6 +74,7 @@ export default function AdminShell({ children, clanName = 'GIA PHẢ PHẠM VĂN
             <div className="w-64 relative shadow-2xl animate-in slide-in-from-left duration-200">
               <AdminSidebar
                 clanName={clanName}
+                userRole={userRole}
                 onCloseMobileDrawer={() => setMobileDrawerOpen(false)}
               />
             </div>
@@ -77,7 +84,7 @@ export default function AdminShell({ children, clanName = 'GIA PHẢ PHẠM VĂN
 
       {/* Desktop Fixed Sidebar */}
       <div className="hidden lg:block w-64 flex-shrink-0 h-screen sticky top-0 z-20">
-        <AdminSidebar clanName={clanName} />
+        <AdminSidebar clanName={clanName} userRole={userRole} />
       </div>
 
       {/* Main Fluid Content Area */}
