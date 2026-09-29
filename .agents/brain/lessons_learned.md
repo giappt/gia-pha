@@ -553,3 +553,33 @@
   2. *Căn nguyên thất lạc / nuốt mất ngày mai khi gửi 2 Web Push riêng biệt:* W3C Web Push API không có native grouping API như Android Native SDK (`setGroup()`). Khi backend phát 2 notification liên tiếp trong vài giây, FCM hoặc Android Chrome thường chỉ hiển thị 1 thẻ và đè/nuốt mất thông báo thứ 2. Giải pháp triệt để 100% (Lựa chọn 1 đã chốt) là gộp cả Hôm nay và Ngày mai vào **1 thông báo Web Push duy nhất** (`tag: 'anniversary-daily-digest'`) cho mỗi người nhận, phân tách 2 sự kiện bằng đường kẻ ngang thẩm mỹ `───────────────────────`.
   3. *Tiêu đề cố định thanh thoát:* Giữ tiêu đề cố định là `'Lịch giỗ'`, không lặp lại nội dung ngày giỗ trong tiêu đề để tránh trùng lặp.
   4. *Tối ưu tốc độ truyền nhận:* Kèm RFC 8030 header `urgency: 'high'` và `TTL: 86400` để đảm bảo thông báo phân phối tức thì trong 2s mà không bị Doze Mode hoãn lại.
+- **Kế Thừa Danh Xưng Ngành/Chi Cho Người Phối Ngẫu (Con Dâu / Con Rể) & Nạp Quan Hệ Hôn Phối Cho Client-Side Rendering:**
+  1. *Căn nguyên:* Trong gia phả truyền thống phụ hệ, con dâu (và con rể ngoại tộc) không có `father_id` trong cây phả hệ của dòng họ. Khi hàm `resolveMemberBranchHierarchy` duyệt cây phụ hệ để xác định Ngành/Chi dựa trên Cụ Khởi Nguồn (`rootMemberId`), nếu không có liên kết hôn phối, các thành viên này sẽ không khớp được nhánh nào và chỉ fallback về hiển thị thế hệ (ví dụ: `Đời thứ 11`). Con gái ruột mang huyết thống dòng họ (có `father_id`) thì không bị ảnh hưởng, vẫn kế thừa Ngành/Chi của cha bình thường.
+  2. *Giải pháp kiến trúc:*
+     - Lõi thuật toán `resolveMemberBranchHierarchy` cần tham số thứ 4 `spouseRelations`: khi thành viên không có `father_id`, hệ thống tự động dò qua liên kết hôn phối để tìm người chồng/vợ và kế thừa toàn bộ chuỗi Ngành/Chi của người đó (Phương án hiển thị đồng nhất `Đời [X] · [Ngành Y · Chi Z]`).
+     - Mở rộng API route `GET /api/spouse-relations` để các trang Client Component nạp danh sách hôn phối.
+     - Mọi component client-side (như trang Lịch Giỗ `/anniversaries` và Cây phả hệ `/tree`) khi gọi `resolveMemberBranchHierarchy` bắt buộc phải nạp bảng `spouse_relations` và truyền đầy đủ 4 tham số ở cả 2 khâu: hiển thị huy hiệu (badge render) và bộ lọc tìm kiếm theo Ngành/Chi. Nếu thiếu, ngày giỗ của con dâu không những mất danh xưng Ngành/Chi mà còn bị lọc mất oan uổng khi người dùng lọc theo nhánh của chồng.
+
+- **Bảo Toàn Cụ Tổ Tiền Nhân Trực Hệ Đời Trên Khi Lọc Theo Chi Nhánh & Segmented Toggle 2 Nấc 'Nhánh Của Tôi' (`lineageDepth`):**
+  1. *Căn nguyên nghiệp vụ:* Tiền nhân đời trên (như *Cụ Nguyễn Thị Hiền* - Đời 4) thuộc các đời sơ khai trước khi dòng họ phân lập các Ngành/Chi (Ngành/Chi bắt đầu từ Đời 5 hoặc Đời 7 do con cháu lập ra). Cụ là Tổ Tiên chung của toàn bộ dòng họ nên chỉ mang huy hiệu `Cụ tổ của bạn` · `Đời thứ 4` mà không mang nhãn Chi riêng lẻ.
+  2. *Lỗi hổng lọc sót giỗ:* Trước đây khi con cháu Chi 1 lọc Lịch Giỗ theo Chi 1, Cụ Hiền (Đời 4) đứng trên Cụ Khởi Chi 1 nên bị loại trừ. Về đạo hiếu và thực tế phụng dưỡng, con cháu Chi 1 vẫn có nghĩa vụ phụng dưỡng ngày giỗ các bậc Cụ Tổ trực hệ đời trên.
+  3. *Giải pháp kiến trúc:*
+     - Xây dựng hàm `getBranchAncestorIds(branchId, branches, members, spouseRelations)`: Dò từ `rootMemberId` của nhánh ngược lên chuỗi phụ hệ `father_id` đến Cụ Thủy Tổ Đời 1, kèm theo phối ngẫu của từng đời để bảo toàn cả Cụ Ông và Cụ Bà.
+     - Hàm `filterMembersByBranch` và bộ lọc trang `/anniversaries` hỗ trợ tham số `lineageDepth`:
+       - `from_root` (mặc định của giao diện): Một thành viên được giữ lại nếu là Hậu duệ của nhánh (`matchedBranchIds.includes(branchId)`) HOẶC là Tiền nhân trực hệ (`branchAncestorIds.has(m.id)`). Nhờ đó, ngày giỗ Cụ Hiền Đời 4 luôn hiển thị trang trọng khi con cháu Chi 1 lọc lịch giỗ!
+       - `from_branch` (mặc định tương thích ngược của hàm filterMembersByBranch): Chỉ lấy từ Cụ Khởi Chi trở xuống con cháu.
+     - Nâng cấp nút "Nhánh của tôi" trên `/anniversaries` thành Segmented Toggle 2 nấc ngọc bích:
+       - `[ 👥 Từ Đời 1]` (mặc định): Trục dọc từ Cụ Tổ Đời 1 đến bản thân.
+       - `[ 🌿 Từ Gốc Chi ]`: Bắt đầu từ Cụ Khởi Nguồn của Chi mình trở xuống.
+
+- **Lineage Depth V2: Bảo Toàn 100% Ông Bà Nội & Nhãn Hiển Thị Động Theo Cấp Gốc CSDL (`rootTierName`):**
+  1. *Căn nguyên lỗi mất Ông Bà Nội ở nấc 2:* Ở thiết kế ban đầu, khi chọn nấc 2 "Từ Gốc Chi", hàm lọc đã lấy nhánh con sâu nhất (`matchedBranchIds[length - 1]`, ví dụ `Chi 1`) và chỉ lấy con cháu của Cụ Khởi Chi 1. Việc này cắt cụt quá sâu khiến các thế hệ phía trên như Ông Bà Nội (như Bà nội Nguyễn Thị Chăm) và Bác/Chú bị loại bỏ khỏi danh sách ngày giỗ.
+  2. *Quy tắc nghiệp vụ bất biến:* Khi người dùng chọn xem "Nhánh của tôi", toàn bộ gia đình ruột thịt từ **Ông Bà Nội $\rightarrow$ Bác/Chú/Cô $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân $\rightarrow$ Con cháu** BẮT BUỘC PHẢI LUÔN ĐẦY ĐỦ 100% trong mọi chế độ (kể cả con dâu không có father trong họ như Bà nội Chăm).
+  3. *Cấp gốc phân nhánh & Nhãn động (`resolveRootTierLabel`):* Điểm bắt đầu phân nhánh lớn là Cấp Gốc cao nhất được định nghĩa trong CSDL (`clan_settings.branch_tiers[0]`, ví dụ `'Ngành'` cho họ Phạm Văn). Nhãn nấc 2 hiển thị động: `[ 🌿 Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ `Từ Gốc Ngành`).
+  4. *Thuật toán `getRootBranchPredecessorIds`:*
+     - Lấy nhánh cấp gốc (`matchedBranchIds[0]`) mà viewer thuộc về.
+     - Lấy các Cụ Tổ thời kỳ đầu strictly nằm bên trên Cụ Khởi Ngành (`predecessors` = cha của Cụ Khởi Ngành trở lên Đời 1, ví dụ Cụ Đời 1, Cụ Hiền Đời 4).
+     - Ở nấc 2 ("Từ Gốc Ngành"): Chỉ ẩn các Cụ trong `predecessors`, giữ lại 100% người từ Cụ Khởi Ngành trở xuống: Cụ Khởi Ngành $\rightarrow$ ... $\rightarrow$ Ông Bà Nội $\rightarrow$ Bác/Chú $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
+     - Đồng thời, route `/api/anniversaries?scope=my_lineage` sử dụng `getExtendedFamilyMemberIds` để trả về trọn vẹn gia đình mở rộng của người xem.
+
+

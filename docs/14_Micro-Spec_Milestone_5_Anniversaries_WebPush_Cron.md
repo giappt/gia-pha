@@ -817,6 +817,33 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   }
   ```
 
+### 5.20. Segmented Toggle 2 Nấc 'Nhánh Của Tôi' & Bảo Toàn Tiền Nhân Trực Hệ Đời Trên (Lineage Depth Engine V2)
+
+- **1. Phân Tầng Di Sản, Phân Cấp Gốc & Bảo Toàn Ông Bà Nội:**
+  - Tiền nhân đời trên (như *Cụ Nguyễn Thị Hiền* - Đời 4) thuộc các thế hệ sơ khai của dòng họ, trước thời điểm con cháu phân lập các Ngành/Chi (Ngành/Chi bắt đầu từ Đời 5 hoặc Đời 7).
+  - Vì vậy, Cụ Hiền là Tổ Tiên chung của toàn gia tộc, không mang nhãn riêng của một Chi cụ thể (huy hiệu là `Cụ tổ của bạn` · `Đời thứ 4`).
+  - **Khắc phục triệt để lỗ hổng sót giỗ & Bảo toàn Ông Bà Nội:**
+    - Khi con cháu chọn xem "Nhánh của tôi", toàn bộ trục gia đình ruột thịt từ **Ông Bà Nội $\rightarrow$ Bác/Chú/Cô $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân $\rightarrow$ Con cháu** BẮT BUỘC PHẢI LUÔN ĐẦY ĐỦ 100% trong mọi chế độ hiển thị (như ngày giỗ Bà nội Nguyễn Thị Chăm).
+    - Điểm phân tách giữa các nhánh lớn xuất phát từ **Cấp Gốc cao nhất** trong CSDL (`clan_settings.branch_tiers[0]`, ví dụ `'Ngành'` cho họ Phạm Văn), chứ không phải cấp "Chi" (Chi là cấp con nằm dưới Ngành).
+- **2. Nhãn Hiển Thị Động Theo Thứ Bậc CSDL (`rootTierName`):**
+  - Hệ thống lấy tên cấp gốc động:
+    `const rootTierName = clanBranches.length > 0 && clanBranches[0]?.tierName ? clanBranches[0].tierName : (clanSettings.branch_tiers?.[0] || 'Ngành');`
+  - Nhãn nấc 2 hiển thị linh hoạt theo CSDL: `[ 🌿 Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành` đối với họ Phạm Văn; `Từ Gốc Phái` đối với họ dùng Phái).
+- **3. Segmented Toggle 2 Nấc Cho 'Nhánh Của Tôi' (`src/app/anniversaries/page.tsx`):**
+  - Chuyển đổi nút bấm đơn thành **Segmented Toggle 2 nấc** ngọc bích chuẩn di sản:
+    - **Nấc 1 (`from_root` - Mặc định):** `[ 👥 Từ Đời 1]` — Trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền (Đời 4) $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bác/Chú $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
+    - **Nấc 2 (`from_branch_root` / `from_branch`):** `[ 🌿 Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ `Từ Gốc Ngành`) — Bắt đầu từ Cụ Khởi của Nhánh Cấp Gốc (Cụ Khởi Ngành) trở xuống:
+      - Ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4).
+      - **BẢO TOÀN 100%** toàn bộ thành viên trong nhánh gia đình có $G \ge G_{root}$: Cụ Khởi Ngành $\rightarrow$ ... $\rightarrow$ **Ông Bà Nội (như Bà nội Nguyễn Thị Chăm)** $\rightarrow$ **Bác/Chú/Cô** $\rightarrow$ **Bố Mẹ** $\rightarrow$ **Bản thân**.
+      - Tuyệt đối KHÔNG cắt cụt theo Chi nhỏ làm biến mất Ông Bà Nội.
+  - **Cơ chế tương tác:**
+    - Khi bấm vào nấc đang chọn $\rightarrow$ Hủy lọc nhánh (chuyển về xem toàn bộ dòng họ).
+    - Khi bấm vào nấc chưa chọn $\rightarrow$ Kích hoạt lọc theo nấc đó.
+- **4. Bộ Lọc Ngành / Chi Đa Tầng (`selectedBranch`):**
+  - Áp dụng nguyên lý `lineageDepth` vào dropdown chọn Ngành/Chi bên phải:
+    - Khi ở chế độ mặc định `from_root`: Bảo toàn toàn bộ các vị Cụ Tổ trực hệ đời trên (từ Cụ Thủy Tổ Đời 1 đến Cụ Khởi Chi, kèm phối ngẫu) thông qua hàm `getBranchAncestorIds(selectedBranch, ...)`. Thành viên hiển thị nếu là Hậu duệ của nhánh **HOẶC** là Tiền nhân trực hệ của nhánh $\rightarrow$ Ngày giỗ Cụ Hiền Đời 4 luôn hiển thị khi con cháu lọc Chi 1!
+    - Khi ở chế độ `from_branch`: Chỉ hiển thị các thành viên hậu duệ từ Cụ Khởi Nhánh được chọn trở xuống.
+
 
 ---
 
@@ -891,6 +918,10 @@ _(Đường dẫn và lệnh chạy lấy từ khối `[VERIFY_COMMANDS]` trong 
 | **TC_UT_CRON_AGGREGATED_DIGEST_V2** | Hàm buildAggregatedDigestPayload sinh tiêu đề 'Lịch giỗ', phân tách bằng ─── và luôn nạp icon chữ 范 | `tests/cron-anniversary.test.ts` | Mock thành viên giỗ hôm nay và ngày mai | Gọi buildAggregatedDigestPayload | Trả về title: 'Lịch giỗ', body phân cách bằng ───, icon: '/icons/icon-192x192.png' | Single Digest Payload V2 | `[x] PASS` |
 | **TC_INT_CRON_SINGLE_PUSH_WITH_URGENCY_HIGH** | Route Cron gửi đúng 1 push duy nhất dạng gộp bằng buildAggregatedDigestPayload với options urgency: high | `tests/cron-anniversary.test.ts` | User liên quan giỗ hôm nay và/hoặc ngày mai | Kích hoạt GET `/api/cron/anniversary-reminder` | Gửi đúng 1 web push (sent = 1) với tag 'anniversary-daily-digest' và pushOptions urgency: 'high' | Single Push Dispatch | `[x] PASS` |
 | **TC_UT_SW_CALLIGRAPHY_ICON_FALLBACK** | public/sw.js luôn đảm bảo options.icon trỏ về icon chữ 范, xóa bỏ hoàn toàn fallback chữ G | `tests/pwa-manifest.test.ts` | File `public/sw.js` | Kiểm tra logic gán options.icon | options.icon luôn được gán URL tuyệt đối hợp lệ tới icon chữ 范 | Anti-G Fallback | `[x] PASS` |
+| **TC_UT_BRANCH_ANCESTOR_PRESERVATION** | getBranchAncestorIds và filterMembersByBranch bảo toàn Cụ Tổ Đời 4 khi lọc theo Chi 1 ở chế độ from_root | `tests/branch-engine.test.ts` | Cây phân chi gồm Cụ Tổ Đời 1, Cụ Hiền Đời 4, Cụ Khởi Chi 1 Đời 5 | Lọc theo Chi 1 với lineageDepth='from_root' vs 'from_branch' | 'from_root' giữ Cụ Tổ Đời 1 và Cụ Hiền Đời 4; 'from_branch' chỉ giữ Cụ Chi 1 | Lineage Depth Engine | `[x] PASS` |
+| **TC_UT_MY_LINEAGE_DEPTH_TOGGLE_UI** | Segmented Toggle 2 nấc 'Nhánh của tôi' trên anniversaries/page.tsx hỗ trợ chuyển đổi from_root và from_branch | `tests/branch-engine.test.ts` | Đọc mã nguồn `src/app/anniversaries/page.tsx` | Kiểm tra state `lineageDepth` và JSX Toggle | Có state `lineageDepth`, các nút chuyển đổi 2 nấc trực quan và cập nhật filteredGroups chính xác | UI State & Controls | `[x] PASS` |
+| **TC_UT_MY_LINEAGE_PRESERVES_GRANDPARENTS** | Lọc 'Nhánh của tôi' ở nấc 2 ('from_branch_root') BẮT BUỘC bảo toàn 100% Ông Bà Nội (như Bà nội Nguyễn Thị Chăm) và Bác/Chú | `tests/branch-engine.test.ts` | Cây gia phả gồm Cụ Đời 1, Cụ Hiền Đời 4, Cụ Khởi Ngành 1 Đời 7, Ông Bà Nội Đời 11, Bác Đời 12, Bố Đời 12, Cháu Đời 13 | Lọc với viewerMemberId là Cháu Đời 13 ở nấc from_branch_root | Ẩn Cụ Đời 1 & Cụ Đời 4; nhưng giữ trọn vẹn Cụ Khởi Ngành 1, Ông Bà Nội Đời 11 (kể cả con dâu), Bác và Bố Mẹ | Lineage Depth Preservation | `[x] PASS` |
+| **TC_UT_DYNAMIC_ROOT_TIER_LABEL** | Nhãn nấc 2 Segmented Toggle hiển thị động theo cấp bậc gốc cao nhất trong CSDL (clan_settings.branch_tiers[0]) | `tests/branch-engine.test.ts` | branch_tiers: ['Ngành', 'Chi'] vs ['Phái', 'Chi'] | Kiểm tra hàm resolveRootTierLabel hoặc render JSX | branch_tiers[0]='Ngành' -> 'Từ Gốc Ngành'; branch_tiers[0]='Phái' -> 'Từ Gốc Phái'; fallback 'Từ Gốc Ngành' | Dynamic Tier Label | `[x] PASS` |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế)_
@@ -950,6 +981,13 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_53 (Đường Phân Cách Trực Quan Phân Tách Hôm Nay & Ngày Mai):** Khi có cả 2 ngày giỗ, nội dung Hôm nay và Ngày mai phân tách bằng đường kẻ ngang `───────────────────────` rõ ràng, ngăn nắp.
 - [ ] **UAT_54 (Bảo Toàn Đầy Đủ 100% Cả 2 Lịch Giỗ Hôm Nay & Ngày Mai):** Thông báo hiển thị đầy đủ cả sự kiện Hôm nay và Ngày mai trong 1 thông báo gộp duy nhất, tuyệt đối không bị Chrome Android nuốt mất tin Ngày mai.
 - [ ] **UAT_55 (Thông Báo Đến Tức Thì < 2s Kể Cả Khi Tắt Màn Hình):** Kích hoạt Cron khi điện thoại đang khóa màn hình $\rightarrow$ Điện thoại rung/chuông và nhận thông báo ngay lập tức trong vòng 1-2 giây nhờ cờ `Urgency: high` (không bị trễ 2-5 phút do Android Doze Mode).
+- [ ] **UAT_56 (Bảo Toàn Cụ Tổ Đời 4 Khi Lọc Theo Chi Nhánh):** Mở `/anniversaries`, chọn bộ lọc dropdown "Chi 1" ở chế độ mặc định (`from_root`) $\rightarrow$ Thẻ ngày giỗ của Cụ Nguyễn Thị Hiền (Đời 4) vẫn hiển thị trang trọng, không bị loại bỏ khỏi danh sách ngày giỗ của con cháu Chi 1.
+- [ ] **UAT_57 (Segmented Toggle 2 Nấc 'Nhánh Của Tôi' & Bảo Toàn Ông Bà Nội):**
+  - Đăng nhập tài khoản đã liên kết, truy cập `/anniversaries`.
+  - Quan sát nhãn nấc 2 hiển thị động theo cấp gốc của dòng họ: `[ 🌿 Từ Gốc Ngành ]` (nếu cấp gốc là Ngành).
+  - Nhấp nấc `[ 👥 Từ Đời 1]` $\rightarrow$ Nấc sáng ngọc bích, danh sách ngày giỗ hiển thị toàn bộ trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
+  - Nhấp nấc `[ 🌿 Từ Gốc Ngành ]` $\rightarrow$ Chuyển chế độ: ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4); nhưng **BẢO TOÀN 100% ngày giỗ của Ông Bà Nội (Bà nội Nguyễn Thị Chăm)**, Bác, Chú, Bố Mẹ và Bản thân.
+  - Bấm lại vào nấc đang chọn $\rightarrow$ Hủy lọc nhánh, hiển thị lại toàn bộ dòng họ.
 
 
 
@@ -1008,6 +1046,8 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [x] **RG49 (Single Card Full Visibility Guard):** Khi có cả 2 sự kiện giỗ (hôm nay và mai), thẻ thông báo duy nhất chứa cả 2 phần phân tách bằng `───────────────────────` với tiêu đề cố định `Lịch giỗ`.
 - [x] **RG50 (Badge Monochrome Transparency Guard):** File `public/icons/badge-72x72.png` duy trì chuẩn alpha mask nền trong suốt, nét chữ trắng đục để Small Icon trên Android luôn sắc nét.
 - [x] **RG51 (Web Push Urgency High & Immediate Delivery Guard):** Đảm bảo mọi luồng gửi Web Push đều truyền options `{ TTL: 86400, urgency: 'high' }` để không bị Android Doze Mode làm trễ.
+- [x] **RG52 (Lineage Depth Filter Safety):** Đảm bảo chuyển đổi giữa `from_root` và `from_branch` không làm sai lệch bộ lọc tìm kiếm theo từ khóa hoặc gây mất ngày giỗ của người dùng khi chưa liên kết node gia phả.
+- [x] **RG53 (Grandparent Lineage Preservation Guard):** Đảm bảo chuyển đổi qua lại giữa 2 nấc không bao giờ làm mất Ông Bà Nội (như Bà nội Nguyễn Thị Chăm) hoặc anh chị em trực hệ của Viewer.
 
 
 

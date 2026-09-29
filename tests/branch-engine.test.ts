@@ -8,12 +8,16 @@ import {
   validateBranchTree,
   resolveMemberBranchHierarchy,
   filterMembersByBranch,
+  getBranchAncestorIds,
   getNextTierName,
   DEFAULT_BRANCH_TIERS,
   findBranchesUsingTier,
+  resolveRootTierLabel,
+  getRootBranchPredecessorIds,
+  filterMembersByMyLineage,
   BranchNode,
 } from '../src/lib/tree-layout/branch-engine';
-import type { MemberRecord } from '../src/types/tree';
+import type { MemberRecord, SpouseRelationRecord } from '../src/types/tree';
 
 describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
   // Mock dữ liệu dòng họ 4 thế hệ:
@@ -481,5 +485,303 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
       content.includes('ở Đáy Cây') || content.includes('Thêm {rootTierName} Mới ở Đáy Cây'),
       'Phải có nút hỗ trợ thêm nhánh ở đáy danh sách cây'
     );
+  });
+
+  it('TC_UT_BRANCH_SPOUSE_INHERITANCE: Con dâu/con rể không có father_id tự động kế thừa Ngành/Chi qua quan hệ hôn phối', () => {
+    // Thêm Cụ Bà (vợ Cụ Chi 1) không có father_id trong dòng họ
+    const spouseMember: MemberRecord = {
+      id: 'm_dau_chi1',
+      full_name: 'Nguyễn Thị Dâu',
+      gender: 'female',
+      life_status: 'deceased',
+      father_id: null,
+      generation_level: 3,
+      is_root: false,
+    };
+    const membersWithSpouse = [...mockMembers, spouseMember];
+
+    const spouseRelations: SpouseRelationRecord[] = [
+      {
+        id: 'rel_dau_chi1',
+        member_a_id: 'm_chi1', // Cụ Chi 1 (Ngành 1 · Chi 1)
+        member_b_id: 'm_dau_chi1',
+        marriage_order: 1,
+        marriage_status: 'married',
+      },
+    ];
+
+    // 1. Khi truyền spouseRelations: Cụ Bà kế thừa chuẩn xác "Ngành 1 · Chi 1" của chồng
+    const resWithSpouse = resolveMemberBranchHierarchy(
+      'm_dau_chi1',
+      membersWithSpouse,
+      mockBranches,
+      spouseRelations
+    );
+    assert.strictEqual(resWithSpouse.branchPath, 'Ngành 1 · Chi 1');
+    assert.deepStrictEqual(resWithSpouse.matchedBranchIds, ['branch_nganh1', 'branch_chi1']);
+    assert.strictEqual(resWithSpouse.primaryBranchName, 'Chi 1');
+
+    // 2. Khi không truyền spouseRelations: Cụ Bà không tìm được Ngành/Chi (chuỗi rỗng)
+    const resWithoutSpouse = resolveMemberBranchHierarchy(
+      'm_dau_chi1',
+      membersWithSpouse,
+      mockBranches
+    );
+    assert.strictEqual(resWithoutSpouse.branchPath, '');
+    assert.deepStrictEqual(resWithoutSpouse.matchedBranchIds, []);
+
+    // 3. Con gái nội tộc (Lan - có father_id là Cụ Chi 1) vẫn kế thừa Ngành/Chi bình thường
+    const resLan = resolveMemberBranchHierarchy(
+      'm_lan',
+      membersWithSpouse,
+      mockBranches,
+      spouseRelations
+    );
+    assert.strictEqual(resLan.branchPath, 'Ngành 1 · Chi 1');
+  });
+
+  it('TC_UT_SPOUSE_RELATIONS_GET_API: API GET /api/spouse-relations trả về danh sách quan hệ hôn phối hợp lệ', async () => {
+    const { GET } = await import('../src/app/api/spouse-relations/route');
+    const response = await GET();
+    assert.strictEqual(response.status, 200, 'HTTP Status phải là 200');
+    const json = await response.json();
+    assert.strictEqual(json.success, true, 'success phải là true');
+    assert.ok(Array.isArray(json.relations), 'relations phải là mảng');
+  });
+
+  it('TC_UT_ANNIVERSARY_SPOUSE_BRANCH_INTEGRITY: Rà soát code anniversaries/page.tsx đảm bảo truyền đầy đủ 4 tham số cho resolveMemberBranchHierarchy', () => {
+    const filePath = path.resolve(process.cwd(), 'src/app/anniversaries/page.tsx');
+    assert.ok(fs.existsSync(filePath), 'File src/app/anniversaries/page.tsx phải tồn tại');
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // 1. Phải nạp /api/spouse-relations
+    assert.ok(content.includes('/api/spouse-relations'), 'Phải fetch /api/spouse-relations');
+
+    // 2. Phải có state spouseRelations
+    assert.ok(content.includes('spouseRelations'), 'Phải có state spouseRelations');
+
+    // 3. Điểm lọc tìm kiếm phải truyền spouseRelations vào resolveMemberBranchHierarchy
+    assert.ok(
+      content.includes('resolveMemberBranchHierarchy(m.id, allMembers, clanBranches, spouseRelations)'),
+      'Bộ lọc chi phái phải truyền spouseRelations'
+    );
+
+    // 4. Điểm render badge phải truyền spouseRelations vào resolveMemberBranchHierarchy
+    assert.ok(
+      content.includes('resolveMemberBranchHierarchy(member.id, allMembers, clanBranches, spouseRelations)'),
+      'Render badge ngày giỗ phải truyền spouseRelations'
+    );
+  });
+
+  it('TC_UT_BRANCH_ANCESTOR_LINEAGE_INCLUSION: getBranchAncestorIds trích xuất chính xác chuỗi Cụ Tổ tiền nhân trực hệ (kèm phối ngẫu) từ Cụ Khởi Nhánh ngược lên Đời 1', () => {
+    // Thêm phối ngẫu của Cụ Ngành 1 (Cụ Bà Ngành 1)
+    const baNganh1: MemberRecord = {
+      id: 'm_ba_nganh1',
+      full_name: 'Trần Thị Ngành Một',
+      gender: 'female',
+      life_status: 'deceased',
+      father_id: null,
+      generation_level: 2,
+      is_root: false,
+    };
+    const membersWithAncestors = [...mockMembers, baNganh1];
+    const spouseRelations: SpouseRelationRecord[] = [
+      {
+        id: 'rel_nganh1_ba',
+        member_a_id: 'm_nganh1',
+        member_b_id: 'm_ba_nganh1',
+        marriage_order: 1,
+        marriage_status: 'married',
+      },
+    ];
+
+    // Chi 1 (branch_chi1) có rootMemberId = 'm_chi1' (Đời 3)
+    // Chuỗi phụ hệ từ m_chi1: m_chi1 -> m_nganh1 (Đời 2) -> m_root (Đời 1)
+    // Kèm phối ngẫu của m_nganh1 là m_ba_nganh1
+    const ancestorIds = getBranchAncestorIds(
+      'branch_chi1',
+      mockBranches,
+      membersWithAncestors,
+      spouseRelations
+    );
+
+    assert.ok(ancestorIds.has('m_root'), 'Phải chứa Cụ Thủy Tổ Đời 1');
+    assert.ok(ancestorIds.has('m_nganh1'), 'Phải chứa Cụ Ngành 1 Đời 2');
+    assert.ok(ancestorIds.has('m_ba_nganh1'), 'Phải chứa Cụ Bà Ngành 1 (phối ngẫu của Cụ Ngành 1)');
+    assert.ok(ancestorIds.has('m_chi1'), 'Phải chứa Cụ Khởi Chi 1');
+
+    // Không được chứa các nhánh không liên quan
+    assert.ok(!ancestorIds.has('m_nganh2'), 'Không được chứa Cụ Ngành 2');
+    assert.ok(!ancestorIds.has('m_chi2'), 'Không được chứa Cụ Chi 2');
+    assert.ok(!ancestorIds.has('m_lan'), 'Không chứa con cháu đời dưới');
+
+    // Trường hợp biên: ID không tồn tại hoặc nhánh không có root
+    assert.strictEqual(getBranchAncestorIds('non_existent', mockBranches, mockMembers).size, 0);
+    assert.strictEqual(getBranchAncestorIds(null, mockBranches, mockMembers).size, 0);
+  });
+
+  it('TC_UT_BRANCH_FILTER_WITH_LINEAGE_DEPTH: Lọc theo nhánh với depth=from_root bảo toàn Cụ Tổ Đời 4, depth=from_branch chỉ lấy từ Cụ Khởi Chi trở xuống', () => {
+    // 1. Khi lineageDepth === 'from_root' (mặc định):
+    // Lọc theo Chi 1 phải giữ Cụ Tổ Đời 1 (m_root), Cụ Ngành 1 (m_nganh1), Cụ Khởi Chi 1 (m_chi1), và Con cháu (m_lan)
+    const membersFromRoot = filterMembersByBranch(
+      mockMembers,
+      'branch_chi1',
+      mockBranches,
+      undefined,
+      'from_root'
+    );
+    const fromRootIds = new Set(membersFromRoot.map((m) => m.id));
+
+    assert.ok(fromRootIds.has('m_root'), 'from_root phải bảo toàn Cụ Thủy Tổ Đời 1');
+    assert.ok(fromRootIds.has('m_nganh1'), 'from_root phải bảo toàn Cụ Ngành 1');
+    assert.ok(fromRootIds.has('m_chi1'), 'from_root phải chứa Cụ Khởi Chi 1');
+    assert.ok(fromRootIds.has('m_lan'), 'from_root phải chứa con cháu Chi 1 (Cháu Lan)');
+
+    // Không được chứa các nhánh khác
+    assert.ok(!fromRootIds.has('m_chi2'), 'Không chứa Chi 2');
+    assert.ok(!fromRootIds.has('m_tuan'), 'Không chứa Cháu Tuấn của Chi 2');
+    assert.ok(!fromRootIds.has('m_nganh2'), 'Không chứa Ngành 2');
+
+    // 2. Khi lineageDepth === 'from_branch':
+    // Chỉ lấy từ Cụ Khởi Chi trở xuống con cháu: m_chi1 và m_lan. Tuyệt đối không có m_root, m_nganh1
+    const membersFromBranch = filterMembersByBranch(
+      mockMembers,
+      'branch_chi1',
+      mockBranches,
+      undefined,
+      'from_branch'
+    );
+    const fromBranchIds = new Set(membersFromBranch.map((m) => m.id));
+
+    assert.ok(fromBranchIds.has('m_chi1'), 'from_branch phải chứa Cụ Khởi Chi 1');
+    assert.ok(fromBranchIds.has('m_lan'), 'from_branch phải chứa con cháu Chi 1 (Cháu Lan)');
+    assert.ok(!fromBranchIds.has('m_root'), 'from_branch CẤM chứa Cụ Thủy Tổ Đời 1');
+    assert.ok(!fromBranchIds.has('m_nganh1'), 'from_branch CẤM chứa Cụ Ngành 1');
+    assert.ok(!fromBranchIds.has('m_chi2'), 'from_branch không chứa Chi 2');
+  });
+
+  it('TC_UT_MY_LINEAGE_DEPTH_TOGGLE_UI: anniversaries/page.tsx chứa Segmented Toggle 2 nấc Nhánh của tôi và lọc ngày giỗ chính xác', () => {
+    const filePath = path.resolve(process.cwd(), 'src/app/anniversaries/page.tsx');
+    assert.ok(fs.existsSync(filePath), 'File src/app/anniversaries/page.tsx phải tồn tại');
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // 1. Phải import getBranchAncestorIds và filterMembersByBranch
+    assert.ok(content.includes('getBranchAncestorIds'), 'Phải import getBranchAncestorIds');
+    assert.ok(content.includes('filterMembersByBranch'), 'Phải import filterMembersByBranch');
+
+    // 2. Phải có state lineageDepth
+    assert.ok(content.includes('lineageDepth'), 'Phải có state lineageDepth');
+    assert.ok(content.includes('setLineageDepth'), 'Phải có setter setLineageDepth');
+
+    // 3. Phải có nhãn Toggle 2 nấc: "Từ Đời 1" và nấc 2 động rootTierLabel
+    assert.ok(content.includes('Từ Đời 1'), 'Phải có nấc Từ Đời 1');
+    assert.ok(content.includes('rootTierLabel'), 'Phải có nấc 2 động rootTierLabel');
+
+    // 4. Trong filteredGroups phải dùng getBranchAncestorIds khi selectedBranch !== all
+    assert.ok(
+      content.includes('getBranchAncestorIds(selectedBranch, clanBranches, allMembers, spouseRelations)'),
+      'filteredGroups phải gọi getBranchAncestorIds để bảo toàn Cụ Tổ'
+    );
+  });
+
+  it('TC_UT_MY_LINEAGE_PRESERVES_GRANDPARENTS: Lọc Nhánh của tôi ở nấc 2 (from_branch) BẮT BUỘC bảo toàn 100% Ông Bà Nội (như Bà nội Nguyễn Thị Chăm) và Bác/Chú', () => {
+    // Cây gia phả mẫu:
+    // Đời 1: Cụ Thủy Tổ (m_root)
+    // Đời 4: Cụ Hiền (m_hien) - con cháu Đời 1
+    // Đời 7: Cụ Khởi Ngành 1 (m_nganh1) - con cháu Cụ Hiền
+    // Đời 11: Ông nội (m_ong_noi) - con cháu Cụ Khởi Ngành 1
+    // Đời 11: Bà nội Nguyễn Thị Chăm (m_ba_cham) - phối ngẫu của Ông nội, con dâu không có father_id trong họ
+    // Đời 12: Bác Cường (m_bac_cuong) - con của Ông nội
+    // Đời 12: Bố (m_bo) - con của Ông nội
+    // Đời 13: Cháu Giáp (m_giap) - con của Bố
+    const testMembers: MemberRecord[] = [
+      { id: 'm_root', full_name: 'Cụ Thủy Tổ', gender: 'male', life_status: 'deceased', father_id: null, generation_level: 1, is_root: true },
+      { id: 'm_hien', full_name: 'Cụ Nguyễn Thị Hiền', gender: 'female', life_status: 'deceased', father_id: 'm_root', generation_level: 4, is_root: false },
+      { id: 'm_nganh1', full_name: 'Cụ Khởi Ngành 1', gender: 'male', life_status: 'deceased', father_id: 'm_hien', generation_level: 7, is_root: false },
+      { id: 'm_ong_noi', full_name: 'Ông nội Phạm Văn A', gender: 'male', life_status: 'deceased', father_id: 'm_nganh1', generation_level: 11, is_root: false },
+      { id: 'm_ba_cham', full_name: 'Bà nội Nguyễn Thị Chăm', gender: 'female', life_status: 'deceased', father_id: null, generation_level: 11, is_root: false },
+      { id: 'm_bac_cuong', full_name: 'Bác Phạm Văn Cường', gender: 'male', life_status: 'deceased', father_id: 'm_ong_noi', generation_level: 12, is_root: false },
+      { id: 'm_bo', full_name: 'Bố Phạm Văn B', gender: 'male', life_status: 'living', father_id: 'm_ong_noi', generation_level: 12, is_root: false },
+      { id: 'm_giap', full_name: 'Cháu Phạm Văn Giáp', gender: 'male', life_status: 'living', father_id: 'm_bo', generation_level: 13, is_root: false },
+    ];
+
+    const testBranches: BranchNode[] = [
+      {
+        id: 'branch_nganh1',
+        name: 'Ngành 1',
+        tierName: 'Ngành',
+        rootMemberId: 'm_nganh1',
+        children: [
+          {
+            id: 'branch_chi1',
+            name: 'Chi 1',
+            tierName: 'Chi',
+            rootMemberId: 'm_ong_noi',
+            children: [],
+          },
+        ],
+      },
+    ];
+
+    const testSpouses: SpouseRelationRecord[] = [
+      {
+        id: 'rel_ong_ba',
+        member_a_id: 'm_ong_noi',
+        member_b_id: 'm_ba_cham',
+        marriage_order: 1,
+        marriage_status: 'married',
+      },
+    ];
+
+    // 1. Kiểm tra hàm getRootBranchPredecessorIds:
+    // Tiền nhân của Ngành 1 chỉ gồm các Cụ trước Cụ Khởi Ngành 1: Cụ Thủy Tổ và Cụ Hiền
+    const predecessors = getRootBranchPredecessorIds('branch_nganh1', testBranches, testMembers, testSpouses);
+    assert.ok(predecessors.has('m_root'), 'Predecessors phải chứa Cụ Thủy Tổ Đời 1');
+    assert.ok(predecessors.has('m_hien'), 'Predecessors phải chứa Cụ Hiền Đời 4');
+    assert.ok(!predecessors.has('m_nganh1'), 'Predecessors KHÔNG được chứa Cụ Khởi Ngành 1');
+    assert.ok(!predecessors.has('m_ong_noi'), 'Predecessors KHÔNG được chứa Ông nội');
+    assert.ok(!predecessors.has('m_ba_cham'), 'Predecessors KHÔNG được chứa Bà nội Nguyễn Thị Chăm');
+    assert.ok(!predecessors.has('m_bac_cuong'), 'Predecessors KHÔNG được chứa Bác Cường');
+
+    // 2. Kiểm tra hàm filterMembersByMyLineage ở nấc 2 'from_branch':
+    const filteredFromBranch = filterMembersByMyLineage(testMembers, 'm_giap', testBranches, testSpouses, 'from_branch');
+    const branchIds = new Set(filteredFromBranch.map((m) => m.id));
+
+    // Ẩn các Cụ thời kỳ đầu trước phân ngành
+    assert.ok(!branchIds.has('m_root'), 'Nấc 2 phải ẩn Cụ Thủy Tổ Đời 1');
+    assert.ok(!branchIds.has('m_hien'), 'Nấc 2 phải ẩn Cụ Hiền Đời 4');
+
+    // BẢO TOÀN 100% Cụ Khởi Ngành, Ông Bà Nội (kể cả con dâu), Bác/Chú, Bố Mẹ, Bản thân
+    assert.ok(branchIds.has('m_nganh1'), 'Nấc 2 phải giữ Cụ Khởi Ngành 1');
+    assert.ok(branchIds.has('m_ong_noi'), 'Nấc 2 phải giữ Ông nội');
+    assert.ok(branchIds.has('m_ba_cham'), 'Nấc 2 BẮT BUỘC phải giữ Bà nội Nguyễn Thị Chăm');
+    assert.ok(branchIds.has('m_bac_cuong'), 'Nấc 2 BẮT BUỘC phải giữ Bác Phạm Văn Cường');
+    assert.ok(branchIds.has('m_bo'), 'Nấc 2 phải giữ Bố');
+    assert.ok(branchIds.has('m_giap'), 'Nấc 2 phải giữ Bản thân');
+
+    // 3. Kiểm tra ở nấc 1 'from_root': Giữ toàn bộ từ Đời 1
+    const filteredFromRoot = filterMembersByMyLineage(testMembers, 'm_giap', testBranches, testSpouses, 'from_root');
+    const rootIds = new Set(filteredFromRoot.map((m) => m.id));
+    assert.ok(rootIds.has('m_root'), 'Nấc 1 phải giữ Cụ Thủy Tổ Đời 1');
+    assert.ok(rootIds.has('m_hien'), 'Nấc 1 phải giữ Cụ Hiền Đời 4');
+    assert.ok(rootIds.has('m_ba_cham'), 'Nấc 1 phải giữ Bà nội Nguyễn Thị Chăm');
+  });
+
+  it('TC_UT_DYNAMIC_ROOT_TIER_LABEL: Nhãn nấc 2 Segmented Toggle hiển thị động theo cấp bậc gốc cao nhất trong CSDL', () => {
+    // 1. Khi branches có tierName = 'Ngành'
+    const labelNganh = resolveRootTierLabel(['Ngành', 'Chi'], [{ id: 'b1', name: 'Ngành 1', tierName: 'Ngành', rootMemberId: null, children: [] }]);
+    assert.strictEqual(labelNganh, 'Từ Gốc Ngành');
+
+    // 2. Khi branches có tierName = 'Phái'
+    const labelPhai = resolveRootTierLabel(['Phái', 'Chi'], [{ id: 'b1', name: 'Phái 1', tierName: 'Phái', rootMemberId: null, children: [] }]);
+    assert.strictEqual(labelPhai, 'Từ Gốc Phái');
+
+    // 3. Khi branches rỗng, đọc từ branch_tiers[0]
+    const labelFallbackTier = resolveRootTierLabel(['Giáp', 'Chi'], []);
+    assert.strictEqual(labelFallbackTier, 'Từ Gốc Giáp');
+
+    // 4. Khi cả hai rỗng, fallback về 'Từ Gốc Ngành'
+    const labelDefault = resolveRootTierLabel([], []);
+    assert.strictEqual(labelDefault, 'Từ Gốc Ngành');
   });
 });

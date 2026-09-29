@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { MemberRecord } from '@/types/tree';
-import { getUpcomingAnniversaries, getLineageMemberIds } from '@/lib/anniversaries/anniversary-engine';
+import { getUpcomingAnniversaries, getExtendedFamilyMemberIds } from '@/lib/anniversaries/anniversary-engine';
 import { buildSpouseMap } from '@/lib/kinship-engine/lca-finder';
 import { KinshipRegion, CustomKinshipDictionary } from '@/types/kinship';
 
@@ -104,9 +104,9 @@ export async function GET(request: NextRequest) {
       spouseMap,
     });
 
-    // Lọc theo nhánh dọc của người xem nếu có yêu cầu scope=my_lineage
+    // Lọc theo nhánh gia đình mở rộng của người xem nếu có yêu cầu scope=my_lineage
     if (scope === 'my_lineage' && effectiveViewerId && members.length > 0) {
-      const lineageIds = getLineageMemberIds(effectiveViewerId, members, spouseMap);
+      const lineageIds = getExtendedFamilyMemberIds(effectiveViewerId, members, spouseMap);
       data = data
         .map((group) => ({
           ...group,

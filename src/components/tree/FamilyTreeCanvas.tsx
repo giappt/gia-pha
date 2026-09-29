@@ -109,6 +109,16 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
     return null;
   }, [currentDataset]);
 
+  const activeSpouseRelations = useMemo(() => {
+    if (currentDataset === 'clan1500' && largeClanData) {
+      return largeClanData.spouseRelations;
+    }
+    if (currentDataset === 'polygamy') {
+      return SAMPLE_POLYGAMY_SPOUSES;
+    }
+    return liveSpouses;
+  }, [currentDataset, largeClanData, liveSpouses]);
+
   // Bộ dữ liệu thành viên đang hoạt động
   const activeMembers = useMemo(() => {
     let raw: MemberRecord[];
@@ -122,7 +132,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
 
     if (clanBranches && clanBranches.length > 0 && currentDataset === 'clan28') {
       return raw.map((m) => {
-        const res = resolveMemberBranchHierarchy(m.id, raw, clanBranches);
+        const res = resolveMemberBranchHierarchy(m.id, raw, clanBranches, activeSpouseRelations);
         if (res.branchPath) {
           return {
             ...m,
@@ -134,17 +144,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
     }
 
     return raw;
-  }, [currentDataset, largeClanData, liveMembers, clanBranches]);
-
-  const activeSpouseRelations = useMemo(() => {
-    if (currentDataset === 'clan1500' && largeClanData) {
-      return largeClanData.spouseRelations;
-    }
-    if (currentDataset === 'polygamy') {
-      return SAMPLE_POLYGAMY_SPOUSES;
-    }
-    return liveSpouses;
-  }, [currentDataset, largeClanData, liveSpouses]);
+  }, [currentDataset, largeClanData, liveMembers, clanBranches, activeSpouseRelations]);
 
   // Tính số lượng thành viên chưa nối phả
   const unlinkedMembers = useMemo(() => {

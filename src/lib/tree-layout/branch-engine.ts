@@ -298,13 +298,80 @@ export function resolveMemberBranchHierarchy(
 }
 
 /**
+ * Trích xuất toàn bộ ID các vị Cụ Tổ tiền nhân trực hệ (kèm phối ngẫu) từ Cụ Khởi Nhánh (rootMemberId)
+ * ngược lên tới Cụ Thủy Tổ Đời 1.
+ * Dùng để bảo toàn các Cụ Tổ đời trên (như Cụ Nguyễn Thị Hiền Đời 4) khi con cháu lọc xem Lịch Giỗ theo Chi/Ngành.
+ */
+export function getBranchAncestorIds(
+  branchId: string | null | undefined,
+  branches: BranchNode[],
+  members: MemberRecord[],
+  spouseRelations?: SpouseRelationRecord[]
+): Set<string> {
+  const ancestorIds = new Set<string>();
+  if (!branchId || branchId === 'all' || !Array.isArray(branches) || !Array.isArray(members) || members.length === 0) {
+    return ancestorIds;
+  }
+
+  const targetNode = findBranchNode(branches, branchId);
+  if (!targetNode || !targetNode.rootMemberId) {
+    return ancestorIds;
+  }
+
+  const memberMap = new Map<string, MemberRecord>();
+  for (const m of members) {
+    if (m?.id) memberMap.set(m.id, m);
+  }
+
+  const spouseMap = new Map<string, Set<string>>();
+  if (Array.isArray(spouseRelations)) {
+    for (const rel of spouseRelations) {
+      if (!rel.member_a_id || !rel.member_b_id) continue;
+      if (!spouseMap.has(rel.member_a_id)) spouseMap.set(rel.member_a_id, new Set());
+      if (!spouseMap.has(rel.member_b_id)) spouseMap.set(rel.member_b_id, new Set());
+      spouseMap.get(rel.member_a_id)!.add(rel.member_b_id);
+      spouseMap.get(rel.member_b_id)!.add(rel.member_a_id);
+    }
+  }
+
+  // Dò ngược chuỗi phụ hệ từ rootMemberId lên Cụ Thủy Tổ Đời 1
+  let curr = memberMap.get(targetNode.rootMemberId);
+  const visited = new Set<string>();
+
+  while (curr && !visited.has(curr.id)) {
+    visited.add(curr.id);
+    ancestorIds.add(curr.id);
+
+    // Bổ sung cả phối ngẫu của vị Cụ Tổ này (nếu có)
+    const spouses = spouseMap.get(curr.id);
+    if (spouses) {
+      spouses.forEach((spouseId) => {
+        ancestorIds.add(spouseId);
+      });
+    }
+
+    if (curr.father_id) {
+      curr = memberMap.get(curr.father_id);
+    } else {
+      break;
+    }
+  }
+
+  return ancestorIds;
+}
+
+/**
  * Lọc danh sách thành viên thuộc về một nhánh cụ thể (bao gồm con cháu của toàn bộ nhánh con)
+ * Hỗ trợ tham số lineageDepth:
+ * - 'from_root': Bảo toàn các vị Cụ Tổ tiền nhân trực hệ từ Cụ Thủy Tổ Đời 1 đến Cụ Khởi Chi.
+ * - 'from_branch' (Mặc định): Chỉ lấy từ Cụ Khởi Chi trở xuống con cháu.
  */
 export function filterMembersByBranch(
   members: MemberRecord[],
   branchId: string | null | undefined,
   branches: BranchNode[],
-  spouseRelations?: SpouseRelationRecord[]
+  spouseRelations?: SpouseRelationRecord[],
+  lineageDepth: 'from_root' | 'from_branch' = 'from_branch'
 ): MemberRecord[] {
   if (!branchId || branchId === 'all' || !Array.isArray(members)) {
     return members;
@@ -319,7 +386,18 @@ export function filterMembersByBranch(
     return members;
   }
 
+  const branchAncestorIds =
+    lineageDepth === 'from_root'
+      ? getBranchAncestorIds(branchId, branches, members, spouseRelations)
+      : new Set<string>();
+
   return members.filter((member) => {
+    // 1. Nếu là Cụ Tổ tiền nhân trực hệ của nhánh (khi ở chế độ from_root)
+    if (branchAncestorIds.has(member.id)) {
+      return true;
+    }
+
+    // 2. Nếu là hậu duệ của nhánh (hoặc con dâu/con rể kế thừa theo chồng/vợ)
     const { matchedBranchIds } = resolveMemberBranchHierarchy(
       member.id,
       members,
@@ -372,3 +450,123 @@ export function saveUserPreferences(prefs: Partial<UserPreferences>): UserPrefer
     return { focusedBranchId: null, enablePushNotifications: false, ...prefs };
   }
 }
+
+/**
+ * Trả về nhãn nấc 2 động theo cấp bậc gốc cao nhất trong CSDL (clan_settings.branch_tiers[0] hoặc branches[0].tierName)
+ * Ví dụ: 'Từ Gốc Ngành', 'Từ Gốc Phái'... Fallback: 'Từ Gốc Ngành'
+ */
+export function resolveRootTierLabel(
+  branchTiers?: string[],
+  branches?: BranchNode[]
+): string {
+  if (Array.isArray(branches) && branches.length > 0 && branches[0]?.tierName) {
+    return `Từ Gốc ${branches[0].tierName}`;
+  }
+  const firstTier = Array.isArray(branchTiers) && branchTiers.length > 0 ? branchTiers[0] : 'Ngành';
+  return `Từ Gốc ${firstTier || 'Ngành'}`;
+}
+
+/**
+ * Trích xuất ID các Cụ Tổ tiền nhân nằm bên trên Cụ Khởi Nhánh Gốc (Root Tier Branch)
+ * Dùng cho nấc 2 'Từ Gốc Ngành' của 'Nhánh của tôi':
+ * Chỉ loại bỏ các Cụ Tổ thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4),
+ * và BẢO TOÀN 100% Cụ Khởi Ngành trở xuống: Ông Bà Nội, Bác/Chú, Bố Mẹ, Bản thân...
+ */
+export function getRootBranchPredecessorIds(
+  rootBranchId: string | null | undefined,
+  branches: BranchNode[],
+  members: MemberRecord[],
+  spouseRelations?: SpouseRelationRecord[]
+): Set<string> {
+  const predecessorIds = new Set<string>();
+  if (!rootBranchId || !Array.isArray(branches) || !Array.isArray(members) || members.length === 0) {
+    return predecessorIds;
+  }
+
+  const rootNode = findBranchNode(branches, rootBranchId);
+  if (!rootNode || !rootNode.rootMemberId) {
+    return predecessorIds;
+  }
+
+  const memberMap = new Map<string, MemberRecord>();
+  for (const m of members) {
+    if (m?.id) memberMap.set(m.id, m);
+  }
+
+  const spouseMap = new Map<string, Set<string>>();
+  if (Array.isArray(spouseRelations)) {
+    for (const rel of spouseRelations) {
+      if (!rel.member_a_id || !rel.member_b_id) continue;
+      if (!spouseMap.has(rel.member_a_id)) spouseMap.set(rel.member_a_id, new Set());
+      if (!spouseMap.has(rel.member_b_id)) spouseMap.set(rel.member_b_id, new Set());
+      spouseMap.get(rel.member_a_id)!.add(rel.member_b_id);
+      spouseMap.get(rel.member_b_id)!.add(rel.member_a_id);
+    }
+  }
+
+  const rootMember = memberMap.get(rootNode.rootMemberId);
+  if (!rootMember || !rootMember.father_id) {
+    return predecessorIds;
+  }
+
+  // Bắt đầu duyệt ngược từ CHA của Cụ Khởi Ngành (không bao gồm Cụ Khởi Ngành)
+  let curr = memberMap.get(rootMember.father_id);
+  const visited = new Set<string>();
+
+  while (curr && !visited.has(curr.id)) {
+    visited.add(curr.id);
+    predecessorIds.add(curr.id);
+
+    const spouses = spouseMap.get(curr.id);
+    if (spouses) {
+      spouses.forEach((spId) => predecessorIds.add(spId));
+    }
+
+    if (curr.father_id) {
+      curr = memberMap.get(curr.father_id);
+    } else {
+      break;
+    }
+  }
+
+  return predecessorIds;
+}
+
+/**
+ * Lọc danh sách thành viên cho chế độ 'Nhánh của tôi'
+ * Hỗ trợ 2 nấc:
+ * - 'from_root': Giữ toàn bộ trục dọc từ Cụ Thủy Tổ Đời 1, Cụ Hiền Đời 4, Cụ Khởi Ngành, Ông Bà Nội, Bác/Chú, Bố Mẹ, Bản thân
+ * - 'from_branch': Chỉ ẩn các Cụ Tổ thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Đời 4);
+ *                  BẢO TOÀN 100% từ Cụ Khởi Ngành trở xuống: Ông Bà Nội (như Bà nội Nguyễn Thị Chăm), Bác/Chú, Bố Mẹ, Bản thân
+ */
+export function filterMembersByMyLineage(
+  members: MemberRecord[],
+  viewerMemberId: string,
+  branches: BranchNode[],
+  spouseRelations?: SpouseRelationRecord[],
+  lineageDepth: 'from_root' | 'from_branch' = 'from_root'
+): MemberRecord[] {
+  if (!viewerMemberId || !Array.isArray(members) || members.length === 0) {
+    return members;
+  }
+
+  if (lineageDepth === 'from_root') {
+    return members;
+  }
+
+  // lineageDepth === 'from_branch' (Từ Gốc Ngành/Phái):
+  // 1. Tìm nhánh cấp gốc cao nhất (Root Tier Branch) mà người xem thuộc về
+  const res = resolveMemberBranchHierarchy(viewerMemberId, members, branches, spouseRelations);
+  const rootBranchId = res.matchedBranchIds.length > 0 ? res.matchedBranchIds[0] : null;
+
+  if (!rootBranchId) {
+    return members;
+  }
+
+  // 2. Lấy danh sách ID các Cụ Tổ thời kỳ đầu (trước Cụ Khởi Ngành)
+  const predecessorIds = getRootBranchPredecessorIds(rootBranchId, branches, members, spouseRelations);
+
+  // 3. Loại bỏ các Cụ Tổ thời kỳ đầu, giữ lại toàn bộ con cháu từ Cụ Khởi Ngành trở xuống (Ông Bà Nội, Bác, Chú, Bố Mẹ...)
+  return members.filter((m) => !predecessorIds.has(m.id));
+}
+

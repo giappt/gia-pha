@@ -129,6 +129,12 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
 - **GET:** Trả về thêm `branch_tiers: clanData?.branch_tiers || devBranchTiers || DEFAULT_BRANCH_TIERS`.
 - **PATCH:** Hỗ trợ nhận `branch_tiers?: string[]`. Tiến hành validate mảng chuỗi không rỗng (trim, loại bỏ trùng lặp). Lưu vào Supabase bảng `clan_settings` và đồng bộ cookie dev `fat_dev_branch_tiers` phục vụ môi trường offline/local.
 
+### 4.3. File: `src/app/api/spouse-relations/route.ts` (Mở Rộng API Hôn Phối)
+- **GET:** Cung cấp endpoint đọc danh sách quan hệ hôn phối:
+  - Truy vấn Supabase: `supabase.from('spouse_relations').select('*')`.
+  - Fallback fixture test / offline: Nếu DB rỗng hoặc môi trường test, nạp `SAMPLE_SPOUSE_RELATIONS`.
+  - Phản hồi JSON: `{ success: true, relations: SpouseRelationRecord[], data: SpouseRelationRecord[] }`.
+
 ---
 
 ## 5. FRONTEND UI & LOGIC
@@ -170,14 +176,50 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
     - Khi bấm `[+ Thêm {Cấp Gốc} Mới]`: Tự động nạp Cấp đầu tiên (`tiers[0] || 'Nhánh'`).
     - Khi bấm `[+ Thêm Con]`: Tự động gọi `getNextTierName` để gán cấp kế tiếp theo thứ bậc dòng họ.
 
-### 5.4. File: `src/app/anniversaries/page.tsx`
-- Đọc `branches` từ clan settings.
-- Bộ lọc Nhánh hiển thị danh mục chuẩn từ cây phân chi thay vì lọc chuỗi tự do.
-- Tự động nạp giá trị mặc định từ `UserPreferences` (`focusedBranchId`).
+### 5.4. File: `src/app/anniversaries/page.tsx` (Kế Thừa Ngành/Chi Cho Phối Ngẫu)
+- Nạp danh mục `branches` từ `/api/clan-settings` và danh sách thành viên `members` từ `/api/members`.
+- **Nạp Quan Hệ Hôn Phối:** Nạp `spouseRelations` từ `/api/spouse-relations` lưu vào state.
+- **Truyền Đầy Đủ 4 Tham Số:** Gọi `resolveMemberBranchHierarchy(memberId, allMembers, clanBranches, spouseRelations)`:
+  - **Tại Thẻ Ngày Giỗ (Badge Render):** Con dâu/con rể không có `father_id` trong họ tự động kế thừa và hiển thị đồng nhất `Đời [X] · [Ngành Y · Chi Z]` của người phối ngẫu theo Phương án 1 (ví dụ: *Bà nội Nguyễn Thị Chăm* hiển thị `Đời 11 · Ngành 1 · Chi 1`).
+  - **Tại Bộ Lọc Chi Phái:** Truyền `spouseRelations` khi kiểm tra `res.matchedBranchIds.includes(selectedBranch)` để ngày giỗ của con dâu không bị lọc mất khi người dùng chọn lọc theo Ngành/Chi của chồng.
 
 ### 5.5. Khắc Phục Lỗi Giao Diện & Bố Cục (UI Polish & Layout Hardening)
 - Chuẩn hóa Backdrop Blur Tailwind v3.
 - Ngăn chặn xung đột bối cảnh giữa Modal và trang nền.
+
+### 5.6. File: `src/components/tree/FamilyTreeCanvas.tsx`
+- Truyền `activeSpouseRelations` vào hàm `resolveMemberBranchHierarchy` khi map `branch_name` cho các node thành viên, đảm bảo tính đồng bộ danh xưng phân chi giữa Cây phả hệ và Lịch Giỗ.
+
+### 5.7. Bảo Toàn Cụ Tổ Tiền Nhân Trực Hệ & Dynamic Root Tier Lineage Scope (`lineageDepth` V2)
+
+- **Bản Chất Nghiệp Vụ & Phân Tầng Di Sản:**
+  - Các vị Cụ Tổ đời trên (ví dụ *Cụ Nguyễn Thị Hiền* - Đời 4) thuộc thế hệ sơ khai trước khi phân lập Ngành/Chi (Ngành/Chi bắt đầu từ Đời 5 hoặc Đời 7 do con cháu đời sau định hình).
+  - Cụ Hiền là Tổ Tiên chung của toàn bộ dòng họ, không thuộc riêng bất kỳ Chi nào. Vì vậy huy hiệu của Cụ là `Cụ tổ của bạn` · `Đời thứ 4`, hoàn toàn không có nhãn Ngành/Chi riêng lẻ.
+  - **Khắc phục triệt để lỗi hổng sót giỗ & Bảo toàn Ông Bà Nội:**
+    - Khi con cháu chọn xem "Nhánh của tôi", toàn bộ trục gia đình ruột thịt từ **Ông Bà Nội $\rightarrow$ Bác/Chú/Cô $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân $\rightarrow$ Con cháu** BẮT BUỘC PHẢI LUÔN ĐẦY ĐỦ 100% trong mọi chế độ hiển thị (như ngày giỗ Bà nội Nguyễn Thị Chăm).
+    - Sự phân chia giữa các nhánh lớn bắt đầu từ **Cấp Gốc cao nhất** được định nghĩa trong CSDL (`clan_settings.branch_tiers[0]`, ví dụ `'Ngành'` cho họ Phạm Văn), chứ không phải cấp "Chi" (Chi nhỏ hơn Ngành).
+- **Nhãn Hiển Thị Động Theo Thứ Bậc CSDL (`rootTierName`):**
+  - Hệ thống lấy tên cấp gốc động:
+    `const rootTierName = clanBranches.length > 0 && clanBranches[0]?.tierName ? clanBranches[0].tierName : (clanSettings.branch_tiers?.[0] || 'Ngành');`
+  - Nhãn nấc 2 hiển thị linh hoạt: `[ 🌿 Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành` đối với họ Phạm Văn; `Từ Gốc Phái` đối với họ dùng Phái).
+- **Cơ Chế Phân Cấp Lọc Lineage Depth V2 Cho 'Nhánh Của Tôi':**
+  - Cơ sở lọc luôn dựa trên tập hợp gia đình mở rộng của Viewer: `getExtendedFamilyMemberIds(viewerMemberId, allMembers, spouseRelations)` kết hợp chuỗi tổ tiên trực hệ.
+  - **Nấc 1 (`from_root` - Mặc định):** `[ 👥 Từ Đời 1]`
+    - Trục dọc gia đình từ Cụ Thủy Tổ Đời 1 $\rightarrow$ Cụ Hiền (Đời 4) $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bác/Chú $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
+    - Hiển thị đầy đủ cả các Cụ Tổ chung thời kỳ đầu trước khi phân nhánh.
+  - **Nấc 2 (`from_branch_root` / `from_branch`):** `[ 🌿 Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành`)
+    - Bắt đầu từ Cụ Khởi của Nhánh Cấp Gốc (Cụ Khởi Ngành) mà Viewer trực thuộc: xác định thế hệ khởi điểm $G_{root}$ của Cụ Khởi Ngành.
+    - Ẩn các Cụ Tổ chung thời kỳ đầu có thế hệ $G < G_{root}$ (Cụ Đời 1, Cụ Hiền Đời 4).
+    - **BẢO TOÀN 100%** toàn bộ thành viên trong nhánh gia đình có $G \ge G_{root}$: Cụ Khởi Ngành $\rightarrow$ ... $\rightarrow$ **Ông Bà Nội (như Bà nội Nguyễn Thị Chăm)** $\rightarrow$ **Bác/Chú/Cô** $\rightarrow$ **Bố Mẹ** $\rightarrow$ **Bản thân**.
+    - Tuyệt đối KHÔNG cắt cụt theo Chi nhỏ làm biến mất Ông Bà Nội.
+- **Bộ Lọc Ngành / Chi Dropdown Phía Phải:**
+  - Áp dụng nguyên lý `lineageDepth`:
+    - Khi `depth === 'from_root'`: Thành viên được giữ lại nếu là Hậu duệ của nhánh (`matchedBranchIds.includes(branchId)`) **HOẶC** là Tiền nhân trực hệ (`branchAncestorIds.has(m.id)`). $\rightarrow$ Cụ Hiền Đời 4 luôn hiển thị trang trọng trong ngày giỗ của con cháu Chi 1!
+    - Khi `depth === 'from_branch'`: Chỉ giữ lại các thành viên hậu duệ từ Cụ Khởi Nhánh được chọn trở xuống.
+- **Tương Tác Toggle:**
+  - Bấm vào nấc đang chọn $\rightarrow$ Hủy lọc nhánh (xem toàn bộ dòng họ).
+  - Bấm vào nấc chưa chọn $\rightarrow$ Kích hoạt ngay chế độ tương ứng.
+
 
 ---
 
@@ -188,6 +230,7 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
 - **Edge Case 3 (Trùng Tên Nhánh):** Các nhánh ở các Ngành khác nhau có thể trùng tên → Hệ thống định danh bằng `id` (UUID/slug duy nhất), hiển thị đường dẫn đầy đủ `Ngành 1 > Chi 2`.
 - **Edge Case 4 (Màn hình Viewport Thấp & Containing Block):** Nhờ cơ chế `createPortal`, Modal cá nhân luôn bám vào Initial Containing Block của `document.body` (100vw × 100vh).
 - **Edge Case 5 (Chặn Xóa Cấp Bậc Đang Sử Dụng):** Khi người dùng xóa một Cấp bậc khỏi danh mục, nếu cấp đó đang gán cho $\ge 1$ nhánh trong cây $\rightarrow$ Hệ thống từ chối xóa và hiện banner cảnh báo đỏ. Chỉ cho phép xóa khi không còn nhánh nào dùng, hỗ trợ xóa đến mảng rỗng `[]` để thiết lập lại từ đầu.
+- **Edge Case 6 (Nhánh Không Có RootMemberId Khi Tính Ancestors):** Nếu một nhánh chưa được gán `rootMemberId` trong CSDL $\rightarrow$ `getBranchAncestorIds` trả về `Set` rỗng an toàn, không ném ngoại lệ hay gây crash.
 
 ---
 
@@ -213,6 +256,14 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
 | **TC_UT_TIER_INTEGRITY_GUARD_02** | `findBranchesUsingTier` trả về rỗng khi cấp bậc không dùng $\rightarrow$ Cho phép xóa cấp cuối an toàn | `tests/branch-engine.test.ts` | Cây phân cấp không có nhánh nào mang cấp `Phái` | Gọi `findBranchesUsingTier(mockBranches, 'Phái')` | Trả về `[]` với độ dài bằng 0 | Logic Guard | - [x] PASS |
 | **TC_UT_FLAT_STEPPER_NO_BOX_IN_BOX** | Rà soát loại bỏ triệt để card xám bao bọc Thứ Bậc Tông Tộc | `tests/branch-engine.test.ts` | Đọc mã nguồn `BranchTaxonomyManager.tsx` | Quét class `bg-slate-50/80 dark:bg-slate-850/60 border border-slate-200/70` | Đảm bảo không còn box xám bao quanh thanh thứ bậc tông tộc | UI Anti Box-in-Box | - [x] PASS |
 | **TC_UT_ADD_BRANCH_BTN_POSITION** | Nút Thêm Nhánh Mới được bố trí tại Cụm Cây phân cấp thay vì Header chính | `tests/branch-engine.test.ts` | Đọc mã nguồn `BranchTaxonomyManager.tsx` | Kiểm tra vị trí của `add-root-branch-btn` | Nằm trong phân khu Cây Phân Cấp (Cụm 2), không nằm ở Header chính trang | Ergonomics / UX | - [x] PASS |
+| **TC_UT_BRANCH_SPOUSE_INHERITANCE** | Con dâu/con rể không có father_id tự động kế thừa Ngành/Chi qua quan hệ hôn phối | `tests/branch-engine.test.ts` | Thành viên nữ không có `father_id`, có quan hệ hôn phối với thành viên nam thuộc `Ngành 1 · Chi 1` | Gọi `resolveMemberBranchHierarchy(femaleId, members, branches, spouseRelations)` | Trả về `branchPath: "Ngành 1 · Chi 1"`, `matchedBranchIds` bao gồm ID các nhánh tương ứng | Spousal Branch Inheritance | - [x] PASS |
+| **TC_UT_SPOUSE_RELATIONS_GET_API** | API GET /api/spouse-relations trả về danh sách quan hệ hôn phối hợp lệ | `tests/branch-engine.test.ts` | Khởi tạo request GET `/api/spouse-relations` | Gọi hàm handler GET trong route | Trả về HTTP 200, JSON chứa `{ success: true, relations: Array }` | API Contract | - [x] PASS |
+| **TC_UT_ANNIVERSARY_SPOUSE_BRANCH_INTEGRITY** | Rà soát code anniversaries/page.tsx đảm bảo truyền đầy đủ 4 tham số cho resolveMemberBranchHierarchy | `tests/branch-engine.test.ts` | Đọc mã nguồn `src/app/anniversaries/page.tsx` | Kiểm tra các điểm gọi `resolveMemberBranchHierarchy` | Cả điểm lọc tìm kiếm và điểm render badge đều truyền tham số `spouseRelations` | Code Integrity | - [x] PASS |
+| **TC_UT_BRANCH_ANCESTOR_LINEAGE_INCLUSION** | `getBranchAncestorIds` trích xuất chính xác chuỗi Cụ Tổ tiền nhân trực hệ (kèm phối ngẫu) từ Cụ Khởi Nhánh ngược lên Đời 1 | `tests/branch-engine.test.ts` | Cây gia phả gồm Cụ Tổ Đời 1, Cụ Hiền Đời 4, Cụ Khởi Chi 1 Đời 5; Chi 1 có rootMemberId = Cụ Khởi Chi 1 | Gọi `getBranchAncestorIds(branchChi1Id, branches, members, spouseRelations)` | Trả về Set chứa Cụ Tổ Đời 1 và Cụ Hiền Đời 4 (kèm phối ngẫu), không sót tiền nhân | Ancestor Lineage Engine | - [x] PASS |
+| **TC_UT_BRANCH_FILTER_WITH_LINEAGE_DEPTH** | Lọc theo nhánh với depth='from_root' bảo toàn Cụ Tổ Đời 4, depth='from_branch' chỉ lấy từ Cụ Khởi Chi trở xuống | `tests/branch-engine.test.ts` | Danh sách gồm Cụ Hiền Đời 4, Cụ Chi 1 Đời 5, và Cụ Chi 2 Đời 5 | Gọi `filterMembersByBranch` với depth='from_root' vs depth='from_branch' | `from_root` giữ Cụ Hiền & Cụ Chi 1 (loại Cụ Chi 2); `from_branch` chỉ giữ Cụ Chi 1 | Lineage Depth Filtering | - [x] PASS |
+| **TC_UT_MY_LINEAGE_DEPTH_TOGGLE_UI** | anniversaries/page.tsx chứa Segmented Toggle 2 nấc 'Nhánh của tôi' và lọc ngày giỗ chính xác | `tests/branch-engine.test.ts` | Đọc mã nguồn `src/app/anniversaries/page.tsx` | Kiểm tra state `lineageDepth`, các nút Toggle nấc 1 'Từ Đời 1' và nấc 2 động | Có state `lineageDepth`, JSX Segmented Toggle với icon Users/Sprout, logic lọc bảo toàn Cụ Tổ | UI State & Controls | - [x] PASS |
+| **TC_UT_MY_LINEAGE_PRESERVES_GRANDPARENTS** | Lọc 'Nhánh của tôi' ở nấc 2 ('from_branch_root') BẮT BUỘC bảo toàn 100% Ông Bà Nội (như Bà nội Nguyễn Thị Chăm) và Bác/Chú | `tests/branch-engine.test.ts` | Cây gia phả gồm Cụ Đời 1, Cụ Hiền Đời 4, Cụ Khởi Ngành 1 Đời 7, Ông Bà Nội Đời 11, Bác Đời 12, Bố Đời 12, Cháu Đời 13 | Lọc với viewerMemberId là Cháu Đời 13 ở nấc from_branch_root | Ẩn Cụ Đời 1 & Cụ Đời 4; nhưng giữ trọn vẹn Cụ Khởi Ngành 1, Ông Bà Nội Đời 11 (kể cả con dâu), Bác và Bố Mẹ | Lineage Depth Preservation | - [x] PASS |
+| **TC_UT_DYNAMIC_ROOT_TIER_LABEL** | Nhãn nấc 2 Segmented Toggle hiển thị động theo cấp bậc gốc cao nhất trong CSDL (clan_settings.branch_tiers[0]) | `tests/branch-engine.test.ts` | branch_tiers: ['Ngành', 'Chi'] vs ['Phái', 'Chi'] | Kiểm tra hàm resolveRootTierLabel hoặc render JSX | branch_tiers[0]='Ngành' -> 'Từ Gốc Ngành'; branch_tiers[0]='Phái' -> 'Từ Gốc Phái'; fallback 'Từ Gốc Ngành' | Dynamic Tier Label | - [x] PASS |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
@@ -231,6 +282,15 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
   - Thử xóa cấp bậc `Ngành` khi đang có nhánh `Ngành 1` $\rightarrow$ Banner đỏ hiện thông báo từ chối, nêu rõ tên nhánh đang dùng.
   - Thử xóa cấp bậc `Phái` (không có nhánh nào dùng) $\rightarrow$ Xóa thành công, kể cả khi chỉ còn 1 cấp duy nhất $\rightarrow$ Danh mục về rỗng `[]` để bắt đầu từ đầu.
 - [ ] **UAT_13 (Vị Trí Nút Thêm Nhánh Liền Mạch Cụm Cây):** Nút `[+ Thêm {Cấp Gốc} Mới]` nằm ngay trên đầu Cây Phân Cấp và ở dòng cuối cùng của bảng cây, thao tác thêm trực quan, không còn nằm xa lạ ở Header trên đỉnh trang.
+- [ ] **UAT_14 (Kế Thừa Ngành/Chi Cho Con Dâu Trên Lịch Giỗ):** Mở `/anniversaries`, kiểm tra thẻ ngày giỗ của Bà nội Nguyễn Thị Chăm (hoặc Cụ Nguyễn Thị Hiền) $\rightarrow$ Hiển thị huy hiệu `Đời 11 · Ngành 1 · Chi 1` trang trọng theo nhánh của người chồng.
+- [ ] **UAT_15 (Bộ Lọc Lịch Giỗ Không Bị Mất Con Dâu):** Tại `/anniversaries`, chọn bộ lọc chi phái "Ngành 1" hoặc "Chi 1" $\rightarrow$ Thẻ ngày giỗ của Bà nội Chăm vẫn hiển thị cùng các thành viên trong chi nhánh, không bị biến mất.
+- [ ] **UAT_16 (Bảo Toàn Cụ Tổ Đời 4 Khi Lọc Theo Chi Nhánh):** Mở `/anniversaries`, chọn bộ lọc dropdown "Chi 1" ở chế độ mặc định (`from_root`) $\rightarrow$ Thẻ ngày giỗ của Cụ Nguyễn Thị Hiền (Đời 4) vẫn hiển thị trang trọng, không bị loại bỏ khỏi danh sách ngày giỗ của con cháu Chi 1.
+- [ ] **UAT_17 (Segmented Toggle 2 Nấc 'Nhánh Của Tôi' & Bảo Toàn Ông Bà Nội):**
+  - Đăng nhập tài khoản đã liên kết, truy cập `/anniversaries`.
+  - Quan sát nhãn nấc 2 hiển thị động theo cấp gốc của dòng họ: `[ 🌿 Từ Gốc Ngành ]` (nếu cấp gốc là Ngành).
+  - Nhấp nấc `[ 👥 Từ Đời 1]` $\rightarrow$ Nấc sáng ngọc bích, danh sách ngày giỗ hiển thị toàn bộ trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
+  - Nhấp nấc `[ 🌿 Từ Gốc Ngành ]` $\rightarrow$ Chuyển chế độ: ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4); nhưng **BẢO TOÀN 100% ngày giỗ của Ông Bà Nội (Bà nội Nguyễn Thị Chăm)**, Bác, Chú, Bố Mẹ và Bản thân.
+  - Bấm lại vào nấc đang chọn $\rightarrow$ Hủy lọc nhánh, hiển thị lại toàn bộ dòng họ.
 
 ---
 
@@ -239,9 +299,13 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
 - [x] **RG01 (Build & Typecheck Clean):** Chạy lệnh `npm run typecheck` và `npm run build` — 0 lỗi (21/21 trang compiled).
 - [x] **RG02 (Automated Test Regression):** Chạy `npm test` — 0 failure mới so với `Known_Failing_Baseline` (113/113 tests pass 100% across 18 suites).
 - [x] **RG03 (Blast Radius):** Các trang `/tree`, `/anniversaries`, `/admin` hoạt động liền mạch và tương thích ngược với dữ liệu cũ.
+- [x] **RG04 (Spouse Branch Regression):** Kiểm tra các trường hợp không có quan hệ hôn phối, người độc thân, hoặc con gái nội tộc (có `father_id`) vẫn hiển thị chính xác theo chuỗi phụ hệ gốc, không sinh lỗi runtime.
+- [x] **RG05 (Lineage Depth Filter Safety):** Đảm bảo chuyển đổi giữa `from_root` và `from_branch` không làm sai lệch bộ lọc tìm kiếm theo từ khóa hoặc gây mất ngày giỗ của người dùng khi chưa liên kết node gia phả.
+- [x] **RG06 (Grandparent & Extended Family Preservation Guard):** Đảm bảo chuyển đổi qua lại giữa 2 nấc không bao giờ làm mất Ông Bà Nội (như Bà nội Nguyễn Thị Chăm) hoặc anh chị em trực hệ của Viewer.
 
 ---
 
 ## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
 
 > "AI ơi, hãy đọc kỹ đặc tả `docs/15_Micro-Spec_Milestone_6_Branch_Taxonomy_Admin_Portal.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test `tests/branch-engine.test.ts`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]`, và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+

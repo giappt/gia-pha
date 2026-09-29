@@ -10,6 +10,7 @@ import {
   Flame,
   Star,
   Users,
+  Sprout,
   ChevronRight,
   Loader2,
   CalendarDays,
@@ -24,30 +25,41 @@ import {
   USER_PREFERENCES_EVENT,
   flattenBranchTree,
   resolveMemberBranchHierarchy,
+  getBranchAncestorIds,
+  filterMembersByBranch,
+  resolveRootTierLabel,
+  getRootBranchPredecessorIds,
 } from '@/lib/tree-layout/branch-engine';
 import type { BranchNode } from '@/types/database';
-import type { MemberRecord } from '@/types/tree';
+import type { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 
 export default function AnniversariesPage() {
   const [dayGroups, setDayGroups] = useState<AnniversaryDayGroup[]>([]);
   const [clanBranches, setClanBranches] = useState<BranchNode[]>([]);
+  const [branchTiers, setBranchTiers] = useState<string[]>(['Ngành', 'Chi', 'Nhánh']);
   const [allMembers, setAllMembers] = useState<MemberRecord[]>([]);
+  const [spouseRelations, setSpouseRelations] = useState<SpouseRelationRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [daysRange, setDaysRange] = useState<number>(30);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [enablePush, setEnablePush] = useState<boolean>(true);
   const [scope, setScope] = useState<string>('all');
+  const [lineageDepth, setLineageDepth] = useState<'from_root' | 'from_branch'>('from_root');
   const [viewerMemberId, setViewerMemberId] = useState<string | null>(null);
 
-  // Nhận diện query param scope từ URL (ví dụ mở từ Web Push Notification: /anniversaries?scope=my_lineage)
+  // Nhận diện query param scope & depth từ URL (ví dụ mở từ Web Push Notification: /anniversaries?scope=my_lineage)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const urlScope = params.get('scope');
       if (urlScope === 'my_lineage') {
         setScope('my_lineage');
+      }
+      const urlDepth = params.get('depth');
+      if (urlDepth === 'from_branch' || urlDepth === 'from_root') {
+        setLineageDepth(urlDepth);
       }
     }
   }, []);
@@ -116,6 +128,9 @@ export default function AnniversariesPage() {
         if (res.success && Array.isArray(res.data?.branches)) {
           setClanBranches(res.data.branches);
         }
+        if (res.success && Array.isArray(res.data?.branch_tiers) && res.data.branch_tiers.length > 0) {
+          setBranchTiers(res.data.branch_tiers);
+        }
         if (
           res.success &&
           res.data?.feature_flags &&
@@ -134,7 +149,23 @@ export default function AnniversariesPage() {
         }
       })
       .catch(() => { });
+
+    fetch('/api/spouse-relations')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.relations)) {
+          setSpouseRelations(res.relations);
+        } else if (res.success && Array.isArray(res.data)) {
+          setSpouseRelations(res.data);
+        }
+      })
+      .catch(() => { });
   }, []);
+
+  // Nhãn nấc 2 hiển thị động theo cấp bậc gốc cao nhất trong CSDL (clan_settings.branch_tiers[0] hoặc branches[0].tierName)
+  const rootTierLabel = useMemo(() => {
+    return resolveRootTierLabel(branchTiers, clanBranches);
+  }, [branchTiers, clanBranches]);
 
   // Làm phẳng cây phân chi chính thức
   const flattenedBranches = useMemo(() => {
@@ -156,6 +187,33 @@ export default function AnniversariesPage() {
   const filteredGroups = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
+    // 1. Trích xuất ID các Cụ Tổ tiền nhân trực hệ của nhánh đang chọn (khi ở nấc from_root)
+    const branchAncestorIds =
+      selectedBranch !== 'all' && clanBranches.length > 0 && allMembers.length > 0 && lineageDepth === 'from_root'
+        ? getBranchAncestorIds(selectedBranch, clanBranches, allMembers, spouseRelations)
+        : new Set<string>();
+
+    // 2. Xác định danh sách tiền nhân đời đầu cần ẩn khi chọn nấc 2 'Từ Gốc Ngành' của Nhánh của tôi
+    let myLineagePredecessorIds: Set<string> | null = null;
+    if (
+      scope === 'my_lineage' &&
+      lineageDepth === 'from_branch' &&
+      viewerMemberId &&
+      allMembers.length > 0 &&
+      clanBranches.length > 0
+    ) {
+      const viewerBranchRes = resolveMemberBranchHierarchy(viewerMemberId, allMembers, clanBranches, spouseRelations);
+      const rootBranchId = viewerBranchRes.matchedBranchIds.length > 0 ? viewerBranchRes.matchedBranchIds[0] : null;
+      if (rootBranchId) {
+        myLineagePredecessorIds = getRootBranchPredecessorIds(
+          rootBranchId,
+          clanBranches,
+          allMembers,
+          spouseRelations
+        );
+      }
+    }
+
     return dayGroups
       .map((group) => {
         const filteredMembers = group.members.filter((m) => {
@@ -164,16 +222,24 @@ export default function AnniversariesPage() {
           let matchBranch = true;
           if (selectedBranch !== 'all') {
             if (clanBranches.length > 0 && allMembers.length > 0) {
-              const res = resolveMemberBranchHierarchy(m.id, allMembers, clanBranches);
+              const res = resolveMemberBranchHierarchy(m.id, allMembers, clanBranches, spouseRelations);
               matchBranch =
                 res.matchedBranchIds.includes(selectedBranch) ||
+                branchAncestorIds.has(m.id) ||
                 m.branch_code === selectedBranch;
             } else {
               matchBranch = m.branch_code === selectedBranch;
             }
           }
 
-          return matchName && matchBranch;
+          let matchMyBranch = true;
+          if (myLineagePredecessorIds) {
+            // Nấc 2 (Từ Gốc Ngành): Ẩn các Cụ Tổ thời kỳ đầu (Cụ Đời 1, Cụ Hiền Đời 4),
+            // nhưng BẢO TOÀN 100% Ông Bà Nội (như Bà nội Nguyễn Thị Chăm), Bác/Chú, Bố Mẹ, Bản thân
+            matchMyBranch = !myLineagePredecessorIds.has(m.id);
+          }
+
+          return matchName && matchBranch && matchMyBranch;
         });
 
         return {
@@ -182,7 +248,7 @@ export default function AnniversariesPage() {
         };
       })
       .filter((group) => group.members.length > 0);
-  }, [dayGroups, searchQuery, selectedBranch, clanBranches, allMembers]);
+  }, [dayGroups, searchQuery, selectedBranch, clanBranches, allMembers, spouseRelations, lineageDepth, scope, viewerMemberId]);
 
   const totalMembersCount = useMemo(() => {
     return filteredGroups.reduce((acc, g) => acc + g.members.length, 0);
@@ -255,18 +321,51 @@ export default function AnniversariesPage() {
             ))}
 
             {viewerMemberId && (
-              <button
-                onClick={() => setScope(scope === 'my_lineage' ? 'all' : 'my_lineage')}
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 border ${
-                  scope === 'my_lineage'
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                    : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-                title="Lọc chỉ hiển thị các ngày giỗ thuộc nhánh dọc gia đình bạn"
+              <div
+                className="flex items-center p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-200/60 dark:bg-slate-800/60"
+                role="group"
+                aria-label="Lọc theo nhánh của tôi"
               >
-                <Users className="w-3.5 h-3.5" />
-                <span>Nhánh của tôi</span>
-              </button>
+                {/* Nấc 1: Từ Đời 1 */}
+                <button
+                  onClick={() => {
+                    if (scope === 'my_lineage' && lineageDepth === 'from_root') {
+                      setScope('all');
+                    } else {
+                      setScope('my_lineage');
+                      setLineageDepth('from_root');
+                    }
+                  }}
+                  className={`px-2.5 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${scope === 'my_lineage' && lineageDepth === 'from_root'
+                      ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  title="Từ Đời 1: Trục dọc gia đình từ Cụ Tổ Đời 1 đến bản thân"
+                >
+                  <Users className="w-3.5 h-3.5 shrink-0" />
+                  <span>Từ Đời 1</span>
+                </button>
+
+                {/* Nấc 2: Từ Gốc Ngành / Chi (Động theo CSDL) */}
+                <button
+                  onClick={() => {
+                    if (scope === 'my_lineage' && lineageDepth === 'from_branch') {
+                      setScope('all');
+                    } else {
+                      setScope('my_lineage');
+                      setLineageDepth('from_branch');
+                    }
+                  }}
+                  className={`px-2.5 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${scope === 'my_lineage' && lineageDepth === 'from_branch'
+                      ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  title={`Nhánh của tôi (${rootTierLabel}): Bắt đầu từ Cụ Khởi Nguồn của cấp gốc trở xuống`}
+                >
+                  <Sprout className="w-3.5 h-3.5 shrink-0" />
+                  <span>{rootTierLabel}</span>
+                </button>
+              </div>
             )}
           </div>
 
@@ -457,7 +556,7 @@ export default function AnniversariesPage() {
                                   {(() => {
                                     const branchRes =
                                       clanBranches.length > 0 && allMembers.length > 0
-                                        ? resolveMemberBranchHierarchy(member.id, allMembers, clanBranches)
+                                        ? resolveMemberBranchHierarchy(member.id, allMembers, clanBranches, spouseRelations)
                                         : null;
 
                                     if (branchRes && branchRes.branchPath) {
