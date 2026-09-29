@@ -260,6 +260,11 @@ sequenceDiagram
   - Nút nổi bật: **`[ 🔗 Kết nối vào Gia Phả ]`** với hiệu ứng hover ngọc bích sang trọng, thu hút con cháu bấm vào.
 
 ### 5.2. Dialog Kết Nối Gia Phả: `src/components/modals/ConnectGenealogyModal.tsx`
+- **Kiến Trúc Quy Trình Wizard 2 Bước (Zero Double-Scrollbar & Pure Flow):**
+  - **Khóa Cứng Chiều Cao Khung Modal (Fixed Height Modal):** Khung Modal cố định chiều cao `h-[600px] max-h-[88vh] flex flex-col overflow-hidden` cho cả 2 tab.
+  - **Neo Đỉnh Nhẹ (Top-Aligned):** Container modal dùng `items-start pt-10 sm:pt-14` (thay vì `items-center`) để cố định mép trên của modal, tránh hiện tượng tâm modal bị giật nảy $\Delta H / 2$.
+  - **Triệt Tiêu 100% Hiện Tượng 2 Thanh Cuộn Kề Nhau (Zero Double-Scrollbar):** Thay vì nhồi nhét toàn bộ 10 trường vào cùng 1 màn hình và dùng dropdown nổi đè lên các trường khác, Tab 2 được chia thành 2 bước tuần tự đĩnh đạc:
+
 - Thiết kế 2 Tab phẳng, hỗ trợ phím `Escape` và Portal gắn vào `document.body`:
   - **Tab 1: "Tôi đã có tên trên cây" (Nhận Node Đã Có - Bảo Mật Tuyệt Đối):**
     - Ô tìm kiếm tên mình trên cây.
@@ -268,39 +273,32 @@ sequenceDiagram
     - Danh sách kết quả hiển thị dạng **Thẻ Ngữ Cảnh 3 Thế Hệ**: Tên, Năm sinh, Đời, Chi, Cha Mẹ (`Con cụ X & bà Y`).
     - Khóa chiều cao container (`h-52 overflow-y-auto`) chống hiện tượng giật nảy layout khi gõ phím.
     - Nút 1-chạm: `[ Chính là tôi ]` $\rightarrow$ Gửi yêu cầu.
-  - **Tab 2: "Tôi chưa có trên cây" (Chuẩn Hóa Kế Thừa UnlinkedMembersDrawer):**
-    - **Khối 1: Thông tin nhân thân cố định (Đưa lên đầu form):**
-      + Họ và tên (tự điền từ Google, sửa được).
-      + Giới tính: Pills `[ Nam ]` / `[ Nữ ]`.
+  - **Tab 2: "Tôi chưa có trên cây" (Wizard 2 Bước Tuần Tự):**
+    - **Bước 1: Thông tin cá nhân của bạn (`newMemberStep === 1`):**
+      + Thanh chỉ báo tiến trình mini: `[ Bước 1: Thông tin của bạn (Đang làm) ] ── ( Bước 2: Bố Mẹ & Cội nguồn )`.
+      + Họ và tên của bạn: * (tự điền từ Google, sửa được).
+      + Giới tính: * (Nam / Nữ).
       + Năm sinh: (Tùy chọn, ví dụ: 1995).
-    - **Khối 2: Cội nguồn trong gia phả (Logic chuẩn UnlinkedMembersDrawer):**
-      + Ô tìm kiếm Cha hoặc Mẹ trên Cây: Kết quả tìm kiếm hiển thị **cặp đôi hôn phối** (`Phạm Văn Khương (Vợ: Chu Thị Hà) · Đời 12 · Chi 1`).
-      + Khi đã chọn Cha (hoặc Mẹ):
-        * *Nếu có 1 vợ/chồng:* Tự động xác nhận Mẹ là người vợ đó.
-        * *Nếu đa thê ($\ge 2$ vợ/chồng):* Hiển thị danh sách Radio phân biệt rõ từng người mẹ: `(•) Mẹ (Bà cả): Chu Thị Hà`, `( ) Mẹ (Bà hai): Nguyễn Thị Mai`.
-        * *Hỗ trợ con riêng minh bạch:* Tùy chọn `( ) Con riêng của Bố/Mẹ (Không chọn người còn lại)` $\rightarrow$ Gán `parent_id` và để trống `spouse_id`.
-      + **Số thứ tự con trong gia đình & Gợi ý thông minh (Smart Birth Order):**
-        * *Thuật toán gợi ý mặc định:* 
-          1. Nếu người dùng nhập Năm sinh: Tự động so sánh với năm sinh các con hiện có của bố mẹ để gợi ý vị trí chính xác (trước ai, sau ai).
-          2. Nếu không có năm sinh: Tìm vị trí còn thiếu nhỏ nhất (gap giữa các số thứ tự); nếu không khuyết số nào thì mặc định chọn vị trí con kế tiếp (`max_order + 1`).
-        * *Bộ tăng giảm số:* Stepper `[ - ]` **Số 3** `[ + ]` cho phép người dùng tự do điều chỉnh.
-        * *Dòng mô phỏng trực quan thời gian thực (Real-time Explanation):*
-          - Khi là con kế tiếp: `ℹ️ Là con kế tiếp (sau [Tên con út]).`
-          - Khi chèn vào giữa: `ℹ️ Đứng sau [Tên con trước], đứng trước [Tên con sau] (khi duyệt, [Tên con sau] và các em sẽ tự động tăng 1 bậc).`
-          - Khi là con đầu lòng: `ℹ️ Con đầu lòng (đứng trước [Tên con đầu], các anh chị em hiện có sẽ lùi lại 1 bậc khi duyệt).`
-      + **Nguyện vọng Con Trưởng (Trưởng Nam):**
-        * Khi người dùng chọn Giới tính là `Nam` $\rightarrow$ Hiển thị checkbox: `[ ] Tôi là Con Trưởng (Trưởng Nam gánh dòng trong gia đình này)`.
-        * Lưu vào `proposed_data.is_senior: boolean` để Ban Quản Trị xem xét khi duyệt.
-      + **Chuyển đổi linh hoạt sang Phiếu Yêu Cầu (Khi chưa rõ Cha Mẹ trên Cây):**
-        * Ở đáy khối cội nguồn, checkbox nhẹ nhàng `[ ] Tôi chưa rõ hoặc Cha Mẹ chưa có trên Cây Gia Phả (Gửi Phiếu Yêu Cầu)`.
-        * Hiển thị ô nhập: `Tên Bố / Mẹ ngoài đời: *` (Bắt buộc) và `Thông tin Ông/Bà hoặc Nhánh nghi vấn` (Tùy chọn).
-    - **Ràng buộc kiểm tra tính hợp lệ & Nút bấm hành động:**
-      + **Điều kiện Disabled của nút bấm:** Nút gửi ở đáy form bắt buộc bị vô hiệu hóa (`disabled`) khi:
-        * Chưa nhập Họ tên (`!fullName.trim()`).
-        * HOẶC khi nối cây (`!isOriginUnknown`): Chưa chọn Cha/Mẹ trên cây (`!parentId`).
-        * HOẶC khi gửi Phiếu Yêu Cầu (`isOriginUnknown`): Chưa nhập Tên Bố/Mẹ ngoài đời (`!rawParentInfo.trim()`).
-      + **Nhãn nút bấm chuẩn hóa (Giữ nguyên theo User):**
-        `<span>{isOriginUnknown ? 'Gửi Yêu Cầu Xác Minh' : 'Gửi Yêu Cầu Xét Duyệt'}</span>`
+      + Màn hình gọn gàng (~220px), **tuyệt đối 0 có thanh cuộn nào**.
+      + Chân modal Bước 1: Nút bấm `[ Tiếp Tục: Chọn Bố Mẹ → ]` (bị disabled khi `!fullName.trim()`).
+    - **Bước 2: Cội nguồn trong họ (`newMemberStep === 2`):**
+      + Dòng tóm tắt Bước 1 trên đầu: `[ ✓ Bạn: [Họ tên] · [Nam/Nữ] · [Năm sinh] (Bấm để sửa) ]` cho phép người dùng click để quay lại Bước 1 bất cứ lúc nào.
+      + Toàn bộ không gian modal rộng rãi dành riêng cho cội nguồn:
+        * Ô tìm kiếm Cha hoặc Mẹ trên Cây.
+        * **Kết quả tìm kiếm hiển thị dạng Thẻ Phẳng (Inline List)** trực tiếp dưới ô tìm kiếm: tối đa 4 người phù hợp nhất kèm thông tin vợ/chồng, đời, chi. Không dùng floating dropdown lơ lửng, không che khuất checkbox hay textarea.
+        * Khi đã chọn Cha (hoặc Mẹ):
+          - Thẻ xác nhận cha mẹ + Nút `Đổi`.
+          - *Nếu có 1 vợ/chồng:* Tự động xác nhận Mẹ là người vợ đó.
+          - *Nếu đa thê ($\ge 2$ vợ/chồng):* Hiển thị danh sách Radio phân biệt rõ từng người mẹ: `(•) Mẹ (Bà cả): Chu Thị Hà`, `( ) Mẹ (Bà hai): Nguyễn Thị Mai`.
+          - *Hỗ trợ con riêng minh bạch:* Tùy chọn `( ) Con riêng của Bố/Mẹ (Không chọn người còn lại)` $\rightarrow$ Gán `parent_id` và để trống `spouse_id`.
+          - *Số thứ tự con trong gia đình & Gợi ý thông minh (Smart Birth Order):* Stepper `[ - ]` **Số 3** `[ + ]` kèm câu giải thích vị trí tức thì (trước ai, sau ai, ai chuyển bậc).
+          - *Nguyện vọng Con Trưởng (Trưởng Nam):* Khi chọn Nam, checkbox `[ ] Tôi là Con Trưởng (Trưởng Nam gánh dòng)`.
+        * Checkbox chuyển đổi linh hoạt sang Phiếu Yêu Cầu (Khi chưa rõ Cha Mẹ trên Cây).
+        * Lời nhắn xác minh gửi BQT / Bố Mẹ.
+      + **Chân modal Bước 2 (Pinned Sticky Footer):**
+        * Nút bên trái: `[ ← Quay lại ]` (trở về Bước 1).
+        * Nút bên phải: `[ Gửi Yêu Cầu Xét Duyệt ]` / `[ Gửi Yêu Cầu Xác Minh ]` (bị disabled khi chưa chọn bố mẹ hoặc chưa nhập tên ngoài đời).
+      + **Triệt tiêu 100% hiện tượng 2 thanh cuộn kề nhau:** Toàn bộ modal chỉ có đúng 1 luồng cuộn tự nhiên duy nhất của cả form nếu nội dung dài, không có thanh cuộn con nào bên trong.
 
 ### 5.3. Dấu `(+)` Thêm Con Trực Tiếp Trên Canvas Cây: `src/components/tree/FamilyTreeCanvas.tsx`
 - Kiểm tra điều kiện: Nếu node hiển thị trên cây có `node.id === userProfile.linked_member_id` (hoặc là spouse của user):
@@ -361,14 +359,16 @@ sequenceDiagram
 - [ ] **UAT_07 (Dấu `(+)` Trực Tiếp Dưới Node Của Mình Trên Cây):** Đăng nhập với tài khoản đã liên kết $\rightarrow$ Mở `/tree` $\rightarrow$ Thấy dấu `(+)` tròn nhỏ màu ngọc bích dưới chân node của mình, bấm vào thêm con hiển thị ngay lập tức.
 - [ ] **UAT_08 (Cổng Quản Trị Chi Nhánh `/branch`):** Đăng nhập tài khoản `branch_editor` $\rightarrow$ Thấy nút `[ 🌿 Quản Trị Chi Nhánh ]` trên Navbar $\rightarrow$ Vào trang chỉ thấy danh sách và phiếu duyệt của Chi mình.
 - [ ] **UAT_09 (Console Sạch):** Mở Developer Console $\rightarrow$ 0 lỗi đỏ, 0 cảnh báo hydration.
+- [ ] **UAT_10 (Zero Double-Scrollbar & Wizard 2-Step):** Mở Tab 2 $\rightarrow$ Bước 1 cực kỳ phẳng phiu, gọn gàng, 0 có thanh cuộn; nhập họ tên $\rightarrow$ bấm nút Tiếp tục sang Bước 2; tại Bước 2 tìm kiếm Bố/Mẹ hiển thị kết quả dạng Thẻ Phẳng ngay dưới ô tìm kiếm, không dùng dropdown lơ lửng, không che khuất checkbox; toàn bộ modal chỉ có đúng 1 luồng cuộn tự nhiên duy nhất (Zero Double-Scrollbar); nút Quay lại Bước 1 hoạt động mượt mà.
 
 ---
 
 ## 8. BẢO VỆ CHỐNG THOÁI LUI (REGRESSION GUARD CHECKLIST)
 
 - [x] **RG01 (Build & Typecheck Clean):** Chạy lệnh `npm.cmd run typecheck` và `npm.cmd run build` — 0 lỗi (Đã xác minh: 0 lỗi typecheck, Next.js build xanh 33/33 static/dynamic routes).
-- [x] **RG02 (Automated Test Regression):** Chạy lệnh `Test` — 0 failure mới so với `Known_Failing_Baseline` (Đã xác minh: 369/369 tests pass, 36/36 suites).
+- [x] **RG02 (Automated Test Regression):** Chạy lệnh `Test` — 0 failure mới so với `Known_Failing_Baseline` (Đã xác minh: 376/376 tests pass, 36/36 suites).
 - [ ] **RG03 (Blast Radius):** Màn hình Cây Gia Phả (`/tree`), Lịch giỗ (`/anniversaries`), Admin Portal (`/admin`), và Personal Settings hoạt động bình thường, không bị phá vỡ.
+- [x] **RG04 (Tab 1 & Tab 2 Input Integrity):** Bảo toàn toàn bộ chức năng lọc hồ sơ bảo mật Tab 1, đa thê, con riêng, number stepper, nguyện vọng con trưởng và form phiếu yêu cầu khi cố định layout. (Đã xác minh: 376/376 tests pass).
 
 ---
 

@@ -190,7 +190,7 @@ export default function IdentityContextWidget({
               ) : (
                 /* Status Line 3: Not Linked */
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Chưa liên kết hồ sơ Gia Phả cá nhân
+                  Chưa liên kết với Gia Phả
                 </p>
               )}
             </div>

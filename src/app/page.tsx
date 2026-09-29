@@ -185,7 +185,7 @@ export default async function HomePage({
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-6 font-normal">
           Nền tảng số hóa gia phả trực tuyến hiện đại.
           <br />
-          Kết nối mọi thế hệ con cháu và nhắc nhở ngày giỗ theo Âm lịch truyền thống.
+          Kết nối thế hệ con cháu, thông báo ngày giỗ theo Âm lịch truyền thống.
         </p>
 
         {/* User Identity Context Widget */}

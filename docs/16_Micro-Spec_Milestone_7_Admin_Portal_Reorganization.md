@@ -582,7 +582,7 @@ sequenceDiagram
   - **(Tùy chọn) Thêm banner nhẹ:** *"Đăng nhập để xem Lịch Giỗ, Xưng hô và nhiều tính năng khác"* — chỉ hiện khi guest.
 - **Khi đã đăng nhập:** Hiển thị đầy đủ như hiện tại (không đổi).
 - **Tinh chỉnh thủ công đã cập nhật trong mã nguồn (Manual Polish Sync):**
-  - **Subtitle Trang Chủ:** Rút gọn thành *"Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu và nhắc nhở ngày giỗ theo Âm lịch truyền thống."* (lược bỏ mệnh đề xưng hô).
+  - **Subtitle Trang Chủ:** Rút gọn thành *"Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối thế hệ con cháu, thông báo ngày giỗ theo Âm lịch truyền thống."* (lược bỏ mệnh đề xưng hô).
   - **Icon Tiêu Đề Spotlight Giỗ:** Sử dụng `<Calendar className="w-3.5 h-3.5" />` (thay cho icon `<Sparkles>` cũ) để tăng tính trang nhã và đồng bộ thiết kế.
 
 
