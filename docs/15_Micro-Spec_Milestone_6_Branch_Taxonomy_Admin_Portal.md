@@ -33,7 +33,7 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
     - Thể hiện quan hệ cha - con bằng **Đường gióng cây Gia Phả (Subtle Tree Guide Lines: `border-l-2 border-emerald-300 dark:border-emerald-800` bo góc cong `rounded-bl-lg`)** thanh thoát.
     - Sử dụng ô nhập phẳng (Ghost Inputs), Badge pill cấp bậc màu ngọc bích sang trọng, nút thao tác nhẹ nhàng khi hover.
   - **Thanh Tabs Phẳng (Flat Segmented Bar):** Toàn bộ phân hệ Admin nằm trên trang quản trị với 2 tabs cấu hình thực tế:
-    - Tab 1: `[ 🌿 Cấu Trúc Ngành/Chi ]` (Quản lý thứ bậc Cấp bậc, phân cấp Ngành/Chi và gán Cụ Khởi Nguồn).
+    - Tab 1: `[ Cấu Trúc Ngành/Chi ]` (Quản lý thứ bậc Cấp bậc, phân cấp Ngành/Chi và gán Cụ Khởi Nguồn).
     - Tab 2: `[ 🏛️ Thông Tin & Xưng Hô ]` (Thông tin dòng họ, nhà thờ tổ, cấu hình từ điển xưng hô 3 miền).
   - **Total Ban on AI Browser Subagent (`[R-NO-BROWSER]`):** AI tuyệt đối không gọi `browser_subagent` để nghiệm thu UI. User tự kiểm chứng thị giác ở Mục 7.2.
 
@@ -201,13 +201,13 @@ Mô-đun thuần túy (pure functions) xử lý Gia Phả phân chi:
 - **Nhãn Hiển Thị Động Theo Thứ Bậc CSDL (`rootTierName`):**
   - Hệ thống lấy tên cấp gốc động:
     `const rootTierName = clanBranches.length > 0 && clanBranches[0]?.tierName ? clanBranches[0].tierName : (clanSettings.branch_tiers?.[0] || 'Ngành');`
-  - Nhãn nấc 2 hiển thị linh hoạt: `[ 🌿 Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành` đối với họ Phạm Văn; `Từ Gốc Phái` đối với họ dùng Phái).
+  - Nhãn nấc 2 hiển thị linh hoạt: `[ Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành` đối với họ Phạm Văn; `Từ Gốc Phái` đối với họ dùng Phái).
 - **Cơ Chế Phân Cấp Lọc Lineage Depth V2 Cho 'Nhánh Của Tôi':**
   - Cơ sở lọc luôn dựa trên tập hợp gia đình mở rộng của Viewer: `getExtendedFamilyMemberIds(viewerMemberId, allMembers, spouseRelations)` kết hợp chuỗi tổ tiên trực hệ.
   - **Nấc 1 (`from_root` - Mặc định):** `[ 👥 Từ Đời 1]`
     - Trục dọc gia đình từ Cụ Thủy Tổ Đời 1 $\rightarrow$ Cụ Hiền (Đời 4) $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bác/Chú $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
     - Hiển thị đầy đủ cả các Cụ Tổ chung thời kỳ đầu trước khi phân nhánh.
-  - **Nấc 2 (`from_branch_root` / `from_branch`):** `[ 🌿 Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành`)
+  - **Nấc 2 (`from_branch_root` / `from_branch`):** `[ Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành`)
     - Bắt đầu từ Cụ Khởi của Nhánh Cấp Gốc (Cụ Khởi Ngành) mà Viewer trực thuộc: xác định thế hệ khởi điểm $G_{root}$ của Cụ Khởi Ngành.
     - Ẩn các Cụ Tổ chung thời kỳ đầu có thế hệ $G < G_{root}$ (Cụ Đời 1, Cụ Hiền Đời 4).
     - **BẢO TOÀN 100%** toàn bộ thành viên trong nhánh gia đình có $G \ge G_{root}$: Cụ Khởi Ngành $\rightarrow$ ... $\rightarrow$ **Ông Bà Nội (như Bà nội Nguyễn Thị Chăm)** $\rightarrow$ **Bác/Chú/Cô** $\rightarrow$ **Bố Mẹ** $\rightarrow$ **Bản thân**.
@@ -268,7 +268,7 @@ Mô-đun thuần túy (pure functions) xử lý Gia Phả phân chi:
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
 - [ ] **UAT_01 (Lối Vào Quản Trị Rõ Ràng):** Đăng nhập với tài khoản Super Admin → Quan sát thanh Navbar xuất hiện nút `[ 🛡️ Quản Trị Dòng Họ ]` màu đồng/amber sang trọng, bấm 1 phát vào thẳng `/admin`.
-- [ ] **UAT_02 (Giao Diện Admin Phẳng - Anti Box-in-Box):** Truy cập `/admin` → Thấy thanh Tab phẳng với 2 phân hệ rõ ràng: `🌿 Cấu Trúc Ngành/Chi`, `🏛️ Thông Tin & Xưng Hô`. Chuyển tab mượt mà, không giật lag.
+- [ ] **UAT_02 (Giao Diện Admin Phẳng - Anti Box-in-Box):** Truy cập `/admin` → Thấy thanh Tab phẳng với 2 phân hệ rõ ràng: `Cấu Trúc Ngành/Chi`, `🏛️ Thông Tin & Xưng Hô`. Chuyển tab mượt mà, không giật lag.
 - [ ] **UAT_03 (Thiết Lập Ngành & Chi Trực Quan):** Tại Tab `Cấu Trúc Ngành/Chi`, bấm thêm Ngành 1, thêm Chi con, chọn Cụ Tiền nhân làm Root Member → Lưu cấu trúc thành công.
 - [ ] **UAT_04 (Cài Đặt Cá Nhân Toàn Màn Hình - Portal Chuẩn Xác):** Bấm vào Avatar cá nhân trên Navbar → Chọn `[ ⚙️ Cài đặt của tôi ]` → Thấy Modal hiển thị trọn vẹn ở trung tâm màn hình, lớp nền tối bao phủ 100% trang web (kể cả Cây Gia Phả bên dưới). Thân modal hiển thị đầy đủ danh sách phân chi, chuông báo giỗ, nút Lưu. Bấm phím `Escape` hoặc bấm ra ngoài nền tối để đóng modal ngay lập tức.
 - [ ] **UAT_05 (Tự Động Kế Thừa Danh Xưng):** Mở Cây Gia Phả và Lịch Giỗ → Con cháu tự động hiển thị danh xưng tôn ti `Đời N · Ngành X · Chi Y` mà không cần nhập tay từng người.
@@ -287,9 +287,9 @@ Mô-đun thuần túy (pure functions) xử lý Gia Phả phân chi:
 - [ ] **UAT_16 (Bảo Toàn Cụ Tổ Đời 4 Khi Lọc Theo Chi Nhánh):** Mở `/anniversaries`, chọn bộ lọc dropdown "Chi 1" ở chế độ mặc định (`from_root`) $\rightarrow$ Thẻ ngày giỗ của Cụ Nguyễn Thị Hiền (Đời 4) vẫn hiển thị trang trọng, không bị loại bỏ khỏi danh sách ngày giỗ của con cháu Chi 1.
 - [ ] **UAT_17 (Segmented Toggle 2 Nấc 'Nhánh Của Tôi' & Bảo Toàn Ông Bà Nội):**
   - Đăng nhập tài khoản đã liên kết, truy cập `/anniversaries`.
-  - Quan sát nhãn nấc 2 hiển thị động theo cấp gốc của dòng họ: `[ 🌿 Từ Gốc Ngành ]` (nếu cấp gốc là Ngành).
+  - Quan sát nhãn nấc 2 hiển thị động theo cấp gốc của dòng họ: `[ Từ Gốc Ngành ]` (nếu cấp gốc là Ngành).
   - Nhấp nấc `[ 👥 Từ Đời 1]` $\rightarrow$ Nấc sáng ngọc bích, danh sách ngày giỗ hiển thị toàn bộ trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
-  - Nhấp nấc `[ 🌿 Từ Gốc Ngành ]` $\rightarrow$ Chuyển chế độ: ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4); nhưng **BẢO TOÀN 100% ngày giỗ của Ông Bà Nội (Bà nội Nguyễn Thị Chăm)**, Bác, Chú, Bố Mẹ và Bản thân.
+  - Nhấp nấc `[ Từ Gốc Ngành ]` $\rightarrow$ Chuyển chế độ: ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4); nhưng **BẢO TOÀN 100% ngày giỗ của Ông Bà Nội (Bà nội Nguyễn Thị Chăm)**, Bác, Chú, Bố Mẹ và Bản thân.
   - Bấm lại vào nấc đang chọn $\rightarrow$ Hủy lọc nhánh, hiển thị lại toàn bộ dòng họ.
 
 ---

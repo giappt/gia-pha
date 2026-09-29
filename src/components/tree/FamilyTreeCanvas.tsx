@@ -55,6 +55,12 @@ interface FamilyTreeCanvasProps {
   effectiveRole?: UserRole | 'guest';
   canManageTree?: boolean;
   featureFlags?: ClanFeatureFlags;
+  currentUser?: {
+    id?: string;
+    user_role?: UserRole | string;
+    linked_member_id?: string | null;
+    assigned_branch_code?: string | null;
+  } | null;
 }
 
 const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
@@ -67,6 +73,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   effectiveRole = 'viewer',
   canManageTree = false,
   featureFlags,
+  currentUser,
 }) => {
   const { getNode, setCenter, fitView } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
@@ -96,7 +103,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   const [memberFormCurrentSpouse, setMemberFormCurrentSpouse] = useState<MemberRecord | null>(null);
   const [memberFormFixedMotherId, setMemberFormFixedMotherId] = useState<string | null>(null);
 
-  // State Modal Sắp xếp thứ tự đàn con
+  // State Modal Sắp xếp thứ tự các con
   const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
   const [reorderParent, setReorderParent] = useState<MemberRecord | null>(null);
   const [reorderChildrenList, setReorderChildrenList] = useState<MemberRecord[]>([]);
@@ -244,7 +251,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
     }
   }, [getNode, nodes, setCenter]);
 
-  // Mở modal kéo thả sắp xếp đàn con
+  // Mở modal kéo thả sắp xếp các con
   const handleOpenReorderModal = useCallback((parentId: string) => {
     const parent = activeMembers.find((m) => m.id === parentId);
     if (!parent) return;
@@ -603,11 +610,13 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         canManageTree={canManageTree}
         effectiveRole={effectiveRole}
         featureFlags={featureFlags}
-        onEditMember={canManageTree ? handleEditMemberFromDrawer : undefined}
-        onAddChild={canManageTree ? handleAddChildFromDrawer : undefined}
-        onAddSpouse={canManageTree ? handleAddSpouseFromDrawer : undefined}
+        currentUser={currentUser}
+        clanBranches={clanBranches}
+        onEditMember={handleEditMemberFromDrawer}
+        onAddChild={handleAddChildFromDrawer}
+        onAddSpouse={handleAddSpouseFromDrawer}
         onDeleteMember={canManageTree ? handleDeleteMember : undefined}
-        onOpenReorder={canManageTree ? handleOpenReorderModal : undefined}
+        onOpenReorder={handleOpenReorderModal}
       />
 
       {/* Slide-over Khay Thành Viên Chưa Nối Phả */}
@@ -635,7 +644,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         onSaved={handleMemberSaved}
       />
 
-      {/* Modal Kéo Thả Sắp Xếp Thứ Tự Đàn Con */}
+      {/* Modal Kéo Thả Sắp Xếp Thứ Tự các con */}
       <ReorderChildrenModal
         isOpen={isReorderModalOpen}
         onClose={() => setIsReorderModalOpen(false)}

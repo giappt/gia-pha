@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { MemberFormData, MemberRecord } from '@/types/tree';
+import { MemberFormData, MemberRecord, SpouseRelationRecord } from '@/types/tree';
+import { BranchNode } from '@/types/database';
 import { validateNoCycle, CycleDetectedError } from '@/lib/tree-layout/graph-validation';
-import { verifyServerRole } from '@/lib/auth/permissions';
+import { verifyServerRole, extractUserProfileFromRequest } from '@/lib/auth/permissions';
+import { canUserManageMember } from '@/lib/claims/claim-engine';
 
 export async function GET() {
   try {
@@ -35,9 +37,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    // Rào chắn bảo mật RBAC: Chỉ super_admin và branch_editor mới được thêm thành viên
-    const authError = await verifyServerRole(request, ['super_admin', 'branch_editor']);
-    if (authError) return authError;
+    const userProfile = await extractUserProfileFromRequest(request);
+    if (!userProfile || userProfile.user_role === 'viewer') {
+      return NextResponse.json(
+        { success: false, error: 'Bạn không có quyền thực hiện thao tác này' },
+        { status: 403 }
+      );
+    }
 
     const body: MemberFormData = await request.json();
 
@@ -50,22 +56,80 @@ export async function POST(request: NextRequest) {
 
     const isTestFixture = request.headers.get('x-test-fixture') === 'true' || process.env.npm_lifecycle_event === 'test' || process.argv.some((a) => a.includes('test')) || (process.execArgv && process.execArgv.some((a) => a.includes('test')));
 
-    // Lấy danh sách thành viên hiện tại để kiểm tra đồ thị và tính thế hệ
+    // Lấy danh sách thành viên, phối ngẫu, nhánh hiện tại
     let existingMembers: MemberRecord[] = [];
+    let existingSpouses: SpouseRelationRecord[] = [];
+    let clanBranches: BranchNode[] = [];
     try {
       const admin = createAdminClient();
       const supabase = admin || createClient();
-      const { data } = await supabase.from('members').select('*');
-      if (data && data.length > 0) {
-        existingMembers = data as unknown as MemberRecord[];
-      } else if (isTestFixture) {
-        const { SAMPLE_MEMBERS_28 } = await import('@/lib/tree-layout/sample-data');
-        existingMembers = SAMPLE_MEMBERS_28;
+      const [membersRes, spousesRes, settingsRes] = await Promise.all([
+        supabase.from('members').select('*'),
+        supabase.from('spouse_relations').select('*'),
+        supabase.from('clan_settings').select('branches').limit(1).maybeSingle(),
+      ]);
+      if (membersRes.data && membersRes.data.length > 0) {
+        existingMembers = membersRes.data as unknown as MemberRecord[];
+      }
+      if (spousesRes.data) {
+        existingSpouses = spousesRes.data as unknown as SpouseRelationRecord[];
+      }
+      if (settingsRes.data?.branches && Array.isArray(settingsRes.data.branches)) {
+        clanBranches = settingsRes.data.branches as unknown as BranchNode[];
       }
     } catch {
       if (isTestFixture) {
-        const { SAMPLE_MEMBERS_28 } = await import('@/lib/tree-layout/sample-data');
+        const { SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS } = await import('@/lib/tree-layout/sample-data');
         existingMembers = SAMPLE_MEMBERS_28;
+        existingSpouses = SAMPLE_SPOUSE_RELATIONS;
+      }
+    }
+
+    if (existingMembers.length === 0 && isTestFixture) {
+      const { SAMPLE_MEMBERS_28, SAMPLE_SPOUSE_RELATIONS } = await import('@/lib/tree-layout/sample-data');
+      existingMembers = SAMPLE_MEMBERS_28;
+      existingSpouses = SAMPLE_SPOUSE_RELATIONS;
+    }
+
+    // Kiểm tra phân quyền thêm thành viên
+    if (userProfile.user_role === 'claimed_member') {
+      const parentId = body.father_id || body.mother_id;
+      const targetManageId = parentId || (body as any).current_spouse_id;
+      if (!targetManageId) {
+        return NextResponse.json(
+          { success: false, error: 'Thành viên chỉ có quyền thêm con hoặc vợ/chồng cho tiểu gia đình của mình' },
+          { status: 403 }
+        );
+      }
+      const canManage = canUserManageMember(
+        userProfile,
+        targetManageId,
+        existingMembers,
+        existingSpouses,
+        clanBranches
+      );
+      if (!canManage) {
+        return NextResponse.json(
+          { success: false, error: 'Bạn không có quyền thêm thành viên cho nhánh này' },
+          { status: 403 }
+        );
+      }
+    } else if (userProfile.user_role === 'branch_editor') {
+      const parentId = body.father_id || body.mother_id;
+      if (parentId) {
+        const canManage = canUserManageMember(
+          userProfile,
+          parentId,
+          existingMembers,
+          existingSpouses,
+          clanBranches
+        );
+        if (!canManage) {
+          return NextResponse.json(
+            { success: false, error: 'Bạn không có quyền thêm thành viên ngoài chi nhánh được giao' },
+            { status: 403 }
+          );
+        }
       }
     }
 

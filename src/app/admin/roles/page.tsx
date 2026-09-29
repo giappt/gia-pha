@@ -85,7 +85,7 @@ const CATEGORY_NAMES: Record<string, { label: string; icon: any; desc: string }>
   editing: {
     label: '3. Biên Tập & Hiệu Đính Gia Phả',
     icon: Sliders,
-    desc: 'Quyền chỉnh sửa thông tin nhân thân, thêm con cháu và tái lập cấu trúc thứ tự đàn con.',
+    desc: 'Quyền chỉnh sửa thông tin nhân thân, thêm con cháu và tái lập cấu trúc thứ tự các con.',
   },
   administration: {
     label: '4. Bàn Điều Hành & Bảo Trợ Tông Tộc',

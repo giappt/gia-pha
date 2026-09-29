@@ -279,7 +279,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 | **TC_UT05** | Tùy chọn Ẩn/Hiện nhánh ngoại (`showMaternalBranches`) | `tests/tree-layout.test.ts` | Fixture 28 thành viên | Gọi `calculateTreeLayout(..., { showMaternalBranches: false })` | Con gái lấy chồng ngoại (Quỳnh) có `externalSpouse`, ẩn rể ngoại | Unit Test |
 | **TC_UT06** | Sắp xếp con cái theo `birth_order` và `birth_year` | `tests/tree-layout.test.ts` | Danh sách con không rõ năm sinh | Gọi `calculateTreeLayout(...)` | Sắp xếp đúng theo `birth_order` từ trái sang phải kể cả khi `birth_year` rỗng | Unit Test |
 | **TC_UT07** | Cơ chế Gốc Tùy Biến (Focus Root) & Tự Đổi Vai | `tests/tree-layout.test.ts` | Fixture 28 thành viên, chọn Gốc là Ông Dũng Chi 2 | Gọi `calculateTreeLayout(..., { focusRootId: 'mem-301' })` | Lọc cây con Chi 2: Mai là con gái ruột, Tuấn là Con rể, con của Mai-Tuấn là Cháu ngoại | Unit Test |
-| **TC_UT08** | Tự động xác định Con Trưởng (`isSenior`) | `tests/tree-layout.test.ts` | Đàn con có con gái sinh trước con trai | Gọi `calculateTreeLayout(...)` | Con trai lớn nhất được gắn cờ `isSenior = true` | Unit Test |
+| **TC_UT08** | Tự động xác định Con Trưởng (`isSenior`) | `tests/tree-layout.test.ts` | các con có con gái sinh trước con trai | Gọi `calculateTreeLayout(...)` | Con trai lớn nhất được gắn cờ `isSenior = true` | Unit Test |
 | **TC_UT09** | Ghost Node Rể nội tộc bên phía người vợ (`showInternalHusbands = true`) | `tests/tree-layout.test.ts` | Fixture 28 thành viên, `showInternalHusbands: true` | Gọi `calculateTreeLayout(...)` | Mai (Chi 2) có Ghost Node Tuấn (Rể nội tộc, viền vàng nét đứt) đặt bên trái, nối ngang hông sang Mai, không vẽ con ở Chi 2 | Unit Test |
 | **TC_UT10** | Tùy chọn ẩn Ghost Node Rể nội tộc (`showInternalHusbands = false`) | `tests/tree-layout.test.ts` | Fixture 28 thành viên, `showInternalHusbands: false` | Gọi `calculateTreeLayout(..., { showInternalHusbands: false })` | Không sinh Ghost Node Tuấn ở Chi 2, thẻ Mai hiển thị footer điều hướng gọn gàng | Unit Test |
 | **TC_INT01** | Contract API `GET /api/tree` | `tests/tree-api.test.ts` | Dữ liệu mẫu 28 thành viên | Gửi request `GET /api/tree` | HTTP 200, JSON DTO đầy đủ | Integration Test |
@@ -295,7 +295,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 - [x] **AC_UT03 (Internal Kinship Dashed Amber & Symmetry):** Thẻ GhostNode dâu/rể nội tộc mang viền vàng nét đứt, huy hiệu hổ phách, đối xứng với thông tin ở thẻ gốc.
 - [x] **AC_UT04 (Orthogonal Bus Hierarchy Edge):** Các cạnh con cái chia sẻ cao độ thanh ngang chung $Y_{bus} = Y_{parent} + 128$, vuông góc $90^\circ$ phẳng lì.
 - [x] **AC_UT05 (Maternal Branch Filter Option):** Tùy chọn `showMaternalBranches = false` lọc gọn nhánh ngoại, con gái lấy ngoại tộc nạp `externalSpouse`.
-- [x] **AC_UT06 (Sibling Ordering by Birth Order):** Sắp xếp đàn con chuẩn ngôi thứ theo `birth_order` từ trái sang phải kể cả khi không rõ năm sinh.
+- [x] **AC_UT06 (Sibling Ordering by Birth Order):** Sắp xếp các con chuẩn ngôi thứ theo `birth_order` từ trái sang phải kể cả khi không rõ năm sinh.
 - [x] **AC_UT07 (Dynamic Focus Root & Role Inversion):** Khi chọn Gốc $X$, lọc cây con chính xác và tự động đổi vai (chồng thành con rể, con thành cháu ngoại khi qua đường nữ).
 - [x] **AC_UT08 (Senior Son Auto Deduction):** Tự động suy luận con trai lớn nhất trong anh em là Trưởng Nam (`isSenior = true`), hỗ trợ hiển thị `(Trưởng)`.
 - [x] **AC_UT09 (Husband Ghost Node on Wife Side):** Khi `showInternalHusbands = true`, sinh Ghost Node cho chồng (Tuấn) bên cạnh vợ (Mai) tại Chi 2, đặt bên trái theo quy ước Nam tả Nữ hữu, không nhân đôi số đinh.
@@ -316,7 +316,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 - [ ] **UAT_02 (Thẻ Dâu/Rể Nội Tộc Viền Vàng Nét Đứt Đối Xứng):** Thẻ Mai ở Chi 1 có viền vàng nét đứt kèm nút `Vị trí gốc ↗`; ở Chi 2 thẻ Mai cũng có nhận diện hổ phách nét đứt `🔗 Hôn phối nội tộc (Chi 1)` kèm nút `Xem gia đình ↗`.
 - [ ] **UAT_03 (Bộ Tìm Kiếm Gốc & Trải Nghiệm Cô Lập Nhánh):** Mặc định xem Toàn họ; gõ tìm tên bất kỳ ai trong menu Gốc để chỉ vẽ cây con của người đó, ẩn các nhánh khác; nút `(X)` tròn trở về Toàn họ.
 - [ ] **UAT_04 (Layout Toolbar & Không Bị Chồng Chéo Menu Profile):** Dropdown Profile của Navbar có z-index cao (`z-[100]`), mở ra đè mượt mà lên trên không bị ô search của Toolbar cắt ngang hay va chạm.
-- [ ] **UAT_05 (Nhận Diện Con Trưởng):** Con trai lớn nhất trong đàn con hiển thị nhãn/ký hiệu `(Trưởng)` cạnh tên.
+- [ ] **UAT_05 (Nhận Diện Con Trưởng):** Con trai lớn nhất trong các con hiển thị nhãn/ký hiệu `(Trưởng)` cạnh tên.
 - [ ] **UAT_06 (Trải Nghiệm Ẩn/Hiện Ghost Node Chồng Nội Tộc):** Bật/tắt công tắc "Hiển thị Rể nội tộc" trên Toolbar hoặc nút mắt trên thẻ Mai; kiểm tra Ghost Node của Tuấn (viền vàng nét đứt) xuất hiện/biến mất mượt mà bên trái của Mai.
 - [ ] **UAT_07 (Footer Hôn Phối Phẳng & Không Bị Tràn Viền):** Khi tắt "Hiển thị Rể nội tộc", thẻ Mai hiển thị footer phẳng phiu, chữ `Chồng: Nguyễn Văn Tuấn` và nút `Chi 1 ↗` nằm trọn vẹn $100\%$ bên trong viền bo cong `rounded-xl`, không còn bất kỳ hộp vàng nét đứt nào bị thò ra ngoài đáy thẻ.
 - [ ] **UAT_08 (Chuyển Màn Có Top Progress Bar & Skeletons Toàn Diện):** Bấm chuyển giữa các tab trên cả PC và Mobile thấy thanh tiến trình chạy ngay trên mép đỉnh và skeleton xuất hiện tức thì trong 50ms.

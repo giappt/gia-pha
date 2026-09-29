@@ -107,12 +107,12 @@ export function calculateTreeLayout(
     });
   }
 
-  // Sắp xếp đàn con: Ưu tiên birth_order trước, rồi đến birth_year
+  // Sắp xếp các con: Ưu tiên birth_order trước, rồi đến birth_year
   childrenMap.forEach((childList) => {
     sortMemberList(childList);
   });
 
-  // Xác định Con Trưởng (Trưởng Nam): Ưu tiên is_senior gán thủ công, hoặc mặc định con trai lớn nhất trong đàn con
+  // Xác định Con Trưởng (Trưởng Nam): Ưu tiên is_senior gán thủ công, hoặc mặc định con trai lớn nhất trong các con
   const seniorMemberIds = new Set<string>();
   childrenMap.forEach((childList) => {
     const explicitSenior = childList.find((c) => c.is_senior === true);

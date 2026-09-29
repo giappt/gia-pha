@@ -828,11 +828,11 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
 - **2. Nhãn Hiển Thị Động Theo Thứ Bậc CSDL (`rootTierName`):**
   - Hệ thống lấy tên cấp gốc động:
     `const rootTierName = clanBranches.length > 0 && clanBranches[0]?.tierName ? clanBranches[0].tierName : (clanSettings.branch_tiers?.[0] || 'Ngành');`
-  - Nhãn nấc 2 hiển thị linh hoạt theo CSDL: `[ 🌿 Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành` đối với họ Phạm Văn; `Từ Gốc Phái` đối với họ dùng Phái).
+  - Nhãn nấc 2 hiển thị linh hoạt theo CSDL: `[ Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành` đối với họ Phạm Văn; `Từ Gốc Phái` đối với họ dùng Phái).
 - **3. Segmented Toggle 2 Nấc Cho 'Nhánh Của Tôi' (`src/app/anniversaries/page.tsx`):**
   - Chuyển đổi nút bấm đơn thành **Segmented Toggle 2 nấc** ngọc bích chuẩn di sản:
     - **Nấc 1 (`from_root` - Mặc định):** `[ 👥 Từ Đời 1]` — Trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền (Đời 4) $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bác/Chú $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
-    - **Nấc 2 (`from_branch_root` / `from_branch`):** `[ 🌿 Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ `Từ Gốc Ngành`) — Bắt đầu từ Cụ Khởi của Nhánh Cấp Gốc (Cụ Khởi Ngành) trở xuống:
+    - **Nấc 2 (`from_branch_root` / `from_branch`):** `[ Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ `Từ Gốc Ngành`) — Bắt đầu từ Cụ Khởi của Nhánh Cấp Gốc (Cụ Khởi Ngành) trở xuống:
       - Ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4).
       - **BẢO TOÀN 100%** toàn bộ thành viên trong nhánh gia đình có $G \ge G_{root}$: Cụ Khởi Ngành $\rightarrow$ ... $\rightarrow$ **Ông Bà Nội (như Bà nội Nguyễn Thị Chăm)** $\rightarrow$ **Bác/Chú/Cô** $\rightarrow$ **Bố Mẹ** $\rightarrow$ **Bản thân**.
       - Tuyệt đối KHÔNG cắt cụt theo Chi nhỏ làm biến mất Ông Bà Nội.
@@ -984,9 +984,9 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_56 (Bảo Toàn Cụ Tổ Đời 4 Khi Lọc Theo Chi Nhánh):** Mở `/anniversaries`, chọn bộ lọc dropdown "Chi 1" ở chế độ mặc định (`from_root`) $\rightarrow$ Thẻ ngày giỗ của Cụ Nguyễn Thị Hiền (Đời 4) vẫn hiển thị trang trọng, không bị loại bỏ khỏi danh sách ngày giỗ của con cháu Chi 1.
 - [ ] **UAT_57 (Segmented Toggle 2 Nấc 'Nhánh Của Tôi' & Bảo Toàn Ông Bà Nội):**
   - Đăng nhập tài khoản đã liên kết, truy cập `/anniversaries`.
-  - Quan sát nhãn nấc 2 hiển thị động theo cấp gốc của dòng họ: `[ 🌿 Từ Gốc Ngành ]` (nếu cấp gốc là Ngành).
+  - Quan sát nhãn nấc 2 hiển thị động theo cấp gốc của dòng họ: `[ Từ Gốc Ngành ]` (nếu cấp gốc là Ngành).
   - Nhấp nấc `[ 👥 Từ Đời 1]` $\rightarrow$ Nấc sáng ngọc bích, danh sách ngày giỗ hiển thị toàn bộ trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
-  - Nhấp nấc `[ 🌿 Từ Gốc Ngành ]` $\rightarrow$ Chuyển chế độ: ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4); nhưng **BẢO TOÀN 100% ngày giỗ của Ông Bà Nội (Bà nội Nguyễn Thị Chăm)**, Bác, Chú, Bố Mẹ và Bản thân.
+  - Nhấp nấc `[ Từ Gốc Ngành ]` $\rightarrow$ Chuyển chế độ: ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4); nhưng **BẢO TOÀN 100% ngày giỗ của Ông Bà Nội (Bà nội Nguyễn Thị Chăm)**, Bác, Chú, Bố Mẹ và Bản thân.
   - Bấm lại vào nấc đang chọn $\rightarrow$ Hủy lọc nhánh, hiển thị lại toàn bộ dòng họ.
 
 

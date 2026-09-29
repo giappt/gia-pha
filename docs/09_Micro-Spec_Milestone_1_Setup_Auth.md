@@ -101,7 +101,7 @@ sequenceDiagram
 - **Trạng thái đang tải (Loading):** Skeleton mờ hoặc spinner nhỏ xoay nhẹ.
 - **Trạng thái đã đăng nhập:**
   - Hiển thị Avatar tròn từ Google, Tên người dùng.
-  - Badge quyền hạn: `[👑 Super Admin]` (màu vàng kim) hoặc `[👁️ Khách xem]` (màu xám xanh).
+  - Badge quyền hạn: `[👑 Super Admin]` (màu vàng kim) hoặc `[ Khách xem]` (màu xám xanh).
   - Dropdown Menu khi bấm vào Avatar:
     - Hiển thị email đầy đủ.
     - Nút `[Đăng xuất]` $\rightarrow$ Gọi `supabase.auth.signOut()` $\rightarrow$ Reload trang về trạng thái Guest.

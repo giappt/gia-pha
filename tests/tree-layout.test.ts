@@ -159,7 +159,7 @@ describe('Genealogy Tree Layout Engine Test Suite', () => {
   });
 
   // TC_UT06: Sắp xếp con cái theo birth_order trước, rồi đến birth_year (kể cả khi không rõ năm sinh)
-  it('TC_UT06: Sắp xếp đàn con chuẩn ngôi thứ theo birth_order từ trái sang phải kể cả khi không rõ năm sinh', () => {
+  it('TC_UT06: Sắp xếp các con chuẩn ngôi thứ theo birth_order từ trái sang phải kể cả khi không rõ năm sinh', () => {
     // Giả lập 1 gia đình có 3 con: năm sinh không rõ nhưng có birth_order
     const mockParent: MemberRecord = {
       id: 'p-1',
@@ -566,7 +566,7 @@ describe('Genealogy Tree Layout Engine Test Suite', () => {
     assert.ok(nodeW1.position.x < nodeW2.position.x, 'Bà 1 nằm bên trái Bà 2');
     assert.ok(nodeW2.position.x < nodeW3.position.x, 'Bà 2 nằm bên trái Bà 3');
 
-    // 2. Kiểm tra vị trí ngang của đàn con: Con riêng < Con bà 1 < Con bà 2 < Con bà 3
+    // 2. Kiểm tra vị trí ngang của các con: Con riêng < Con bà 1 < Con bà 2 < Con bà 3
     const nodeCSingle = nodes.find((n) => n.id === 'c-single')!;
     const nodeCW1 = nodes.find((n) => n.id === 'c-w1')!;
     const nodeCW2 = nodes.find((n) => n.id === 'c-w2')!;

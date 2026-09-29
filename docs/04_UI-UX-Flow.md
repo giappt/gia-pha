@@ -248,7 +248,7 @@ flowchart TD
 |  👨 Giáp Phạm     giap.pt.90@gmail.com   (Chưa gắn node)  [ 👑 Super Admin        ▼ ]  |
 |  👨 Nguyễn Tuấn   tuan.nguyen@gmail.com  Ông Tuấn (Đời 4) [ 📝 Trưởng Chi (Chi 2) ▼ ]  |
 |  👩 Trần Mai      mai.tran@gmail.com     Bà Mai (Đời 5)   [ 👤 Con cháu họ        ▼ ]  |
-|  👤 Khách Xem     viewer.abc@gmail.com   (Chưa gắn node)  [ 👁️ Khách xem (Viewer) ▼ ]  |
+|  👤 Khách Xem     viewer.abc@gmail.com   (Chưa gắn node)  [  Khách xem (Viewer) ▼ ]  |
 +---------------------------------------------------------------------------------------+
 |  💡 Hướng dẫn: Super Admin chỉ cần bấm vào Dropdown Vai Trò để nâng quyền hoặc hạ     |
 |  quyền tức thì cho bất kỳ thành viên nào trong dòng họ.                                |

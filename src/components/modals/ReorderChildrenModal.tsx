@@ -131,7 +131,7 @@ export const ReorderChildrenModal: React.FC<ReorderChildrenModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                Sắp xếp thứ tự đàn con
+                Sắp xếp thứ tự các con
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {parentMember.full_name} ({items.length} người con)
@@ -172,11 +172,10 @@ export const ReorderChildrenModal: React.FC<ReorderChildrenModalProps> = ({
                   onDragStart={() => handleDragStart(idx)}
                   onDragOver={(e) => handleDragOver(e, idx)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-center justify-between p-2.5 rounded-lg border transition-all select-none ${
-                    isDragging
+                  className={`flex items-center justify-between p-2.5 rounded-lg border transition-all select-none ${isDragging
                       ? 'opacity-40 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-md'
                       : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2.5">
                     {/* Drag Handle */}

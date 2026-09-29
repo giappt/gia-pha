@@ -50,7 +50,7 @@ export interface MemberRecord {
 }
 ```
 
-### 2.2. Model cấu trúc Phân Cụm Đàn Con & Mạng Lưới Thân Tộc 1 Đời:
+### 2.2. Model cấu trúc Phân Cụm các con & Mạng Lưới Thân Tộc 1 Đời:
 ```typescript
 export interface ChildrenGroup {
   motherId: string | null;
@@ -132,7 +132,7 @@ sequenceDiagram
     3. **Phu thê:** Tìm các `spouseRelations` liên quan đến `targetId`, lấy danh sách các `MemberRecord` phối ngẫu tương ứng (sắp xếp theo `marriage_order`).
     4. **Huynh đệ (Siblings):** Tìm tất cả thành viên có cùng `father_id` (hoặc `mother_id`) với `targetMember`, loại trừ chính `targetMember`. Sắp xếp theo `birth_order` / `birth_year`.
     5. **Hậu duệ (Children):** Tìm tất cả thành viên có `father_id === targetId` hoặc `mother_id === targetId`. Sắp xếp theo `birth_order` / `birth_year`.
-    6. **Phân cụm theo mẹ (`childrenGroups`):** Gọi `groupChildrenByMother(targetMember.id, children, spouseRelations, memberMap)` để chia đàn con thành:
+    6. **Phân cụm theo mẹ (`childrenGroups`):** Gọi `groupChildrenByMother(targetMember.id, children, spouseRelations, memberMap)` để chia các con thành:
        - Các nhóm con của từng người vợ theo thứ tự `marriage_order` (Vợ cả, Vợ hai...).
        - Nhóm con riêng khuyết mẹ (`mother_id == null` hoặc mẹ không nằm trong danh sách vợ).
   - _Output:_ Đối tượng `ImmediateFamily`.
@@ -191,7 +191,7 @@ sequenceDiagram
   4. **Con riêng của người mẹ (Cha đẻ không phải Chồng):**
      - Thành viên có `mother_id == wife.id` nhưng `father_id != husband.id` (hoặc `father_id == null`):
      - Hạ thẳng từ đáy thẻ người mẹ (`children-single` của Mẹ), dùng nét đứt (dashed line) phân biệt, xếp thẳng dưới chân Mẹ, **hoàn toàn không chạm vào thanh Bus của người Chồng**.
-- **Căn Chỉnh Trọng Tâm Đàn Con Theo Mẹ (Parent-Anchored Subtree):**
+- **Căn Chỉnh Trọng Tâm các con Theo Mẹ (Parent-Anchored Subtree):**
   - Tọa độ $X$ của từng cụm con được căn dạt tập trung ngay dưới khu vực thẻ của người mẹ đó, giúp đường bus ngang ngắn lại, đi thẳng đứng xuống, triệt tiêu nguy cơ cắt ngang đường dọc của cụm khác.
 
 ---
@@ -213,8 +213,8 @@ sequenceDiagram
   ```
 - **Các khối giao diện (Modern Vietnamese Heritage):**
   1. **Backdrop & Panel Container:** Nền mờ `bg-slate-900/40 backdrop-blur-sm`, Panel cố định mép phải `w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800`.
-  2. **Header:** Nút đóng `X` (kèm phím tắt Esc), Avatar tròn theo giới tính, Họ tên to bản, Bí danh (nếu có), Badge Đời thứ X, Badge Con trưởng / Trưởng nam, Badge Còn sống / Đã khuất (hoặc Khuyết danh).
-  3. **Section Phong Tục & Giỗ Chạp (Nếu đã khuất):**
+  2. **Header:** Nút đóng `X` (kèm phím tắt Esc), Avatar tròn theo giới tính, Họ tên to bản, Bí danh (nếu có), Badge Đời thứ X, Badge Con trưởng / Trưởng nam, Badge Còn sống / Đã mất (hoặc Khuyết danh).
+  3. **Section Phong Tục & Giỗ Chạp (Nếu Đã mất):**
      - Thẻ nổi bật màu hổ phách/vàng rơm: Ngày giỗ Âm lịch (`Ngày DD Tháng MM Âm lịch`).
      - **Ngày giỗ Dương lịch kế tiếp tương ứng:** Hiển thị ngày dương lịch và số ngày đếm ngược (VD: *"Còn 42 ngày"*).
      - Hưởng thọ & Nơi an táng / Mộ phần (`burial_location`).

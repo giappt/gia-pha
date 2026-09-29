@@ -162,7 +162,7 @@ export default function IdentityContextWidget({
               {linkedMember ? (
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                    🌿 {linkedMember.full_name} · Đời {linkedMember.generation_level || 1}
+                    {linkedMember.full_name} · Đời {linkedMember.generation_level || 1}
                     {hierarchyRes?.primaryBranchName ? ` · ${hierarchyRes.primaryBranchName}` : ''}
                   </span>
                 </div>

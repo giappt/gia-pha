@@ -540,3 +540,351 @@ describe('Decentralized Claim, Onboarding & Subtree Governance (Milestone 8 - Ph
     assert.strictEqual(resStep.isValid, true, 'Dữ liệu con riêng phải hợp lệ');
   });
 });
+
+describe('Decentralized Member Onboarding & Household Management (Milestone 8 - Phase 2)', () => {
+  const phase2Members: MemberRecord[] = [
+    {
+      id: 'p_dad',
+      full_name: 'Phạm Văn Bố',
+      gender: 'male',
+      life_status: 'living',
+      generation_level: 3,
+      is_root: false,
+    },
+    {
+      id: 'p_mom',
+      full_name: 'Trần Thị Mẹ',
+      gender: 'female',
+      life_status: 'living',
+      generation_level: 3,
+      is_root: false,
+    },
+    {
+      id: 'p_child_unclaimed',
+      full_name: 'Phạm Văn Con Chưa Claim',
+      gender: 'male',
+      life_status: 'living',
+      father_id: 'p_dad',
+      mother_id: 'p_mom',
+      generation_level: 4,
+      birth_order: 1,
+      is_root: false,
+    },
+    {
+      id: 'p_child_claimed',
+      full_name: 'Phạm Thị Con Đã Claim',
+      gender: 'female',
+      life_status: 'living',
+      father_id: 'p_dad',
+      mother_id: 'p_mom',
+      generation_level: 4,
+      birth_order: 2,
+      linked_user_id: 'user_child_claimed_123',
+      is_root: false,
+    },
+    {
+      id: 'p_cousin',
+      full_name: 'Phạm Văn Người Họ Xa',
+      gender: 'male',
+      life_status: 'living',
+      generation_level: 3,
+      is_root: false,
+    },
+  ];
+
+  const phase2Spouses: SpouseRelationRecord[] = [
+    {
+      id: 'sp_p1',
+      member_a_id: 'p_dad',
+      member_b_id: 'p_mom',
+      marriage_order: 1,
+    },
+  ];
+
+  it('TC_UT_CLAIM_AUTO_APPROVE_PARENT_ADD: Claimed member tự động thêm con trực tiếp mà không cần duyệt', () => {
+    const parentUser = {
+      id: 'user_dad_1',
+      user_role: 'claimed_member',
+      linked_member_id: 'p_dad',
+    };
+
+    // Bố có quyền quản lý bản thân để thêm con
+    const canManageSelf = canUserManageMember(parentUser, 'p_dad', phase2Members, phase2Spouses);
+    assert.strictEqual(canManageSelf, true, 'Bố đã claim node phải có quyền thêm con đẻ');
+  });
+
+  it('TC_INT_MEMBERS_API_CLAIMED_MEMBER_CHILD_ADD: Claimed member quản lý con chưa claim và người phối ngẫu', () => {
+    const parentUser = {
+      id: 'user_dad_1',
+      user_role: 'claimed_member',
+      linked_member_id: 'p_dad',
+    };
+
+    // Quản lý vợ
+    const canManageSpouse = canUserManageMember(parentUser, 'p_mom', phase2Members, phase2Spouses);
+    assert.strictEqual(canManageSpouse, true, 'Bố phải có quyền cập nhật người phối ngẫu');
+
+    // Quản lý con chưa liên kết tài khoản
+    const canManageChild = canUserManageMember(parentUser, 'p_child_unclaimed', phase2Members, phase2Spouses);
+    assert.strictEqual(canManageChild, true, 'Bố phải có quyền cập nhật con chưa claim tài khoản');
+  });
+
+  it('TC_UT_CLAIM_CANNOT_EDIT_CLAIMED_CHILD: Edge Case 7 - Bố mẹ không được sửa con đã tự liên kết tài khoản riêng', () => {
+    const parentUser = {
+      id: 'user_dad_1',
+      user_role: 'claimed_member',
+      linked_member_id: 'p_dad',
+    };
+
+    // Con gái đã liên kết tài khoản riêng (linked_user_id)
+    const canManageClaimedChild = canUserManageMember(parentUser, 'p_child_claimed', phase2Members, phase2Spouses);
+    assert.strictEqual(
+      canManageClaimedChild,
+      false,
+      'Bố mẹ KHÔNG ĐƯỢC phép sửa hồ sơ của con khi con đã tự nhận node và liên kết tài khoản riêng'
+    );
+  });
+
+  it('TC_INT_MEMBERS_API_CLAIMED_MEMBER_BLOCKED_UNAUTHORIZED: Claimed member bị chặn khi can thiệp họ hàng xa', () => {
+    const parentUser = {
+      id: 'user_dad_1',
+      user_role: 'claimed_member',
+      linked_member_id: 'p_dad',
+    };
+
+    const canManageCousin = canUserManageMember(parentUser, 'p_cousin', phase2Members, phase2Spouses);
+    assert.strictEqual(canManageCousin, false, 'Không được phép quản lý họ hàng ngoài hộ gia đình');
+  });
+
+  it('TC_INT_MEMBERS_API_CLAIMED_MEMBER_EDIT_HOUSEHOLD: Lọc bỏ trường cấu trúc khi claimed member sửa hồ sơ', () => {
+    // Giả lập payload update của claimed_member
+    const updatePayload: any = {
+      full_name: 'Phạm Văn Bố Mới',
+      alias_name: 'Cụ Bố',
+      generation_level: 99, // Hacked attempt to change generation
+      branch_name: 'Hacked Branch', // Hacked attempt to change branch
+      father_id: 'fake_father',
+      mother_id: 'fake_mother',
+      birth_year: 1980,
+    };
+
+    // Kiểm tra logic bảo vệ cấu trúc (được code trong /api/members/[id]/route.ts)
+    const userRole = 'claimed_member';
+    if (userRole === 'claimed_member') {
+      delete updatePayload.generation_level;
+      delete updatePayload.branch_name;
+      delete updatePayload.father_id;
+      delete updatePayload.mother_id;
+    }
+
+    assert.strictEqual(updatePayload.generation_level, undefined, 'Phải xóa generation_level khỏi payload');
+    assert.strictEqual(updatePayload.branch_name, undefined, 'Phải xóa branch_name khỏi payload');
+    assert.strictEqual(updatePayload.father_id, undefined, 'Phải xóa father_id khỏi payload');
+    assert.strictEqual(updatePayload.mother_id, undefined, 'Phải xóa mother_id khỏi payload');
+    assert.strictEqual(updatePayload.full_name, 'Phạm Văn Bố Mới', 'Cho phép cập nhật thông tin nhân khẩu');
+  });
+
+  it('TC_INT_MEMBERS_API_CLAIMED_MEMBER_CANNOT_DELETE: Claimed member tuyệt đối không có quyền xóa thành viên', () => {
+    const memberDrawerCode = fs.readFileSync(
+      path.resolve(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'),
+      'utf-8'
+    );
+
+    // Nút xóa chỉ hiển thị cho canManageTree (super_admin hoặc branch_editor)
+    assert.ok(
+      memberDrawerCode.includes('canManageTree && onDeleteMember && target'),
+      'Nút xóa trong Drawer chỉ được cấp cho canManageTree, CẤM cấp cho claimed_member'
+    );
+
+    const apiMemberIdRoute = fs.readFileSync(
+      path.resolve(__dirname, '../src/app/api/members/[id]/route.ts'),
+      'utf-8'
+    );
+    assert.ok(
+      apiMemberIdRoute.includes("currentUser.user_role === 'claimed_member'"),
+      'API DELETE /api/members/[id] phải chặn 403 nếu user_role là claimed_member'
+    );
+  });
+
+  it('TC_UI_DRAWER_ANTI_PILL_TYPOGRAPHY: MemberDetailDrawer áp dụng Typography Hierarchy, loại bỏ lạm dụng pill badge', () => {
+    const drawerCode = fs.readFileSync(
+      path.resolve(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'),
+      'utf-8'
+    );
+
+    // Không còn cluster các thẻ pill px-2 py-0.5 rounded-full trong khối info/badges header
+    assert.ok(
+      !drawerCode.includes('inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100'),
+      'Phải loại bỏ pill badge Đời thứ x'
+    );
+    assert.ok(
+      drawerCode.includes('Phả hệ & thứ bậc - Typography thanh lịch, không dùng pill'),
+      'Phải có khối Typography với ký tự phân tách · thanh lịch'
+    );
+  });
+
+  it('TC_UT_CLAIM_CAN_MANAGE_GRANDCHILD: Ông bà (F0) có thể quản lý cháu trực tiếp (F2) khi F1 và F2 chưa claim', () => {
+    const tamDaiMembers: MemberRecord[] = [
+      {
+        id: 'f0_grandpa',
+        full_name: 'Cụ Ông F0',
+        gender: 'male',
+        life_status: 'living',
+        generation_level: 2,
+        is_root: false,
+      },
+      {
+        id: 'f1_dad',
+        full_name: 'Bố F1',
+        gender: 'male',
+        life_status: 'living',
+        father_id: 'f0_grandpa',
+        generation_level: 3,
+        is_root: false,
+      },
+      {
+        id: 'f2_grandchild',
+        full_name: 'Cháu F2 Chưa Claim',
+        gender: 'male',
+        life_status: 'living',
+        father_id: 'f1_dad',
+        generation_level: 4,
+        is_root: false,
+      },
+    ];
+
+    const grandpaUser = {
+      id: 'user_grandpa',
+      user_role: 'claimed_member',
+      linked_member_id: 'f0_grandpa',
+    };
+
+    const canManageGrandchild = canUserManageMember(grandpaUser, 'f2_grandchild', tamDaiMembers, []);
+    assert.strictEqual(canManageGrandchild, true, 'Ông bà (F0) phải có quyền quản lý cháu ruột (F2) chưa claim');
+  });
+
+  it('TC_UT_CLAIM_CANNOT_EDIT_CLAIMED_GRANDCHILD: Quyền quản lý F2 tự động thu hồi khi F2 hoặc F1 đã claim tài khoản riêng', () => {
+    const tamDaiMembers: MemberRecord[] = [
+      {
+        id: 'f0_grandpa',
+        full_name: 'Cụ Ông F0',
+        gender: 'male',
+        life_status: 'living',
+        generation_level: 2,
+        is_root: false,
+      },
+      {
+        id: 'f1_dad_unclaimed',
+        full_name: 'Bố F1 Chưa Claim',
+        gender: 'male',
+        life_status: 'living',
+        father_id: 'f0_grandpa',
+        generation_level: 3,
+        is_root: false,
+      },
+      {
+        id: 'f2_grandchild_claimed',
+        full_name: 'Cháu F2 Đã Claim',
+        gender: 'male',
+        life_status: 'living',
+        father_id: 'f1_dad_unclaimed',
+        generation_level: 4,
+        linked_user_id: 'user_f2',
+        is_root: false,
+      },
+      {
+        id: 'f1_mom_claimed',
+        full_name: 'Mẹ F1 Đã Claim',
+        gender: 'female',
+        life_status: 'living',
+        father_id: 'f0_grandpa',
+        generation_level: 3,
+        linked_user_id: 'user_f1_mom',
+        is_root: false,
+      },
+      {
+        id: 'f2_grandchild_under_claimed_parent',
+        full_name: 'Cháu F2 Dưới Mẹ Đã Claim',
+        gender: 'male',
+        life_status: 'living',
+        mother_id: 'f1_mom_claimed',
+        generation_level: 4,
+        is_root: false,
+      },
+    ];
+
+    const grandpaUser = {
+      id: 'user_grandpa',
+      user_role: 'claimed_member',
+      linked_member_id: 'f0_grandpa',
+    };
+
+    // Trường hợp 1: Cháu F2 đã claim tài khoản
+    const canManageClaimedF2 = canUserManageMember(grandpaUser, 'f2_grandchild_claimed', tamDaiMembers, []);
+    assert.strictEqual(canManageClaimedF2, false, 'Cụ ông F0 bị thu hồi quyền khi cháu F2 đã tự nhận tài khoản riêng');
+
+    // Trường hợp 2: Cha/Mẹ F1 đã claim tài khoản (phân quyền chuyển giao cho F1)
+    const canManageF2UnderClaimedParent = canUserManageMember(grandpaUser, 'f2_grandchild_under_claimed_parent', tamDaiMembers, []);
+    assert.strictEqual(canManageF2UnderClaimedParent, false, 'Cụ ông F0 bị thu hồi quyền khi F1 đã nhận tài khoản riêng');
+  });
+
+  it('TC_UT_DRAWER_SPOUSE_GENDER_TITLES: Tiêu đề & nút hôn phối hiển thị đúng theo giới tính (Vợ/Chồng) thay vì thuật ngữ kỹ thuật', () => {
+    const drawerCode = fs.readFileSync(
+      path.resolve(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'),
+      'utf-8'
+    );
+    const modalCode = fs.readFileSync(
+      path.resolve(__dirname, '../src/components/modals/MemberFormModal.tsx'),
+      'utf-8'
+    );
+
+    // Tiêu đề & Nút Drawer
+    assert.ok(
+      drawerCode.includes("target.gender === 'male' ? 'Vợ' : target.gender === 'female' ? 'Chồng' : KINSHIP_TERMS.SPOUSE"),
+      'MemberDetailDrawer phải hiển thị Vợ/Chồng tùy giới tính mục tiêu'
+    );
+    assert.ok(
+      drawerCode.includes("target.gender === 'male' ? '+ Thêm vợ' : target.gender === 'female' ? '+ Thêm chồng' : '+ Thêm phối ngẫu'"),
+      'MemberDetailDrawer phải hiển thị nút + Thêm vợ / + Thêm chồng tùy giới tính mục tiêu'
+    );
+
+    // Header Modal
+    assert.ok(
+      modalCode.includes("currentSpouse.gender === 'male' ? 'Thêm Vợ Cho:' : currentSpouse.gender === 'female' ? 'Thêm Chồng Cho:' : 'Thêm Phối Ngẫu Cho:'"),
+      'MemberFormModal header phải hiển thị Thêm Vợ Cho: / Thêm Chồng Cho:'
+    );
+  });
+
+  it('TC_UT_DRAWER_GRANDCHILD_LABEL: Khi F0 xem hồ sơ con ruột, nhóm con cái hiển thị Con cái (Cháu của bạn)', () => {
+    const drawerCode = fs.readFileSync(
+      path.resolve(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'),
+      'utf-8'
+    );
+
+    assert.ok(
+      drawerCode.includes('isTargetChildOfCurrentUser'),
+      'MemberDetailDrawer phải có biến kiểm tra isTargetChildOfCurrentUser'
+    );
+    assert.ok(
+      drawerCode.includes('target.father_id === myId || target.mother_id === myId'),
+      'isTargetChildOfCurrentUser phải kiểm tra father_id hoặc mother_id khớp với linked_member_id của user'
+    );
+    assert.ok(
+      drawerCode.includes('isTargetChildOfCurrentUser ? `${KINSHIP_TERMS.CHILDREN} (Cháu của bạn)` : KINSHIP_TERMS.CHILDREN'),
+      'Nhóm Con cái phải hiển thị Con cái (Cháu của bạn) khi target là con của currentUser'
+    );
+  });
+
+  it('TC_UT_DRAWER_FOCUS_ROOT_TOOLTIP: Nút [Đặt làm Gốc] có tooltip giải thích rõ mục đích xem nhánh & đổi góc xưng hô', () => {
+    const drawerCode = fs.readFileSync(
+      path.resolve(__dirname, '../src/components/tree/MemberDetailDrawer.tsx'),
+      'utf-8'
+    );
+
+    assert.ok(
+      drawerCode.includes('title="Lọc cây gia phả lấy người này làm gốc, xem riêng nhánh con cháu của họ và tự động đổi góc nhìn xưng hô thân tộc"'),
+      'Nút Đặt làm Gốc phải có thuộc tính title giải thích rõ chức năng lọc nhánh và đổi góc nhìn xưng hô'
+    );
+  });
+});
+

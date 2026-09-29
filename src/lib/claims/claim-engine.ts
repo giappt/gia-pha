@@ -237,8 +237,31 @@ export function canUserManageMember(
     );
     if (isSpouse) return true;
 
-    // C. Con đẻ trực hệ (có father_id hoặc mother_id là myId)
+    // C. Con đẻ trực hệ F1 (có father_id hoặc mother_id là myId)
     if (target.father_id === myId || target.mother_id === myId) {
+      // Edge Case 7: Nếu con đẻ đã tự liên kết tài khoản riêng, con tự quản lý tài khoản của mình
+      if (target.linked_user_id || target.claimed_by) {
+        return false;
+      }
+      return true;
+    }
+
+    // D. Cháu trực hệ F2: Nếu có ít nhất một cha hoặc mẹ là con ruột của myId
+    const fatherOfTarget = target.father_id ? memberMap.get(target.father_id) : null;
+    const motherOfTarget = target.mother_id ? memberMap.get(target.mother_id) : null;
+    const parentIsMyChild =
+      (fatherOfTarget && (fatherOfTarget.father_id === myId || fatherOfTarget.mother_id === myId))
+        ? fatherOfTarget
+        : (motherOfTarget && (motherOfTarget.father_id === myId || motherOfTarget.mother_id === myId))
+        ? motherOfTarget
+        : null;
+
+    if (parentIsMyChild) {
+      // Edge Case 9: Nếu cháu (F2) hoặc con (F1 - cha/mẹ của cháu) đã tự liên kết tài khoản riêng
+      // -> Quyền quản lý thuộc về cá nhân / tiểu gia đình đó
+      if (target.linked_user_id || target.claimed_by || parentIsMyChild.linked_user_id || parentIsMyChild.claimed_by) {
+        return false;
+      }
       return true;
     }
 

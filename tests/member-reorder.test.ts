@@ -4,8 +4,8 @@ import { NextRequest } from 'next/server';
 import { POST as reorderChildren } from '../src/app/api/members/reorder/route';
 
 describe('TC_UT_REORDER_01: Member Reorder API & Logic Suite', () => {
-  it('TC_UT_REORDER_01: POST /api/members/reorder cập nhật đồng loạt birth_order 1..N cho đàn con không xung đột', async () => {
-    // Giả lập đàn con 8 người của Cụ Phạm Văn Uyên
+  it('TC_UT_REORDER_01: POST /api/members/reorder cập nhật đồng loạt birth_order 1..N cho các con không xung đột', async () => {
+    // Giả lập các con 8 người của Cụ Phạm Văn Uyên
     const mockChildIds = [
       'c-nang',
       'c-chi',

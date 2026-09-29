@@ -154,7 +154,7 @@ export function getAccurateSolarAnniversary(
 }
 
 /**
- * Tính toán tiền tố danh xưng cho người đã khuất:
+ * Tính toán tiền tố danh xưng cho người Đã mất:
  * - Khi ĐÃ liên kết node (viewerKinshipTerm được truyền vào):
  *   + Nếu quan hệ gần (cách 1-2 thế hệ như Bố, Mẹ, Ông, Bà, Bác, Chú, Cô, Dì...): ưu tiên dùng danh xưng thân tộc này (bỏ "của bạn" nếu có).
  *   + Nếu quan hệ bậc Cụ/Kỵ trở lên: tiền tố là "Cụ".

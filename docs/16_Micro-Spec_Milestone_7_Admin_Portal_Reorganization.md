@@ -13,7 +13,7 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
   - Trên mobile / màn hình nhỏ (< 1024px): Sidebar tự động chuyển thành **Slide-over Drawer** với nút Hamburger và Backdrop làm mờ.
 - **Nguyên tắc Phân Nhóm Sidebar (4 Nhóm Thuần Việt Tự Nhiên):**
   1. `❖ TỔNG QUAN`: 📊 Bàn Điều Hành (`/admin`).
-  2. `❖ Gia Phả & QUY ƯỚC`: 🏛️ Căn Cước Dòng Họ (`/admin/profile`), 🌿 Cấu Trúc Ngành & Chi (`/admin/branches`), 🗣️ Quy Ước Xưng Hô (`/admin/kinship`).
+  2. `❖ Gia Phả & QUY ƯỚC`: 🏛️ Căn Cước Dòng Họ (`/admin/profile`), Cấu Trúc Ngành & Chi (`/admin/branches`), 🗣️ Quy Ước Xưng Hô (`/admin/kinship`).
   3. `❖ THÀNH VIÊN & TÀI KHOẢN`: 👥 Quản Lý Tài Khoản (`/admin/users`).
   4. `❖ VẬN HÀNH & HỆ THỐNG`: ⚙️ Bật/Tắt Tính Năng (`/admin/features`), 📥 Nạp & Sao Lưu (`/admin/import`).
 - **Nguyên tắc "Không Giữ Chỗ / Không Placeholder":**
@@ -145,7 +145,7 @@ sequenceDiagram
     - `📊 Bàn Điều Hành` trỏ tới `/admin`.
   - `❖ Gia Phả & QUY ƯỚC`:
     - `🏛️ Căn Cước Dòng Họ` trỏ tới `/admin/profile`.
-    - `🌿 Cấu Trúc Ngành & Chi` trỏ tới `/admin/branches`.
+    - `Cấu Trúc Ngành & Chi` trỏ tới `/admin/branches`.
     - `🗣️ Quy Ước Xưng Hô` trỏ tới `/admin/kinship`.
   - `❖ THÀNH VIÊN & TÀI KHOẢN`:
     - `👥 Quản Lý Tài Khoản` trỏ tới `/admin/users`.
@@ -179,7 +179,7 @@ sequenceDiagram
     - Cho phép quản trị viên xem chi tiết danh sách người chưa nối, tìm kiếm tên, thực hiện **Nối vào Cha/Mẹ** (chọn cha mẹ, tự động kiểm tra chu trình `validateNoCycle`) hoặc xóa node rác an toàn. Sau khi thao tác, hệ thống tự động làm tươi số liệu trên Dashboard.
     - Cảnh báo tài khoản mới chưa gán node kèm nút điều hướng nhanh tới `/admin/users`.
   - **Khối 3: Phím Tắt Tác Vụ Thường Nhật (Quick Actions):**
-    - Phím tắt dạng card `rounded-md` viền phẳng: `[🌿 Ngành & Chi]`, `[👥 Tài Khoản]`, `[⚙️ Bật/Tắt Cờ]`, `[📥 Nạp Excel]`.
+    - Phím tắt dạng card `rounded-md` viền phẳng: `[Ngành & Chi]`, `[👥 Tài Khoản]`, `[⚙️ Bật/Tắt Cờ]`, `[📥 Nạp Excel]`.
   - **Khối 4: Nhật Ký Biến Động Gần Đây (Activity Audit):**
     - Danh sách các thao tác gần đây trong khung `rounded-lg`.
 
@@ -1589,7 +1589,7 @@ sequenceDiagram
   - Phân nhóm quyền hạn rõ ràng:
     - *Nhóm 1: Tiếp cận & Quyền riêng tư:* Xem cây Gia Phả, Xem SĐT người sống, Tra cứu xưng hô, Xem lịch giỗ.
     - *Nhóm 2: Tự phục vụ & Gắn kết:* Gửi yêu cầu nhận node, Nhận thông báo Web Push.
-    - *Nhóm 3: Biên tập gia phả:* Thêm thành viên, Sửa thông tin, Đổi thứ tự đàn con, Xóa node lá.
+    - *Nhóm 3: Biên tập gia phả:* Thêm thành viên, Sửa thông tin, Đổi thứ tự các con, Xóa node lá.
     - *Nhóm 4: Bàn điều hành:* Quản lý tài khoản, Nạp Excel & Smart Re-map.
   - Cột `Super Admin` hiển thị dấu tích xanh cố định (God Mode).
   - Chân mỗi cột có nút hành động: **`[ 🎭 Thử Đóng Vai Role Này ]`**.

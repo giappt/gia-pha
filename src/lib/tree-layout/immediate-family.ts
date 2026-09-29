@@ -77,7 +77,7 @@ export function getImmediateFamily(
   // Sắp xếp hậu duệ
   children.sort(compareMemberOrder);
 
-  // 5. Phân cụm đàn con theo từng người mẹ & con riêng
+  // 5. Phân cụm các con theo từng người mẹ & con riêng
   const childrenGroups = groupChildrenByMother(targetMemberId, children, spouseRelations, memberMap);
 
   return {

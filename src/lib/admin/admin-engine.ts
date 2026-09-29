@@ -389,7 +389,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
   },
   {
     id: 'reorder_children',
-    name: 'Sắp Xếp Thứ Tự Đàn Con & Con Trưởng',
+    name: 'Sắp Xếp Thứ Tự các con & Con Trưởng',
     description: 'Thay đổi ngôi thứ sinh (birth_order) và gán danh vị Trưởng Nam trong Chi',
     category: 'editing',
     roles: { guest: false, viewer: false, claimed_member: false, branch_editor: true, super_admin: true },

@@ -886,7 +886,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                 : defaultRole === 'child' && parentMember
                   ? `Thêm Con Cho: ${parentMember.full_name}`
                   : defaultRole === 'spouse' && currentSpouse
-                    ? `Thêm Phối Ngẫu Cho: ${currentSpouse.full_name}`
+                    ? `${currentSpouse.gender === 'male' ? 'Thêm Vợ Cho:' : currentSpouse.gender === 'female' ? 'Thêm Chồng Cho:' : 'Thêm Phối Ngẫu Cho:'} ${currentSpouse.full_name}`
                     : 'Thêm Thành Viên Mới'}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
@@ -965,8 +965,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                   type="button"
                   onClick={() => setSpouseOrigin('external')}
                   className={`flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${spouseOrigin === 'external'
-                      ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
                   🌸 {currentSpouse.gender === 'male' ? KINSHIP_TERMS.CLAN_EXTERNAL_BRIDE : KINSHIP_TERMS.CLAN_EXTERNAL_GROOM}
@@ -975,8 +975,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                   type="button"
                   onClick={() => setSpouseOrigin('internal')}
                   className={`flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${spouseOrigin === 'internal'
-                      ? 'bg-purple-700 text-white border-purple-700 shadow-sm'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-purple-700 text-white border-purple-700 shadow-sm'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
                   🔗 {currentSpouse.gender === 'male' ? KINSHIP_TERMS.CLAN_INTERNAL_BRIDE : KINSHIP_TERMS.CLAN_INTERNAL_GROOM}
@@ -996,8 +996,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       setMaritalEventYear('');
                     }}
                     className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === null
-                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold'
-                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                      ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold'
+                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                       }`}
                   >
                     Bình thường
@@ -1006,8 +1006,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                     type="button"
                     onClick={() => setMaritalStatus('divorced')}
                     className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === 'divorced'
-                        ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
-                        : 'text-slate-500 hover:text-amber-700 dark:text-slate-400'
+                      ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
+                      : 'text-slate-500 hover:text-amber-700 dark:text-slate-400'
                       }`}
                   >
                     Ly hôn
@@ -1016,8 +1016,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                     type="button"
                     onClick={() => setMaritalStatus('remarried')}
                     className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === 'remarried'
-                        ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-bold border border-rose-300 dark:border-rose-700'
-                        : 'text-slate-500 hover:text-rose-700 dark:text-slate-400'
+                      ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-bold border border-rose-300 dark:border-rose-700'
+                      : 'text-slate-500 hover:text-rose-700 dark:text-slate-400'
                       }`}
                   >
                     {gender === 'female' ? 'Tái giá' : 'Đã lấy vợ'}
@@ -1209,8 +1209,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       type="button"
                       onClick={() => setGender('male')}
                       className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${gender === 'male'
-                          ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-blue-600'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-blue-600'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
                       <span className="text-sm">♂</span> Nam
@@ -1219,8 +1219,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       type="button"
                       onClick={() => setGender('female')}
                       className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${gender === 'female'
-                          ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-700 dark:text-rose-300 shadow-sm ring-1 ring-rose-600'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-700 dark:text-rose-300 shadow-sm ring-1 ring-rose-600'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
                       <span className="text-sm">♀</span> Nữ
@@ -1229,8 +1229,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       type="button"
                       onClick={() => setGender('other')}
                       className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${gender === 'other'
-                          ? 'bg-slate-100 dark:bg-slate-800 border-slate-600 text-slate-800 dark:text-slate-200 shadow-sm ring-1 ring-slate-600'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        ? 'bg-slate-100 dark:bg-slate-800 border-slate-600 text-slate-800 dark:text-slate-200 shadow-sm ring-1 ring-slate-600'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
                       <span>⚪</span> Khác
@@ -1367,10 +1367,10 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       {parentPairingStatus.status !== 'none' && (
                         <div
                           className={`p-2.5 rounded-lg border text-xs flex flex-col gap-1 transition-all ${parentPairingStatus.status === 'valid_couple'
-                              ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300'
-                              : parentPairingStatus.status === 'single_parent'
-                                ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300'
-                                : 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
+                            ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300'
+                            : parentPairingStatus.status === 'single_parent'
+                              ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300'
+                              : 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
                             }`}
                         >
                           <div className="flex items-center justify-between font-semibold">
@@ -1616,8 +1616,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                           setMaritalEventYear('');
                         }}
                         className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === null
-                            ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold'
-                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                          ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold'
+                          : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                           }`}
                       >
                         Bình thường
@@ -1626,8 +1626,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                         type="button"
                         onClick={() => setMaritalStatus('divorced')}
                         className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === 'divorced'
-                            ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
-                            : 'text-slate-500 hover:text-amber-700 dark:text-slate-400'
+                          ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
+                          : 'text-slate-500 hover:text-amber-700 dark:text-slate-400'
                           }`}
                       >
                         Ly hôn
@@ -1636,8 +1636,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                         type="button"
                         onClick={() => setMaritalStatus('remarried')}
                         className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === 'remarried'
-                            ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-bold border border-rose-300 dark:border-rose-700'
-                            : 'text-slate-500 hover:text-rose-700 dark:text-slate-400'
+                          ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-bold border border-rose-300 dark:border-rose-700'
+                          : 'text-slate-500 hover:text-rose-700 dark:text-slate-400'
                           }`}
                       >
                         {gender === 'female' ? 'Tái giá' : 'Đã lấy vợ'}
@@ -1672,7 +1672,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                           type="button"
                           onClick={() => setShowReorderModal(true)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          title="Sắp xếp thứ tự đàn con"
+                          title="Sắp xếp thứ tự các con"
                         >
                           <ArrowUpDown className="w-3.5 h-3.5" /> Sắp xếp thứ tự
                         </button>
@@ -1720,23 +1720,23 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                               <div
                                 key={c.id}
                                 className={`p-2.5 rounded-md border flex items-center justify-between transition-colors ${isStagedUnlink
-                                    ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 opacity-70'
-                                    : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/60'
+                                  ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 opacity-70'
+                                  : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/60'
                                   }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   <span
                                     className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${isStagedUnlink
-                                        ? 'bg-rose-100 text-rose-600 dark:bg-rose-900 dark:text-rose-300'
-                                        : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                                      ? 'bg-rose-100 text-rose-600 dark:bg-rose-900 dark:text-rose-300'
+                                      : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
                                       }`}
                                   >
                                     {displayOrder}
                                   </span>
                                   <span
                                     className={`font-semibold truncate text-xs ${isStagedUnlink
-                                        ? 'line-through text-slate-400 dark:text-slate-500'
-                                        : 'text-slate-800 dark:text-slate-200'
+                                      ? 'line-through text-slate-400 dark:text-slate-500'
+                                      : 'text-slate-800 dark:text-slate-200'
                                       }`}
                                   >
                                     {c.full_name}
@@ -1906,8 +1906,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                               type="button"
                               onClick={() => setQuickChildGender('male')}
                               className={`px-3 py-1 rounded-md border text-xs font-semibold transition-all ${quickChildGender === 'male'
-                                  ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-blue-300 ring-1 ring-blue-600'
-                                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
+                                ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-blue-300 ring-1 ring-blue-600'
+                                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                                 }`}
                             >
                               ♂ Nam
@@ -1916,8 +1916,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                               type="button"
                               onClick={() => setQuickChildGender('female')}
                               className={`px-3 py-1 rounded-md border text-xs font-semibold transition-all ${quickChildGender === 'female'
-                                  ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-700 dark:text-rose-300 ring-1 ring-rose-600'
-                                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
+                                ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-700 dark:text-rose-300 ring-1 ring-rose-600'
+                                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                                 }`}
                             >
                               ♀ Nữ
@@ -1926,8 +1926,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                               type="button"
                               onClick={() => setQuickChildGender('other')}
                               className={`px-3 py-1 rounded-md border text-xs font-semibold transition-all ${quickChildGender === 'other'
-                                  ? 'bg-slate-100 dark:bg-slate-800 border-slate-600 text-slate-800 dark:text-slate-200 ring-1 ring-slate-600'
-                                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
+                                ? 'bg-slate-100 dark:bg-slate-800 border-slate-600 text-slate-800 dark:text-slate-200 ring-1 ring-slate-600'
+                                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                                 }`}
                             >
                               ⚪ Khác
@@ -2004,8 +2004,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       type="button"
                       onClick={() => setLifeStatus('living')}
                       className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${lifeStatus === 'living'
-                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-600 text-emerald-700 dark:text-emerald-300 shadow-sm ring-1 ring-emerald-600'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-600 text-emerald-700 dark:text-emerald-300 shadow-sm ring-1 ring-emerald-600'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
                       <span>🌱</span> Còn sống
@@ -2014,8 +2014,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       type="button"
                       onClick={() => setLifeStatus('deceased')}
                       className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${lifeStatus === 'deceased'
-                          ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-600 text-amber-800 dark:text-amber-200 shadow-sm ring-1 ring-amber-600'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-600 text-amber-800 dark:text-amber-200 shadow-sm ring-1 ring-amber-600'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
                       Đã mất
@@ -2174,7 +2174,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
         </div>
       </div>
 
-      {/* Modal Sắp Xếp Đàn Con Kéo Thả Trực Tiếp Trong Form */}
+      {/* Modal Sắp Xếp các con Kéo Thả Trực Tiếp Trong Form */}
       {showReorderModal && initialData && (
         <ReorderChildrenModal
           isOpen={showReorderModal}

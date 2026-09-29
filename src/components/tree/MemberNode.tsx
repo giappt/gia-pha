@@ -32,16 +32,16 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
   const borderColor = isAnonymous
     ? 'border-dashed border-amber-400 dark:border-amber-600/70'
     : isMale
-    ? 'border-blue-500/50 hover:border-blue-500'
-    : 'border-pink-500/50 hover:border-pink-500';
+      ? 'border-blue-500/50 hover:border-blue-500'
+      : 'border-pink-500/50 hover:border-pink-500';
 
   const avatarBg = isAnonymous
     ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
     : isDeceased
-    ? 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-    : isMale
-    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-    : 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300';
+      ? 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+      : isMale
+        ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+        : 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300';
 
   // Lấy 2 chữ cái đầu chuẩn hóa
   const initials = getMemberInitials(fullName, isAnonymous);
@@ -51,16 +51,14 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
   const aliasDisplay = nodeData.aliasName || (fullName.match(/[\(\[](.*?)[\)\]]/)?.[1]?.trim());
 
   const birthDeathText = nodeData.birthYear || nodeData.deathYear
-    ? `${nodeData.birthYear ? `SN: ${nodeData.birthYear}` : ''}${
-        nodeData.deathYear ? ` - Mất: ${nodeData.deathYear}` : ''
+    ? `${nodeData.birthYear ? `SN: ${nodeData.birthYear}` : ''}${nodeData.deathYear ? ` - Mất: ${nodeData.deathYear}` : ''
       }`.trim()
     : nodeData.branchName || '';
 
   return (
     <div
-      className={`group relative w-[200px] h-[96px] rounded-xl border bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-2.5 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex flex-col overflow-hidden cursor-pointer ${
-        isAnonymous ? 'bg-amber-50/30 dark:bg-amber-950/20' : ''
-      } ${borderColor}`}
+      className={`group relative w-[200px] h-[96px] rounded-xl border bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-2.5 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] flex flex-col overflow-hidden cursor-pointer ${isAnonymous ? 'bg-amber-50/30 dark:bg-amber-950/20' : ''
+        } ${borderColor}`}
     >
       {/* Target Handle cho cha mẹ nối xuống (Tàng hình) */}
       <Handle
@@ -113,11 +111,10 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
           </span>
         ) : (
           <span
-            className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${
-              isDeceased
+            className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${isDeceased
                 ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                 : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-            }`}
+              }`}
           >
             {isDeceased ? 'Đã mất' : 'Còn sống'}
           </span>
@@ -150,9 +147,8 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
         <div className="mt-auto h-[18px] shrink-0 flex items-center justify-between text-[9px] pt-1 border-t border-slate-100 dark:border-slate-800/80">
           <span
             className="truncate max-w-[125px] flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300"
-            title={`${nodeData.internalSpouse.roleTitle || 'Hôn phối'}: ${nodeData.internalSpouse.fullName}${
-              nodeData.internalSpouse.branchName ? ` (${nodeData.internalSpouse.branchName})` : ''
-            }`}
+            title={`${nodeData.internalSpouse.roleTitle || 'Hôn phối'}: ${nodeData.internalSpouse.fullName}${nodeData.internalSpouse.branchName ? ` (${nodeData.internalSpouse.branchName})` : ''
+              }`}
           >
             <Link2 className="w-2.5 h-2.5 shrink-0 text-amber-600 dark:text-amber-400" />
             <span className="truncate">
@@ -177,8 +173,8 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
             {nodeData.maritalStatus === 'remarried'
               ? (nodeData.gender === 'female' ? 'Tái giá' : 'Đã lấy vợ')
               : nodeData.maritalStatus === 'divorced'
-              ? 'Ly hôn'
-              : (nodeData.branchName || '')}
+                ? 'Ly hôn'
+                : (nodeData.branchName || '')}
           </span>
           {!nodeData.inlawRole && nodeData.childCount != null && nodeData.childCount > 0 && (
             <button
@@ -195,7 +191,7 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
                 }
               }}
               className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group/reorder"
-              title="Nhấp để kéo thả sắp xếp thứ tự đàn con"
+              title="Nhấp để kéo thả sắp xếp thứ tự các con"
             >
               <span>{nodeData.childCount} người con</span>
               <ArrowUpDown className="w-2.5 h-2.5 opacity-60 group-hover/reorder:opacity-100 transition-opacity" />

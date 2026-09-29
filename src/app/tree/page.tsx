@@ -22,19 +22,31 @@ export default async function TreePage() {
   let userRole: UserRole = 'viewer';
   let featureFlags: ClanFeatureFlags = resolveFeatureFlags(undefined);
 
+  let currentUser: {
+    id?: string;
+    user_role: UserRole;
+    linked_member_id?: string | null;
+    assigned_branch_code?: string | null;
+  } | null = null;
+
   try {
     const supabase = createClient();
 
-    // 1. Trích xuất vai trò người dùng (Dev Cookie trước, Supabase Auth sau)
+    // 1. Trích xuất vai trò và thông tin người dùng (Dev Cookie trước, Supabase Auth sau)
     const devUserCookie = cookieStore.get('fat_dev_user')?.value;
     if (devUserCookie) {
       try {
         const parsed = JSON.parse(decodeURIComponent(devUserCookie));
-        if (parsed?.user_role) {
-          userRole = parsed.user_role;
-        } else if (parsed?.id === '00000000-0000-0000-0000-000000000001') {
-          userRole = 'super_admin';
-        }
+        const parsedRole =
+          parsed?.user_role ||
+          (parsed?.id === '00000000-0000-0000-0000-000000000001' ? 'super_admin' : 'viewer');
+        userRole = parsedRole;
+        currentUser = {
+          id: parsed?.id,
+          user_role: parsedRole,
+          linked_member_id: parsed?.linked_member_id || null,
+          assigned_branch_code: parsed?.assigned_branch_code || null,
+        };
       } catch { }
     } else {
       try {
@@ -44,16 +56,34 @@ export default async function TreePage() {
         if (user) {
           if (user.id === '00000000-0000-0000-0000-000000000001') {
             userRole = 'super_admin';
-          } else if (user.user_metadata?.user_role) {
-            userRole = user.user_metadata.user_role;
+            currentUser = {
+              id: user.id,
+              user_role: 'super_admin',
+              linked_member_id: null,
+              assigned_branch_code: null,
+            };
           } else {
             const { data: profile } = await supabase
               .from('users')
-              .select('user_role')
+              .select('id, user_role, linked_member_id, assigned_branch_code')
               .eq('id', user.id)
               .maybeSingle();
-            if (profile?.user_role) {
+            if (profile) {
               userRole = profile.user_role;
+              currentUser = {
+                id: profile.id,
+                user_role: profile.user_role,
+                linked_member_id: profile.linked_member_id || null,
+                assigned_branch_code: profile.assigned_branch_code || null,
+              };
+            } else {
+              userRole = (user.user_metadata?.user_role as UserRole) || 'viewer';
+              currentUser = {
+                id: user.id,
+                user_role: userRole,
+                linked_member_id: null,
+                assigned_branch_code: null,
+              };
             }
           }
         }
@@ -127,6 +157,13 @@ export default async function TreePage() {
   const effectiveRole = resolveEffectiveRole(userRole, impersonatedRole);
   const canManage = canManageTree(effectiveRole === 'guest' ? 'viewer' : effectiveRole);
 
+  const effectiveCurrentUser = currentUser
+    ? {
+        ...currentUser,
+        user_role: (effectiveRole === 'guest' ? 'viewer' : effectiveRole) as UserRole,
+      }
+    : null;
+
   return (
     <div className="relative w-full h-full flex-1 overflow-hidden flex flex-col">
       <FamilyTreeCanvas
@@ -139,6 +176,7 @@ export default async function TreePage() {
         effectiveRole={effectiveRole}
         canManageTree={canManage}
         featureFlags={featureFlags}
+        currentUser={effectiveCurrentUser}
       />
     </div>
   );

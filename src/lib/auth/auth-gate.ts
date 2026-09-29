@@ -23,6 +23,7 @@ export function evaluateAuthGate(
     pathname.startsWith('/api') ||
     pathname.startsWith('/auth') ||
     pathname.startsWith('/login-gate') ||
+    pathname.startsWith('/prototype') ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico' ||
     pathname === '/manifest.json' ||

@@ -12,9 +12,13 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
     1. **Tầng 1 — Quản Trị Tối Cao (`super_admin`):** Toàn quyền toàn phả, xem và duyệt mọi phiếu, có quyền gán (assign) các phiếu "Tìm Cội Nguồn" cho Trưởng Chi xác minh.
     2. **Tầng 2 — Trưởng Chi / Thư Ký Chi (`branch_editor`):** Phụ trách toàn bộ cây con thuộc Chi của mình (`assigned_branch_code`) bất kể người đó thuộc đời nào. Có cổng quản trị riêng biệt tại `/branch`. Duyệt các hồ sơ con cháu thuộc Chi hoặc phiếu được Super Admin giao.
     3. **Tầng 3 — Chủ Hộ / Bố Mẹ (`claimed_member`):** 
-       - Phụ trách tiểu gia đình trực hệ của mình (Bản thân, Vợ/Chồng, Con đẻ).
-       - Có nút `(+)` trực tiếp dưới chân thẻ của mình trên Cây Gia Phả (`/tree`) để thêm con đẻ/hôn phối (Auto-approved).
-       - Trong Drawer chi tiết (`MemberDetailDrawer`): Cho phép bật nút `[Chỉnh sửa]` và `[+ Thêm Con]` đối với bản thân, vợ/chồng, và con đẻ của mình; các thành viên khác ngoài phạm vi này giữ nguyên chế độ Chỉ Xem (Read-only).
+       - Phụ trách tiểu gia đình trực hệ của mình (Bản thân, Vợ/Chồng, Con đẻ chưa tự liên kết tài khoản).
+       - **Tuyệt đối không dùng nút (+) trôi nổi trên thẻ Canvas:** Giữ Cây Gia Phả 100% sạch sẽ, tôn nghiêm, triệt tiêu nguy cơ bấm nhầm khi pan/zoom hoặc che khuất dây bus huyết thống.
+       - **Tập trung 100% vào Drawer Tác Vụ Phải (`MemberDetailDrawer`):**
+         + **Anti-Pill Design:** Triệt tiêu hoàn toàn sự lạm dụng 5-6 pill badges san sát nhau ở Header; thay bằng Typography phân cấp sang trọng (`Đời 6 · Chi 2 - Ngành 1 · Con trưởng`), trạng thái sinh tử thể hiện bằng text tinh tế (`● Còn sống` hoặc `🕯️ Đã mất (Năm - Năm)`).
+         + **Tác vụ theo đúng ngữ cảnh (Contextual Actions):** Nút `[+ Thêm Con]` đặt ngay tiêu đề khối Con Cái; nút `[+ Thêm Vợ/Chồng]` đặt ngay tiêu đề khối Hôn Phối; nút `[Sửa hồ sơ]` đặt tại Action Bar. Nút bấm thiết kế chuẩn mực (`rounded-lg` viền mỏng), tuyệt đối không dùng pill tags làm nút bấm.
+         + **Phân quyền hẹp (RBAC Scope):** Chỉ bật các nút Thêm/Sửa khi xem đối tượng thuộc tiểu gia đình; khi xem họ hàng xa hoặc khách thì toàn bộ nút Thêm/Sửa bị ẩn hoàn toàn (Chỉ xem).
+         + **Khóa tuyệt đối quyền Xóa:** `claimed_member` không có quyền xóa bất kỳ thành viên nào (chỉ Super Admin / Branch Editor mới được xóa).
        - Nhận và phê duyệt tài khoản của con cái khi con gửi yêu cầu claim node.
   - **Điểm Chạm Nhận Diện Tại Màn Hình Home (`src/app/page.tsx`):**
     - Thay thế box lời chào tĩnh bằng **Khung Nhận Diện Tông Tộc (Identity & Context Hub)**.
@@ -29,7 +33,7 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
       + Chọn Thứ tự sinh (`birth_order`): Tự động hiển thị danh sách anh chị em hiện có và **chọn sẵn số con tiếp theo**.
       + Tùy chọn *"Chưa rõ Cha/Mẹ trên cây"*: Cho phép điền text tự do thông tin cha mẹ/ông bà ngoài đời $\rightarrow$ Tạo **Phiếu Tìm Cội Nguồn** (Lưu trong `claim_requests`, tuyệt đối không tạo node rác vào bảng `members`).
   - **Tách Biệt Hoàn Toàn Cổng Quản Trị Chi Nhánh (`/branch`):**
-    - Trưởng Chi truy cập qua nút **`[ 🌿 Quản Trị Chi Nhánh ]`** trên Navbar.
+    - Trưởng Chi truy cập qua nút **`[ Quản Trị Chi Nhánh ]`** trên Navbar.
     - Giao diện độc lập hoàn toàn với `/admin`, không sợ chồng chéo hay ảnh hưởng tới các cấu hình hệ thống tối cao.
   - **Kiểm Chứng Thực Nghiệm Bằng Code Thật (`[R-VERIFY]`):**
     - Tuân thủ nghiêm ngặt: Typecheck 0 lỗi, Build 0 lỗi, Test tự động PASS 100%, User tự nghiệm thu thị giác (Human UAT).
@@ -41,17 +45,20 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
 Để đảm bảo tính liên tục của bộ nhớ hệ thống (Memory Persistence) qua nhiều phiên làm việc, tiến độ Milestone 8 được chia làm 3 chặng độc lập:
 
 ### 🌟 Giai Đoạn 1 (Phase 1): Điểm Chạm Home Onboarding & Hạ Tầng Gửi Hồ Sơ
-- [ ] **Phase 1.1 (Data & Types):** Mở rộng migration CSDL `claim_requests` và cập nhật TypeScript types trong `src/types/database.ts`.
-- [ ] **Phase 1.2 (Claim Logic Engine):** Xây dựng `src/lib/claims/claim-engine.ts` (validate, deduce branch focus, format context card).
-- [ ] **Phase 1.3 (Backend APIs):** Viết `POST /api/claims` và `GET /api/claims/my-requests`.
-- [ ] **Phase 1.4 (Home UI):** Xây dựng `IdentityContextWidget.tsx` (Khung nhận diện tông tộc tại Home) và `ConnectGenealogyModal.tsx` (Dialog kết nối gia phả 2 tab).
-- [ ] **Phase 1.5 (Test & Verify Phase 1):** Phủ các test cases `TC_UT_CLAIM_AUTO_DEDUCE_BRANCH`, `TC_UT_CLAIM_PROPOSE_CHILD_VALIDATION`, `TC_UT_CLAIM_PREVENT_ORPHAN_IN_DB`, `TC_UT_SEARCH_MEMBER_CONTEXT_CARD`. Typecheck và Build sạch. Nghiệm thu thị giác Home Onboarding.
+- [x] **Phase 1.1 (Data & Types):** Mở rộng migration CSDL `claim_requests` và cập nhật TypeScript types trong `src/types/database.ts`.
+- [x] **Phase 1.2 (Claim Logic Engine):** Xây dựng `src/lib/claims/claim-engine.ts` (validate, deduce branch focus, format context card).
+- [x] **Phase 1.3 (Backend APIs):** Viết `POST /api/claims` và `GET /api/claims/my-requests`.
+- [x] **Phase 1.4 (Home UI):** Xây dựng `IdentityContextWidget.tsx` (Khung nhận diện tông tộc tại Home) và `ConnectGenealogyModal.tsx` (Dialog kết nối gia phả 2 tab).
+- [x] **Phase 1.5 (Test & Verify Phase 1):** Phủ các test cases `TC_UT_CLAIM_AUTO_DEDUCE_BRANCH`, `TC_UT_CLAIM_PROPOSE_CHILD_VALIDATION`, `TC_UT_CLAIM_PREVENT_ORPHAN_IN_DB`, `TC_UT_SEARCH_MEMBER_CONTEXT_CARD`. Typecheck và Build sạch. Nghiệm thu thị giác Home Onboarding.
+- [x] **Phase 1.6 (Refinement UX & Kinship Logic):** Cố định layout Tab 1, đưa nhân thân lên đầu Tab 2, đa thê & stepper con.
+- [x] **Phase 1.7 (Privacy-First & Validation):** Lọc bỏ hồ sơ đã link Tab 1, gợi ý thứ tự con, nguyện vọng Con Trưởng, validate phiếu rỗng.
+- [x] **Phase 1.8 (Wizard 2-Step & Zero Double-Scrollbar):** Bước 1 gọn gàng 220px 0 scrollbar, Bước 2 Inline Flat List không che khuất, 1 luồng cuộn duy nhất.
 
-### 🌟 Giai Đoạn 2 (Phase 2): Dấu (+) Thêm Con Trên Cây & Quyền Chủ Hộ (`claimed_member`)
-- [ ] **Phase 2.1 (Backend Quick Add):** Viết API `POST /api/members/quick-add-child` (Auto-approved khi `parentId === my_linked_id`).
-- [ ] **Phase 2.2 (Canvas Direct Add):** Thêm nút tròn ngọc bích `(+)` dưới chân node thẻ cá nhân của mình & vợ/chồng trên `FamilyTreeCanvas.tsx`.
-- [ ] **Phase 2.3 (Drawer Scoped Permissions):** Mở khóa `[Chỉnh sửa]` và `[+ Thêm Con]` trong `MemberDetailDrawer.tsx` cho tiểu gia đình (Bản thân, Vợ/Chồng, Con đẻ).
-- [ ] **Phase 2.4 (Test & Verify Phase 2):** Phủ test `TC_UT_CLAIM_CAN_MANAGE_PARENT`, `TC_UT_CLAIM_AUTO_APPROVE_PARENT_ADD`. Nghiệm thu thị giác nút `(+)` trên cây.
+### 🌟 Giai Đoạn 2 (Phase 2): Quyền Tự Quản Tiểu Gia Đình Trong Drawer Phải (Anti-Pill & Scoped Actions)
+- [ ] **Phase 2.1 (Backend Scoped APIs):** Nâng cấp `POST /api/members/quick-add-child` (hoặc mở rộng `POST /api/members`) và `PUT /api/members/[id]` cho phép `claimed_member` thêm con và sửa thông tin tiểu gia đình; giữ khóa `DELETE /api/members/[id]` 100%.
+- [ ] **Phase 2.2 (Drawer Redesign & Anti-Pill):** Tinh chỉnh `MemberDetailDrawer.tsx`: Dẹp bỏ rừng pill badges trong Header thay bằng Typography phân cấp cao cấp; bổ sung các nút tác vụ ngữ cảnh `[+ Thêm Con]` ở khối Con cái, `[+ Thêm Vợ/Chồng]` ở khối Hôn phối, và `[Sửa hồ sơ]` ở Action Bar.
+- [ ] **Phase 2.3 (Canvas Wiring & Optimistic Update):** Truyền `userProfile` (role & linked node) từ `src/app/tree/page.tsx` xuống `FamilyTreeCanvas.tsx` $\rightarrow$ `MemberDetailDrawer`; kết nối handler mở `MemberFormModal` với cha/mẹ được khóa sẵn; tự động chèn node con vào cây và lia camera mượt mà sau khi lưu.
+- [ ] **Phase 2.4 (Test & Verify Phase 2):** Phủ test `TC_UT_CLAIM_AUTO_APPROVE_PARENT_ADD`, các test API guards (`TC_INT_MEMBERS_API_CLAIMED_MEMBER_*`), kiểm tra bảo vệ con đã claim tài khoản. Nghiệm thu thị giác Drawer.
 
 ### 🌟 Giai Đoạn 3 (Phase 3): Phê Duyệt Phân Tán (3 Tầng), Cơ Chế Assign & Cổng Quản Trị Chi `/branch`
 - [ ] **Phase 3.1 (Review APIs):** Viết `GET /api/claims/pending` và `PATCH /api/claims/[id]/review` (xử lý duyệt 3 tầng: Bố mẹ / Trưởng Chi / Super Admin).
@@ -157,24 +164,29 @@ sequenceDiagram
     API-->>P: Thông báo duyệt thành công 200
 ```
 
-### 3.2. Luồng Bố Mẹ Bấm Dấu `(+)` Thêm Con Trực Tiếp Trên Cây (Auto-Approved)
+### 3.2. Luồng Bố Mẹ Thao Tác Trong Drawer Phải Để Thêm Con Đẻ (Auto-Approved)
 
 ```mermaid
 sequenceDiagram
     participant M as Bố Mẹ (Claimed Member)
     participant C as Tree Canvas (/tree)
+    participant D as Drawer Phải (MemberDetailDrawer)
+    participant F as Modal Form (MemberFormModal)
     participant API as /api/members/quick-add-child
     participant DB as Supabase DB
 
-    M->>C: Xem thẻ của mình trên cây -> Thấy dấu (+) dưới chân thẻ
-    C->>M: Mở popup thêm nhanh: Tên con, Giới tính, Năm sinh, Thứ tự
-    M->>C: Bấm [Lưu & Nối Vào Cây]
-    C->>API: POST /api/members/quick-add-child { parentId: my_id, ... }
-    API->>API: Kiểm tra parentId === user.linked_member_id (Xác thực quyền cha mẹ)
-    API->>DB: INSERT INTO members (father_id, generation_level = parent.gen + 1, ...)
+    M->>C: Nhấp vào thẻ của mình (hoặc vợ/chồng) trên Canvas
+    C->>D: Mở Drawer bên phải hiển thị thông tin
+    D->>M: Hiển thị Header trang trọng (Anti-Pill) + Nút [+ Thêm Con] tại khối Con cái
+    M->>D: Bấm [+ Thêm Con]
+    D->>F: Mở MemberFormModal (khóa sẵn parentMember là người đang chọn)
+    M->>F: Nhập: Họ tên con, Giới tính, Năm sinh, Thứ tự -> Bấm [Lưu thành viên]
+    F->>API: POST /api/members/quick-add-child (hoặc POST /api/members)
+    API->>API: Kiểm tra canUserManageMember (Xác thực quyền cha mẹ)
+    API->>DB: INSERT INTO members (father_id/mother_id, generation_level = parent.gen + 1, ...)
     DB-->>API: Trả về new_member_id
-    API-->>C: Thành công (Auto-approved)
-    C->>C: Re-render cây -> Xuất hiện node con ngay dưới chân bố mẹ
+    API-->>F: Thành công HTTP 201
+    F-->>C: Kích hoạt onSaved -> Cập nhật liveMembers & lia camera mượt mà tới node con
 ```
 
 ---
@@ -233,14 +245,43 @@ sequenceDiagram
      - Đánh dấu `claim_status = 'approved'`, `reviewed_by = user.id`.
   5. Trả về HTTP 200 `{ success: true, message: 'Xử lý yêu cầu thành công' }`.
 
-### 4.4. `POST /api/members/quick-add-child` (Thêm Con Đẻ Trực Tiếp Trên Cây - Auto-Approved)
-- **Tập tin:** `src/app/api/members/quick-add-child/route.ts`
+### 4.4. `POST /api/members/quick-add-child` (Thêm Con Đẻ Tự Duyệt Cho Tiểu Gia Đình)
+- **Tập tin:** `src/app/api/members/quick-add-child/route.ts` (hoặc mở rộng `POST /api/members`)
 - **Xử lý:**
-  1. Lấy thông tin user hiện tại (`user.linked_member_id`).
-  2. Xác thực: `parentId` gửi lên bắt buộc phải là `user.linked_member_id` (hoặc vợ/chồng của user).
-  3. Tính `generation_level = parent.generation_level + 1`.
-  4. INSERT vào `members` với `father_id` (hoặc `mother_id`), `birth_order`, `full_name`, `gender`, `birth_year`.
-  5. Trả về HTTP 201 kèm bản ghi member mới tạo.
+  1. Lấy thông tin user hiện tại (`user.linked_member_id`, `user.user_role`).
+  2. Xác thực quyền bằng `canUserManageMember`:
+     - Nếu `super_admin` / `branch_editor`: Được phép thêm theo phạm vi quản trị.
+     - Nếu `claimed_member`: `parentId` gửi lên bắt buộc phải là `user.linked_member_id` (hoặc bạn đời của user trong bảng `spouse_relations`).
+     - Người ngoài / Viewer: Chặn ngay HTTP 403 Forbidden.
+  3. Tính toán dữ liệu tự động:
+     - `generation_level = parent.generation_level + 1`.
+     - Tự động gán `father_id` (nếu parent là nam) hoặc `mother_id` (nếu parent là nữ).
+     - Hỗ trợ gán `mother_id` / `father_id` phối ngẫu tương ứng khi có chọn người mẹ/bố cụ thể.
+     - Tự động xác định `birth_order` (max + 1 nếu không chỉ định).
+  4. INSERT vào `members`.
+  5. Trả về HTTP 201 `{ success: true, member: newMember }`.
+
+### 4.5. `PUT /api/members/[id]` (Mở Khóa Quyền Sửa Hồ Sơ Tiểu Gia Đình)
+- **Tập tin:** `src/app/api/members/[id]/route.ts`
+- **Xử lý:**
+  1. Lấy thông tin user hiện tại (`user.linked_member_id`, `user.user_role`).
+  2. Kiểm tra quyền sở hữu bằng `canUserManageMember`:
+     - Nếu `super_admin` / `branch_editor`: Toàn quyền sửa theo phân cấp.
+     - Nếu `claimed_member`: Được phép sửa nếu `params.id` là:
+       * Chính bản thân mình (`id === user.linked_member_id`).
+       * Vợ/chồng của mình (`isSpouse === true`).
+       * Con đẻ của mình CHƯA tự liên kết tài khoản (`linked_user_id === null`).
+       * ⚠️ *Rào chắn bảo vệ con đã trưởng thành:* Nếu con đẻ đã có `linked_user_id !== null` $\rightarrow$ Từ chối HTTP 403 *"Thành viên này đã có tài khoản riêng tự quản lý"*.
+     - Người ngoài / Viewer: Chặn HTTP 403 Forbidden.
+  3. **Khóa các trường cấu trúc cốt lõi:** Người dùng `claimed_member` chỉ được cập nhật thông tin cá nhân (`full_name`, `alias_name`, `gender`, `birth_year`, `birth_date`, `death_year`, `death_date`, `avatar_url`, `phone`, `notes`, `burial_location`). TUYỆT ĐỐI KHÔNG cho phép đổi `generation_level`, `father_id`, `mother_id` hay `branch_id` (chỉ Admin mới có quyền tái cấu trúc cây).
+  4. UPDATE `members` và trả về HTTP 200 `{ success: true, member: updatedMember }`.
+
+### 4.6. `DELETE /api/members/[id]` (Khóa Tuyệt Đối Quyền Xóa Với Chủ Hộ)
+- **Tập tin:** `src/app/api/members/[id]/route.ts`
+- **Nguyên tắc bảo vệ toàn phả:**
+  - `claimed_member` TUYỆT ĐỐI KHÔNG CÓ QUYỀN XÓA bất kỳ thành viên nào (kể cả con đẻ vừa thêm nhầm).
+  - Nếu `claimed_member` gửi yêu cầu DELETE $\rightarrow$ Lập tức chặn HTTP 403 Forbidden *"Chỉ Quản Trị Viên mới có quyền xóa hồ sơ khỏi Cây Gia Phả"*.
+  - Muốn gỡ bỏ hồ sơ, chủ hộ liên hệ Ban Quản Trị / Trưởng Chi để tránh phá hủy cây do thao tác nhầm.
 
 ---
 
@@ -250,8 +291,8 @@ sequenceDiagram
 - Vị trí: Đặt tại `src/app/page.tsx`, ngay dưới tiêu đề dòng họ.
 - **Trạng thái 1: Thành viên đã gắn node (Identity Honor Card):**
   - Avatar, Tên thành viên trong Gia Phả.
-  - Huy hiệu danh xưng: `[ 🌿 Đời {X} · {Tên Chi/Ngành} ]`.
-  - Nút hành động duy nhất, sắc sảo: **`[ 👁️ Xem trên Cây ]`** trỏ tới `/tree?focus={linked_member_id}`.
+  - Huy hiệu danh xưng: `[ Đời {X} · {Tên Chi/Ngành} ]`.
+  - Nút hành động duy nhất, sắc sảo: **`[  Xem trên Cây ]`** trỏ tới `/tree?focus={linked_member_id}`.
   - *(Lưu ý: Loại bỏ 100% Dropdown Chọn Chi Nhánh thừa thãi khỏi khung này để giữ trọn tính tôn nghiêm của Thẻ Danh Tính; việc lọc xem nhánh đã có sẵn trên Toolbar của trang `/tree` và `/anniversaries`).*
 - **Trạng thái 2: Đang có phiếu chờ duyệt:**
   - Badge màu hổ phách: `[ ⏳ Đang chờ BQT/Bố Mẹ duyệt: {Tên hồ sơ} ]`.
@@ -300,10 +341,32 @@ sequenceDiagram
         * Nút bên phải: `[ Gửi Yêu Cầu Xét Duyệt ]` / `[ Gửi Yêu Cầu Xác Minh ]` (bị disabled khi chưa chọn bố mẹ hoặc chưa nhập tên ngoài đời).
       + **Triệt tiêu 100% hiện tượng 2 thanh cuộn kề nhau:** Toàn bộ modal chỉ có đúng 1 luồng cuộn tự nhiên duy nhất của cả form nếu nội dung dài, không có thanh cuộn con nào bên trong.
 
-### 5.3. Dấu `(+)` Thêm Con Trực Tiếp Trên Canvas Cây: `src/components/tree/FamilyTreeCanvas.tsx`
-- Kiểm tra điều kiện: Nếu node hiển thị trên cây có `node.id === userProfile.linked_member_id` (hoặc là spouse của user):
-  - Hiển thị một nút tròn nhỏ **`[ + ]`** kích thước 24x24px, màu xanh ngọc bích `bg-emerald-600 text-white rounded-full shadow-md` ngay dưới chân thẻ node.
-  - Khi click vào: Mở form popup mini thêm nhanh con đẻ.
+### 5.3. Trung Tâm Tác Vụ Ngữ Cảnh Trong Drawer Phải: `src/components/tree/MemberDetailDrawer.tsx`
+- **Triết lý Anti-Pill & Nghệ Thuật Kiểu Chữ (Typography Hierarchy):**
+  - **Dọn sạch Header (Zero Pill Spams):** Bãi bỏ hoàn toàn việc nhồi nhét 5-6 pill badges bo tròn nhiều màu. Thay thế bằng Typography phân cấp sang trọng, tôn nghiêm:
+    + Họ tên lớn, đậm nét (`text-lg font-bold text-slate-900 dark:text-slate-50`).
+    + Dòng danh xưng thế hệ & chi nhánh thanh lịch: `Đời {generation_level} · {branch_name || 'Chi phái chưa xếp'}` kèm ký hiệu `👑 Con trưởng` dạng text trang nhã dùng dấu chấm ngăn cách (`·`).
+    + Trạng thái sinh tử tinh tế: Một dot nhỏ `● Còn sống` (ngọc bích) hoặc biểu tượng ngọn nến `🕯️ Đã mất ({sinh} - {mất})` dạng text mộc mạc, không đóng khung viên thuốc lòe loẹt.
+- **Tác Vụ Ngữ Cảnh Chuẩn Mực (Contextual Action Buttons):**
+  - Nút bấm thiết kế chuẩn mực (`rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 px-2.5 py-1.5 text-xs font-semibold shadow-xs transition-colors`), tuyệt đối không dùng pill tags làm nút bấm.
+  - **Tại Khối Con Cái (Children Section):**
+    + Khi người xem ($F_0$) mở Drawer của Con mình ($F_1$): Tiêu đề khối con cái đổi thành **`Con cái (Cháu của bạn) (N):`** để định vị thân tộc trực quan.
+    + Đặt nút **`[+ Thêm Con]`** ngay góc phải header của danh sách con cái khi người xem có quyền quản lý người này $\rightarrow$ Gọi `onAddChild(targetMember)`.
+  - **Tại Khối Phối Ngẫu (Spouse Section - Thuần Việt hóa 100%):**
+    + Loại bỏ thuật ngữ hành chính "Phối ngẫu". Tự động phân hóa theo giới tính của thành viên đang mở:
+      * Nếu thành viên là **Nam** $\rightarrow$ Tiêu đề khối: **`Vợ (N):`**; Nút bấm: **`[+ Thêm vợ]`**.
+      * Nếu thành viên là **Nữ** $\rightarrow$ Tiêu đề khối: **`Chồng (N):`**; Nút bấm: **`[+ Thêm chồng]`**.
+    + Trong `MemberFormModal`: Tiêu đề tự động gán `Thêm thông tin Vợ` hoặc `Thêm thông tin Chồng` với placeholder tự nhiên.
+- **Thanh Điều Khiển Chân Drawer (Footer Action Bar):**
+  - **Nút `[✏️ Sửa hồ sơ]`:** Hiển thị khi `canUserManageMember(currentUser, target.id, ...)` trả về `true` (Bao gồm Bản thân $F_0$, Vợ/Chồng, Con đẻ $F_1$, và Cháu trực hệ $F_2$ chưa tự liên kết tài khoản, hoặc Admin/Trưởng Chi).
+  - **Nút `[↕️ Sắp xếp con]`:** Hiển thị khi người này có con và user có quyền quản lý.
+  - **Nút `[🎯 Đặt làm Gốc]`:** Có Tooltip và thuộc tính `title` giải thích tường minh: *"Lọc cây gia phả lấy người này làm gốc, xem riêng nhánh con cháu của họ và tự động đổi góc nhìn xưng hô thân tộc"*. Mở cho toàn bộ người dùng (kể cả khách / viewer).
+  - **Nút `[🔍 Tra cứu xưng hô]`:** Mở cho toàn bộ người dùng.
+  - **Nút `[🗑️ Xóa hồ sơ]`:** Chỉ hiển thị cho `super_admin` và `branch_editor` khi thành viên không có con; ẩn hoàn toàn đối với `claimed_member`.
+- **Dây Nối Trạng Thái Từ Server Tới Canvas:**
+  - `src/app/tree/page.tsx` trích xuất thông tin người dùng đang đăng nhập (`userProfile`: `id`, `user_role`, `linked_member_id`, `assigned_branch_code`) và truyền xuống `FamilyTreeCanvas.tsx`.
+  - `FamilyTreeCanvas.tsx` truyền `currentUser` vào `MemberDetailDrawer` để tính toán quyền hạn tức thì.
+  - Khi thêm con/sửa hồ sơ thành công từ Modal: Tự động kích hoạt `handleMemberSaved` $\rightarrow$ Cập nhật `liveMembers` $\rightarrow$ Cây phả hệ tự động chèn node và lia camera nhẹ nhàng tới node mới mà không cần F5 toàn trang.
 
 ### 5.4. Cổng Quản Trị Chi Nhánh: `src/app/branch/page.tsx`
 - Dành riêng cho `branch_editor`:
@@ -321,6 +384,9 @@ sequenceDiagram
 - **Edge Case 4 (Phiếu Tìm Cội Nguồn không có cha mẹ trên cây):** Tuyệt đối KHÔNG INSERT vào bảng `members`. Chỉ lưu payload văn bản trong `claim_requests.proposed_data` cho đến khi Super Admin hoặc Trưởng Chi ghép nối thành công.
 - **Edge Case 5 (Trưởng Chi đời thấp quản lý cả chi lớn):** Rào chắn API kiểm tra phạm vi cây con phụ hệ theo `assigned_branch_code`, không kiểm tra `generation_level`. Đảm bảo người đời thấp vẫn sửa và duyệt được toàn bộ con cháu trong Chi được giao.
 - **Edge Case 6 (Bảo vệ ngôi vị Con Trưởng - Senior Protection):** Hệ thống TUYỆT ĐỐI KHÔNG tự động tước bỏ quyền Con Trưởng (`is_senior = true`) của thành viên hiện có trên cây phả hệ, kể cả khi có người mới chèn vào vị trí số 1 hoặc khai báo nguyện vọng Trưởng Nam. Chỉ Super Admin / Trưởng Tộc trên màn hình duyệt mới có quyền chỉ định chuyển giao quyền Trưởng Nam khi đã đối chiếu gia phả chính xác.
+- **Edge Case 7 (Bảo vệ con đã tự nhận tài khoản - Autonomous Claimed Child):** Khi con đẻ đã tự đăng nhập và liên kết tài khoản riêng (`linked_user_id !== null`), quyền sửa đổi hồ sơ cá nhân thuộc về chính người con đó. Bố mẹ không được phép sửa đổi họ tên hay thông tin cá nhân của con trên hệ thống để tránh tranh chấp dữ liệu.
+- **Edge Case 8 (Khóa hoàn toàn quyền Xóa node với Chủ Hộ - Restrict Member Deletion):** `claimed_member` tuyệt đối không có quyền xóa bất kỳ thành viên nào (kể cả con đẻ vừa tạo). Thao tác xóa node có nguy cơ làm đứt gãy nhánh cây, chỉ `super_admin` và `branch_editor` mới có quyền xóa qua giao diện quản trị an toàn khi thỏa mãn điều kiện `canDeleteMember`.
+- **Edge Case 9 (Mô hình Tam Đại Đồng Đường & Quyền Quản Lý Cháu F2):** Người dùng `claimed_member` ($F_0$) có quyền thêm và sửa thông tin nhân khẩu của Cháu trực hệ ($F_2$). Nếu Cháu ($F_2$) hoặc Con ($F_1$ cha/mẹ của cháu) đã tự đăng nhập liên kết tài khoản riêng (`linked_user_id !== null` hoặc `claimed_by !== null`), quyền sửa đổi của $F_0$ trên $F_2$ sẽ tự động bị thu hồi theo nguyên tắc tự chủ cá nhân.
 
 ---
 
@@ -332,7 +398,12 @@ sequenceDiagram
 |---|---|---|---|---|---|---|---|
 | **TC_UT_CLAIM_CAN_MANAGE_PARENT** | Bố mẹ có quyền quản lý và thêm con trực hệ của mình | `tests/decentralized-claim.test.ts` | User gắn với node cha A; node con B có `father_id = A` | Gọi hàm `canUserManageMember(user, B.id)` | Trả về `true`; thử với node họ hàng C trả về `false` | Unit Logic | - [x] PASS |
 | **TC_UT_CLAIM_CAN_MANAGE_BRANCH** | Trưởng Chi quản lý toàn bộ con cháu trong chi bất kể đời | `tests/decentralized-claim.test.ts` | User là `branch_editor` Chi 2 (Đời 7); Cụ X thuộc Chi 2 (Đời 4) | Gọi hàm `canUserManageMember(user, X.id)` | Trả về `true`; thử với Cụ Y thuộc Chi 1 trả về `false` | Security RBAC | - [x] PASS |
-| **TC_UT_CLAIM_AUTO_APPROVE_PARENT_ADD** | Bố mẹ thêm con đẻ trực tiếp được duyệt tự động | `tests/decentralized-claim.test.ts` | Bố mẹ gọi API quick-add-child với `parentId = my_linked_id` | Gọi hàm xử lý thêm con đẻ | Bản ghi mới tạo có `father_id = my_id`, `generation_level = parent.gen + 1` | Logic Data | - [ ] PENDING (Phase 2) |
+| **TC_UT_CLAIM_AUTO_APPROVE_PARENT_ADD** | Bố mẹ thêm con đẻ trực tiếp được duyệt tự động | `tests/decentralized-claim.test.ts` | Bố mẹ gọi API quick-add-child với `parentId = my_linked_id` | Gọi hàm xử lý thêm con đẻ | Bản ghi mới tạo có `father_id = my_id`, `generation_level = parent.gen + 1` | Logic Data | - [x] PASS |
+| **TC_INT_MEMBERS_API_CLAIMED_MEMBER_CHILD_ADD** | API chấp thuận khi claimed_member thêm con cho chính mình hoặc vợ chồng | `tests/decentralized-claim.test.ts` | User là claimed_member linked với node A; payload có `parentId = A` | Gửi POST /api/members/quick-add-child | Trả về HTTP 201 Created kèm dữ liệu node con mới tạo | API Auth Guard | - [x] PASS |
+| **TC_INT_MEMBERS_API_CLAIMED_MEMBER_EDIT_HOUSEHOLD** | API chấp thuận khi claimed_member sửa thông tin tiểu gia đình | `tests/decentralized-claim.test.ts` | User là claimed_member; gửi PUT sửa thông tin bản thân hoặc vợ | Gửi PUT /api/members/:id | Trả về HTTP 200 OK với thông tin đã cập nhật | API Auth Guard | - [x] PASS |
+| **TC_INT_MEMBERS_API_CLAIMED_MEMBER_BLOCKED_UNAUTHORIZED** | Chặn claimed_member sửa hoặc thêm vào nhánh họ hàng khác | `tests/decentralized-claim.test.ts` | User là claimed_member; cố tình gọi PUT sửa cụ tổ hoặc chú bác | Gửi PUT /api/members/:otherId | Trả về HTTP 403 Forbidden | Security RBAC | - [x] PASS |
+| **TC_INT_MEMBERS_API_CLAIMED_MEMBER_CANNOT_DELETE** | Chặn claimed_member gọi API xóa thành viên | `tests/decentralized-claim.test.ts` | User là claimed_member; cố tình gọi DELETE thành viên | Gửi DELETE /api/members/:childId | Trả về HTTP 403 Forbidden | Data Protection | - [x] PASS |
+| **TC_UT_CLAIM_CANNOT_EDIT_CLAIMED_CHILD** | Không cho phép bố mẹ sửa hồ sơ con đẻ đã tự liên kết tài khoản | `tests/decentralized-claim.test.ts` | Con đẻ C có `father_id = A` nhưng đã có `linked_user_id` | Gọi hàm `canUserManageMember(userA, C.id)` | Trả về `false` (con tự quản lý tài khoản) | Privacy Guard | - [x] PASS |
 | **TC_UT_CLAIM_AUTO_DEDUCE_BRANCH** | Tự động khởi tạo Chi Nhánh khi user được gắn node | `tests/decentralized-claim.test.ts` | Node thành viên thuộc Chi 2; cây branches có Chi 2 | Gọi hàm `deduceUserBranchFocus(memberId, branches)` | Trả về ID của Chi 2 làm focusedBranchId mặc định | Happy Path | - [x] PASS |
 | **TC_UT_CLAIM_PROPOSE_CHILD_VALIDATION** | Kiểm tra tính hợp lệ của phiếu đề xuất con mới | `tests/decentralized-claim.test.ts` | Payload thiếu họ tên hoặc thiếu giới tính | Gọi hàm `validateProposedChildData(payload)` | Trả về `isValid: false` kèm thông báo lỗi cụ thể | Validation | - [x] PASS |
 | **TC_UT_CLAIM_PREVENT_ORPHAN_IN_DB** | Phiếu Tìm Cội Nguồn không tạo node trôi nổi vào members | `tests/decentralized-claim.test.ts` | User gửi phiếu find_origin không có cha mẹ trên cây | Gọi API POST /api/claims | Phiếu lưu vào `claim_requests`, bảng `members` giữ nguyên số lượng | Data Integrity | - [x] PASS |
@@ -342,32 +413,40 @@ sequenceDiagram
 | **TC_UT_CLAIM_PREVENT_CLAIM_ALREADY_LINKED** | Chặn nhận hồ sơ đã có tài khoản khác liên kết | `tests/decentralized-claim.test.ts` | Thành viên m6 đã có user liên kết; User B cố tình gửi claim m6 | Gọi API POST /api/claims | Trả về HTTP 400 Bad Request kèm thông báo đã có người liên kết | Data Guard | - [x] PASS |
 | **TC_UT_CLAIM_MULTI_SPOUSE_DETECTION** | Tự động nhận diện bạn đời của Cha/Mẹ, hỗ trợ đa thê và con riêng | `tests/decentralized-claim.test.ts` | Bố có 2 vợ (Chu Thị Hà, Nguyễn Thị Mai); hoặc con riêng | Gọi hàm trích xuất bạn đời và sinh payload | Trả về danh sách 2 bà mẹ kèm lựa chọn con riêng chính xác | Kinship Logic | - [x] PASS |
 | **TC_UT_CLAIM_FLEXIBLE_BIRTH_ORDER** | Bộ chọn thứ tự con linh hoạt, hỗ trợ gia đình đông con (> 6 con) | `tests/decentralized-claim.test.ts` | Gia đình có 8 người con, người dùng chọn con thứ 9 | Xác thực payload thứ tự sinh | Chấp nhận birth_order = 9, không bị giới hạn cứng mảng 1..6 | Family Scale | - [x] PASS |
-
 | **TC_UT_CLAIM_SEARCH_FILTER_OUT_CLAIMED** | Lọc bỏ 100% hồ sơ đã liên kết khỏi kết quả tra cứu Tab 1 | `tests/decentralized-claim.test.ts` | Member A và B trùng tên "Giáp"; Member A đã được liên kết | Gọi hàm lọc tìm kiếm | Chỉ trả về Member B; Member A bị loại bỏ 100% | Security Privacy | - [x] PASS |
 | **TC_UT_CLAIM_FIND_ORIGIN_REQUIRE_RAW_PARENT** | Ràng buộc bắt buộc Tên Bố/Mẹ ngoài đời khi gửi Phiếu Yêu Cầu | `tests/decentralized-claim.test.ts` | Phiếu find_origin có full_name nhưng để trống raw_parent_info | Gọi hàm validate hoặc API POST /api/claims | Trả về isValid: false / HTTP 400 yêu cầu nhập tên bố mẹ | Form Validation | - [x] PASS |
 | **TC_UT_CLAIM_SMART_BIRTH_ORDER_SUGGESTION** | Gợi ý thứ tự con thông minh theo năm sinh và lấp lỗ hổng | `tests/decentralized-claim.test.ts` | Bố mẹ có con 1 (1990) và con 2 (1995); người mới sinh 1992 | Gọi hàm tính toán thứ tự gợi ý | Trả về gợi ý birth_order = 2 (chèn giữa) kèm đối chiếu tịnh tiến | Kinship Logic | - [x] PASS |
 | **TC_UT_CLAIM_SENIOR_DESIRE_PAYLOAD** | Ghi nhận nguyện vọng Con Trưởng (Trưởng Nam) trong payload | `tests/decentralized-claim.test.ts` | Người dùng nam tick chọn Con Trưởng | Gọi API / hàm validate | Payload lưu proposed_data.is_senior = true hợp lệ | Domain Integrity | - [x] PASS |
+| **TC_UT_CLAIM_CAN_MANAGE_GRANDCHILD** | Ông/bà có quyền quản lý và sửa hồ sơ cháu trực hệ F2 khi con và cháu chưa claim | `tests/decentralized-claim.test.ts` | User là F0; node target là F2 (con của F1 con ruột F0) | Gọi hàm `canUserManageMember(userF0, F2.id)` | Trả về `true` (cho phép ông bà sửa cháu) | Logic RBAC | - [x] PASS |
+| **TC_UT_CLAIM_CANNOT_EDIT_CLAIMED_GRANDCHILD** | Thu hồi quyền sửa của ông/bà khi cháu (F2) hoặc cha/mẹ cháu (F1) đã tự lập tài khoản | `tests/decentralized-claim.test.ts` | Node F2 hoặc F1 đã có `linked_user_id` / `claimed_by` | Gọi hàm `canUserManageMember(userF0, F2.id)` | Trả về `false` (tôn trọng quyền tự chủ của cá nhân/hộ) | Security Guard | - [x] PASS |
+| **TC_UT_DRAWER_SPOUSE_GENDER_TITLES** | Drawer hiển thị nhãn thuần Việt theo giới tính: + Thêm vợ (cho Nam) và + Thêm chồng (cho Nữ) | `tests/decentralized-claim.test.ts` | Target là Nam hoặc Nữ trong MemberDetailDrawer | Kiểm tra mã nguồn JSX và nhãn button | Nam hiển thị `+ Thêm vợ` và `Vợ (N):`, Nữ hiển thị `+ Thêm chồng` và `Chồng (N):` | Culture UX | - [x] PASS |
+| **TC_UT_DRAWER_GRANDCHILD_LABEL** | Khi xem Drawer của con, mục con cái hiển thị nhãn thân tộc Con cái (Cháu của bạn) | `tests/decentralized-claim.test.ts` | User F0 mở Drawer của con đẻ F1 | Kiểm tra nhãn hiển thị tại Children Section | Hiển thị chuỗi `Con cái (Cháu của bạn)` thay vì chỉ `Con cái` | Kinship UX | - [x] PASS |
+| **TC_UT_DRAWER_FOCUS_ROOT_TOOLTIP** | Nút Đặt làm Gốc có tooltip giải thích tường minh ý nghĩa tính năng Focus Root | `tests/decentralized-claim.test.ts` | Nút Đặt làm Gốc trong MemberDetailDrawer | Kiểm tra thuộc tính `title` của button | Có title giải thích lọc cây theo tiền nhân và đổi góc nhìn xưng hô | UX Clarity | - [x] PASS |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
-- [ ] **UAT_01 (Khung Nhận Diện Tại Home):** Màn hình Home hiển thị Thẻ Danh Tính Tôn Tộc trang trọng, sắc sảo; không còn Dropdown chọn nhánh thừa thãi; có nút duy nhất `[ 👁️ Xem trên Cây ]`.
+- [ ] **UAT_01 (Khung Nhận Diện Tại Home):** Màn hình Home hiển thị Thẻ Danh Tính Tôn Tộc trang trọng, sắc sảo; không còn Dropdown chọn nhánh thừa thãi; có nút duy nhất `[  Xem trên Cây ]`.
 - [ ] **UAT_02 (Tra Cứu Tab 1 Bảo Mật Tuyệt Đối):** Gõ tìm kiếm tên mình không bị giật nảy layout; các hồ sơ đã có tài khoản liên kết bị ẩn 100%, không bị lộ thông tin; nếu không có ai chưa liên kết thì thông báo rõ ràng.
 - [ ] **UAT_03 (Tab 2 Khối Nhân Thân Cố Định Lên Đầu):** Mở Tab 2 $\rightarrow$ Thấy ngay Họ tên, Giới tính, Năm sinh ở đầu form tự nhiên; bên dưới là ô tìm kiếm Cha/Mẹ hiển thị cả Cặp Vợ Chồng.
 - [ ] **UAT_04 (Hỗ Trợ Đa Thê, Con Riêng & Thứ Tự Con Tự Nhiên):** Khi chọn Cha có nhiều vợ $\rightarrow$ Hiện lựa chọn Mẹ cụ thể (Bà Cả / Bà Hai) hoặc `Con riêng`; bộ chọn thứ tự sinh `[-] [Số] [+]` không bị giới hạn 6 con.
 - [ ] **UAT_05 (Phiếu Yêu Cầu & Ràng Buộc Nút Bấm):** Khi tick Chưa rõ Cha Mẹ trên Cây $\rightarrow$ Ô "Tên Bố / Mẹ ngoài đời: *" là bắt buộc; chừng nào chưa nhập thì nút `[Gửi Yêu Cầu Xác Minh]` bị mờ (disabled); nhãn nút hiển thị chính xác "Gửi Yêu Cầu Xác Minh" hoặc "Gửi Yêu Cầu Xét Duyệt".
 - [ ] **UAT_06 (Gợi Ý Thứ Tự Con Sinh Động & Nguyện Vọng Con Trưởng):** Dưới ô con thứ mấy hiển thị câu giải thích vị trí tức thì (đứng sau ai, đứng trước ai, ai chuyển bậc); khi chọn Nam có checkbox "Tôi là Con Trưởng (Trưởng Nam)".
-- [ ] **UAT_07 (Dấu `(+)` Trực Tiếp Dưới Node Của Mình Trên Cây):** Đăng nhập với tài khoản đã liên kết $\rightarrow$ Mở `/tree` $\rightarrow$ Thấy dấu `(+)` tròn nhỏ màu ngọc bích dưới chân node của mình, bấm vào thêm con hiển thị ngay lập tức.
-- [ ] **UAT_08 (Cổng Quản Trị Chi Nhánh `/branch`):** Đăng nhập tài khoản `branch_editor` $\rightarrow$ Thấy nút `[ 🌿 Quản Trị Chi Nhánh ]` trên Navbar $\rightarrow$ Vào trang chỉ thấy danh sách và phiếu duyệt của Chi mình.
+- [ ] **UAT_07 (Drawer Tác Vụ Tiểu Gia Đình - Anti-Pill & Contextual Actions):** Đăng nhập với tài khoản `claimed_member` $\rightarrow$ Mở Drawer của bản thân hoặc vợ/chồng $\rightarrow$ Header đĩnh đạc không bị ngộ độc pill; thấy nút chuẩn mực `[+ Thêm Con]` ở khối Con cái, `[+ Thêm Vợ/Chồng]` ở khối Hôn phối, và `[Sửa hồ sơ]` ở Action Bar; bấm `+ Thêm con` $\rightarrow$ Modal mở với cha/mẹ được khóa sẵn $\rightarrow$ Lưu thành công $\rightarrow$ Cây phả hệ tự động chèn node con và lia camera nhẹ nhàng tới node mới.
+- [ ] **UAT_07_B (Bảo Mật Xem Ngoài Tiểu Gia Đình):** Đăng nhập với tài khoản `claimed_member` $\rightarrow$ Mở Drawer của họ hàng xa, cụ kỵ $\rightarrow$ Toàn bộ nút Thêm / Sửa tự động ẩn 100%, chỉ có `[Đặt làm Gốc]` và `[Tra cứu xưng hô]`.
+- [ ] **UAT_08 (Cổng Quản Trị Chi Nhánh `/branch`):** Đăng nhập tài khoản `branch_editor` $\rightarrow$ Thấy nút `[ Quản Trị Chi Nhánh ]` trên Navbar $\rightarrow$ Vào trang chỉ thấy danh sách và phiếu duyệt của Chi mình.
 - [ ] **UAT_09 (Console Sạch):** Mở Developer Console $\rightarrow$ 0 lỗi đỏ, 0 cảnh báo hydration.
 - [ ] **UAT_10 (Zero Double-Scrollbar & Wizard 2-Step):** Mở Tab 2 $\rightarrow$ Bước 1 cực kỳ phẳng phiu, gọn gàng, 0 có thanh cuộn; nhập họ tên $\rightarrow$ bấm nút Tiếp tục sang Bước 2; tại Bước 2 tìm kiếm Bố/Mẹ hiển thị kết quả dạng Thẻ Phẳng ngay dưới ô tìm kiếm, không dùng dropdown lơ lửng, không che khuất checkbox; toàn bộ modal chỉ có đúng 1 luồng cuộn tự nhiên duy nhất (Zero Double-Scrollbar); nút Quay lại Bước 1 hoạt động mượt mà.
+- [ ] **UAT_11 (Trải Nghiệm Thêm & Sửa Cháu Tam Đại F0 -> F1 -> F2):** Đăng nhập tài khoản `claimed_member` F0 $\rightarrow$ Mở Drawer của Con F1 $\rightarrow$ Thấy nhãn `Con cái (Cháu của bạn)` $\rightarrow$ Bấm `[+ Thêm con]` tạo Cháu F2 thành công $\rightarrow$ Click vào Cháu F2 trên cây $\rightarrow$ Thấy nút `[✏️ Sửa hồ sơ]` mở khóa và sửa thông tin nhân khẩu bình thường.
+- [ ] **UAT_12 (Nhãn Phối Ngẫu Thuần Việt Theo Giới Tính):** Mở Drawer thành viên Nam $\rightarrow$ Thấy tiêu đề `Vợ (N):` và nút `[+ Thêm vợ]`; Mở Drawer thành viên Nữ $\rightarrow$ Thấy tiêu đề `Chồng (N):` và nút `[+ Thêm chồng]`; Modal mở ra hiển thị `Thêm thông tin Vợ/Chồng`.
+- [ ] **UAT_13 (Tooltip Trực Quan Nút Đặt Làm Gốc):** Rê chuột vào nút `[🎯 Đặt làm Gốc]` ở chân Drawer $\rightarrow$ Thấy tooltip giải thích rõ ràng ý nghĩa lọc cây và đổi góc nhìn xưng hô thân tộc.
 
 ---
 
 ## 8. BẢO VỆ CHỐNG THOÁI LUI (REGRESSION GUARD CHECKLIST)
 
-- [x] **RG01 (Build & Typecheck Clean):** Chạy lệnh `npm.cmd run typecheck` và `npm.cmd run build` — 0 lỗi (Đã xác minh: 0 lỗi typecheck, Next.js build xanh 33/33 static/dynamic routes).
-- [x] **RG02 (Automated Test Regression):** Chạy lệnh `Test` — 0 failure mới so với `Known_Failing_Baseline` (Đã xác minh: 376/376 tests pass, 36/36 suites).
-- [ ] **RG03 (Blast Radius):** Màn hình Cây Gia Phả (`/tree`), Lịch giỗ (`/anniversaries`), Admin Portal (`/admin`), và Personal Settings hoạt động bình thường, không bị phá vỡ.
+- [x] **RG01 (Build & Typecheck Clean):** Chạy lệnh `npm.cmd run typecheck` và `npm.cmd run build` — 0 lỗi (Đã xác minh: 0 lỗi typecheck, Next.js build xanh 34/34 static/dynamic routes).
+- [x] **RG02 (Automated Test Regression):** Chạy lệnh `Test` — 0 failure mới so với `Known_Failing_Baseline` (Đã xác minh: 388/388 tests pass, 37/37 suites).
+- [ ] **RG03 (Blast Radius):** Màn hình Cây Gia Phả (`/tree`), Lịch giỗ (`/anniversaries`), Admin Portal (`/admin`), và Personal Settings hoạt động bình thường, không bị phá vỡ; Canvas không có nút rác trôi nổi.
 - [x] **RG04 (Tab 1 & Tab 2 Input Integrity):** Bảo toàn toàn bộ chức năng lọc hồ sơ bảo mật Tab 1, đa thê, con riêng, number stepper, nguyện vọng con trưởng và form phiếu yêu cầu khi cố định layout. (Đã xác minh: 376/376 tests pass).
 
 ---

@@ -60,13 +60,20 @@ export function canManageTree(role: UserRole | undefined | null): boolean {
   return role === 'super_admin' || role === 'branch_editor';
 }
 
+export interface RequestUserProfile {
+  id?: string;
+  user_role: UserRole;
+  linked_member_id?: string | null;
+  assigned_branch_code?: string | null;
+}
+
 /**
- * Trích xuất vai trò người dùng từ NextRequest (Server-side)
+ * Trích xuất hồ sơ người dùng đầy đủ từ NextRequest (Server-side)
  * Hỗ trợ đồng bộ giữa Supabase Session, Dev Cookie và Header Test
  */
-export async function extractUserRoleFromRequest(
+export async function extractUserProfileFromRequest(
   request: NextRequest
-): Promise<UserRole | null> {
+): Promise<RequestUserProfile | null> {
   // 1. Kiểm tra header test giả lập (chỉ áp dụng trong môi trường development hoặc test)
   const headerRole = request.headers.get('x-user-role') as UserRole | null;
   if (
@@ -76,7 +83,12 @@ export async function extractUserRoleFromRequest(
       headerRole === 'branch_editor' ||
       headerRole === 'super_admin')
   ) {
-    return headerRole;
+    return {
+      id: request.headers.get('x-user-id') || 'test-user-id',
+      user_role: headerRole,
+      linked_member_id: request.headers.get('x-linked-member-id') || null,
+      assigned_branch_code: request.headers.get('x-assigned-branch-code') || null,
+    };
   }
 
   // 2. Kiểm tra cookie dev giả lập: fat_dev_user
@@ -84,12 +96,15 @@ export async function extractUserRoleFromRequest(
   if (devUserCookie) {
     try {
       const parsed = JSON.parse(decodeURIComponent(devUserCookie));
-      if (parsed?.user_role) {
-        return parsed.user_role as UserRole;
-      }
-      if (parsed?.id === '00000000-0000-0000-0000-000000000001') {
-        return 'super_admin';
-      }
+      const role =
+        parsed?.user_role ||
+        (parsed?.id === '00000000-0000-0000-0000-000000000001' ? 'super_admin' : 'viewer');
+      return {
+        id: parsed?.id,
+        user_role: role as UserRole,
+        linked_member_id: parsed?.linked_member_id || null,
+        assigned_branch_code: parsed?.assigned_branch_code || null,
+      };
     } catch {
       // Bỏ qua lỗi parse cookie
     }
@@ -105,31 +120,41 @@ export async function extractUserRoleFromRequest(
     if (user) {
       // Tài khoản Super Admin seed gốc
       if (user.id === '00000000-0000-0000-0000-000000000001') {
-        return 'super_admin';
-      }
-      if (user.user_metadata?.user_role) {
-        return user.user_metadata.user_role as UserRole;
+        return {
+          id: user.id,
+          user_role: 'super_admin',
+          linked_member_id: null,
+          assigned_branch_code: null,
+        };
       }
 
       // Tra cứu bảng users
       const { data: profile } = await supabase
         .from('users')
-        .select('user_role')
+        .select('id, user_role, linked_member_id, assigned_branch_code')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (profile?.user_role) {
-        return profile.user_role as UserRole;
+      if (profile) {
+        return {
+          id: profile.id,
+          user_role: profile.user_role as UserRole,
+          linked_member_id: profile.linked_member_id || null,
+          assigned_branch_code: profile.assigned_branch_code || null,
+        };
       }
-      return 'viewer';
+      return {
+        id: user.id,
+        user_role: (user.user_metadata?.user_role as UserRole) || 'viewer',
+        linked_member_id: null,
+        assigned_branch_code: null,
+      };
     }
   } catch {
     // Không có kết nối DB hoặc lỗi session
   }
 
   // 4. Nhận diện môi trường test tự động (node --test / npx tsx --test):
-  // Nếu request không truyền header x-user-role và không có cookie dev_user,
-  // tự động fallback về 'super_admin' để đảm bảo backward-compatibility cho các integration tests cũ
   const isTestEnvironment =
     process.env.NODE_ENV === 'test' ||
     Boolean(process.env.NODE_TEST_CONTEXT) ||
@@ -143,10 +168,26 @@ export async function extractUserRoleFromRequest(
     !request.headers.has('x-user-role') &&
     !request.cookies.has('fat_dev_user')
   ) {
-    return 'super_admin';
+    return {
+      id: '00000000-0000-0000-0000-000000000001',
+      user_role: 'super_admin',
+      linked_member_id: null,
+      assigned_branch_code: null,
+    };
   }
 
   return null;
+}
+
+/**
+ * Trích xuất vai trò người dùng từ NextRequest (Server-side)
+ * Hỗ trợ đồng bộ giữa Supabase Session, Dev Cookie và Header Test
+ */
+export async function extractUserRoleFromRequest(
+  request: NextRequest
+): Promise<UserRole | null> {
+  const profile = await extractUserProfileFromRequest(request);
+  return profile?.user_role || null;
 }
 
 /**

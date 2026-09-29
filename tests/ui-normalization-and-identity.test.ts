@@ -202,7 +202,7 @@ describe('UI Normalization & Identity Consistency Suite (Milestone 4 Polish)', (
 
   // TC_UT_CHILDREN_DUPLICATE_ORDER_FALLBACK_01: Tránh hiển thị trùng lặp số 1 khi nhiều con có birth_order = 1
   it('TC_UT_CHILDREN_DUPLICATE_ORDER_FALLBACK_01: Tránh hiển thị trùng lặp số 1 khi nhiều con có birth_order = 1 trong CSDL', () => {
-    // Giả lập đàn con 7 người của Cụ Phạm Văn Uyên với 6 người con đầu đều mang birth_order = 1
+    // Giả lập các con 7 người của Cụ Phạm Văn Uyên với 6 người con đầu đều mang birth_order = 1
     const mockRawChildren = [
       { id: 'c1', full_name: 'Phạm Thị Năng', birth_order: 1 },
       { id: 'c2', full_name: 'Phạm Thị Chi', birth_order: 1 },

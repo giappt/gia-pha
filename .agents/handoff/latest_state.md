@@ -1,35 +1,33 @@
 # STATE MANIFEST
 ### 1. Key Context
-- **Nhiệm vụ trọng tâm:** Tinh chỉnh modal kết nối gia phả (`ConnectGenealogyModal.tsx`) giải quyết triệt để vấn đề phản cảm thị giác: 2 thanh cuộn lồng nhau kề sát (Double Scrollbar Artifact) và giật nảy màn hình khi nhập thông tin ở Tab 2 "Tôi chưa có trên cây".
-- **Kiến trúc chốt qua Brainstorm & Spec:** Chuyển đổi Tab 2 sang **Quy trình Wizard 2 Bước Tuần Tự (Wizard 2-Step)**:
-  - **Bước 1 (Thông tin cá nhân):** Họ tên, Giới tính, Năm sinh (~220px, tuyệt đối 0 scrollbar) + nút `[ Tiếp Tục: Chọn Bố Mẹ → ]`.
-  - **Bước 2 (Cội nguồn & Bố Mẹ):** Badge tóm tắt Bước 1 (có nút Sửa quay lại) + Tìm Bố Mẹ hiển thị **dạng Thẻ Phẳng (Inline List)** trực tiếp dưới ô input (loại bỏ hoàn toàn dropdown `absolute` lơ lửng, không che khuất checkbox hay textarea) + Đa thê + Stepper thứ tự con + Nguyện vọng con trưởng + Phiếu tìm cội nguồn + Sticky Footer có nút `[ ← Quay lại ]` và `[ Gửi Yêu Cầu Xét Duyệt ]`.
-  - Toàn bộ modal chỉ có duy nhất **1 luồng cuộn tự nhiên duy nhất**, triệt tiêu 100% hiện tượng 2 thanh cuộn kề nhau.
-- **Tập tin đã chỉnh sửa:**
-  - `src/components/modals/ConnectGenealogyModal.tsx`: Đã thi công xong trọn vẹn Wizard 2 bước + Inline List phẳng.
-  - `docs/17_Micro-Spec_Milestone_8_Member_Onboarding_Decentralized_Approval.md`: Đã cập nhật Section 5.2 và Section 7.2 (UAT_10).
-  - `.agents/brain/lessons_learned.md`: Đã ghi nhận bài học kinh nghiệm về Wizard 2 bước & Triệt tiêu Double Scrollbar.
-- **Kết quả kiểm chứng 3 tầng:**
-  - Typecheck: `npm run typecheck` $\rightarrow$ 0 lỗi.
-  - Build: `npm run build` $\rightarrow$ Thành công 33/33 static & dynamic routes.
-  - Automated Tests: `npm test` $\rightarrow$ PASS 376/376 tests (36 suites, 0 fail).
-- **Trạng thái môi trường & Dev Server:**
-  - Dev server vừa được User restart sạch (`npm run dev`) để tránh lỗi 404 chunks do webpack cache sau khi build.
+- Dự án: FAT - Family Tree Management System (Next.js 14 App Router, TypeScript, TailwindCSS, Supabase PostgreSQL).
+- Milestone 8: Member Onboarding & Decentralized Approval.
+  + Phase 1: Onboarding, Form Nhận/Nối Người Thân & Refinement UX (Hoàn thành 100%).
+  + Phase 2: Quyền Tự Quản Tiểu Gia Đình & Ngữ Cảnh Thao Tác Trong Drawer (Anti-Pill & Contextual Actions, Hoàn thành 100%).
+  + Phase 2.5: Quản Trị Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc Drawer (Hoàn thành 100%):
+    * Lõi RBAC Tam Đại: Mở rộng `canUserManageMember` trong `src/lib/claims/claim-engine.ts` cho phép ông bà ($F_0$) quản lý/sửa hồ sơ cháu trực hệ ($F_2$).
+    * Edge Case 9: Tự động thu hồi quyền sửa của $F_0$ khi cháu ($F_2$) hoặc cha/mẹ ($F_1$) đã tự nhận tài khoản riêng (`linked_user_id` / `claimed_by`).
+    * Định vị thân tộc: Khối con cái trong `MemberDetailDrawer.tsx` hiển thị `Con cái (Cháu của bạn) (N):` khi $F_0$ xem con ruột $F_1$.
+    * Thuần Việt hóa Hôn phối: `Vợ (N):` & `+ Thêm vợ` cho Nam; `Chồng (N):` & `+ Thêm chồng` cho Nữ; `MemberFormModal.tsx` hiển thị `Thêm Vợ Cho:` / `Thêm Chồng Cho:`.
+    * Tooltip Đặt làm Gốc: Bổ sung tooltip giải thích ý nghĩa lọc nhánh và đổi góc nhìn xưng hô thân tộc cho nút `[🎯 Đặt làm Gốc]` (vừa được tinh chỉnh câu chữ trực tiếp trong Drawer).
+- Hệ thống kiểm chứng Code-First 3 Tầng:
+  + Typecheck: 0 lỗi (`npm.cmd run typecheck`).
+  + Build: 34/34 routes xanh (`npm.cmd run build`).
+  + Test Suite: 388/388 tests PASS, 37/37 suites (`npm.cmd test`, bổ sung 5 tests mới cho Phase 2.5, 0 failures so với Known_Failing_Baseline).
+- Các file đang mở / vừa chỉnh sửa:
+  + `src/lib/claims/claim-engine.ts`
+  + `src/components/tree/MemberDetailDrawer.tsx`
+  + `src/components/modals/MemberFormModal.tsx`
+  + `tests/decentralized-claim.test.ts`
+  + `docs/17_Micro-Spec_Milestone_8_Member_Onboarding_Decentralized_Approval.md` (Đã reverse-sync tick PASS Mục 7.1)
+  + `.agents/brain/lessons_learned.md` (Đã ghi nhận bài học kinh nghiệm Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc)
+  + `task.md` (Đã cập nhật tiến độ Phase 2.5)
 
 ### 2. Task Checklist
-- [x] Phase 1.1: Mở rộng migration CSDL `claim_requests` và cập nhật TypeScript types trong `src/types/database.ts`
-- [x] Phase 1.2: Xây dựng `src/lib/claims/claim-engine.ts` (validate, deduce branch focus, format context card)
-- [x] Phase 1.3: Viết Backend APIs `POST /api/claims` và `GET /api/claims/my-requests`
-- [x] Phase 1.4: Xây dựng `IdentityContextWidget.tsx` và `ConnectGenealogyModal.tsx`
-- [x] Phase 1.5: Phủ test cases Phase 1 ban đầu, Typecheck/Build sạch
-- [x] Phase 1.6: Refinement UX & Kinship Logic (Xóa dropdown nhánh Home, cố định layout Tab 1, đưa nhân thân lên đầu Tab 2, đa thê & stepper con)
-- [x] Phase 1.7: Bảo mật tra cứu Privacy-first Tab 1, gợi ý thứ tự con thông minh, nguyện vọng Con Trưởng & validate phiếu rỗng
-- [x] Phase 1.8: Triệt tiêu Double Scrollbar & thi công Wizard 2 Bước Tuần Tự (Bước 1 gọn 220px 0 scrollbar, Bước 2 Inline Flat List không che khuất, 1 luồng cuộn duy nhất)
-- [ ] Phase 2.1: Viết API `POST /api/members/quick-add-child` (Auto-approved khi `parentId === my_linked_id`)
-- [ ] Phase 2.2: Thêm nút tròn ngọc bích `(+)` dưới chân node thẻ cá nhân của mình & vợ/chồng trên `FamilyTreeCanvas.tsx`
-- [ ] Phase 2.3: Mở khóa `[Chỉnh sửa]` và `[+ Thêm Con]` trong `MemberDetailDrawer.tsx` cho tiểu gia đình (Bản thân, Vợ/Chồng, Con đẻ)
-- [ ] Phase 2.4: Phủ test Phase 2 (`TC_UT_CLAIM_CAN_MANAGE_PARENT`, `TC_UT_CLAIM_AUTO_APPROVE_PARENT_ADD`), Human UAT nút `(+)` trên cây
-- [ ] Phase 3: Phê duyệt phân tán (3 tầng), cơ chế Assign cho Trưởng Chi & Cổng quản trị `/branch`
+- [x] Phase 1: Onboarding, Form Nhận/Nối Người Thân & Refinement UX
+- [x] Phase 2: Quyền Tự Quản Tiểu Gia Đình & Ngữ Cảnh Thao Tác Trong Drawer (Anti-Pill & Contextual Actions)
+- [x] Phase 2.5: Quản Trị Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc Drawer
+- [ ] Phase 3: Phê Duyệt Phân Tán (3 tầng), Cơ Chế Ủy Quyền Cho Trưởng Chi & Cổng Quản Trị Chi Nhánh (`/branch`)
 
 ### 3. Immediate Next Step
-- Mời User kiểm thử thị giác (Human Visual UAT) trên trình duyệt tại `http://localhost:3000` để trải nghiệm Wizard 2 bước của Tab 2 (Bước 1 không cuộn $\rightarrow$ Tiếp tục $\rightarrow$ Bước 2 thẻ phẳng, không còn 2 thanh cuộn), hoặc tiếp tục bước tiếp theo sang **Phase 2 (Dấu + thêm con trực tiếp trên cây cho tài khoản đã liên kết)**.
+- Khởi động **Phase 3 của Milestone 8**: Thảo luận / Lên đặc tả chi tiết cho cơ chế Phê duyệt phân tán (Super Admin gán phiếu cho Trưởng Chi xác minh, Trưởng Chi duyệt phiếu tạo node tự động cập nhật cây) và giao diện Cổng Quản Trị Chi (`/branch`).

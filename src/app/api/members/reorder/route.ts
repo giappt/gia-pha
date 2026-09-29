@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       items: reorderedResults,
-      message: 'Cập nhật thứ tự đàn con thành công',
+      message: 'Cập nhật thứ tự các con thành công',
     });
   } catch (err: any) {
     return NextResponse.json(
