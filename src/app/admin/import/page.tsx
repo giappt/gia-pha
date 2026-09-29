@@ -116,14 +116,14 @@ export default function ExcelImportPage() {
               href="/tree"
               className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors mb-2"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Quay lại Cây phả hệ
+              <ArrowLeft className="w-3.5 h-3.5" /> Quay lại Cây Gia Phả
             </Link>
             <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
               <FileSpreadsheet className="w-7 h-7 text-emerald-600" />
               Nhập Liệu Gia Phả Hàng Loạt (Bulk Excel Import - S-08)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Tự động phân tích cây phả hệ, sắp xếp thế hệ (Topological Sort) và phát hiện lỗi chu trình
+              Tự động phân tích cây Gia Phả, sắp xếp thế hệ (Topological Sort) và phát hiện lỗi chu trình
             </p>
           </div>
 
@@ -153,7 +153,7 @@ export default function ExcelImportPage() {
               href="/tree"
               className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors"
             >
-              Xem Cây Phả Hệ
+              Xem Cây Gia Phả
             </Link>
           </div>
         )}
@@ -175,11 +175,10 @@ export default function ExcelImportPage() {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all ${
-              isDragging
+            className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all ${isDragging
                 ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
                 : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-emerald-400 hover:bg-slate-50/50 dark:hover:bg-slate-800/50'
-            }`}
+              }`}
           >
             <input
               ref={fileInputRef}
@@ -281,17 +280,17 @@ export default function ExcelImportPage() {
                 </label>
               </div>
 
-            {importMode === 'clean' && (
-              <div
-                id="clean-mode-warning-callout"
-                className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs flex items-start gap-2.5"
-              >
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-bold">Lưu ý an toàn:</strong> Chế độ làm mới sẽ xóa trắng dữ liệu cây cũ. Hệ thống sẽ tự động đối chiếu thông tin (Họ tên + Năm sinh) để bảo tồn liên kết cho tài khoản người dùng. Tài khoản bị thay đổi thông tin trong file mới sẽ cần gán lại tại <em>Quản Lý Tài Khoản</em>.
+              {importMode === 'clean' && (
+                <div
+                  id="clean-mode-warning-callout"
+                  className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs flex items-start gap-2.5"
+                >
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="font-bold">Lưu ý an toàn:</strong> Chế độ làm mới sẽ xóa trắng dữ liệu cây cũ. Hệ thống sẽ tự động đối chiếu thông tin (Họ tên + Năm sinh) để bảo tồn liên kết cho tài khoản người dùng. Tài khoản bị thay đổi thông tin trong file mới sẽ cần gán lại tại <em>Quản Lý Tài Khoản</em>.
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
@@ -355,13 +354,12 @@ export default function ExcelImportPage() {
                       return (
                         <tr
                           key={row.rowNumber}
-                          className={`transition-colors ${
-                            hasErrors
+                          className={`transition-colors ${hasErrors
                               ? 'bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-50'
                               : hasWarnings
-                              ? 'bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50/60'
-                              : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                          }`}
+                                ? 'bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50/60'
+                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                            }`}
                         >
                           <td className="py-2.5 px-3 font-bold text-slate-500">{row.stt}</td>
                           <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white">
@@ -374,11 +372,10 @@ export default function ExcelImportPage() {
                           </td>
                           <td className="py-2.5 px-3">
                             <span
-                              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                                row.gender === 'Nam'
+                              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${row.gender === 'Nam'
                                   ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300'
                                   : 'bg-pink-50 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300'
-                              }`}
+                                }`}
                             >
                               {row.gender}
                             </span>
@@ -397,9 +394,8 @@ export default function ExcelImportPage() {
                           </td>
                           <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">
                             {row.deathLunarDay && row.deathLunarMonth
-                              ? `${row.deathLunarDay}/${row.deathLunarMonth}${
-                                  row.deathLunarIsLeap ? ' (Nhuận)' : ''
-                                }`
+                              ? `${row.deathLunarDay}/${row.deathLunarMonth}${row.deathLunarIsLeap ? ' (Nhuận)' : ''
+                              }`
                               : '-'}
                           </td>
                           <td className="py-2.5 px-3">

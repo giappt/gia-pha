@@ -172,7 +172,7 @@ describe('Auth Gate & Guest Visibility Test Suite (Milestone 7.5)', () => {
 
   // 16. TC_UT_MOBILE_NAV_GUEST_FILTERED
   it('TC_UT_MOBILE_NAV_GUEST_FILTERED: MobileBottomNav lọc link chuẩn xác cho guest', () => {
-    // 16a. Khi isGuest = true, enablePublicTree = true -> chỉ có Trang Chủ và Phả Hệ
+    // 16a. Khi isGuest = true, enablePublicTree = true -> chỉ có Trang Chủ và Gia Phả
     const guestPublicItems = NAV_ITEMS.filter((item) => {
       if (item.href === '/anniversaries' || item.href === '/kinship') return false;
       if (item.href === '/tree') return true;
@@ -419,7 +419,7 @@ describe('Auth Gate & Guest Visibility Test Suite (Milestone 7.5)', () => {
       false,
       'Tab /anniversaries phải bị ẩn khi enable_anniversaries = false'
     );
-    assert.strictEqual(visibleRegular.length, 2, 'Chỉ còn hiển thị 2 tab: Trang Chủ và Phả Hệ');
+    assert.strictEqual(visibleRegular.length, 2, 'Chỉ còn hiển thị 2 tab: Trang Chủ và Gia Phả');
 
     // Super Admin (isSuperAdmin = true) luôn thấy đủ 4 tabs dù cờ tắt
     const visibleAdmin = filterNavItems(disabledFlags, true, false);

@@ -214,7 +214,7 @@ export default function BranchTaxonomyManager({
       } else {
         setStatusMessage({
           type: 'success',
-          text: 'Đã lưu cấu trúc Ngành/Chi thành công! Phả hệ và Lịch Giỗ sẽ tự động áp dụng.',
+          text: 'Đã lưu cấu trúc Ngành/Chi thành công! Gia Phả và Lịch Giỗ sẽ tự động áp dụng.',
         });
         if (onBranchesSaved) {
           onBranchesSaved(branches, tiers);
@@ -268,7 +268,7 @@ export default function BranchTaxonomyManager({
             <span>Cấu Trúc Phân Cấp Ngành & Chi Tông Tộc</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Thiết lập thứ bậc phả hệ ({tiers.join(' → ') || 'Ngành → Chi → Nhánh'}). Gán Cụ Khởi Nguồn (`Root Member`) để hệ thống tự động kế thừa danh xưng cho mọi con cháu.
+            Thiết lập thứ bậc Gia Phả ({tiers.join(' → ') || 'Ngành → Chi → Nhánh'}). Gán Cụ Khởi Nguồn (`Root Member`) để hệ thống tự động kế thừa danh xưng cho mọi con cháu.
           </p>
         </div>
 
@@ -390,7 +390,7 @@ export default function BranchTaxonomyManager({
               <code className="px-1 py-0.5 rounded bg-amber-100/70 dark:bg-amber-900/50 font-mono text-[11px]">
                 Đời 7 · Ngành 1 · Chi 2
               </code>
-              ) trên Cây phả hệ và Lịch giỗ mà không cần nhập tay từng người.
+              ) trên Cây Gia Phả và Lịch giỗ mà không cần nhập tay từng người.
             </div>
           </div>
 

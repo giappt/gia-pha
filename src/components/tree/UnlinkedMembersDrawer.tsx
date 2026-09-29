@@ -296,7 +296,7 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                   Toàn bộ gia tộc đã được kết nối liền mạch.
                 </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Không còn thành viên nào bị cô lập ngoài cây phả hệ.
+                  Không còn thành viên nào bị cô lập ngoài cây Gia Phả.
                 </p>
               </div>
             ) : (
@@ -307,8 +307,8 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                   <div
                     key={member.id}
                     className={`p-3.5 rounded-xl border transition-all ${isRelinkingThis
-                        ? 'border-amber-400 dark:border-amber-600 bg-amber-50/40 dark:bg-amber-950/20 shadow-sm'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
+                      ? 'border-amber-400 dark:border-amber-600 bg-amber-50/40 dark:bg-amber-950/20 shadow-sm'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
                       }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -392,8 +392,8 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                                 key={p.id}
                                 onClick={() => handleSelectParent(p.id)}
                                 className={`p-2 text-xs flex items-center justify-between cursor-pointer transition-colors ${selectedParentId === p.id
-                                    ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 font-bold'
-                                    : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300'
+                                  ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 font-bold'
+                                  : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300'
                                   }`}
                               >
                                 <span>
@@ -436,8 +436,8 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                                       <label
                                         key={spouse.id}
                                         className={`flex items-start gap-2.5 p-1.5 rounded-lg cursor-pointer transition-colors ${isSelected
-                                            ? 'bg-amber-100/60 dark:bg-amber-950/40 text-slate-900 dark:text-white font-medium'
-                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
+                                          ? 'bg-amber-100/60 dark:bg-amber-950/40 text-slate-900 dark:text-white font-medium'
+                                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                                           }`}
                                       >
                                         <input
@@ -470,8 +470,8 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                                   {/* Tùy chọn Lưu làm con riêng */}
                                   <label
                                     className={`flex items-start gap-2.5 p-1.5 rounded-lg cursor-pointer transition-colors ${isSpouseOptedOut || !selectedSpouseId
-                                        ? 'bg-amber-100/60 dark:bg-amber-950/40 text-slate-900 dark:text-white font-medium'
-                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400'
+                                      ? 'bg-amber-100/60 dark:bg-amber-950/40 text-slate-900 dark:text-white font-medium'
+                                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400'
                                       }`}
                                   >
                                     <input
@@ -499,7 +499,7 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                               </div>
                             ) : (
                               <p className="text-[11px] text-slate-500 dark:text-slate-400 italic py-1">
-                                ℹ Người này chưa có bạn đời trong phả hệ → Con sẽ được lưu làm con riêng.
+                                ℹ Người này chưa có bạn đời trong Gia Phả → Con sẽ được lưu làm con riêng.
                               </p>
                             )}
                           </div>

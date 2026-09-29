@@ -95,7 +95,7 @@ export default async function Navbar({
                 GIA PHẢ HỌ PHẠM
               </span>
               <span className="text-[11px] font-medium text-emerald-700/90 dark:text-emerald-400/90 mt-1 leading-none tracking-wide">
-                FAT · Phả Hệ Số Hiện Đại
+                FAT · Gia Phả Số Hiện Đại
               </span>
             </div>
           </Link>
@@ -109,7 +109,7 @@ export default async function Navbar({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all"
             >
               <FamilyTreeIcon className="w-4 h-4 text-emerald-600" />
-              <span>Cây Phả Hệ</span>
+              <span>Cây Gia Phả</span>
             </Link>
           )}
 

@@ -155,8 +155,8 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
     currentDataset === 'clan1500'
       ? 'Đại Tộc Phạm Văn (Giả Lập 1.500 Người)'
       : currentDataset === 'polygamy'
-      ? 'Gia Đình Cụ Phạm Văn Chiến (Đa Thê & Con Riêng)'
-      : clanName;
+        ? 'Gia Đình Cụ Phạm Văn Chiến (Đa Thê & Con Riêng)'
+        : clanName;
 
   // Reset focusRootId khi đổi dataset
   const handleSwitchDataset = (dataset: 'clan28' | 'polygamy' | 'clan1500') => {
@@ -496,9 +496,8 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
   return (
     <div
       style={{ width: '100%', height: 'calc(100vh - 4rem)' }}
-      className={`relative select-none bg-slate-100/70 dark:bg-slate-950 overflow-hidden ${
-        isSpacePressed ? 'cursor-grab active:cursor-grabbing' : ''
-      }`}
+      className={`relative select-none bg-slate-100/70 dark:bg-slate-950 overflow-hidden ${isSpacePressed ? 'cursor-grab active:cursor-grabbing' : ''
+        }`}
     >
       {/* Thanh Điều Khiển Cố Định */}
       <TreeToolbar
@@ -530,14 +529,13 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
           className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/95 dark:bg-slate-900/95 border border-emerald-500/40 shadow-lg backdrop-blur-md text-xs text-slate-700 dark:text-slate-200 transition-all animate-fade-in max-w-[92vw]"
         >
           <span className="flex items-center gap-1.5 font-medium">
-            <span>👋</span>
             <span>Chưa nhận vị trí trong cây?</span>
           </span>
           <Link
             href="/login-gate"
             className="flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-400 hover:underline"
           >
-            <span>🎯 Nhận Node</span>
+            <span>Nhận Node</span>
           </Link>
           <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">|</span>
           <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">

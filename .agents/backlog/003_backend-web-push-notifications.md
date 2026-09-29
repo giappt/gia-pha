@@ -23,5 +23,5 @@ Trang `/admin/features` đã có UI toggle cho cờ `enable_push_notifications` 
 - **Bảng `push_subscriptions` đã có schema** trong `database.ts` nhưng chưa có migration SQL thật trên Supabase.
 
 ## Lý do hoãn / Điều kiện nên làm
-- **Lý do hoãn:** Ưu tiên hiện tại là hoàn thiện các phân hệ cốt lõi (Cây phả hệ, Xưng hô, Ngày giỗ, Quản trị quyền). Web Push là tính năng nâng cao, phụ thuộc vào việc deploy lên Vercel production (Cron Job chỉ hoạt động trên Vercel).
+- **Lý do hoãn:** Ưu tiên hiện tại là hoàn thiện các phân hệ cốt lõi (Cây Gia Phả, Xưng hô, Ngày giỗ, Quản trị quyền). Web Push là tính năng nâng cao, phụ thuộc vào việc deploy lên Vercel production (Cron Job chỉ hoạt động trên Vercel).
 - **Điều kiện kích hoạt:** Khi hệ thống đã deploy production trên Vercel và có ít nhất 5 người dùng thực tế sử dụng tính năng Lịch Giỗ.

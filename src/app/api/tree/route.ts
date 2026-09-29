@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || 'Không thể tải dữ liệu cây phả hệ',
+        error: error?.message || 'Không thể tải dữ liệu cây Gia Phả',
       },
       { status: 500 }
     );

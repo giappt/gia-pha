@@ -64,7 +64,7 @@ export default function AdminBranchesPage() {
               Cấu Trúc Phân Cấp Ngành & Chi Tông Tộc
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              Thiết lập thứ bậc phả hệ (Ngành → Chi → Nhánh → Phái) và gán Cụ Khởi Nguồn để hệ thống tự động kế thừa danh xưng cho con cháu.
+              Thiết lập thứ bậc Gia Phả (Ngành → Chi → Nhánh → Phái) và gán Cụ Khởi Nguồn để hệ thống tự động kế thừa danh xưng cho con cháu.
             </p>
           </div>
         </div>

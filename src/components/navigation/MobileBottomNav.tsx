@@ -21,7 +21,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Home,
   },
   {
-    label: 'Phả Hệ',
+    label: 'Gia Phả',
     href: '/tree',
     icon: FamilyTreeIcon,
   },
@@ -90,7 +90,7 @@ export default function MobileBottomNav({
       if (typeof window !== 'undefined' && 'vibrate' in navigator) {
         try {
           navigator.vibrate(10);
-        } catch {}
+        } catch { }
       }
     }
   };
@@ -114,28 +114,25 @@ export default function MobileBottomNav({
             key={item.href}
             href={item.href}
             onClick={() => handleItemClick(item.href)}
-            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-2 rounded-xl transition-all duration-200 relative ${
-              isActive
+            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-2 rounded-xl transition-all duration-200 relative ${isActive
                 ? 'text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-500/10 dark:bg-emerald-950/50'
                 : isPending
-                ? 'text-emerald-600 dark:text-emerald-300 font-medium bg-emerald-500/15 animate-pulse'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95'
-            }`}
+                  ? 'text-emerald-600 dark:text-emerald-300 font-medium bg-emerald-500/15 animate-pulse'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95'
+              }`}
           >
             <div className="relative">
               <Icon
-                className={`w-5 h-5 transition-transform ${
-                  isActive ? 'scale-110 stroke-[2.25]' : isPending ? 'scale-105 stroke-[2] animate-bounce' : 'stroke-[1.75]'
-                }`}
+                className={`w-5 h-5 transition-transform ${isActive ? 'scale-110 stroke-[2.25]' : isPending ? 'scale-105 stroke-[2] animate-bounce' : 'stroke-[1.75]'
+                  }`}
               />
               {isPending && (
                 <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
               )}
             </div>
             <span
-              className={`text-[11px] mt-0.5 tracking-tight ${
-                isActive ? 'font-bold' : 'font-medium'
-              }`}
+              className={`text-[11px] mt-0.5 tracking-tight ${isActive ? 'font-bold' : 'font-medium'
+                }`}
             >
               {item.label}
             </span>

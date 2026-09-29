@@ -56,7 +56,7 @@ describe('Admin Portal & Feature Governance Engine (Milestone 7)', () => {
       assert.strictEqual(patched2.enable_anniversaries, true);
     });
 
-    // TC_UT_DASHBOARD_STATS_01: Tính toán chỉ số sức sống phả hệ
+    // TC_UT_DASHBOARD_STATS_01: Tính toán chỉ số sức sống Gia Phả
     it('TC_UT_DASHBOARD_STATS_01: should compute accurate vitality metrics and account coverage', () => {
       const mockMembers = [
         { id: '1', gender: 'male', life_status: 'deceased', generation_number: 1 },

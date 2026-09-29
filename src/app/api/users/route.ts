@@ -154,7 +154,7 @@ export async function PATCH(request: Request) {
       if (existingUser) {
         return NextResponse.json(
           {
-            error: `Node phả hệ này đã được liên kết với tài khoản '${existingUser.email}' (${existingUser.full_name || 'Chưa đặt tên'}). Vui lòng gỡ liên kết cũ trước.`,
+            error: `Node Gia Phả này đã được liên kết với tài khoản '${existingUser.email}' (${existingUser.full_name || 'Chưa đặt tên'}). Vui lòng gỡ liên kết cũ trước.`,
           },
           { status: 409 }
         );

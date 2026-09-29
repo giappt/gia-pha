@@ -13,7 +13,7 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
   - Trên mobile / màn hình nhỏ (< 1024px): Sidebar tự động chuyển thành **Slide-over Drawer** với nút Hamburger và Backdrop làm mờ.
 - **Nguyên tắc Phân Nhóm Sidebar (4 Nhóm Thuần Việt Tự Nhiên):**
   1. `❖ TỔNG QUAN`: 📊 Bàn Điều Hành (`/admin`).
-  2. `❖ PHẢ HỆ & QUY ƯỚC`: 🏛️ Căn Cước Dòng Họ (`/admin/profile`), 🌿 Cấu Trúc Ngành & Chi (`/admin/branches`), 🗣️ Quy Ước Xưng Hô (`/admin/kinship`).
+  2. `❖ Gia Phả & QUY ƯỚC`: 🏛️ Căn Cước Dòng Họ (`/admin/profile`), 🌿 Cấu Trúc Ngành & Chi (`/admin/branches`), 🗣️ Quy Ước Xưng Hô (`/admin/kinship`).
   3. `❖ THÀNH VIÊN & TÀI KHOẢN`: 👥 Quản Lý Tài Khoản (`/admin/users`).
   4. `❖ VẬN HÀNH & HỆ THỐNG`: ⚙️ Bật/Tắt Tính Năng (`/admin/features`), 📥 Nạp & Sao Lưu (`/admin/import`).
 - **Nguyên tắc "Không Giữ Chỗ / Không Placeholder":**
@@ -31,7 +31,7 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
     enable_public_tree: boolean;         // Cho phép khách vãng lai xem cây (default: true)
     enable_kinship_lookup: boolean;      // Bật/tắt công cụ tra cứu vai vế (default: true)
     enable_anniversaries: boolean;       // Bật/tắt lịch giỗ 30 ngày & web push (default: true)
-    allow_member_claims: boolean;        // Mở/đóng cổng nhận node phả hệ (default: true)
+    allow_member_claims: boolean;        // Mở/đóng cổng nhận node Gia Phả (default: true)
     mask_living_member_privacy: boolean; // Che mờ SĐT, địa chỉ người còn sống với khách (default: true)
     maintenance_mode: boolean;           // Chế độ bảo trì, chỉ Super Admin truy cập (default: false)
   }
@@ -66,7 +66,7 @@ sequenceDiagram
 
     Admin->>Shell: Truy cập /admin
     Shell->>API: GET /api/members & GET /api/clan-settings
-    API->>DB: Truy vấn phả hệ & cấu hình
+    API->>DB: Truy vấn Gia Phả & cấu hình
     DB-->>API: Dữ liệu thành viên & feature_flags
     API-->>Dash: Dữ liệu tính toán
     Dash-->>Admin: Hiển thị 4 Khối: Sức Khỏe Dữ Liệu, Việc Khẩn, Quick Actions, Audit Log
@@ -143,7 +143,7 @@ sequenceDiagram
 - **Cấu trúc 4 Nhóm điều hướng:**
   - `❖ TỔNG QUAN`:
     - `📊 Bàn Điều Hành` trỏ tới `/admin`.
-  - `❖ PHẢ HỆ & QUY ƯỚC`:
+  - `❖ Gia Phả & QUY ƯỚC`:
     - `🏛️ Căn Cước Dòng Họ` trỏ tới `/admin/profile`.
     - `🌿 Cấu Trúc Ngành & Chi` trỏ tới `/admin/branches`.
     - `🗣️ Quy Ước Xưng Hô` trỏ tới `/admin/kinship`.
@@ -156,7 +156,7 @@ sequenceDiagram
   - Active item: Nền Emerald phẳng (`bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 font-semibold border-l-2 border-emerald-600 rounded-r-md`).
   - Bo góc chuẩn: `rounded-md` (6px) phẳng phiu, loại bỏ hoàn toàn viền `border-r-2` gây cong góc méo mó ở cạnh phải.
   - Inactive item: Text Slate (`text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 rounded-md`).
-  - Nút quay lại: `← Về Cây Phả Hệ` đặt nổi bật ở đầu Sidebar.
+  - Nút quay lại: `← Về Cây Gia Phả` đặt nổi bật ở đầu Sidebar.
   - Mobile Drawer: Nút Toggle Hamburger ở top bar cho màn hình di động, đóng khi click vào liên kết.
 
 ### 5.2. File: `src/app/admin/layout.tsx` [MODIFY]
@@ -203,13 +203,13 @@ sequenceDiagram
 - **Trang Quản Lý Tài Khoản Người Dùng:**
   - Ô tìm kiếm theo Tên hoặc Email.
   - Bộ lọc Vai Trò: `Tất cả`, `viewer`, `claimed_member`, `branch_editor`, `super_admin`.
-  - Bảng danh sách: Avatar, Họ tên, Email, Vai trò (Dropdown hoặc Modal chọn đổi vai trò), Node phả hệ liên kết (kèm nút Gán node / Hủy liên kết), Ngày tạo.
+  - Bảng danh sách: Avatar, Họ tên, Email, Vai trò (Dropdown hoặc Modal chọn đổi vai trò), Node Gia Phả liên kết (kèm nút Gán node / Hủy liên kết), Ngày tạo.
   - Tích hợp gọi API `/api/users` (GET và PATCH).
 
 ### 5.8. File: `src/app/admin/features/page.tsx` [NEW]
 - **Trang Bật/Tắt Tính Năng Tinh Gọn:**
   - Danh sách 6 cờ tính năng được thiết kế dưới dạng thẻ tương tác trực quan:
-    1. `enable_public_tree` (🌳 Công Khai Cây Phả Hệ)
+    1. `enable_public_tree` (🌳 Công Khai Cây Gia Phả)
     2. `enable_kinship_lookup` (🗣️ Tra Cứu Vai Vế)
     3. `enable_anniversaries` (🗓️ Lịch Giỗ & Web Push)
     4. `allow_member_claims` (📬 Tiếp Nhận Đơn Nhận Node)
@@ -243,7 +243,7 @@ sequenceDiagram
 - [x] **TC_UT_FEAT_MERGE_02 (Merge cờ tính năng ghi đè một phần):**
   - **Mô tả:** Hàm `mergeFeatureFlags(current, { maintenance_mode: true })` cập nhật cờ `maintenance_mode` thành `true`, 5 cờ còn lại giữ nguyên.
   - **Trạng thái:** PASS (duration: 0.19ms).
-- [x] **TC_UT_DASHBOARD_STATS_01 (Tính toán chỉ số sức sống phả hệ):**
+- [x] **TC_UT_DASHBOARD_STATS_01 (Tính toán chỉ số sức sống Gia Phả):**
   - **Mô tả:** Hàm `computeClanVitalityMetrics(mockMembers, mockUsers)` trả về chính xác: `total: 10, males: 6, females: 4, deceased: 3, living: 7, maxGeneration: 2`.
   - **Trạng thái:** PASS (duration: 0.25ms).
 - [x] **TC_UT_DASHBOARD_ALERTS_02 (Phát hiện thành viên chưa nối phả):**
@@ -314,20 +314,20 @@ sequenceDiagram
 - [ ] **UAT_03 (Bàn Điều Hành Dashboard):** Trang `/admin` hiển thị đầy đủ 4 khối: Chỉ số nhân khẩu, Trung tâm cảnh báo việc khẩn (thành viên chưa nối phả, user mới), Phím tắt tác vụ nhanh và Nhật ký biến động gần đây.
 - [ ] **UAT_04 (Căn Cước Dòng Họ & Live Preview):** Trang `/admin/profile` hiển thị Form nhập tên họ kèm khung Live Preview cập nhật tức thời diện mạo trang chủ khi gõ chữ.
 - [ ] **UAT_05 (Quản Lý Cây Ngành/Chi Thoáng Đãng):** Trang `/admin/branches` hiển thị trọn vẹn `BranchTaxonomyManager` trên không gian toàn màn hình, các cấp Ngành $\rightarrow$ Chi $\rightarrow$ Nhánh $\rightarrow$ Phái không bị tràn khung.
-- [ ] **UAT_06 (Quản Lý Tài Khoản):** Trang `/admin/users` hiển thị danh sách người dùng Google, hỗ trợ tìm kiếm theo email/tên, lọc theo role, đổi được vai trò và gán/hủy node phả hệ thành công.
+- [ ] **UAT_06 (Quản Lý Tài Khoản):** Trang `/admin/users` hiển thị danh sách người dùng Google, hỗ trợ tìm kiếm theo email/tên, lọc theo role, đổi được vai trò và gán/hủy node Gia Phả thành công.
 - [ ] **UAT_07 (Bật/Tắt Tính Năng):** Trang `/admin/features` hiển thị 6 công tắc tính năng, gạt bật/tắt mượt mà, bấm "Lưu Cấu Hình" báo thành công và lưu vào CSDL.
 - [ ] **UAT_08 (Console Sạch):** Toàn bộ các trang trong `/admin/*` mở lên không có lỗi đỏ (0 Error, 0 Hydration Warning) trong Developer Console.
 - [ ] **UAT_09 (Crisp Architectural Geometry):** Sidebar menu mang phong cách ngọc bích phẳng vuông vắn `rounded-md`, không còn viền cong viên thuốc méo; 4 thẻ thống kê và các khối card trên Dashboard vuông vắn, trang trọng `rounded-lg`.
 - [ ] **UAT_10 (Drawer Rà Soát Nối Phả Tại Chỗ):** Bấm nút `[Kiểm tra →]` tại khối việc khẩn mở Slide-over Drawer từ cạnh phải màn hình `/admin`, hiển thị danh sách 10 người thiếu cha mẹ, hỗ trợ tìm kiếm, nối vào cha mẹ và tự động làm tươi số liệu thống kê ngay lập tức.
 - [ ] **UAT_11 (SQL Migration Chạy Thành Công Từ File Riêng 20260907000001):** Mở Supabase Dashboard SQL Editor, dán nội dung file migration độc lập `supabase/migrations/20260907000001_add_is_adopted_column.sql` và bấm Run: 0 lỗi, bảng `members` nhận cột `is_adopted`.
 - [ ] **UAT_12 (Nhập File Excel Thành Công Không Lỗi Schema):** Mở `/admin/import`, tải file `gia_pha_ho_pham_van_lite.xlsx` lên và bấm "Nhập Dữ Liệu": hệ thống báo nạp thành công 60 thành viên và 29 quan hệ hôn phối, không còn lỗi `Could not find the 'is_adopted' column of 'members' in the schema cache`.
-- [ ] **UAT_13 (Cây Phả Hệ Hiển Thị Dữ Liệu Thật):** Mở `/tree`, hiển thị đúng tên dòng họ thật và danh sách con cháu thật từ Supabase DB, 28 người mẫu cũ biến mất hoàn toàn khỏi màn hình.
+- [ ] **UAT_13 (Cây Gia Phả Hiển Thị Dữ Liệu Thật):** Mở `/tree`, hiển thị đúng tên dòng họ thật và danh sách con cháu thật từ Supabase DB, 28 người mẫu cũ biến mất hoàn toàn khỏi màn hình.
 - [ ] **UAT_14 (Chỉ Định Cụ Tổ Trong Admin Settings):** Mở `/admin/settings` hoặc `/admin/profile`: Dropdown "Cụ Tổ Của Dòng Họ" chỉ hiển thị các thành viên nội tộc, chọn Cụ Phạm Văn Chiến và bấm Lưu $\rightarrow$ Hệ thống lưu `root_ancestor_id` vào `clan_settings`.
 - [ ] **UAT_15 (Kiểm Chứng Huy Hiệu Cụ Tổ Duy Nhất & Đời của Phối Ngẫu):** Mở `/tree`:
   - Thẻ của Cụ Tổ Phạm Văn Chiến hiển thị đúng huy hiệu `✨ Cụ Tổ`.
   - Thẻ của Bà cả Hoàng Thị Mơ và Bà hai Đào Thị Liễu chỉ hiển thị `🌸 Bà cả` / `🌸 Bà hai` và `† Đã mất`, **hoàn toàn không có huy hiệu Cụ Tổ**.
   - Thẻ của Bà Vũ Thị Thìn mang đúng `Đời 2`, Bà Hoàng Thị Dĩnh mang đúng `Đời 3`, Bà Nguyễn Thị Hiến mang đúng `Đời 4`, Bà Lê Thị Nhân mang đúng `Đời 5`...
-- [ ] **UAT_16 (Re-import Ghi Đè Thành Công Với 60 Thành Viên Liền Mạch):** Nạp lại file `gia_pha_ho_pham_van_lite.xlsx` với tùy chọn "Xóa sạch dữ liệu cũ và nhập mới (Clean Mode)": Cây phả hệ dựng lên mượt mà, đầy đủ các tầng từ Đời 1 đến Đời 13 không đứt gãy.
+- [ ] **UAT_16 (Re-import Ghi Đè Thành Công Với 60 Thành Viên Liền Mạch):** Nạp lại file `gia_pha_ho_pham_van_lite.xlsx` với tùy chọn "Xóa sạch dữ liệu cũ và nhập mới (Clean Mode)": Cây Gia Phả dựng lên mượt mà, đầy đủ các tầng từ Đời 1 đến Đời 13 không đứt gãy.
 
 ---
 
@@ -556,7 +556,7 @@ sequenceDiagram
   - Logo chữ Hán "Phạm" (范) kích thước lớn (size 60-80px) ở trung tâm.
   - Tên dòng họ đọc từ `clan_settings.clan_name`.
   - Subtitle phân biệt 2 trường hợp (đọc từ query param hoặc feature flags):
-    - Khi `enable_public_tree = false`: *"Cây phả hệ dòng họ đang ở chế độ Nội bộ. Vui lòng đăng nhập để xem."*
+    - Khi `enable_public_tree = false`: *"Cây Gia Phả dòng họ đang ở Trang Nội Bộ. Vui lòng đăng nhập để xem."*
     - Khi `enable_public_tree = true` nhưng route bị chặn: *"Tính năng này yêu cầu đăng nhập tài khoản dòng họ."*
   - Nút **"Đăng nhập bằng Google"** (tái sử dụng OAuth logic từ `AuthButton`, nhưng render lớn hơn, nổi bật hơn).
   - Nút **"Dev Bypass"** (chỉ hiện ở `NODE_ENV === 'development'`).
@@ -578,7 +578,7 @@ sequenceDiagram
 - **Khi `isGuest`:**
   - **Ẩn hoàn toàn** block "Spotlight Ngày Giỗ Gần Nhất" (wrapped trong `{!isGuest && nearestGroup && nearestMember && (...)}`).
   - **Ẩn** link "Lịch Giỗ" trong CTA section (nếu có).
-  - **Giữ** Hero header + CTA "Xem Cây Phả Hệ" (link `/tree`) + nút "Đăng nhập Google" trên Navbar.
+  - **Giữ** Hero header + CTA "Xem Cây Gia Phả" (link `/tree`) + nút "Đăng nhập Google" trên Navbar.
   - **(Tùy chọn) Thêm banner nhẹ:** *"Đăng nhập để xem Lịch Giỗ, Xưng hô và nhiều tính năng khác"* — chỉ hiện khi guest.
 - **Khi đã đăng nhập:** Hiển thị đầy đủ như hiện tại (không đổi).
 - **Tinh chỉnh thủ công đã cập nhật trong mã nguồn (Manual Polish Sync):**
@@ -592,8 +592,8 @@ sequenceDiagram
 - **Khi `isGuest`:**
   - **Ẩn** link "Lịch Giỗ" (`/anniversaries`).
   - **Ẩn** link "Xưng hô" (`/kinship`).
-  - Khi `enable_public_tree = true`: **Giữ** link "Cây Phả Hệ" (`/tree`).
-  - Khi `enable_public_tree = false`: **Ẩn luôn** "Cây Phả Hệ" (nhất quán — guest bị redirect ở middleware rồi, nhưng Navbar trên `/login-gate` layout cũng cần sạch).
+  - Khi `enable_public_tree = true`: **Giữ** link "Cây Gia Phả" (`/tree`).
+  - Khi `enable_public_tree = false`: **Ẩn luôn** "Cây Gia Phả" (nhất quán — guest bị redirect ở middleware rồi, nhưng Navbar trên `/login-gate` layout cũng cần sạch).
 - **Khi đã đăng nhập:** Hiển thị đầy đủ 3 link như hiện tại (không đổi).
 
 #### 14.5.4. File: `src/components/navigation/MobileBottomNav.tsx` [MODIFY]
@@ -602,8 +602,8 @@ sequenceDiagram
 - **Khi `isGuest`:**
   - Ẩn "Lịch Giỗ" (`/anniversaries`).
   - Ẩn "Xưng hô" (`/kinship`).
-  - Khi `enable_public_tree = false`: Ẩn luôn "Phả Hệ" (`/tree`), chỉ giữ "Trang Chủ".
-  - Khi `enable_public_tree = true`: Giữ "Trang Chủ" + "Phả Hệ".
+  - Khi `enable_public_tree = false`: Ẩn luôn "Gia Phả" (`/tree`), chỉ giữ "Trang Chủ".
+  - Khi `enable_public_tree = true`: Giữ "Trang Chủ" + "Gia Phả".
 - **Khi đã đăng nhập:** Hiển thị đầy đủ 4 link.
 - **Đổi nhãn "Vai Vế" → "Xưng hô"** để khớp với Navbar Desktop (đồng bộ nhãn đã đổi ở commit `2e68dd5`).
 
@@ -699,7 +699,7 @@ sequenceDiagram
 - [x] **TC_UT_MOBILE_NAV_GUEST_FILTERED (MobileBottomNav lọc link cho guest):**
   - **Given:** MobileBottomNav nhận `isGuest = true`, `enablePublicTree = true`.
   - **When:** Render component.
-  - **Then:** Chỉ hiển thị 2 link: "Trang Chủ" (`/`) và "Phả Hệ" (`/tree`). Ẩn: "Lịch Giỗ", "Xưng hô".
+  - **Then:** Chỉ hiển thị 2 link: "Trang Chủ" (`/`) và "Gia Phả" (`/tree`). Ẩn: "Lịch Giỗ", "Xưng hô".
 
 - [x] **TC_UT_MOBILE_NAV_LABEL_SYNC (MobileBottomNav đổi nhãn "Vai Vế" → "Xưng hô"):**
   - **Given:** Source code `MobileBottomNav.tsx`.
@@ -708,12 +708,12 @@ sequenceDiagram
 
 ### 14.8. Bổ Sung Tiêu Chí Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT)
 
-- [ ] **UAT_17 (Login Gate — Private Mode):** Gạt TẮT `enable_public_tree` trong `/admin/features` → Mở trình duyệt ẩn danh → Truy cập `/tree` → Expect redirect tới trang Login Gate trang trọng: logo chữ Hán, tên dòng họ, thông điệp "Chế độ Nội bộ", nút "Đăng nhập Google".
+- [ ] **UAT_17 (Login Gate — Private Mode):** Gạt TẮT `enable_public_tree` trong `/admin/features` → Mở trình duyệt ẩn danh → Truy cập `/tree` → Expect redirect tới trang Login Gate trang trọng: logo chữ Hán, tên dòng họ, thông điệp "Trang Nội Bộ", nút "Đăng nhập Google".
 - [ ] **UAT_18 (Login Gate — Feature-restricted):** Gạt BẬT `enable_public_tree` → Trình duyệt ẩn danh → Truy cập `/anniversaries` → Expect redirect tới Login Gate với thông điệp "Tính năng yêu cầu đăng nhập".
-- [ ] **UAT_19 (Guest Xem Cây Thành Công):** `enable_public_tree = true` → Trình duyệt ẩn danh → Truy cập `/tree` → Cây phả hệ hiển thị đầy đủ, pan/zoom hoạt động bình thường.
+- [ ] **UAT_19 (Guest Xem Cây Thành Công):** `enable_public_tree = true` → Trình duyệt ẩn danh → Truy cập `/tree` → Cây Gia Phả hiển thị đầy đủ, pan/zoom hoạt động bình thường.
 - [ ] **UAT_20 (Home Giản Lược Cho Guest):** Trình duyệt ẩn danh → Truy cập `/` → Hero header hiển thị tên dòng họ, CTA "Xem Cây", nút "Đăng nhập Google". **KHÔNG** thấy spotlight "Ngày Giỗ Gần Nhất".
-- [ ] **UAT_21 (Navbar Desktop — Guest Mode):** Trình duyệt ẩn danh → Navbar chỉ hiển thị link "Cây Phả Hệ" (khi public). Link "Lịch Giỗ" và "Xưng hô" hoàn toàn vắng mặt.
-- [ ] **UAT_22 (MobileBottomNav — Guest Mode):** Trình duyệt ẩn danh, thu nhỏ dưới 768px → Bottom nav chỉ có 2 icon: "Trang Chủ" + "Phả Hệ". Ẩn icon "Lịch Giỗ" và "Xưng hô".
+- [ ] **UAT_21 (Navbar Desktop — Guest Mode):** Trình duyệt ẩn danh → Navbar chỉ hiển thị link "Cây Gia Phả" (khi public). Link "Lịch Giỗ" và "Xưng hô" hoàn toàn vắng mặt.
+- [ ] **UAT_22 (MobileBottomNav — Guest Mode):** Trình duyệt ẩn danh, thu nhỏ dưới 768px → Bottom nav chỉ có 2 icon: "Trang Chủ" + "Gia Phả". Ẩn icon "Lịch Giỗ" và "Xưng hô".
 - [ ] **UAT_23 (Đăng Nhập Thành Công → Full Access):** Từ Login Gate, đăng nhập Google → Redirect về trang yêu cầu ban đầu → Navbar hiện đủ 3 link, Home hiện Spotlight Giỗ, MobileBottomNav hiện đủ 4 icon.
 - [ ] **UAT_24 (Console Sạch Login Gate):** Trang `/login-gate` mở lên không có lỗi đỏ (0 Error, 0 Hydration Warning) trong Developer Console.
 
@@ -733,7 +733,7 @@ sequenceDiagram
 
 ### 15.1. Bối Cảnh & Phân Tích Căn Nguyên Gốc Rễ
 
-Trong quá trình nghiệm thu Milestone 7.5, phát sinh sự cố: Super Admin đã gạt tắt switch "Công Khai Cây Phả Hệ Cho Khách Vãng Lai" (`enable_public_tree = false`) trên `/admin/features`, nhưng khi mở Tab Ẩn danh (Incognito) truy cập `http://localhost:3000` thì vẫn nhìn thấy liên kết "Cây Phả Hệ" trên Navbar.
+Trong quá trình nghiệm thu Milestone 7.5, phát sinh sự cố: Super Admin đã gạt tắt switch "Công Khai Cây Gia Phả Cho Khách Vãng Lai" (`enable_public_tree = false`) trên `/admin/features`, nhưng khi mở Tab Ẩn danh (Incognito) truy cập `http://localhost:3000` thì vẫn nhìn thấy liên kết "Cây Gia Phả" trên Navbar.
 
 **Hai căn nguyên cốt lõi:**
 1. **Lỗ hổng UX (Missing Auto-Save):** Sự kiện gạt switch trong `AdminFeaturesPage` chỉ cập nhật biến React State trong bộ nhớ RAM client. Nút "Lưu Cấu Hình Tính Năng" nằm ở tận đáy trang ngoài tầm nhìn (below the fold). Người dùng theo thói quen gạt switch xong chuyển tab ngay mà không bấm Lưu, dẫn đến **không có request HTTP nào được gửi đi**.
@@ -766,7 +766,7 @@ sequenceDiagram
 
     Guest->>MW: Mở Tab Ẩn danh truy cập http://localhost:3000
     MW->>AdminDB: Đọc Postgres clan_settings (enable_public_tree = false)
-    MW-->>Guest: HTTP 307 Redirect tới /login-gate?returnTo=%2F (Ẩn hoàn toàn Cây Phả Hệ)
+    MW-->>Guest: HTTP 307 Redirect tới /login-gate?returnTo=%2F (Ẩn hoàn toàn Cây Gia Phả)
 ```
 
 ### 15.3. Thiết Kế Chi Tiết & Ranh Giới File
@@ -857,8 +857,8 @@ sequenceDiagram
 
 ### 15.6. Bổ Sung Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
 
-- [ ] **UAT_25 (Auto-Save on Toggle):** Truy cập `/admin/features`, gạt switch "Công Khai Cây Phả Hệ Cho Khách Vãng Lai" sang TẮT. Thấy xuất hiện ngay spinner "Đang lưu..." bên cạnh switch, sau đó chuyển thành "✓ Đã lưu" màu xanh lá mà không cần cuộn xuống bấm nút Lưu.
-- [ ] **UAT_26 (Incognito Real-time Enforcement):** Sau khi gạt TẮT, mở cửa sổ Ẩn danh (Incognito) mới, truy cập `http://localhost:3000`. Hệ thống tự động chuyển hướng về `/login-gate?returnTo=%2F` và trên Navbar không hề xuất hiện link "Cây Phả Hệ".
+- [ ] **UAT_25 (Auto-Save on Toggle):** Truy cập `/admin/features`, gạt switch "Công Khai Cây Gia Phả Cho Khách Vãng Lai" sang TẮT. Thấy xuất hiện ngay spinner "Đang lưu..." bên cạnh switch, sau đó chuyển thành "✓ Đã lưu" màu xanh lá mà không cần cuộn xuống bấm nút Lưu.
+- [ ] **UAT_26 (Incognito Real-time Enforcement):** Sau khi gạt TẮT, mở cửa sổ Ẩn danh (Incognito) mới, truy cập `http://localhost:3000`. Hệ thống tự động chuyển hướng về `/login-gate?returnTo=%2F` và trên Navbar không hề xuất hiện link "Cây Gia Phả".
 - [ ] **UAT_27 (Rollback on Network Error):** Trong môi trường dev, tắt mạng hoặc giả lập lỗi API $\rightarrow$ Gạt switch $\rightarrow$ Switch tự động bật ngược lại trạng thái ban đầu kèm thông báo lỗi rõ ràng.
 
 ### 15.7. Bổ Sung Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
@@ -957,7 +957,7 @@ sequenceDiagram
 ### 16.4. Xử Lý Lỗi & Trường Hợp Biên (Edge Cases)
 
 - **Edge Case 52 (Supabase Auth API bị timeout hoặc mất mạng khi gọi signOut):** Khối `try/catch` bọc quanh `supabase.auth.signOut()` và `fetch('/api/auth/logout')`. Khối `finally` luôn thực thi reset React state và điều hướng `window.location.href = '/'`, đảm bảo người dùng không bị kẹt ở trạng thái loading.
-- **Edge Case 53 (Đăng xuất khi cây phả hệ đang ở chế độ Riêng tư `enable_public_tree = false`):** Sau khi đăng xuất, điều hướng về `/` sẽ bị Middleware Auth Gate tự động chuyển tiếp tới `/login-gate?returnTo=%2F`. Điều này hoàn toàn đúng với nghiệp vụ bảo mật dòng họ.
+- **Edge Case 53 (Đăng xuất khi cây Gia Phả đang ở chế độ Riêng tư `enable_public_tree = false`):** Sau khi đăng xuất, điều hướng về `/` sẽ bị Middleware Auth Gate tự động chuyển tiếp tới `/login-gate?returnTo=%2F`. Điều này hoàn toàn đúng với nghiệp vụ bảo mật dòng họ.
 - **Edge Case 54 (Người dùng vừa dùng Google Auth vừa có cookie Dev Bypass sót lại):** Cả 2 tầng client và server đều được xóa sạch đồng thời, loại bỏ triệt để xung đột session lai (hybrid session ghosting).
 
 ### 16.5. Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
@@ -1277,13 +1277,13 @@ Trong quá trình vận hành hệ thống tại `http://localhost:3000/admin/us
    - **RLS Nuốt Chửng Lệnh UPDATE:** API `PATCH /api/users` sử dụng `createClient()` (Anon Client). Bảng `users` chỉ có RLS Policy cho `SELECT`, hoàn toàn không có Policy cho `UPDATE`. Supabase JS v2 trả về `{ error }` chứ không ném exception, khối `try...catch` không bắt được lỗi. API trả về `{ success: true }` giả tạo trong khi PostgreSQL không hề được cập nhật dữ liệu.
    - **Thiếu Đồng Bộ Role:** Gán node cho `viewer` không tự động thăng cấp thành `claimed_member` trong CSDL.
 
-2. **Nguy Cơ Đứt Gãy Toàn Bộ Liên Kết Khi Import Lại Cây Phả Hệ (`/admin/import`):**
+2. **Nguy Cơ Đứt Gãy Toàn Bộ Liên Kết Khi Import Lại Cây Gia Phả (`/admin/import`):**
    - Trong PostgreSQL schema (`20260903000000_init_schema.sql`), cột `users.linked_member_id` có ràng buộc:
      ```sql
      linked_member_id UUID UNIQUE REFERENCES public.members(id) ON DELETE SET NULL
      ```
    - Khi Admin Import ở chế độ **Làm mới toàn bộ (Ghi đè cây mới - `mode: clean`)**, API thực thi `DELETE FROM members`. Ràng buộc `ON DELETE SET NULL` ngay lập tức chuyển toàn bộ `linked_member_id` của tất cả người dùng thành `NULL`.
-   - Khi chèn các thành viên mới từ file Excel, hàm import sinh ngẫu nhiên UUID mới toanh (`crypto.randomUUID()`). Dù họ tên, năm sinh, thế hệ không đổi, liên kết cũ bị mất vĩnh viễn, con cháu bị "bật gốc" khỏi cây phả hệ và Admin phải gán lại thủ công từ đầu.
+   - Khi chèn các thành viên mới từ file Excel, hàm import sinh ngẫu nhiên UUID mới toanh (`crypto.randomUUID()`). Dù họ tên, năm sinh, thế hệ không đổi, liên kết cũ bị mất vĩnh viễn, con cháu bị "bật gốc" khỏi cây Gia Phả và Admin phải gán lại thủ công từ đầu.
 
 ### 19.2. Sơ Đồ Trình Tự Đồng Bộ & Tự Động Tái Liên Kết (Smart Re-mapping Sequence Diagram)
 
@@ -1405,7 +1405,7 @@ sequenceDiagram
 
 - **Edge Case 61 (User không có năm sinh hoặc năm sinh bị sửa khi import file mới):** Thuật toán tự động kích hoạt Mức 2 đối chiếu thêm thế hệ (`generation_level`) kết hợp giới tính và họ tên.
 - **Edge Case 62 (Trùng họ tên trong cùng một thế hệ - Ambiguous Collision):** Nếu 2 người trong file mới cùng tên Nguyễn Văn Nam, cùng đời 4 $\rightarrow$ Thuật toán bỏ qua việc tự động gán cho tài khoản này để bảo toàn tính liêm chính, đưa vào danh sách cần Admin duyệt tay.
-- **Edge Case 63 (Gỡ node phả hệ):** Khi Admin bấm nút "Gỡ" trên `/admin/users`, nếu vai trò là `claimed_member` $\rightarrow$ tự động hạ về `viewer`; nếu là `branch_editor` hoặc `super_admin` $\rightarrow$ giữ nguyên.
+- **Edge Case 63 (Gỡ node Gia Phả):** Khi Admin bấm nút "Gỡ" trên `/admin/users`, nếu vai trò là `claimed_member` $\rightarrow$ tự động hạ về `viewer`; nếu là `branch_editor` hoặc `super_admin` $\rightarrow$ giữ nguyên.
 - **Edge Case 64 (Môi trường phát triển không có Service Role Key):** Route fallback sang client hiện có và ghi nhận dev cookie một cách nhất quán, tránh văng lỗi 500 crash server.
 - **Edge Case 65 (Người dùng đã liên kết node nhưng không có trong file Excel mới):** Tài khoản sẽ trở về trạng thái chưa liên kết (`linked_member_id = null`), vai trò chuyển về `viewer` để bảo đảm an toàn.
 
@@ -1450,7 +1450,7 @@ sequenceDiagram
 
 ### 19.6. Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
 
-- [ ] **UAT_37 (Gán Node Lưu Bền Vững /admin/users):** Vào `/admin/users` $\rightarrow$ Bấm "Gán Node" cho 1 tài khoản $\rightarrow$ Chọn thành viên $\rightarrow$ Cột "Hồ Sơ Phả Hệ Liên Kết" hiển thị đúng Tên, Đời, Chi $\rightarrow$ F5 tải lại trang $\rightarrow$ Dữ liệu liên kết vẫn tồn tại 100%.
+- [ ] **UAT_37 (Gán Node Lưu Bền Vững /admin/users):** Vào `/admin/users` $\rightarrow$ Bấm "Gán Node" cho 1 tài khoản $\rightarrow$ Chọn thành viên $\rightarrow$ Cột "Hồ Sơ Gia Phả Liên Kết" hiển thị đúng Tên, Đời, Chi $\rightarrow$ F5 tải lại trang $\rightarrow$ Dữ liệu liên kết vẫn tồn tại 100%.
 - [ ] **UAT_38 (Tự Động Đổi Badge Vai Trò):** Sau khi gán node cho tài khoản Viewer $\rightarrow$ Badge vai trò lập tức chuyển sang màu xanh dương "Con Cháu Đã Gắn Node (Member)" mà không cần thao tác đổi vai trò thủ công.
 - [ ] **UAT_39 (Bảo Tồn Liên Kết Sau Khi Import Clean):** Có ít nhất 1 tài khoản đã được gán node $\rightarrow$ Vào `/admin/import`, tải file Excel và chọn "Làm mới toàn bộ (Ghi đè cây mới)" $\rightarrow$ Bấm nạp dữ liệu $\rightarrow$ Thông báo thành công hiển thị số tài khoản được bảo tồn $\rightarrow$ Quay lại `/admin/users` $\rightarrow$ Tài khoản vẫn giữ nguyên liên kết tới đúng người đó trên cây mới.
 - [ ] **UAT_40 (Hộp Cảnh Báo An Toàn /admin/import):** Khi click vào tùy chọn "Làm mới toàn bộ (Ghi đè cây mới)" trên trang Import $\rightarrow$ Xuất hiện Callout cảnh báo an toàn rõ ràng, giúp Admin ý thức được rủi ro liên kết.
@@ -1587,7 +1587,7 @@ sequenceDiagram
   - Tiêu đề: **Phân Quyền & Ma Trận Vai Trò Tông Tộc**.
   - Bảng Ma trận 5 cột tương ứng 5 Roles: `Khách vãng lai`, `Viewer`, `Con cháu gắn node`, `Biên tập viên Chi`, `Super Admin`.
   - Phân nhóm quyền hạn rõ ràng:
-    - *Nhóm 1: Tiếp cận & Quyền riêng tư:* Xem cây phả hệ, Xem SĐT người sống, Tra cứu xưng hô, Xem lịch giỗ.
+    - *Nhóm 1: Tiếp cận & Quyền riêng tư:* Xem cây Gia Phả, Xem SĐT người sống, Tra cứu xưng hô, Xem lịch giỗ.
     - *Nhóm 2: Tự phục vụ & Gắn kết:* Gửi yêu cầu nhận node, Nhận thông báo Web Push.
     - *Nhóm 3: Biên tập gia phả:* Thêm thành viên, Sửa thông tin, Đổi thứ tự đàn con, Xóa node lá.
     - *Nhóm 4: Bàn điều hành:* Quản lý tài khoản, Nạp Excel & Smart Re-map.
@@ -1642,7 +1642,7 @@ sequenceDiagram
 #### 1. Bối Cảnh & Mục Tiêu Kỹ Thuật
 Khi Super Admin chọn đóng vai tại `/admin/roles`, cookie `fat_impersonated_role` được thiết lập trên trình duyệt. Để chế độ này phát huy tác dụng thực tế 100%, toàn bộ chuỗi mắt xích giao diện phải tiêu thụ cookie này thông qua hàm thuần túy `resolveEffectiveRole(realRole, impersonatedRole)`:
 1. **Navbar & AuthButton:** Khi đóng vai `guest`, Navbar nhận diện `isGuest = true`, chuyển `AuthButton` sang nút *"Đăng nhập Google"* và ẩn các liên kết bị khóa theo cờ tính năng.
-2. **Cây Phả Hệ (`/tree`):** Trang `TreePage` đọc cookie và tính `effectiveRole`. Khi đóng vai `guest`, `viewer` hoặc `claimed_member`, `canManageTree` tự động chuyển thành `false`, ẩn các nút thêm/sửa thành viên trên Toolbar.
+2. **Cây Gia Phả (`/tree`):** Trang `TreePage` đọc cookie và tính `effectiveRole`. Khi đóng vai `guest`, `viewer` hoặc `claimed_member`, `canManageTree` tự động chuyển thành `false`, ẩn các nút thêm/sửa thành viên trên Toolbar.
 3. **Thẻ Chi Tiết Thành Viên (`MemberDetailDrawer`):**
    - **Bảo Vệ Quyền Riêng Tư :** Số điện thoại của người còn sống bị che mờ thành `0912 *** ***` đối với vai `guest` và `viewer`. Chỉ vai `claimed_member`, `branch_editor` và `super_admin` mới thấy số đầy đủ.
    - **Nút Nhận Node (Claim Node):** Khi đóng vai `viewer`, trên các thẻ thành viên còn sống chưa ai liên kết (`!linked_user_id`), hiển thị nút to màu xanh ngọc bích: `[🙋 Tôi là người này (Gửi yêu cầu nhận node)]`.
@@ -1877,7 +1877,7 @@ graph TD
 #### 5. Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
 
 - [ ] **UAT_51 (Cờ Public Tree TẮT $\rightarrow$ Đóng vai Guest bị chặn sang Login Gate):**
-  - Vào `/admin/features`, gạt TẮT "Công Khai Cây Phả Hệ Cho Khách Vãng Lai".
+  - Vào `/admin/features`, gạt TẮT "Công Khai Cây Gia Phả Cho Khách Vãng Lai".
   - Sang `/admin/roles`, bấm `[🎭 Thử đóng vai]` tại cột "Khách vãng lai".
   - Bấm vào link `/tree` $\rightarrow$ Lập tức bị chuyển hướng sang `/login-gate?returnTo=%2Ftree`.
   - Màn hình Login Gate hiển thị ổn định, không bị văng ngược lại. Banner nổi ở đỉnh màn hình vẫn có nút `[⚙️ Vào Quản Trị]`.

@@ -93,7 +93,7 @@ sequenceDiagram
 ### 5.2. Thanh Điều Hướng Header (`src/components/navbar/Navbar.tsx`)
 - Logo thương hiệu dòng họ: Tên họ lấy từ CSDL (hoặc mặc định: *"GIA PHẢ DÒNG HỌ NGUYỄN VĂN"*).
 - Badge trạng thái kết nối CSDL (Đang kết nối / Đã kết nối).
-- Menu điều hướng cơ bản: [Cây Phả Hệ], [Lịch Giỗ], [Tra Cứu Vai Vế].
+- Menu điều hướng cơ bản: [Cây Gia Phả], [Lịch Giỗ], [Tra Cứu Vai Vế].
 - Vị trí góc phải: Component `AuthButton`.
 
 ### 5.3. Nút Xác Thực (`src/components/auth/AuthButton.tsx`)
@@ -135,7 +135,7 @@ sequenceDiagram
 
 - [x] **AC01:** Dự án Next.js 14 App Router khởi tạo hoàn chỉnh, `npm.cmd run typecheck` và `npm.cmd run build` đạt sạch sẽ 100% 0 lỗi.
 - [x] **AC02:** Bộ thư viện kết nối Supabase (`client.ts`, `server.ts`, `middleware.ts`) được cấu hình đúng chuẩn `@supabase/ssr`.
-- [x] **AC03:** Trang chủ và Navbar hiển thị giao diện phả hệ trang nhã (Font tiếng Việt nét tròn, tông màu hổ phách/slate sang trọng).
+- [x] **AC03:** Trang chủ và Navbar hiển thị giao diện Gia Phả trang nhã (Font tiếng Việt nét tròn, tông màu hổ phách/slate sang trọng).
 - [x] **AC04:** Bấm nút [Đăng nhập Google] kích hoạt luồng OAuth chuẩn xác.
 - [x] **AC05:** Endpoint `/auth/callback` trao đổi mã code thành công, thiết lập session cookie an toàn.
 - [x] **AC06:** Tài khoản `giap.pt.90@gmail.com` được tự động cấp quyền `super_admin`.

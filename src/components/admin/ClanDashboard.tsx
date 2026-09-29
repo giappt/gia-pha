@@ -156,7 +156,7 @@ export default function ClanDashboard() {
             href="/"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
           >
-            <span>Xem Cây Phả Hệ</span>
+            <span>Xem Cây Gia Phả</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -192,7 +192,7 @@ export default function ClanDashboard() {
         <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Độ Sâu Phả Hệ
+              Độ Sâu Gia Phả
             </span>
             <div className="w-8 h-8 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
               <FamilyTreeIcon className="w-4 h-4" />
@@ -246,7 +246,7 @@ export default function ClanDashboard() {
               <span>{featureFlags?.maintenance_mode ? 'Bảo Trì' : 'Đang Hoạt Động'}</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
-              Cây phả hệ: {featureFlags?.enable_public_tree ? 'Công khai' : 'Nội bộ'} • Bảo vệ sống: {featureFlags?.mask_living_member_privacy ? 'Bật' : 'Tắt'}
+              Cây Gia Phả: {featureFlags?.enable_public_tree ? 'Công khai' : 'Nội bộ'} • Bảo vệ sống: {featureFlags?.mask_living_member_privacy ? 'Bật' : 'Tắt'}
             </p>
           </div>
         </div>
@@ -308,11 +308,11 @@ export default function ClanDashboard() {
                 <div>
                   <h3 className="text-xs sm:text-sm font-bold text-blue-950 dark:text-blue-200">
                     {metrics && metrics.unlinkedUsers > 0
-                      ? `Có ${metrics.unlinkedUsers} tài khoản Google mới chưa được gắn node phả hệ`
+                      ? `Có ${metrics.unlinkedUsers} tài khoản Google mới chưa được gắn node Gia Phả`
                       : 'Toàn bộ tài khoản đã được đối soát & liên kết'}
                   </h3>
                   <p className="text-xs text-blue-800/80 dark:text-blue-300/80 mt-1 leading-relaxed">
-                    Con cháu đã đăng nhập tài khoản. Trưởng tộc có thể trực tiếp liên kết tài khoản của họ vào đúng vị trí trên cây phả hệ.
+                    Con cháu đã đăng nhập tài khoản. Trưởng tộc có thể trực tiếp liên kết tài khoản của họ vào đúng vị trí trên cây Gia Phả.
                   </p>
                 </div>
               </div>

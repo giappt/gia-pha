@@ -45,7 +45,7 @@ interface FamilyUnit {
 }
 
 /**
- * Thuật toán dàn trang cây phả hệ (Genealogy Tree Layout Engine)
+ * Thuật toán dàn trang cây Gia Phả (Genealogy Tree Layout Engine)
  * - Phân tầng thế hệ Y = (generation_level - 1) * LEVEL_HEIGHT
  * - Tọa độ vợ chồng: X_spouse = X_primary + NODE_WIDTH + SPOUSE_GAP
  * - Zero collision: Tính độ rộng nhánh con (subtree width) từ dưới lên

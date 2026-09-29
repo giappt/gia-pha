@@ -120,6 +120,39 @@ export interface SpouseRelation {
   updated_at?: string;
 }
 
+export type ClaimRequestType = 'claim_existing' | 'propose_child' | 'find_origin';
+
+export interface ProposedChildData {
+  full_name: string;
+  gender: 'male' | 'female';
+  birth_year?: number | null;
+  birth_order?: number | null;
+  is_senior?: boolean | null;
+  parent_id?: string | null;
+  parent_relation?: 'father' | 'mother';
+  spouse_id?: string | null;
+  is_stepchild?: boolean;
+  raw_parent_info?: string | null;
+  raw_ancestor_info?: string | null;
+  notes?: string | null;
+}
+
+export interface ClaimRequestRow {
+  id: string;
+  user_id: string;
+  member_id: string | null;
+  request_type: ClaimRequestType;
+  claim_status: ClaimStatus;
+  proposed_data: ProposedChildData | null;
+  verification_notes: string | null;
+  assigned_to: string | null;
+  target_branch_code: string | null;
+  reviewed_by: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -158,9 +191,18 @@ export type Database = {
         Update: Partial<PushSubscriptionRecord>;
         Relationships: [];
       };
+      claim_requests: {
+        Row: ClaimRequestRow;
+        Insert: Partial<ClaimRequestRow> & {
+          user_id: string;
+        };
+        Update: Partial<ClaimRequestRow>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
   };
 };
+
 

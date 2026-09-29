@@ -14,7 +14,7 @@ _Dự án: FAT (Family Tree - Hệ Thống Quản Lý Gia Phả Dòng Họ)_
   - TailwindCSS (Styling).
   - Lucide Icons (`lucide-react`).
   - Shadcn UI / Radix UI Primitives (Dialog, Dropdown, Tabs, Switch, Tooltip, Toast).
-- **Thư viện Vẽ Đồ thị Cây Phả hệ (Tree Visualization):**
+- **Thư viện Vẽ Đồ thị Cây Gia Phả (Tree Visualization):**
   - `@xyflow/react` (React Flow v12) — Hỗ trợ Pan, Zoom, Custom Nodes (`MemberNode`, `GhostNode`), Minimap, Drag & Drop, 60 FPS Virtualization.
   - `dagre` / `d3-hierarchy` (Hỗ trợ thuật toán tự động sắp xếp tọa độ cây phân tầng không bị đè node).
 - **Quản lý Trạng thái Toàn cục (State Management):**
@@ -142,17 +142,17 @@ _(Nguyên tắc: Milestone N phải nghiệm thu hoàn hảo 100% 0 lỗi mới 
 ### MILESTONE 2: Lõi Thuật Toán Gia Phả (Kinship Engine & Lịch Âm) & Giao Diện Tra Cứu Vai Vế
 - **Mục tiêu:**
   - Xây dựng unit test độc lập cho thuật toán tìm Gốc Gần Nhất, tính độ lệch thế hệ, ánh xạ từ điển xưng hô vùng miền (`kinship-engine.ts`) và bộ chuyển đổi Âm - Dương / Năm Can Chi (`vietnamese-lunar.ts`).
-  - **Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược):** Vẽ đồ thị nhánh huyết thống trực quan chỉ lấy từ điểm giao nhau LCA (không lấy thừa từ Root), tích hợp cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời để giao diện luôn gọn gàng và không bị tràn cuộn.
+  - **Sơ Đồ Cây Gia Phả Trực Quan (Mini Cây Chữ V Ngược):** Vẽ đồ thị nhánh huyết thống trực quan chỉ lấy từ điểm giao nhau LCA (không lấy thừa từ Root), tích hợp cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời để giao diện luôn gọn gàng và không bị tràn cuộn.
   - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:** Bỏ đoạn văn dài, chia thành khối Quy tắc vùng miền, Tục ngữ cổ phong và Bảng đối sánh tương quan trực diện (nhánh họ vs tuổi đời).
   - **Tập Dữ Liệu Kiểm Thử Toàn Diện (Comprehensive Clan Seed):** Mở rộng bộ dữ liệu mẫu đa dạng (6-7 đời, nhiều chi, vợ cả đã mất / vợ hai, con nuôi, hôn nhân nội tộc) để kiểm chứng 100% các ca thực tế.
 - **Thư mục/File:** `src/lib/kinship-engine/`, `src/lib/lunar/`, `src/app/kinship/`, `src/app/api/kinship/`, các file unit test `tests/`.
 
-### MILESTONE 3: Màn hình Cây Phả Hệ Tương Tác & Ghost Node 🔗 Canvas
+### MILESTONE 3: Màn hình Cây Gia Phả Tương Tác & Ghost Node 🔗 Canvas
 - **Mục tiêu:**
   - Dựng cây đồ thị toàn thể trực quan bằng React Flow (`@xyflow/react`) và `dagre`, hỗ trợ Pan/Zoom vô cực, Minimap, Drag & Drop, 60 FPS Virtualization.
   - **Hiển Thị Đa Thê & Con Nuôi:** Hiển thị rõ ràng các cặp vợ chồng (Vợ cả Chánh thất, Vợ hai Kế thất, trạng thái còn sống / đã mất) và huy hiệu phân biệt Con nuôi.
   - **Cơ Chế Ghost Node 🔗 (Hôn Nhân Nội Tộc):** Hiển thị Node phản chiếu viền nét đứt kèm icon 🔗 tại nhánh hôn phối, click vào tự động lướt camera sang vị trí Node gốc ở chi bên kia.
-  - **Liên Kết Trải Nghiệm Liên Màn Hình (Deep Linking from /kinship):** Trên sơ đồ tra cứu vai vế `/kinship` có nút `[🔍 Xem trên Cây Phả Hệ Tổng]`, bấm vào sẽ điều hướng về trang chủ `/` và camera tự động pan/zoom focus làm nổi bật 2 node A & B trên cây tổng.
+  - **Liên Kết Trải Nghiệm Liên Màn Hình (Deep Linking from /kinship):** Trên sơ đồ tra cứu vai vế `/kinship` có nút `[🔍 Xem trên Cây Gia Phả Tổng]`, bấm vào sẽ điều hướng về trang chủ `/` và camera tự động pan/zoom focus làm nổi bật 2 node A & B trên cây tổng.
   - Tính năng tìm kiếm Spotlight và Toggle xem Nhánh Nội / Toàn bộ.
 - **Thư mục/File:** `src/components/tree/`, `src/app/page.tsx`, `src/app/api/tree/route.ts`.
 

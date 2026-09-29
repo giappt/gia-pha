@@ -154,7 +154,7 @@ export default function PersonalSettingsModal({
               <span>Nhánh Theo Dõi Mặc Định</span>
             </label>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-              Tự động ưu tiên lọc danh sách giỗ và góc nhìn phả hệ theo nhánh bạn quan tâm nhất.
+              Tự động ưu tiên lọc danh sách giỗ và góc nhìn Gia Phả theo nhánh bạn quan tâm nhất.
             </p>
 
             <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 border border-slate-200 dark:border-slate-800 rounded-xl p-2 bg-slate-50/50 dark:bg-slate-950/40">

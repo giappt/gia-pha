@@ -10,11 +10,11 @@ _Dự án: FAT (Family Tree - Hệ Thống Quản Lý Gia Phả Dòng Họ)_
 
 | **Mã** | **Tên màn hình** | **Mục đích** | **Vai trò được truy cập** |
 |---|---|---|---|
-| **S-01** | Cây Phả Hệ Tương Tác (Family Tree View) | Màn hình chính xem cây gia phả, pan/zoom, spotlight tìm kiếm, lọc Chi nhánh và toggle Nội/Ngoại | Tất cả (`viewer`, `claimed_member`, `branch_editor`, `super_admin`) |
+| **S-01** | Cây Gia Phả Tương Tác (Family Tree View) | Màn hình chính xem cây gia phả, pan/zoom, spotlight tìm kiếm, lọc Chi nhánh và toggle Nội/Ngoại | Tất cả (`viewer`, `claimed_member`, `branch_editor`, `super_admin`) |
 | **S-02** | Thẻ Chi Tiết & Modal Form 1 Cấp (Member Modal) | Xem thông tin cá nhân, tiểu sử, ngày giỗ, mộ phần; mở popup thêm vợ/chồng hoặc con trực tiếp 1 cấp | Xem: Tất cả; Sửa/Thêm: `branch_editor`, `super_admin` |
 | **S-03** | Tra Cứu Vai Vế Xưng Hô (Kinship Resolver View) | Chọn 2 người để hệ thống tự động suy luận vai vế xưng hô 2 chiều kèm sơ đồ huyết thống | Tất cả (`viewer`, `claimed_member`, `branch_editor`, `super_admin`) |
 | **S-04** | Lịch Giỗ 30 Ngày & Đăng Ký Push (Anniversaries View) | Xem danh sách các ngày giỗ sắp tới xếp theo âm lịch; nút bấm kích hoạt nhận Web Push Notification | Tất cả (`viewer`, `claimed_member`, `branch_editor`, `super_admin`) |
-| **S-05** | Đăng Nhập & Phiếu Nhận Node (Auth & Claim Profile) | Đăng nhập Google OAuth và gửi phiếu xác nhận "Đây là tôi trên cây phả hệ" | Chưa đăng nhập (`viewer`) |
+| **S-05** | Đăng Nhập & Phiếu Nhận Node (Auth & Claim Profile) | Đăng nhập Google OAuth và gửi phiếu xác nhận "Đây là tôi trên cây Gia Phả" | Chưa đăng nhập (`viewer`) |
 | **S-06** | Hàng Đợi Duyệt Claim (Claim Review Queue) | Xem danh sách phiếu xin nhận node, đối soát thông tin và bấm Duyệt / Từ chối | `super_admin` |
 | **S-07** | Cài Đặt Dòng Họ & Master Data Chi Tộc (Clan Settings) | Đổi tên họ, chỉnh sửa danh mục Chi nhánh (Master Data), cấu hình từ điển xưng hô vùng miền | `super_admin` |
 | **S-08** | Nhập Liệu Hàng Loạt (Bulk Excel Import) | Tải template mẫu, tải lên file Excel dữ liệu gia phả, xem trước kiểm tra lỗi logic và nạp hàng loạt | `super_admin` |
@@ -27,7 +27,7 @@ _Dự án: FAT (Family Tree - Hệ Thống Quản Lý Gia Phả Dòng Họ)_
 
 ```mermaid
 flowchart TD
-    S01["S-01: Cây Phả Hệ (Trang Chủ)"]
+    S01["S-01: Cây Gia Phả (Trang Chủ)"]
     S02["S-02: Modal Chi Tiết / Sửa Bố Mẹ 1 Cấp"]
     S03["S-03: Tra Cứu Vai Vế (Kinship)"]
     S04["S-04: Lịch Giỗ 30 Ngày"]
@@ -64,13 +64,13 @@ flowchart TD
 - **Luồng E — Quản lý Node Độc lập & Nối cây tự nhiên:**
   - *Tạo độc lập:* Người nhập thêm thành viên mới nhưng để trống Bố/Mẹ. Thành viên được lưu an toàn vào DB mà không bắt buộc có liên kết.
   - *Lọc chống rối mắt:* Mặc định cây chính `S-01` chỉ hiển thị các nhánh nối từ Cụ Tổ. Ở thanh công cụ có nút filter: `[📦 Chưa nối phả (X)]`. Bấm vào sẽ mở `S-09` để xem danh sách riêng.
-  - *Nối cây tự nhiên:* Người dùng click vào người chưa nối phả $\rightarrow$ Mở Modal `S-02` $\rightarrow$ Chỉ cần chọn trường **Bố** hoặc **Mẹ** (hoặc chọn Vợ/Chồng) $\rightarrow$ Bấm **Lưu** $\rightarrow$ Hệ thống tự động gắn vào cây phả hệ chính và biến mất khỏi danh sách chưa nối mà không cần thao tác phức tạp!
+  - *Nối cây tự nhiên:* Người dùng click vào người chưa nối phả $\rightarrow$ Mở Modal `S-02` $\rightarrow$ Chỉ cần chọn trường **Bố** hoặc **Mẹ** (hoặc chọn Vợ/Chồng) $\rightarrow$ Bấm **Lưu** $\rightarrow$ Hệ thống tự động gắn vào cây Gia Phả chính và biến mất khỏi danh sách chưa nối mà không cần thao tác phức tạp!
 
 ---
 
 ## 3. TRẠNG THÁI MÀN HÌNH (SCREEN STATES)
 
-### 3.1. Màn hình S-01: Cây Phả Hệ Tương Tác
+### 3.1. Màn hình S-01: Cây Gia Phả Tương Tác
 - **Loading:** Hiển thị khung Skeleton đồ thị dạng cây mờ kèm thanh tiến trình tải nhẹ nhàng.
 - **Empty:** Trường hợp dòng họ mới tinh chưa có ai $\rightarrow$ Hiện Banner trang trọng: *"Dòng họ chưa có dữ liệu. Vui lòng bấm vào đây để khởi tạo Cụ Tổ đầu tiên hoặc tải lên file Excel"*.
 - **Success/Default:** 
@@ -86,10 +86,10 @@ flowchart TD
   - Khối kết quả nổi bật 2 chiều: 
     - Chiều đi: **`A gọi B là: Bác họ (Xưng Cháu)`**
     - Chiều về: **`B gọi A là: Cháu họ (Xưng Bác)`**
-  - **Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược):** 
+  - **Sơ Đồ Cây Gia Phả Trực Quan (Mini Cây Chữ V Ngược):** 
     - Đỉnh chóp là Gốc Gần Nhất, rẽ xuống 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ).
     - Có cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời (nén các đời giữa thành nút bấm `[🔽 Nén N thế hệ - Bấm mở rộng]`).
-    - Nút liên kết: `[🔍 Xem trên Cây Phả Hệ Lớn]` lướt camera trên `S-01` focus vào 2 node.
+    - Nút liên kết: `[🔍 Xem trên Cây Gia Phả Lớn]` lướt camera trên `S-01` focus vào 2 node.
   - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:**
     - Huy hiệu nguyên tắc dòng họ (`Phong tục Miền Bắc: Tôn vai Nhánh Trưởng`).
     - Câu đối / tục ngữ cổ phong (`"Bé bằng củ khoai, cứ vai Bác là gọi Anh"`).
@@ -147,7 +147,7 @@ flowchart TD
 
 ## 5. WIREFRAME (PHÁC THẢO BỐ CỤC DẠNG ASCII)
 
-### 5.1. Màn hình S-01: Giao diện Cây Phả Hệ (Trang Chủ)
+### 5.1. Màn hình S-01: Giao diện Cây Gia Phả (Trang Chủ)
 ```
 +-----------------------------------------------------------------------------------+
 |  [FAT LOGO] DÒNG HỌ NGUYỄN VĂN    [🔍 Tìm tên thành viên...]    [Lịch Giỗ]  [Tôi là ai?]  |
@@ -203,7 +203,7 @@ flowchart TD
 ### 5.3. Màn hình S-03: Công Cụ Tra Cứu Vai Vế Xưng Hô (Kinship Resolver)
 ```
 +-----------------------------------------------------------------------------------+
-|  ← Quay lại Cây phả hệ           CÔNG CỤ TRA CỨU VAI VẾ XƯNG HÔ                   |
+|  ← Quay lại Cây Gia Phả           CÔNG CỤ TRA CỨU VAI VẾ XƯNG HÔ                   |
 +-----------------------------------------------------------------------------------+
 |  Chọn Người thứ nhất (A):                 Chọn Người thứ hai (B):                 |
 |  [ 🔍 Tôi: Nguyễn Văn Nam (Đời 6)  ▼ ]    [ 🔍 Bác: Nguyễn Văn Dực (Đời 5)   ▼ ]  |
@@ -215,7 +215,7 @@ flowchart TD
 |    👉 Bạn gọi Bác Dực là:  👑 BÁC HỌ (Xưng Cháu)                                  |
 |    👈 Bác Dực gọi bạn là:  🌱 CHÁU HỌ (Xưng Bác)                                  |
 +-----------------------------------------------------------------------------------+
-|  SƠ ĐỒ CÂY PHẢ HỆ TRỰC QUAN (XUẤT PHÁT TỪ Gốc Gần Nhất):                |
+|  SƠ ĐỒ CÂY Gia Phả TRỰC QUAN (XUẤT PHÁT TỪ Gốc Gần Nhất):                |
 |                                                                                   |
 |                       [ 👑 TỔ TIÊN CHUNG: CỤ AN (ĐỜI 4) ]                         |
 |                                 /             \                                   |
@@ -227,7 +227,7 @@ flowchart TD
 |                         │                                │                        |
 |                         └═══════[ CẦU NỐI XƯNG HÔ ]══════┘                        |
 |                                                                                   |
-|             [🔍 Xem vị trí 2 người trên Cây Phả Hệ Tổng Thể]                      |
+|             [🔍 Xem vị trí 2 người trên Cây Gia Phả Tổng Thể]                      |
 +-----------------------------------------------------------------------------------+
 |  📜 CĂN CỨ PHONG TỤC & ĐỐI SÁNH TƯƠNG QUAN:                                       |
 |  • Nguyên tắc: Phong tục Miền Bắc (Tôn vai Nhánh Trưởng)                          |
@@ -255,14 +255,14 @@ flowchart TD
 +---------------------------------------------------------------------------------------+
 ```
 
-### 5.5. Tiêu Chuẩn Phản Hồi Chuyển Màn & Trải Nghiệm Cây Phả Hệ Quy Mô Lớn (1.500 Người)
+### 5.5. Tiêu Chuẩn Phản Hồi Chuyển Màn & Trải Nghiệm Cây Gia Phả Quy Mô Lớn (1.500 Người)
 
 #### A. Phản Hồi Chuyển Màn Toàn Diện:
 - **Thanh Tiến Trình Đỉnh Trang (Top Progress Bar):** Chiều cao 3px, vệt sáng shimmer chạy ngang, đồng bộ màu theo theme token `--brand-primary`. Kích hoạt ngay trong 50ms sau khi bấm chuyển trang.
 - **Phản Hồi Thị Giác Trên Navbar & Bottom Nav:** Nút/tab được bấm lập tức nảy nhẹ (scale bounce `active:scale-95`), viền phát sáng ngọc bích pulse xoay nhẹ báo hiệu hệ thống đã nhận thao tác.
 - **Bộ 6 Màn Hình Loading Skeleton Chuẩn Hóa [R-UI.LOADING]:** Trang bị file `loading.tsx` chuẩn Next.js App Router cho cả 6 route (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`, `/login-gate`), tích hợp component chuẩn hóa `SyncLoadingBadge` với spinner `Loader2` chống méo và duy nhất một thông điệp thống nhất: *"Đang tải dữ liệu..."*.
 
-#### B. Trải Nghiệm Cây Phả Hệ 1.500 Người:
+#### B. Trải Nghiệm Cây Gia Phả 1.500 Người:
 - **Phân Tầng Theo Chi/Nhánh & Breadcrumbs:** Lọc nhanh từng Chi (Chi Trưởng, Chi 2...) và breadcrumb điều hướng `Gia tộc Phạm Văn > Chi 1 > Nhánh Cụ Chiến`.
 - **Chế Độ Bán Kính Gia Đình 5 Đời:** Xem tập trung 5 đời quanh người được chọn ($\text{Ông bà} \rightarrow \text{Cha mẹ} \rightarrow \text{Bản thân} \rightarrow \text{Con} \rightarrow \text{Cháu}$). Các nhánh xa hơn gập gọn thành nút `[ + 18 con cháu ]` bấm đến đâu bung đến đó.
 - **Trải Nghiệm Khách & Người Chưa Liên Kết:** Mặc định hiển thị Cụ Thủy Tổ + 3 đời đầu trang nghiêm (~15 người), các Chi đời sau gập gọn thành nút `[ + Chi 1 ]`. Banner gợi ý: *"👋 Chưa nhận vị trí của bạn trong cây? [ 🎯 Tìm & Nhận Node ] hoặc gõ tìm tên người thân để xem nhanh 5 đời quanh họ"*.

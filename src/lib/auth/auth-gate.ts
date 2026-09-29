@@ -87,7 +87,7 @@ export function evaluateAuthGate(
   }
 
   // 6. Khách khi cây ở chế độ Công khai (enable_public_tree = true)
-  // CHỈ cho phép xem Trang Chủ (/) và Cây Phả Hệ (/tree)
+  // CHỈ cho phép xem Trang Chủ (/) và Cây Gia Phả (/tree)
   if (pathname === '/' || pathname.startsWith('/tree')) {
     return { action: 'pass' };
   }

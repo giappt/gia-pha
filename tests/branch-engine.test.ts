@@ -135,7 +135,7 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
     },
   ];
 
-  it('TC_UT_BRANCH_INHERITANCE_01: Kế thừa phả hệ tự động 2 tầng (Ngành -> Chi) chuẩn xác', () => {
+  it('TC_UT_BRANCH_INHERITANCE_01: Kế thừa Gia Phả tự động 2 tầng (Ngành -> Chi) chuẩn xác', () => {
     // 1. Cháu Tuấn (Đời 4) có cha là Cụ Chi 2, ông nội là Cụ Ngành 1
     const resTuan = resolveMemberBranchHierarchy('m_tuan', mockMembers, mockBranches);
     assert.strictEqual(resTuan.branchPath, 'Ngành 1 · Chi 2');
@@ -374,10 +374,10 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
     // 3. Phải có đường hairline phân cách giữa các dòng
     assert.ok(content.includes('divide-y') || content.includes('border-b'), 'Phải có đường kẻ hairline phân cách các dòng');
 
-    // 4. Phải có đường gióng cây phả hệ (tree guide line)
+    // 4. Phải có đường gióng cây Gia Phả (tree guide line)
     assert.ok(
       content.includes('border-l-2 border-emerald-') || content.includes('border-l-2'),
-      'Phải có đường gióng cây phả hệ cho các cấp con'
+      'Phải có đường gióng cây Gia Phả cho các cấp con'
     );
 
     // 5. Phải có Thanh Thứ Bậc Tông Tộc (Tier Hierarchy Bar)

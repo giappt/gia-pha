@@ -53,7 +53,7 @@ export function hasPermission(
 }
 
 /**
- * Kiểm tra xem vai trò có quyền chỉnh sửa/quản trị cây phả hệ hay không
+ * Kiểm tra xem vai trò có quyền chỉnh sửa/quản trị cây Gia Phả hay không
  * (Chỉ cho phép super_admin và branch_editor)
  */
 export function canManageTree(role: UserRole | undefined | null): boolean {

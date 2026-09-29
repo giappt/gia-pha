@@ -1,4 +1,4 @@
-# ĐẶC TẢ KỸ THUẬT: MILESTONE 2 - LÕI THUẬT TOÁN PHẢ HỆ (KINSHIP ENGINE) & LỊCH ÂM VIỆT NAM
+# ĐẶC TẢ KỸ THUẬT: MILESTONE 2 - LÕI THUẬT TOÁN Gia Phả (KINSHIP ENGINE) & LỊCH ÂM VIỆT NAM
 
 _Tài liệu này dùng để giới hạn Context Window. AI chỉ được phép đọc, suy luận và sinh code cho ĐÚNG các file được đề cập trong đây._
 
@@ -71,7 +71,7 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
   export interface KinshipResolution {
     termAtoB: string; // A gọi B là gì (VD: "Bác họ", "Chú họ", "Chị dâu", "Con dâu")
     termBtoA: string; // B gọi A là gì (VD: "Cháu họ", "Em họ", "Chú", "Bố chồng")
-    explanation: string; // Diễn giải phong tục và gốc tích phả hệ
+    explanation: string; // Diễn giải phong tục và gốc tích Gia Phả
     region: KinshipRegion;
     breadcrumbs: string[]; // Chuỗi mắt xích
     generationDelta: number;
@@ -100,7 +100,7 @@ sequenceDiagram
     U->>KView: Chọn Người A & Người B + Chọn Vùng Miền (Bắc/Trung/Nam)
     Note over KView: Tính toán tức thì in-memory 0ms trên Client (hoặc gọi API)
     KView->>API: GET /api/kinship?p1=UUID_A&p2=UUID_B&region=north
-    API->>DB: Truy vấn dữ liệu phả hệ (members & spouse_relations)
+    API->>DB: Truy vấn dữ liệu Gia Phả (members & spouse_relations)
     DB-->>API: Trả về danh sách thành viên và liên kết hôn phối
     API->>LCA: findLowestCommonAncestor(nodeA, nodeB, membersMap, spousesMap)
     Note over LCA: 1. Kiểm tra quan hệ Vợ - Chồng trực tiếp<br/>2. Tìm LCA Huyết thống ruột<br/>3. Nếu không có LCA, tìm Cầu nối Hôn nhân (Spouse Bridge)<br/>4. Xác định độ lệch thế hệ & vai dâu/rể
@@ -118,7 +118,7 @@ sequenceDiagram
 
 ### 4.1. Thư viện Toán học Đồ thị (`src/lib/kinship-engine/lca-finder.ts`)
 - **Hàm `findLowestCommonAncestor(personAId: string, personBId: string, membersMap: Map<string, Member>): LcaResult`**:
-  - Xây dựng bảng quan hệ phả hệ ngược (từ con lên cha mẹ).
+  - Xây dựng bảng quan hệ Gia Phả ngược (từ con lên cha mẹ).
   - Tìm tập hợp tổ tiên của A kèm khoảng cách thế hệ: `Map<ancestorId, distance>`.
   - Duyệt cây tổ tiên của B: tìm tổ tiên chung có tổng khoảng cách ngắn nhất $\rightarrow$ **LCA**.
   - Tính $\Delta G = \text{distanceB} - \text{distanceA}$.
@@ -193,11 +193,11 @@ sequenceDiagram
   6. Hiển thị thẻ kết quả nổi bật:
      - Khung xưng hô 2 chiều lớn: *"A gọi B là: **Bác Họ**"* & *"B gọi A là: **Cháu Họ**"*.
      - Huy hiệu thế hệ: *"Cùng thế hệ"* hoặc *"Cách nhau N thế hệ"*.
-     - **Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược):**
+     - **Sơ Đồ Cây Gia Phả Trực Quan (Mini Cây Chữ V Ngược):**
        - Bắt đầu từ **Gốc Gần Nhất** (không lấy thừa từ Root).
        - Phân làm 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ) với đường line cong SVG bezier mềm mại.
        - Tích hợp cơ chế **Nén Tầng Trung Gian (Smart Folding)**: Nếu khoảng cách $\ge 4$ đời, mặc định nén các thế hệ giữa thành nút `[🔽 Nén N thế hệ - Bấm để mở rộng]`.
-       - Thanh Cầu nối quan hệ dưới chân nối giữa A và B kèm nút bấm `[🔍 Xem trên Cây Phả Hệ Tổng]`.
+       - Thanh Cầu nối quan hệ dưới chân nối giữa A và B kèm nút bấm `[🔍 Xem trên Cây Gia Phả Tổng]`.
      - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:**
        - Huy hiệu phong tục vùng miền (VD: `Phong tục Miền Bắc: Tôn vai Nhánh Trưởng`).
        - Lời răn / Tục ngữ cổ phong (VD: *"Bé bằng củ khoai, cứ vai Bác là gọi Anh"*).
@@ -214,7 +214,7 @@ sequenceDiagram
   - **Tối ưu Middleware:** Thêm đường dẫn `api/kinship` vào danh sách loại trừ trong `src/middleware.ts` để các truy vấn API công khai không bị nghẽn mạng bởi Supabase Auth.
 
 ### 5.2. Tinh Chỉnh Giao Diện & Trải Nghiệm Người Dùng (UX Refinements Theo UAT)
-- **5.2.1. Hệ Thống Đường Nối Phả Hệ Vuông Góc 90 Độ (Orthogonal Square Connectors):**
+- **5.2.1. Hệ Thống Đường Nối Gia Phả Vuông Góc 90 Độ (Orthogonal Square Connectors):**
   - Loại bỏ hoàn toàn SVG đường cong nét đứt (`strokeDasharray`, `bezier`) bị lệch tâm card.
   - Thay bằng hệ thống đường nối vuông góc 90 độ nét liền `solid` (`bg-emerald-600` / `border-emerald-600`):
     - Trục đứng từ tâm đáy LCA đi xuống.
@@ -285,8 +285,8 @@ sequenceDiagram
        - Nếu $S_A$ và $S_B$ là chị em gái $\rightarrow$ $A$ và $B$ là **Anh em đồng hao (cọc chèo)**.
        - Nếu $S_A$ và $S_B$ là anh em họ $\rightarrow$ Chị em dâu họ / Đồng hao họ.
 
-- **5.4.2. Cây Phả Hệ Trực Quan Nối Cầu Hôn Nhân (Visual In-Law Path):**
-  - Khi quan hệ có liên quan đến Dâu/Rể, sơ đồ phả hệ hiển thị rõ ràng chuỗi liên kết:
+- **5.4.2. Cây Gia Phả Trực Quan Nối Cầu Hôn Nhân (Visual In-Law Path):**
+  - Khi quan hệ có liên quan đến Dâu/Rể, sơ đồ Gia Phả hiển thị rõ ràng chuỗi liên kết:
     - Nhịp huyết thống biểu diễn bằng mũi tên nét liền $\rightarrow$ (Cha con, Anh em).
     - Nhịp hôn nhân biểu diễn bằng đường đôi $\xlongequal{\text{Vợ Chồng}}$.
     - Giúp người xem nắm bắt ngay tức thì lý do vì sao có cách xưng hô này (VD: `[Bố] ──(Cha)──> [Chồng] ══(Vợ Chồng)══ [Con dâu]`).
@@ -367,7 +367,7 @@ sequenceDiagram
     - Xóa bỏ các hằng số gán cứng `DEFAULT_A` và `DEFAULT_B` mang UUID của họ Nguyễn Văn.
 - **5.8.2. Skeleton Loading State Trang Nhã & Empty State Minh Bạch:**
   - Khi `isLoading === true`: Hiển thị Skeleton loading (khung xám mờ animation pulse) cho 2 bộ chọn người A, B và khu vực sơ đồ kết quả. Tuyệt đối không phơi bày tên giả định của bất kỳ ai trong lúc đang tải.
-  - Khi `!isLoading && members.length === 0`: Hiển thị Empty State thông báo *"Chưa có dữ liệu thành viên phả hệ. Vui lòng liên hệ Quản trị viên cập nhật danh sách."*
+  - Khi `!isLoading && members.length === 0`: Hiển thị Empty State thông báo *"Chưa có dữ liệu thành viên Gia Phả. Vui lòng liên hệ Quản trị viên cập nhật danh sách."*
 - **5.8.3. Thanh Lọc 8 Nút Kịch Bản Mẫu Cũ:**
   - Loại bỏ hoàn toàn 8 nút chip kịch bản mẫu gắn chết tên họ Nguyễn Văn (`Khởi & Bình`, `Hải & Minh`, `Hùng & Hải`, `Nam & Tâm`, `Huệ & Cường`...).
   - Thay bằng cơ chế gợi ý động: Tự động phát hiện Cụ Tổ và thành viên đời kế cận từ CSDL thật của dòng họ Phạm Văn để hiển thị gợi ý, hoặc ẩn cụm kịch bản mẫu nếu dữ liệu chưa đủ.
@@ -382,7 +382,7 @@ sequenceDiagram
 
 1. **Thành viên chưa nối phả (`parent_id` = null & không có con cái):**
    - API trả về `relationshipType = 'unrelated'`, `termAtoB` = `"Người ngoài dòng tộc"`.
-   - UI hiển thị Warning Box màu vàng: *"Hai thành viên này chưa tìm thấy mối liên kết phả hệ hoặc thuộc các nhánh chưa kết nối."*
+   - UI hiển thị Warning Box màu vàng: *"Hai thành viên này chưa tìm thấy mối liên kết Gia Phả hoặc thuộc các nhánh chưa kết nối."*
 2. **Chọn trùng Người A và Người B:**
    - Dropdown tự động hiển thị lỗi cảnh báo: *"Vui lòng chọn 2 thành viên khác nhau để tra cứu vai vế."* Nút tính toán bị vô hiệu hóa (`disabled`).
 3. **Mạng chậm hoặc lỗi kết nối Supabase (Zero Mock Leak):**
@@ -407,7 +407,7 @@ sequenceDiagram
 | **TC08** | Cây Chữ V Ngược Xuất Phát Từ LCA | UI / E2E | Chọn 2 người cùng ông nội (Đời 3) trong cây 7 đời | Bấm [Xác định quan hệ] | Đỉnh cây hiển thị đúng Ông nội (LCA), KHÔNG hiển thị thừa các đời 2, 1 (Root) | Happy Path |
 | **TC09** | Nén Tầng Trung Gian (Smart Folding) | UI / E2E | Chọn 2 người cách nhau $\ge 4$ đời (Đời 1 và Đời 6) | Bấm [Xác định quan hệ] $\rightarrow$ Bấm nút [🔽 Nén N thế hệ] | Ban đầu nén gọn các tầng giữa; bấm vào bung mở rộng mượt mà | Happy Path |
 | **TC10** | Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa | UI / E2E | Tra cứu Dũng (Chi Trưởng) và Hùng (Chi Thứ) | Quan sát khối Diễn giải phong tục | Hiển thị đủ 3 khối: Huy hiệu vùng miền, Tục ngữ cổ phong, Bảng đối sánh trực diện | UI / Visual |
-| **TC11** | Phả Hệ Đa Thê & Con Nuôi | Unit Test | Dữ liệu mẫu mở rộng 25–30 người có vợ cả/hai, con nuôi | Chạy `findLowestCommonAncestor` & `resolveKinshipTerms` | Xác định đúng quan hệ con cùng cha khác mẹ và xưng hô cho con nuôi | Happy Path |
+| **TC11** | Gia Phả Đa Thê & Con Nuôi | Unit Test | Dữ liệu mẫu mở rộng 25–30 người có vợ cả/hai, con nuôi | Chạy `findLowestCommonAncestor` & `resolveKinshipTerms` | Xác định đúng quan hệ con cùng cha khác mẹ và xưng hô cho con nuôi | Happy Path |
 | **TC12** | Live Reactivity Khi Đổi Dropdown | UI / E2E | Đang ở trang `/kinship` | Chọn thành viên khác trên dropdown A hoặc B | Cây Chữ V và thẻ xưng hô cập nhật tức thì 0ms không cần bấm nút phụ | Happy Path |
 | **TC13** | Live Reactivity Khi Đổi Vùng Miền | UI / E2E | Đang hiển thị quan hệ giữa Hùng và Hải | Bấm chuyển sang tab "Miền Nam (Trọng Tuổi)" | Danh xưng đổi tức thì thành "Anh" / "Em" theo tuổi đời 0ms | Happy Path |
 | **TC14** | Auto-Clean Search Khi Chọn Mẫu | UI / E2E | Ô tìm kiếm A đang có từ khóa "abc" | Bấm nút kịch bản mẫu `👑 Cây Chữ V (Hải & Minh)` | Ô tìm kiếm tự động xóa sạch, dropdown hiển thị đúng tên, Cây Chữ V hiển thị tức thì | Happy Path |
@@ -432,7 +432,7 @@ sequenceDiagram
 | **TC33** | Quan Hệ Anh Rể - Em Vợ & Em Rể | Unit / API | Chọn chồng của chị gái & em trai vợ | Chạy tra cứu vai vế | Em vợ gọi "Anh rể", anh rể gọi em vợ là "Cậu" / "Em" | Happy Path |
 | **TC34** | Quan Hệ Bác Dâu, Thím, Dượng, Mợ | Unit / API | Chọn vợ của Bác trai, vợ của Chú, chồng của Cô/Dì | Chạy tra cứu vai vế | Trả về chuẩn xác "Bác dâu" (Bác), "Thím", "Dượng", "Mợ" | Happy Path |
 | **TC35** | Quan Hệ Chị Em Dâu & Đồng Hao | Unit / API | Chọn vợ của 2 anh em trai ruột | Chạy tra cứu vai vế | Nhận diện `relationshipType = 'co_in_law'`, xưng "Chị dâu" - "Em dâu" | Happy Path |
-| **TC36** | Cây Phả Hệ Trực Quan Nối Cầu Hôn Nhân | UI / Visual | Tra cứu cặp có quan hệ Dâu/Rể (Hà & Uyên) | Quan sát sơ đồ chuỗi phả hệ | Hiển thị đường nối huyết thống $\rightarrow$ và đường nối đôi hôn nhân $\xlongequal{\text{Vợ Chồng}}$ mạch lạc | Happy Path |
+| **TC36** | Cây Gia Phả Trực Quan Nối Cầu Hôn Nhân | UI / Visual | Tra cứu cặp có quan hệ Dâu/Rể (Hà & Uyên) | Quan sát sơ đồ chuỗi Gia Phả | Hiển thị đường nối huyết thống $\rightarrow$ và đường nối đôi hôn nhân $\xlongequal{\text{Vợ Chồng}}$ mạch lạc | Happy Path |
 | **TC37** | Dọn Sạch 100% Ký Tự Ngoặc Đơn Khỏi Preset Dictionary | Unit Test | Quét 100% quy tắc trong `getRegionalPresetDictionary` (Bắc, Trung, Nam) | Kiểm tra `termSenior` và `termJunior` | Không chứa bất kỳ dấu ngoặc đơn `(`, `)` hoặc gạch chéo `/` nào; 100% là danh xưng nguyên bản | Happy Path |
 | **TC38** | Tra Cứu SSOT Tùy Biến Đè Chuẩn Xác Từng Ký Tự | Unit Test | Mock `customDictionary['uncle_senior_husband'] = { termSenior: 'Bác rể quý', termJunior: 'Cháu ngoan' }` | Chạy `resolveKinshipTerms` | Trả về chính xác `termAtoB = 'Bác rể quý'`, `termBtoA = 'Cháu ngoan'`, không còn hardcode | Happy Path |
 | **TC39** | So Sánh Thứ Bậc Anh Em Ruột Ưu Tiên Thứ Tự Sinh (Chị Gái vs Trưởng Nam) | Unit Test | Chọn Phạm Thị Chỉ (`birth_order: 2`, `is_senior: false`) và Phạm Văn Khương (`birth_order: 3`, `is_senior: true`) | Chạy `compareSeniority(Chỉ, Khương)` | Trả về `true` (Chỉ sinh trước là Chị ruột / vai Bác), cờ `is_senior` không làm đảo ngược | Happy Path |
@@ -449,13 +449,13 @@ sequenceDiagram
 | **TC50** | Loại Bỏ Hoàn Toàn Nhãn Chi Thứ / Chi Trưởng Khỏi Thẻ Sơ Đồ Cây | UI / E2E | Tra cứu quan hệ giữa 2 người bất kỳ | Kiểm tra DOM thẻ node trên `#direct-lineage-tree` và `#inverted-v-tree` | Không còn bất kỳ đoạn text `· Chi Thứ` hay `· Chi Trưởng` nào xuất hiện trên giao diện thẻ | Happy Path |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu (Acceptance Criteria)
-- [x] **AC1:** Thuật toán `findLowestCommonAncestor` tìm chính xác Gốc Gần Nhất và khoảng cách thế hệ giữa 2 người bất kỳ trên đồ thị phả hệ.
+- [x] **AC1:** Thuật toán `findLowestCommonAncestor` tìm chính xác Gốc Gần Nhất và khoảng cách thế hệ giữa 2 người bất kỳ trên đồ thị Gia Phả.
 - [x] **AC2:** Bộ từ điển xưng hô `resolveKinshipTerms` ánh xạ đúng danh xưng 2 chiều cho anh em ruột, con chú con bác, chú-cháu, ông-cháu theo 3 miền Bắc/Trung/Nam.
 - [x] **AC3:** Bộ chuyển đổi `vietnamese-lunar.ts` quy đổi chính xác Âm - Dương theo múi giờ UTC+7 và xuất đúng tên Năm Can Chi (Thập Can + Thập Nhị Chi).
 - [x] **AC4:** API `GET /api/kinship` trả về dữ liệu cấu trúc chuẩn, có breadcrumbs đường đi huyết thống và lý giải phong tục.
 - [x] **AC5:** Giao diện `/kinship` cho phép tìm kiếm, chọn 2 thành viên, đổi vai A $\leftrightarrow$ B và xem kết quả trực quan mượt mà.
 - [x] **AC6:** Bộ Unit Test (`tests/kinship.test.ts` & `tests/lunar.test.ts`) đạt tỷ lệ Pass 100%.
-- [x] **AC7:** Sơ Đồ Cây Phả Hệ Trực Quan (Mini Cây Chữ V Ngược) hiển thị trực quan bắt đầu từ Gốc Gần Nhất, phân 2 cột nhánh (Trưởng vs Thứ), có đường nối và thanh cầu nối xưng hô ở chân.
+- [x] **AC7:** Sơ Đồ Cây Gia Phả Trực Quan (Mini Cây Chữ V Ngược) hiển thị trực quan bắt đầu từ Gốc Gần Nhất, phân 2 cột nhánh (Trưởng vs Thứ), có đường nối và thanh cầu nối xưng hô ở chân.
 - [x] **AC8:** Cơ chế Smart Folding tự động nén thế hệ trung gian khi khoảng cách $\ge 4$ đời, hỗ trợ toggle mở rộng/thu gọn mượt mà.
 - [x] **AC9:** Thẻ Diễn Giải Phong Tục cấu trúc hóa thay thế đoạn văn bản cũ.
 - [x] **AC10:** Mở rộng bộ dữ liệu mẫu `MOCK_CLAN_MEMBERS` lên 25–30 người bao phủ đa chi, vợ cả/vợ hai, con nuôi, 6-7 đời và hôn nhân nội tộc.
@@ -482,7 +482,7 @@ sequenceDiagram
 - [x] **AC32:** Thuật toán phân giải chuẩn xác quan hệ Anh rể - Em vợ và Em rể - Anh/Chị vợ.
 - [x] **AC33:** Thuật toán phân giải chuẩn xác quan hệ Bác dâu, Thím, Dượng, Mợ cho các thế hệ trên.
 - [x] **AC34:** Thuật toán phân giải chuẩn xác quan hệ Chị em dâu và Anh em đồng hao (cọc chèo) giữa 2 người dâu/rể.
-- [x] **AC35:** Sơ đồ phả hệ trực quan hiển thị đường nối cầu hôn nhân nét đôi `═(Hôn phối)═` nối nhịp giữa các mắt xích.
+- [x] **AC35:** Sơ đồ Gia Phả trực quan hiển thị đường nối cầu hôn nhân nét đôi `═(Hôn phối)═` nối nhịp giữa các mắt xích.
 - [x] **AC36:** Trang `/kinship` và API `/api/kinship` nạp đồng bộ `spouse_relations`, đảm bảo tính toán in-memory tức thì 0ms trên Client.
 - [x] **AC37:** 100% các giá trị `termSenior` và `termJunior` trong các bộ Presets (Bắc, Trung, Nam) được dọn sạch, không chứa dấu ngoặc đơn hoặc gạch chéo.
 - [x] **AC38:** Cơ chế tra cứu SSOT `getTermFromSSOT` được áp dụng cho toàn bộ các hàm phân giải, loại bỏ hoàn toàn các chuỗi hardcode fallback rải rác.
@@ -510,7 +510,7 @@ sequenceDiagram
 | UAT ID | Kịch Bản Nghiệm Thu | Thao Tác Thực Hiện | Kết Quả Mong Đợi |
 | :--- | :--- | :--- | :--- |
 | **UAT_INLAW_01** | Nghiệm thu cặp Vợ - Chồng | Chọn `Phạm Văn Chiến` & `Đào Thị Liễu` | Thẻ danh xưng hiện: Chiến gọi Liễu là **"Vợ"**, Liễu gọi Chiến là **"Chồng"**. Không còn nhãn "Người ngoài họ". |
-| **UAT_INLAW_02** | Nghiệm thu Bố chồng - Con dâu | Chọn `Chu Thị Hà` & `Phạm Văn Uyên` | Thẻ danh xưng hiện: Hà gọi Uyên là **"Bố"** (Bố chồng), Uyên gọi Hà là **"Con"** (Con dâu). Sơ đồ chuỗi phả hệ hiển thị rõ đường đi qua người chồng. |
+| **UAT_INLAW_02** | Nghiệm thu Bố chồng - Con dâu | Chọn `Chu Thị Hà` & `Phạm Văn Uyên` | Thẻ danh xưng hiện: Hà gọi Uyên là **"Bố"** (Bố chồng), Uyên gọi Hà là **"Con"** (Con dâu). Sơ đồ chuỗi Gia Phả hiển thị rõ đường đi qua người chồng. |
 | **UAT_INLAW_03** | Nghiệm thu Chị dâu - Em chồng | Chọn `Chu Thị Hà` & `Phạm Văn Bẩy` | Thẻ danh xưng hiện: Bẩy gọi Hà là **"Chị dâu"**, Hà gọi Bẩy là **"Chú"**. Khớp 100% với SSOT. |
 | **UAT_INLAW_04** | Nghiệm thu Đảo vai dâu rể | Bấm nút tròn Đảo vai ⇄ | Các danh xưng dâu rể hoán đổi vị trí chuẩn xác tức thì. |
 | **UAT_SSOT_01** | Nghiệm thu Bác rể (Hưng & Giáp) | Chọn `Tạ Duy Hưng` & `Phạm Tiến Giáp` | Thẻ danh xưng hiện: Giáp gọi Hưng là **"Bác rể"**, Hưng gọi Giáp là **"Cháu"**. Explanation giải thích rõ Chỉ là bác gái của Giáp. |
@@ -522,7 +522,7 @@ sequenceDiagram
 | **UAT_SSOT_07** | Nghiệm thu Thứ bậc sinh "Con cả / Con thứ N" trên Cây Chữ V | Chọn `Bùi Trường Minh` & `Phạm Tiến Giáp` | Thẻ Khương và Cường hiển thị rõ thứ bậc sinh (`Con thứ ...`); thẻ Dung và Giáp hiển thị `Con cả`; thẻ Minh chỉ có badge `💍 Hôn phối` và năm sinh, KHÔNG CÒN chữ "Chi Thứ" hay "Chi Trưởng" nào. |
 | **UAT_ZERO_MOCK_01** | Nghiệm thu Màn hình Loading trên `/kinship` | Mở `/kinship` và quan sát trong khi mạng đang tải | Hiển thị Skeleton loading mờ trang nhã; tuyệt đối không thấy tên "Nguyễn Văn Hải" hay "Nguyễn Văn Hùng". |
 | **UAT_ZERO_MOCK_02** | Nghiệm thu Loại bỏ kịch bản mẫu giả | Quan sát khu vực kịch bản mẫu trên `/kinship` | Hoàn toàn biến mất các nút chip chứa tên họ Nguyễn Văn (Khởi & Bình, Cụ Bà Huệ & Cụ Cường...). |
-| **UAT_ZERO_MOCK_03** | Nghiệm thu Tên thương hiệu chuẩn | Kiểm tra Trang Chủ, Cây phả hệ, Admin Portal khi DB chưa tải | Tên dòng họ hiển thị mặc định là "GIA PHẢ PHẠM VĂN", tuyệt đối không bao giờ xuất hiện chữ "NGUYỄN VĂN". |
+| **UAT_ZERO_MOCK_03** | Nghiệm thu Tên thương hiệu chuẩn | Kiểm tra Trang Chủ, Cây Gia Phả, Admin Portal khi DB chưa tải | Tên dòng họ hiển thị mặc định là "GIA PHẢ PHẠM VĂN", tuyệt đối không bao giờ xuất hiện chữ "NGUYỄN VĂN". |
 
 ---
 
@@ -536,7 +536,7 @@ sequenceDiagram
 - [x] **RG06 (Bypass Middleware cho API Kinship):** Route API `/api/kinship` được loại trừ khỏi kiểm tra auth của `middleware.ts`, phản hồi nhanh < 100ms.
 - [x] **RG07 (Kịch bản mẫu & Đổi vai):** Các nút kịch bản mẫu và nút Đổi vai A ↔ B hoạt động trơn tru với cả Sơ đồ Chữ V và Sơ đồ Trực Hệ Dọc mới.
 - [x] **RG08 (Không lỗi Compile/Runtime):** Không phát sinh lỗi runtime, hydration mismatch hoặc xung đột cache build `.next/`.
-- [x] **RG09 (Toàn vẹn sơ đồ phả hệ):** Cả 2 sơ đồ (Trực hệ dọc & Chữ V) giữ nguyên các đường nối vuông góc nét liền sắc nét, thẳng tâm card.
+- [x] **RG09 (Toàn vẹn sơ đồ Gia Phả):** Cả 2 sơ đồ (Trực hệ dọc & Chữ V) giữ nguyên các đường nối vuông góc nét liền sắc nét, thẳng tâm card.
 - [x] **RG10 (Live Reactivity & Không lỗi Console):** Thao tác đổi dropdown hoặc click đổi vai diễn ra tức thì 0ms, browser console sạch 100% không lỗi.
 - [x] **RG11 (Toàn vẹn trục trực hệ và cây chữ V):** Cả Sơ đồ Trực hệ dọc và Cây Chữ V hiển thị mạch lạc, không vỡ layout và không phát sinh lỗi console runtime.
 - [x] **RG12 (Toàn vẹn Cài đặt Dòng họ & Tra cứu Vai vế):** Đổi tên dòng họ, lưu từ điển tùy biến, và tra cứu vai vế đồng bộ trơn tru, không lỗi TypeScript/build.

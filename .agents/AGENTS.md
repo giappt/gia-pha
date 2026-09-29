@@ -21,7 +21,7 @@ Dưới đây là các nguyên tắc TỐI THƯỢNG mà AI Agent BẮT BUỘC P
 
 ## 2. TECH STACK CONSTRAINTS
 - **Frontend / Fullstack:** Next.js 14+ (App Router), React, TypeScript, TailwindCSS, Lucide Icons, Shadcn UI / Radix Primitives.
-- **Tree Visualization:** Thư viện đồ thị/cây phả hệ (React Flow / family-chart / D3.js) có hỗ trợ pan, zoom, collapse/expand.
+- **Tree Visualization:** Thư viện đồ thị/cây Gia Phả (React Flow / family-chart / D3.js) có hỗ trợ pan, zoom, collapse/expand.
 - **Database & Backend Services:** **Supabase** (PostgreSQL với `WITH RECURSIVE` truy vấn đệ quy, Supabase Auth với Google OAuth, Supabase Storage cho avatar S3-compatible).
 - **Hosting & Push Notifications:** Vercel (Serverless Hosting + Vercel Cron cho lịch quét giỗ ngầm) + PWA Web Push API.
 > 🚫 Tuyệt đối KHÔNG ĐƯỢC TỰ Ý THÊM/ĐỔI thư viện hay framework khác nếu chưa có sự đồng ý của User.

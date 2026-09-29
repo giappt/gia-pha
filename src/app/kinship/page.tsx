@@ -66,7 +66,7 @@ function computeKinshipDirect(
   const isMember2Unlinked = !memberB.father_id && !memberB.mother_id && genB > 1;
   if (lcaResult.relationshipType === 'unrelated' && (isMember1Unlinked || isMember2Unlinked)) {
     const unlinkedName = isMember1Unlinked ? memberA.full_name : memberB.full_name;
-    resolution.explanation = `Thành viên "${unlinkedName}" chưa được liên kết cha/mẹ trong cây phả hệ, do đó chưa thể xác định quan hệ xưng hô.`;
+    resolution.explanation = `Thành viên "${unlinkedName}" chưa được liên kết cha/mẹ trong cây Gia Phả, do đó chưa thể xác định quan hệ xưng hô.`;
   }
 
   return resolution;
@@ -124,7 +124,7 @@ export default function KinshipPage() {
     if (directRes) {
       setResult(directRes);
     } else {
-      setErrorMessage('Không tìm thấy dữ liệu phả hệ của thành viên được chọn.');
+      setErrorMessage('Không tìm thấy dữ liệu Gia Phả của thành viên được chọn.');
       setResult(null);
     }
   };
@@ -287,7 +287,7 @@ export default function KinshipPage() {
           result.lcaNode.id === selectedPersonB?.id)))
   );
 
-  // Chuỗi phả hệ trực hệ từ Tiền Bối (trên) xuống Hậu Bối (dưới)
+  // Chuỗi Gia Phả trực hệ từ Tiền Bối (trên) xuống Hậu Bối (dưới)
   const directLineageNodes: KinshipPathNode[] = React.useMemo(() => {
     if (!result || !isDirectLineage) return [];
     if (result.generationDelta >= 0 && result.pathB && result.pathB.length > 0) {
@@ -321,7 +321,7 @@ export default function KinshipPage() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold tracking-wide">
             <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>ĐỒ THỊ PHẢ HỆ VIỆT NAM</span>
+            <span>ĐỒ THỊ Gia Phả VIỆT NAM</span>
             {isLoading && (
               <span className="inline-flex items-center gap-1 text-[11px] font-normal text-emerald-600 dark:text-emerald-400 pl-2 border-l border-emerald-300 dark:border-emerald-700">
                 <Sparkles className="w-3 h-3 animate-spin" /> Đang đồng bộ...
@@ -382,7 +382,7 @@ export default function KinshipPage() {
                 href="/tree"
                 className="px-4 py-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm"
               >
-                Xem Cây Phả Hệ
+                Xem Cây Gia Phả
               </Link>
               <Link
                 href="/admin/members"
@@ -395,236 +395,236 @@ export default function KinshipPage() {
         ) : (
           /* Form Selector Box */
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm p-5 sm:p-7 space-y-6">
-          {/* 2 Selectors with Swap Button */}
-          <div className="grid grid-cols-1 md:grid-cols-9 gap-4 items-center">
-            {/* Person A Selector */}
-            <div className="md:col-span-4 space-y-2">
-              <label
-                htmlFor="person-a-select"
-                className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
-              >
-                <span>Người hỏi (A)</span>
-                {selectedPersonA && (
-                  <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 normal-case">
-                    Đời thứ {selectedPersonA.generation_level ?? selectedPersonA.generation_number}
-                  </span>
-                )}
-              </label>
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    id="person-a-search"
-                    placeholder="Lọc theo tên..."
-                    value={searchA}
-                    onChange={(e) => setSearchA(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
-                  />
-                </div>
-                <select
-                  id="person-a-select"
-                  value={personAId}
-                  onChange={(e) => {
-                    const newA = e.target.value;
-                    setPersonAId(newA);
-                    setErrorMessage(null);
-                    if (newA && personBId && newA !== personBId) {
-                      handleCalculate(newA, personBId, region, customDict, membersMap);
-                    }
-                  }}
-                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
+            {/* 2 Selectors with Swap Button */}
+            <div className="grid grid-cols-1 md:grid-cols-9 gap-4 items-center">
+              {/* Person A Selector */}
+              <div className="md:col-span-4 space-y-2">
+                <label
+                  htmlFor="person-a-select"
+                  className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
                 >
-                  <option value="">-- Chọn thành viên A --</option>
-                  {filteredMembersA.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.full_name} ({m.gender === 'male' ? 'Nam' : 'Nữ'}
-                      {m.birth_year ? ` - ${m.birth_year}` : ''}
-                      {m.is_senior_branch ? ' · Chi Trưởng' : ''}
-                      {m.is_adopted ? ' · Con Nuôi' : ''})
-                    </option>
-                  ))}
-                </select>
+                  <span>Người hỏi (A)</span>
+                  {selectedPersonA && (
+                    <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 normal-case">
+                      Đời thứ {selectedPersonA.generation_level ?? selectedPersonA.generation_number}
+                    </span>
+                  )}
+                </label>
+                <div className="space-y-1.5">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      id="person-a-search"
+                      placeholder="Lọc theo tên..."
+                      value={searchA}
+                      onChange={(e) => setSearchA(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+                  <select
+                    id="person-a-select"
+                    value={personAId}
+                    onChange={(e) => {
+                      const newA = e.target.value;
+                      setPersonAId(newA);
+                      setErrorMessage(null);
+                      if (newA && personBId && newA !== personBId) {
+                        handleCalculate(newA, personBId, region, customDict, membersMap);
+                      }
+                    }}
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
+                  >
+                    <option value="">-- Chọn thành viên A --</option>
+                    {filteredMembersA.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.full_name} ({m.gender === 'male' ? 'Nam' : 'Nữ'}
+                        {m.birth_year ? ` - ${m.birth_year}` : ''}
+                        {m.is_senior_branch ? ' · Chi Trưởng' : ''}
+                        {m.is_adopted ? ' · Con Nuôi' : ''})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Swap Button (TC07) */}
+              <div className="md:col-span-1 flex justify-center pt-3 md:pt-6">
+                <button
+                  type="button"
+                  id="swap-roles-btn"
+                  onClick={handleSwapRoles}
+                  title="Đảo vai xưng hô (A ↔ B)"
+                  className="w-10 h-10 rounded-full border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 flex items-center justify-center transition-all shadow-sm hover:scale-105 active:scale-95"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Person B Selector */}
+              <div className="md:col-span-4 space-y-2">
+                <label
+                  htmlFor="person-b-select"
+                  className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+                >
+                  <span>Người được xưng hô (B)</span>
+                  {selectedPersonB && (
+                    <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 normal-case">
+                      Đời thứ {selectedPersonB.generation_level ?? selectedPersonB.generation_number}
+                    </span>
+                  )}
+                </label>
+                <div className="space-y-1.5">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      id="person-b-search"
+                      placeholder="Lọc theo tên..."
+                      value={searchB}
+                      onChange={(e) => setSearchB(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+                  <select
+                    id="person-b-select"
+                    value={personBId}
+                    onChange={(e) => {
+                      const newB = e.target.value;
+                      setPersonBId(newB);
+                      setErrorMessage(null);
+                      if (personAId && newB && personAId !== newB) {
+                        handleCalculate(personAId, newB, region, customDict, membersMap);
+                      }
+                    }}
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
+                  >
+                    <option value="">-- Chọn thành viên B --</option>
+                    {filteredMembersB.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.full_name} ({m.gender === 'male' ? 'Nam' : 'Nữ'}
+                        {m.birth_year ? ` - ${m.birth_year}` : ''}
+                        {m.is_senior_branch ? ' · Chi Trưởng' : ''}
+                        {m.is_adopted ? ' · Con Nuôi' : ''})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* Swap Button (TC07) */}
-            <div className="md:col-span-1 flex justify-center pt-3 md:pt-6">
+            {/* Region Setting Controls & Calculate Button */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                  Quy ước dòng họ:
+                </span>
+                <div className="inline-flex rounded-lg border border-slate-200/80 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-950 text-xs font-medium">
+                  <button
+                    type="button"
+                    id="region-north-btn"
+                    onClick={() => {
+                      setRegion('north');
+                      if (personAId && personBId && personAId !== personBId) {
+                        handleCalculate(personAId, personBId, 'north', customDict, membersMap);
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-md transition-all ${region === 'north'
+                      ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                  >
+                    Miền Bắc
+                  </button>
+                  <button
+                    type="button"
+                    id="region-central-btn"
+                    onClick={() => {
+                      setRegion('central');
+                      if (personAId && personBId && personAId !== personBId) {
+                        handleCalculate(personAId, personBId, 'central', customDict, membersMap);
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-md transition-all ${region === 'central'
+                      ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                  >
+                    Miền Trung
+                  </button>
+                  <button
+                    type="button"
+                    id="region-south-btn"
+                    onClick={() => {
+                      setRegion('south');
+                      if (personAId && personBId && personAId !== personBId) {
+                        handleCalculate(personAId, personBId, 'south', customDict, membersMap);
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-md transition-all ${region === 'south'
+                      ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                  >
+                    Miền Nam
+                  </button>
+                </div>
+                <Link
+                  href="/admin/kinship"
+                  title="Thay đổi mặc định trong Cài đặt Dòng họ"
+                  className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5 ml-1"
+                >
+                  (Cài đặt ⚙️)
+                </Link>
+              </div>
+
+              {/* Tra cứu Button */}
               <button
                 type="button"
-                id="swap-roles-btn"
-                onClick={handleSwapRoles}
-                title="Đảo vai xưng hô (A ↔ B)"
-                className="w-10 h-10 rounded-full border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 flex items-center justify-center transition-all shadow-sm hover:scale-105 active:scale-95"
+                id="calculate-kinship-btn"
+                disabled={isSamePerson}
+                onClick={() => handleCalculate()}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-sm shadow-emerald-700/20 transition-all"
               >
-                <ArrowRightLeft className="w-4 h-4" />
+                {isCalculating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Đang tính toán Gia Phả...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Xác định quan hệ</span>
+                  </>
+                )}
               </button>
             </div>
 
-            {/* Person B Selector */}
-            <div className="md:col-span-4 space-y-2">
-              <label
-                htmlFor="person-b-select"
-                className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+            {/* Validation Warning when Same Person is selected (TC05) */}
+            {isSamePerson && (
+              <div
+                id="same-person-warning"
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs"
               >
-                <span>Người được xưng hô (B)</span>
-                {selectedPersonB && (
-                  <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 normal-case">
-                    Đời thứ {selectedPersonB.generation_level ?? selectedPersonB.generation_number}
-                  </span>
-                )}
-              </label>
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    id="person-b-search"
-                    placeholder="Lọc theo tên..."
-                    value={searchB}
-                    onChange={(e) => setSearchB(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
-                  />
-                </div>
-                <select
-                  id="person-b-select"
-                  value={personBId}
-                  onChange={(e) => {
-                    const newB = e.target.value;
-                    setPersonBId(newB);
-                    setErrorMessage(null);
-                    if (personAId && newB && personAId !== newB) {
-                      handleCalculate(personAId, newB, region, customDict, membersMap);
-                    }
-                  }}
-                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm"
-                >
-                  <option value="">-- Chọn thành viên B --</option>
-                  {filteredMembersB.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.full_name} ({m.gender === 'male' ? 'Nam' : 'Nữ'}
-                      {m.birth_year ? ` - ${m.birth_year}` : ''}
-                      {m.is_senior_branch ? ' · Chi Trưởng' : ''}
-                      {m.is_adopted ? ' · Con Nuôi' : ''})
-                    </option>
-                  ))}
-                </select>
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>
+                  Vui lòng chọn 2 thành viên khác nhau để tra cứu quan hệ xưng hô.
+                </span>
               </div>
-            </div>
-          </div>
+            )}
 
-          {/* Region Setting Controls & Calculate Button */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                Quy ước dòng họ:
-              </span>
-              <div className="inline-flex rounded-lg border border-slate-200/80 dark:border-slate-800 p-0.5 bg-slate-100/70 dark:bg-slate-950 text-xs font-medium">
-                <button
-                  type="button"
-                  id="region-north-btn"
-                  onClick={() => {
-                    setRegion('north');
-                    if (personAId && personBId && personAId !== personBId) {
-                      handleCalculate(personAId, personBId, 'north', customDict, membersMap);
-                    }
-                  }}
-                  className={`px-3 py-1 rounded-md transition-all ${region === 'north'
-                    ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                    }`}
-                >
-                  Miền Bắc
-                </button>
-                <button
-                  type="button"
-                  id="region-central-btn"
-                  onClick={() => {
-                    setRegion('central');
-                    if (personAId && personBId && personAId !== personBId) {
-                      handleCalculate(personAId, personBId, 'central', customDict, membersMap);
-                    }
-                  }}
-                  className={`px-3 py-1 rounded-md transition-all ${region === 'central'
-                    ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                    }`}
-                >
-                  Miền Trung
-                </button>
-                <button
-                  type="button"
-                  id="region-south-btn"
-                  onClick={() => {
-                    setRegion('south');
-                    if (personAId && personBId && personAId !== personBId) {
-                      handleCalculate(personAId, personBId, 'south', customDict, membersMap);
-                    }
-                  }}
-                  className={`px-3 py-1 rounded-md transition-all ${region === 'south'
-                    ? 'bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                    }`}
-                >
-                  Miền Nam
-                </button>
-              </div>
-              <Link
-                href="/admin/kinship"
-                title="Thay đổi mặc định trong Cài đặt Dòng họ"
-                className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5 ml-1"
+            {/* Error Message */}
+            {errorMessage && (
+              <div
+                id="kinship-error-banner"
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-50/80 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs"
               >
-                (Cài đặt ⚙️)
-              </Link>
-            </div>
-
-            {/* Tra cứu Button */}
-            <button
-              type="button"
-              id="calculate-kinship-btn"
-              disabled={isSamePerson}
-              onClick={() => handleCalculate()}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-sm shadow-emerald-700/20 transition-all"
-            >
-              {isCalculating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Đang tính toán phả hệ...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Xác định quan hệ</span>
-                </>
-              )}
-            </button>
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
           </div>
-
-          {/* Validation Warning when Same Person is selected (TC05) */}
-          {isSamePerson && (
-            <div
-              id="same-person-warning"
-              className="flex items-center gap-2.5 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs"
-            >
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>
-                Vui lòng chọn 2 thành viên khác nhau để tra cứu quan hệ xưng hô.
-              </span>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {errorMessage && (
-            <div
-              id="kinship-error-banner"
-              className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-50/80 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs"
-            >
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
-        </div>
-      )}
+        )}
 
         {/* Kinship Result Card */}
         {result && (
@@ -695,7 +695,7 @@ export default function KinshipPage() {
               </div>
             </div>
 
-            {/* SƠ ĐỒ CÂY PHẢ HỆ TRỰC QUAN (TRỰC HỆ HOẶC CHỮ V NGƯỢC) */}
+            {/* SƠ ĐỒ CÂY Gia Phả TRỰC QUAN (TRỰC HỆ HOẶC CHỮ V NGƯỢC) */}
             {result.relationshipType !== 'unrelated' && (
               <div className="px-6 sm:px-8 space-y-4">
                 <div className="flex items-center justify-between">
@@ -706,7 +706,7 @@ export default function KinshipPage() {
                         ? 'Sơ Đồ Hôn Phối Trực Tiếp (Spouse)'
                         : isDirectLineage
                           ? 'Sơ Đồ Dòng Trực Hệ Dọc (Vertical Direct Lineage)'
-                          : 'Sơ Đồ Cây Phả Hệ Trực Quan'}
+                          : 'Sơ Đồ Cây Gia Phả Trực Quan'}
                     </span>
                   </h2>
 
@@ -715,7 +715,7 @@ export default function KinshipPage() {
                     id="deep-link-tree-btn"
                     className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline"
                   >
-                    <span>Xem trên Cây Phả Hệ Lớn</span>
+                    <span>Xem trên Cây Gia Phả Lớn</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
                 </div>
@@ -917,7 +917,7 @@ export default function KinshipPage() {
                         </div>
                       </div>
 
-                      {/* Đường nối phả hệ vuông góc 90 độ nét liền (Orthogonal Square Connectors) */}
+                      {/* Đường nối Gia Phả vuông góc 90 độ nét liền (Orthogonal Square Connectors) */}
                       <div className="w-full max-w-4xl mx-auto hidden sm:block">
                         {/* Trục đứng từ LCA đi xuống */}
                         <div className="w-0.5 h-5 bg-emerald-600 dark:bg-emerald-500 mx-auto" />

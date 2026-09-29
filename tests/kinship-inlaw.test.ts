@@ -405,9 +405,9 @@ describe('Kinship Engine In-Law & Affinal Test Suite (TC29 - TC36)', () => {
   });
 
   // =========================================================================
-  // TC36: Cây Phả Hệ Trực Quan Nối Cầu Hôn Nhân (Breadcrumbs & Path)
+  // TC36: Cây Gia Phả Trực Quan Nối Cầu Hôn Nhân (Breadcrumbs & Path)
   // =========================================================================
-  it('TC36: Cây Phả Hệ Trực Quan Nối Cầu Hôn Nhân (Breadcrumbs & isSpouse Flags)', () => {
+  it('TC36: Cây Gia Phả Trực Quan Nối Cầu Hôn Nhân (Breadcrumbs & isSpouse Flags)', () => {
     // Cụ Uyên & Liễu (Bố chồng - Con dâu)
     const lca = findLowestCommonAncestor('fam-lieu', 'fam-uyen', membersMap, spouseMap);
     const lieu = membersMap.get('fam-lieu')!;

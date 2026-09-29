@@ -1,14 +1,14 @@
 # HỆ THỐNG QUẢN LÝ GIA PHẢ DÒNG HỌ (FAT - Family Tree)
 
 ## 1. MỤC TIÊU CỐT LÕI
-- Xây dựng hệ thống phả hệ trực tuyến cho toàn bộ thành viên trong dòng họ tra cứu nguồn cội, cây gia phả, nhánh họ, và quan hệ thứ bậc xưng hô giữa các cá nhân.
+- Xây dựng hệ thống Gia Phả trực tuyến cho toàn bộ thành viên trong dòng họ tra cứu nguồn cội, cây gia phả, nhánh họ, và quan hệ thứ bậc xưng hô giữa các cá nhân.
 - Tối ưu cho thiết bị di động (PWA) và Web, giao diện trực quan, thao tác đơn giản, phù hợp cho cả người lớn tuổi trong dòng họ.
 
 ---
 
 ## 2. KIẾN TRÚC KỸ THUẬT ĐÃ THỐNG NHẤT
 - **Frontend / Fullstack:** Next.js 14+ (App Router), React, TypeScript, TailwindCSS, Lucide Icons, Shadcn UI / Radix Primitives.
-- **Hiển thị Cây (Visualization):** Thư viện dựng đồ thị cây phả hệ (React Flow / family-chart / D3.js) hỗ trợ Pan, Zoom, Collapse/Expand từng nhánh.
+- **Hiển thị Cây (Visualization):** Thư viện dựng đồ thị cây Gia Phả (React Flow / family-chart / D3.js) hỗ trợ Pan, Zoom, Collapse/Expand từng nhánh.
 - **CSDL & Backend Services:** **Supabase**
   - **PostgreSQL Database:** Tận dụng `WITH RECURSIVE` để truy vấn đệ quy cây gia phả, tổ tiên, con cháu; ràng buộc khóa ngoại (Foreign Keys) bảo đảm tính toàn vẹn 100%.
   - **Supabase Auth:** Đăng nhập Google OAuth tiện lợi.

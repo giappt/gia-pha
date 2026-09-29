@@ -610,7 +610,7 @@ export const MOCK_CLAN_MEMBERS: Member[] = [
     avatar_url: null,
     phone: null,
     address: 'Đà Nẵng',
-    biography: 'Thành viên chưa được liên kết cha mẹ trong cây phả hệ',
+    biography: 'Thành viên chưa được liên kết cha mẹ trong cây Gia Phả',
     generation_number: 1,
     birth_order: 1,
     created_at: new Date().toISOString(),

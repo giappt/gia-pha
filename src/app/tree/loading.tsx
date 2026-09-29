@@ -20,7 +20,7 @@ export default function TreeLoading() {
         </div>
       </div>
 
-      {/* Vùng Canvas mờ ảo với hoa văn và Card Phả Hệ Skeleton */}
+      {/* Vùng Canvas mờ ảo với hoa văn và Card Gia Phả Skeleton */}
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
         {/* Lưới chấm mờ nền canvas */}
         <div
@@ -34,7 +34,7 @@ export default function TreeLoading() {
         {/* Thông báo trạng thái đồng bộ chuẩn hóa [R-UI.LOADING] */}
         <SyncLoadingBadge className="absolute top-6 left-1/2 -translate-x-1/2 z-20 shadow-md" />
 
-        {/* Cấu trúc cây phả hệ mẫu dạng Skeleton (3 thế hệ thu nhỏ) */}
+        {/* Cấu trúc cây Gia Phả mẫu dạng Skeleton (3 thế hệ thu nhỏ) */}
         <div className="flex flex-col items-center gap-8 opacity-75 dark:opacity-60 scale-90 sm:scale-100">
           {/* Cụ Thủy Tổ Đời 1 */}
           <div className="w-52 h-24 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 p-3 flex flex-col justify-between shadow-sm animate-pulse">

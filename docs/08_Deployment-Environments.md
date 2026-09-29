@@ -87,7 +87,7 @@ Hệ thống sử dụng **Vercel Cron** để đánh thức Serverless Function
 
 ### 4.3. Chiến lược Sao lưu Dữ liệu (Backup & Recovery):
 - CSDL Supabase PostgreSQL tự động thực hiện **Daily Backup** lưu trữ trong 7 ngày liên tiếp.
-- Dữ liệu phả hệ được bảo vệ tại cụm máy chủ Singapore (khu vực gần Việt Nam nhất, độ trễ < 30ms).
+- Dữ liệu Gia Phả được bảo vệ tại cụm máy chủ Singapore (khu vực gần Việt Nam nhất, độ trễ < 30ms).
 
 ---
 

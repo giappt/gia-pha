@@ -8,7 +8,7 @@
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
 
-**FAT (Family Tree)** là nền tảng quản lý và số hóa phả hệ dòng họ trực tuyến đa nền tảng (Web & PWA Mobile), được thiết kế tối ưu cho văn hóa truyền thống Việt Nam. Hệ thống giúp toàn bộ con cháu trong dòng họ tra cứu nguồn cội, hình dung trực quan cây gia phả nhiều thế hệ, phân định vai vế xưng hô chính xác theo phong tục vùng miền (Bắc / Trung / Nam), và tự động nhắc nhở ngày giỗ theo Âm lịch.
+**FAT (Family Tree)** là nền tảng quản lý và số hóa Gia Phả dòng họ trực tuyến đa nền tảng (Web & PWA Mobile), được thiết kế tối ưu cho văn hóa truyền thống Việt Nam. Hệ thống giúp toàn bộ con cháu trong dòng họ tra cứu nguồn cội, hình dung trực quan cây gia phả nhiều thế hệ, phân định vai vế xưng hô chính xác theo phong tục vùng miền (Bắc / Trung / Nam), và tự động nhắc nhở ngày giỗ theo Âm lịch.
 
 ---
 

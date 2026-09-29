@@ -167,7 +167,7 @@ async function seed() {
         });
       }
     } else if (datasetArg === 'pham-van') {
-      console.log('📦 [2/4] Chuẩn bị dữ liệu Phả Hệ Họ Phạm Văn (từ file docx)...');
+      console.log('📦 [2/4] Chuẩn bị dữ liệu Gia Phả Họ Phạm Văn (từ file docx)...');
       clanName = 'DÒNG HỌ PHẠM VĂN';
       const extractedPath = path.resolve(process.cwd(), 'scratch/extracted_members.json');
       if (!fs.existsSync(extractedPath)) {
@@ -284,7 +284,7 @@ async function seed() {
     console.log(`- Cụ Tổ root_ancestor_id: ${rootMemberId}`);
     console.log(`- Tổng thành viên: ${membersToInsert.length}`);
     console.log(`- Tổng hôn phối: ${spousesToInsert.length}`);
-    console.log(`\nKhởi động web dev server (npm run dev) để xem cây phả hệ thật trên http://localhost:3000/tree\n`);
+    console.log(`\nKhởi động web dev server (npm run dev) để xem cây Gia Phả thật trên http://localhost:3000/tree\n`);
   } catch (err) {
     console.error('❌ Lỗi khi seed database:', err);
     process.exit(1);

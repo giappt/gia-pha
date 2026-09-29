@@ -75,7 +75,7 @@ export default async function LoginGatePage({
           ) : isTreePrivateMode ? (
             <>
               <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Chế Độ Nội Bộ</span>
+              <span>Trang Nội Bộ</span>
             </>
           ) : (
             <>
@@ -92,10 +92,10 @@ export default async function LoginGatePage({
         {/* Thông Điệp Ngữ Cảnh */}
         <p className="text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto mb-6 leading-relaxed">
           {isMaintenanceMode
-            ? 'Hệ thống phả hệ hiện đang tạm thời bảo trì để nâng cấp và bảo toàn dữ liệu di sản. Xin quý bà con vui lòng quay lại sau.'
+            ? 'Hệ thống Gia Phả hiện đang tạm thời bảo trì để nâng cấp và bảo toàn dữ liệu di sản. Xin quý bà con vui lòng quay lại sau.'
             : isTreePrivateMode
-            ? 'Cây phả hệ dòng họ hiện đang ở chế độ Nội bộ. Vui lòng đăng nhập bằng tài khoản Google để truy cập.'
-            : 'Tính năng này yêu cầu đăng nhập tài khoản dòng họ để bảo mật thông tin gia tộc.'}
+              ? 'Cây Gia Phả dòng họ hiện đang ở Trang Nội Bộ. Vui lòng đăng nhập bằng tài khoản Google để truy cập.'
+              : 'Tính năng này yêu cầu đăng nhập tài khoản dòng họ để bảo mật thông tin.'}
         </p>
 
         {/* Cụm Nút Hành Động */}

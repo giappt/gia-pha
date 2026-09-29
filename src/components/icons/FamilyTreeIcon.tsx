@@ -7,7 +7,7 @@ export interface FamilyTreeIconProps extends React.SVGProps<SVGSVGElement> {
 }
 
 /**
- * FamilyTreeIcon - Biểu tượng Cây Phả Hệ chuẩn 3 ô vuông
+ * FamilyTreeIcon - Biểu tượng Cây Gia Phả chuẩn 3 ô vuông
  * - 1 ô vuông thế hệ tiền nhân ở trên
  * - Trục gia tộc nối xuống rẽ 2 nhánh hạ xuống
  * - 2 ô vuông thế hệ hậu duệ ở dưới

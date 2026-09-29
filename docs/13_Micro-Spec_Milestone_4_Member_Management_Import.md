@@ -16,7 +16,7 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
   - **Database Persistence & Admin Client Contract:** Mọi server route mutation (`POST`, `PUT`, `DELETE` tại `/api/members`, `/api/spouse-relations`, `/api/admin/import`) bắt buộc phải sử dụng Supabase Admin Client (`SUPABASE_SERVICE_ROLE_KEY`) để ghi dữ liệu thực tế vào database, vượt qua rào cản RLS (Row Level Security). Tuyệt đối CẤM nuốt lỗi DB trong khối `try/catch` để giả lập offline thành công ảo.
   - **React Flow Node Dimension Contract:** Toàn bộ các object Node (`memberNode`, `ghostNode`) do `calculateTreeLayout` sinh ra bắt buộc phải khai báo tường minh kích thước `width: 200, height: 96` trực tiếp trên Node object để tránh hiện tượng React Flow đánh giá sai viewport và chặn render (màn hình đen rỗng).
   - **Internal Spouse Linking Contract (Không Nhân Bản Khi Ghép Nội Tộc):** Khi thêm phối ngẫu với tùy chọn `🔗 Dâu/Rể nội tộc` (`spouseOrigin === 'internal'`), hệ thống tuyệt đối KHÔNG ĐƯỢC gọi API tạo thành viên mới (`POST /api/members`). Chỉ được gọi API liên kết hôn phối (`POST /api/spouse-relations`) với ID của thành viên nội tộc đã chọn. Đảm bảo bảo toàn nguyên tắc duy nhất một bản ghi cá nhân trong dòng họ.
-  - **Drawer Safe Delete Action Contract (Xóa Trực Tiếp Trên Cây Phả Hệ):** Cung cấp hành động `[🗑️ Xóa hồ sơ]` trực tiếp trên `MemberDetailDrawer` tuân thủ nghiêm ngặt chính sách Safe Delete RESTRICT. Node lá (không có con) được phép xóa sau hộp thoại xác nhận; Node đang có con cái bị vô hiệu hóa nút xóa kèm giải thích nguyên do.
+  - **Drawer Safe Delete Action Contract (Xóa Trực Tiếp Trên Cây Gia Phả):** Cung cấp hành động `[🗑️ Xóa hồ sơ]` trực tiếp trên `MemberDetailDrawer` tuân thủ nghiêm ngặt chính sách Safe Delete RESTRICT. Node lá (không có con) được phép xóa sau hộp thoại xác nhận; Node đang có con cái bị vô hiệu hóa nút xóa kèm giải thích nguyên do.
   - **Import API Fail-Fast Contract (Cấm Nuốt Lỗi Database):** API `/api/admin/import` khi khởi tạo được `createAdminClient()` mà gặp lỗi thực thi câu lệnh SQL/Insert từ Supabase bắt buộc phải ném lỗi ngay (fail-fast) và trả về HTTP 500 kèm chi tiết lỗi, tuyệt đối CẤM nuốt lỗi trong khối `catch` để giả lập thành công ảo.
 - **Ràng buộc UX / UI (Refined Modern Heritage Design System):**
   - **Popup 1 Cấp (S-02):** Tuyệt đối không lồng popup đè lên popup. Tìm kiếm cha mẹ, phối ngẫu bằng Combobox/Autocomplete ngay trong form.
@@ -399,7 +399,7 @@ sequenceDiagram
   ```
 - **Hàm Pure Functions Kiểm Tra Quyền (`src/lib/auth/permissions.ts`):**
   - `hasPermission(role: UserRole | undefined | null, action: PermissionAction): boolean`: Kiểm tra quyền hành động cụ thể.
-  - `canManageTree(role: UserRole | undefined | null): boolean`: Kiểm tra xem người dùng có quyền quản trị cây phả hệ hay không (`role === 'super_admin' || role === 'branch_editor'`).
+  - `canManageTree(role: UserRole | undefined | null): boolean`: Kiểm tra xem người dùng có quyền quản trị cây Gia Phả hay không (`role === 'super_admin' || role === 'branch_editor'`).
 - **Server Guard Helper (`verifyServerRole`):**
   - Trích xuất `user_role` từ Supabase Auth session hoặc `fat_dev_user` cookie (đảm bảo tương thích mượt mà giữa môi trường Production và Development/Test).
   - Trả về `null` nếu hợp lệ, hoặc trả về `NextResponse.json({ success: false, error: 'Bạn không có quyền thực hiện thao tác này' }, { status: 403 })` nếu không đủ quyền.
@@ -414,14 +414,14 @@ sequenceDiagram
 
 ---
 
-### 4.4. Ingestion Pipeline: Bộ Chuyển Đổi Phả Hệ Cổ Truyền (Legacy Word/Markdown to 19-Column Excel Converter)
-- **Mục tiêu:** Chuyển đổi dữ liệu phả hệ thô dạng văn bản/bảng Word (`GIA PHẢ HỌ PHẠM VĂN.docx` / `GIA_PHA_HO_PHAM_VAN.md` với ~1.100 nhân khẩu, 14 thế hệ) sang file Excel chuẩn hóa 19 cột tương thích 100% với `parseExcelFamilyTree()`.
+### 4.4. Ingestion Pipeline: Bộ Chuyển Đổi Gia Phả Cổ Truyền (Legacy Word/Markdown to 19-Column Excel Converter)
+- **Mục tiêu:** Chuyển đổi dữ liệu Gia Phả thô dạng văn bản/bảng Word (`GIA PHẢ HỌ PHẠM VĂN.docx` / `GIA_PHA_HO_PHAM_VAN.md` với ~1.100 nhân khẩu, 14 thế hệ) sang file Excel chuẩn hóa 19 cột tương thích 100% với `parseExcelFamilyTree()`.
 - **Nguyên Tắc Bảo Vệ Tính Nguyên Bản Của Quan Hệ Cha Con (Lineage Integrity Principle):**
   1. **Tuyệt đối cấm AI tự ý suy đoán quan hệ Cha - Con (Anti-Hallucination Guard):**
      - Từ Đời 5 $\rightarrow$ Đời 14 (khi dòng họ phân nhánh thành 2 Ngành - 7 Chi), cột `STT Bố` và `STT Mẹ` bắt buộc **PHẢI ĐỂ TRỐNG (`null`)**.
      - Không tự động gán bất kỳ giả định cha con nào nếu không có bằng chứng lịch sử rõ ràng. Dữ liệu này dành cho con cháu/ban trị sự điền tay theo sổ phả gốc.
   2. **Tự động hóa 100% Cụm Hôn Phối Hạt Nhân (Nuclear Spouse Pairing):**
-     - Trong bảng phả hệ cổ truyền, các dòng `Vợ cả: ...`, `Vợ hai: ...`, `Vợ: ...` nằm ngay sau chồng được tự động nhận diện giới tính Nữ, tự động gán `STT Vợ/Chồng` trỏ về STT của người chồng, và người chồng tự động trỏ về vợ (hỗ trợ đa thê).
+     - Trong bảng Gia Phả cổ truyền, các dòng `Vợ cả: ...`, `Vợ hai: ...`, `Vợ: ...` nằm ngay sau chồng được tự động nhận diện giới tính Nữ, tự động gán `STT Vợ/Chồng` trỏ về STT của người chồng, và người chồng tự động trỏ về vợ (hỗ trợ đa thê).
      - Đối với con gái họ Phạm, dòng `Chồng: ...` nằm ngay sau được tự động nhận diện giới tính Nam và gán `STT Vợ/Chồng`.
   3. **Bóc tách Tự động Ngày Giỗ Âm Lịch & Tuổi Thọ (Regex Date Parser):**
      - Bóc tách các dạng chuỗi `DD / MM`, `DD – MM Thọ XX`, `DD- MM-YYYY Thọ XX` thành 2 giá trị số nguyên: `Ngày mất (Âm)` và `Tháng mất (Âm)`.
@@ -516,7 +516,7 @@ sequenceDiagram
 - `src/lib/tree-layout/genealogy-layout.ts`:
   - Khai báo tường minh `width: NODE_WIDTH (200)` và `height: NODE_HEIGHT (96)` trực tiếp trên 100% object Node (`memberNode` & `ghostNode`).
 - `src/components/tree/FamilyTreeCanvas.tsx`:
-  - Bỏ cờ `onlyRenderVisibleElements={true}` hoặc cấu hình chuẩn xác bounding box; thiết lập `fitView` padding chuẩn xác để toàn bộ cây phả hệ xuất hiện tức thì, triệt tiêu 100% hiện tượng màn hình đen rỗng.
+  - Bỏ cờ `onlyRenderVisibleElements={true}` hoặc cấu hình chuẩn xác bounding box; thiết lập `fitView` padding chuẩn xác để toàn bộ cây Gia Phả xuất hiện tức thì, triệt tiêu 100% hiện tượng màn hình đen rỗng.
   - Lắp ráp `MemberFormModal` và `UnlinkedMembersDrawer`.
   - Xử lý callback mutation: Cập nhật state nội bộ và lia camera mượt mà tới node mới.
   - Xử lý callback `onDeleteMember`: Cập nhật state nội bộ loại bỏ member và các quan hệ hôn phối, tính lại layout cây và đóng Drawer.
@@ -636,14 +636,14 @@ sequenceDiagram
   - Nút *Lưu thứ tự* $\rightarrow$ gọi API `POST /api/members/reorder` $\rightarrow$ cây tự động re-layout từ trái sang phải theo `birth_order` mới.
 
 ### 5.10. Frontend Read-Only Tree Mode & UI Action Guards (Bảo Vệ Giao Diện Cây Theo Vai Trò):
-- **Trang Cây Phả Hệ (`src/app/tree/page.tsx`):**
+- **Trang Cây Gia Phả (`src/app/tree/page.tsx`):**
   - Trích xuất session và role người dùng từ Supabase Server Client / Cookies:
     ```typescript
     const userRole = profile?.user_role || devUser?.user_role || 'viewer';
     const canManageTree = userRole === 'super_admin' || userRole === 'branch_editor';
     ```
   - Truyền `userRole={userRole}` và `canManageTree={canManageTree}` xuống `FamilyTreeCanvas`.
-- **Bàn Vẽ Cây Phả Hệ (`src/components/tree/FamilyTreeCanvas.tsx`):**
+- **Bàn Vẽ Cây Gia Phả (`src/components/tree/FamilyTreeCanvas.tsx`):**
   - Tiếp nhận props `userRole` và `canManageTree`.
   - Chỉ truyền các handler `onOpenAddMemberModal` và `onOpenUnlinkedDrawer` xuống `TreeToolbar` khi `canManageTree === true`.
   - Truyền prop `canManageTree` vào `MemberDetailDrawer`.
@@ -666,7 +666,7 @@ sequenceDiagram
   - Gỡ bỏ hoàn toàn khối `Nguồn dữ liệu kiểm thử` (chứa các nút chuyển đổi dữ liệu giả lập Clan 28, Đa thê Cụ Chiến, Clan 1.500) khỏi menu popover `[ ⚙ Tùy chọn ▾ ]`.
   - Dọn dẹp import biểu tượng `Users` khỏi `TreeToolbar` (nếu không còn sử dụng trong toolbar).
   - Giữ lại các chức năng nghiệp vụ thiết thực: `Khóa vị trí thẻ`, `Hiển thị Rể nội tộc` và `Lối tắt Nhập liệu Excel`.
-- **Bàn Vẽ Cây Phả Hệ (`src/components/tree/FamilyTreeCanvas.tsx`):**
+- **Bàn Vẽ Cây Gia Phả (`src/components/tree/FamilyTreeCanvas.tsx`):**
   - Mặc định và cố định hiển thị nguồn dữ liệu sống thực tế (`liveMembers`) lấy từ Supabase DB. Không còn cung cấp nút bấm UI để người dùng chuyển đổi sang các dataset giả lập ngoài màn hình cây.
 
 ### 5.12. Đồng Bộ Nhận Diện Biểu Tượng "Xưng Hô" (Kinship Icon Transition: Compass → Users):
@@ -676,7 +676,7 @@ sequenceDiagram
 - **Các Vị Trí Cập Nhật Biểu Tượng `Users` Thay Thế Cho `Compass`:**
   - **Desktop Header Navbar (`src/components/navbar/Navbar.tsx`):** Mục liên kết `Xưng hô` (`/kinship`) hiển thị `<Users className="w-4 h-4 text-emerald-600" />`.
   - **Mobile Bottom Navigation (`src/components/navigation/MobileBottomNav.tsx`):** Tab `Xưng hô` (`/kinship`) trong danh sách `NAV_ITEMS` sử dụng `icon: Users`.
-  - **Trang Tra Cứu Quan Hệ (`src/app/kinship/page.tsx`):** Badge hero đầu trang `ĐỒ THỊ PHẢ HỆ VIỆT NAM` hiển thị `<Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />`.
+  - **Trang Tra Cứu Quan Hệ (`src/app/kinship/page.tsx`):** Badge hero đầu trang `ĐỒ THỊ Gia Phả VIỆT NAM` hiển thị `<Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />`.
   - **Trang Cấu Hình Tính Năng Admin (`src/app/admin/features/page.tsx`):** Mục `enable_kinship_lookup` ("Công Cụ Tra Cứu Vai Vế Xưng Hô") đồng bộ icon `Users`.
 
 ---
@@ -732,7 +732,7 @@ sequenceDiagram
 - **Edge Case 24: Cố định vị trí Y của Tên trên thẻ Node bất kể có hay không có năm sinh/mất:**
   - _Xử lý:_ Trong `MemberNode.tsx`, container text được cố định chiều cao `h-8` (32px), khớp tuyệt đối với kích thước avatar 32x32px. Dòng 2 chứa năm sinh - năm mất được gán chiều cao cố định `h-[14px] leading-[14px]`. Khi thẻ không có năm sinh, năm mất và chi nhánh (như `Nguyễn Thị Kim`), dòng 2 render ký tự rỗng không vỡ `\u00A0`. Nhờ đó dòng 1 (Tên) luôn luôn neo ở cùng tọa độ Y trên 100% thẻ phả đồ, triệt tiêu hiện tượng so le lệch hàng.
 - **Edge Case 25: Viền thẻ người đã mất phân định theo giới tính & Xóa sạch ký tự thập `†`:**
-  - _Xử lý:_ Trong `MemberNode.tsx`, `borderColor` ưu tiên ánh xạ theo giới tính (`isMale ? blue : pink`) cho 100% thành viên bất kể sinh hay tử, giúp cây phả hệ phân biệt rõ Nam/Nữ trực quan. Khối avatar bên trong giữ nền xám trang trọng cho người đã khuất. Toàn bộ các nơi hiển thị nhãn sinh tử (`MemberNode`, `MemberFormModal`, `age-utils`) xóa bỏ hoàn toàn ký tự dấu thập `†`, thay thế bằng chữ `Đã mất` chuẩn thuần phong mỹ tục dòng họ.
+  - _Xử lý:_ Trong `MemberNode.tsx`, `borderColor` ưu tiên ánh xạ theo giới tính (`isMale ? blue : pink`) cho 100% thành viên bất kể sinh hay tử, giúp cây Gia Phả phân biệt rõ Nam/Nữ trực quan. Khối avatar bên trong giữ nền xám trang trọng cho người đã khuất. Toàn bộ các nơi hiển thị nhãn sinh tử (`MemberNode`, `MemberFormModal`, `age-utils`) xóa bỏ hoàn toàn ký tự dấu thập `†`, thay thế bằng chữ `Đã mất` chuẩn thuần phong mỹ tục dòng họ.
 - **Edge Case 26: Avatar Initials trích xuất từ Tên chính sạch không dính ngoặc:**
   - _Xử lý:_ Trong `src/lib/tree-layout/avatar-utils.ts`, hàm `getMemberInitials` thực hiện tiền xử lý lọc sạch toàn bộ nội dung nằm trong ngoặc tròn `(...)` hoặc ngoặc vuông `[...]` trước khi split từ. Với `Phạm Văn Uyên (Nuôi)`, chuỗi sạch là `Phạm Văn Uyên`, hệ thống lấy chữ cái đầu của Tên đệm (`Văn` $\rightarrow$ V) và Tên chính (`Uyên` $\rightarrow$ U) $\rightarrow$ sinh ra Initials chuẩn xác là **VU** (thay vì `U(`).
 - **Edge Case 27: Tách bạch triệt để Tên chính và Tên húy / Bí danh:**
@@ -761,7 +761,7 @@ sequenceDiagram
     3. Body (Avatar + Tên) luôn cách Header một khoảng cách cố định `mt-1.5 shrink-0`. Khi đó, đỉnh Y của Avatar của 100% thẻ trên toàn phả đồ luôn được neo cứng tại tọa độ bất biến: $Y = 10\text{px (padding)} + 18\text{px (header)} + 6\text{px (margin)} = \mathbf{34\text{px}}$.
     4. Footer được đẩy xuống đáy bằng `mt-auto` và cố định chiều cao `h-[18px] shrink-0`. Loại bỏ hoàn toàn các thẻ placeholder thừa thãi mang text thô `\u00A0`, bảo đảm đường hairline `border-t` luôn nằm phẳng phiu ở đáy mọi thẻ card và giao diện sạch bóng 100%.
 - **Edge Case 37: Cơ chế Gỡ con khỏi cha mẹ (Unlink Child) & Đồng bộ đổi Cha Mẹ theo cặp Hôn phối (Cascading Parent Coupling):**
-  - _Bối cảnh & Căn nguyên:_ Khi nhập liệu hoặc import file Excel, một người con có thể bị gán nhầm vào một người cha/mẹ khác. Ở giao diện cũ, thẻ con trong mục "4. CON CÁI" của người cha chỉ là khối `div` thụ động không có nút hành động gỡ; đồng thời ở mục "2. BỐ MẸ & THỨ BẬC GIA ĐÌNH", dropdown Cha ruột và Mẹ ruột bị ẩn khi ở chế độ chỉnh sửa (`mode === 'edit'`) do điều kiện `{defaultRole !== 'child'}`. Ngoài ra, nếu người dùng đổi Cha sang người khác, việc không đồng bộ Mẹ theo cặp hôn phối có thể dẫn đến việc đứa con có Cha A và Mẹ B không phải vợ chồng của nhau, làm vỡ logic hạ nhánh con trên cây phả hệ.
+  - _Bối cảnh & Căn nguyên:_ Khi nhập liệu hoặc import file Excel, một người con có thể bị gán nhầm vào một người cha/mẹ khác. Ở giao diện cũ, thẻ con trong mục "4. CON CÁI" của người cha chỉ là khối `div` thụ động không có nút hành động gỡ; đồng thời ở mục "2. BỐ MẸ & THỨ BẬC GIA ĐÌNH", dropdown Cha ruột và Mẹ ruột bị ẩn khi ở chế độ chỉnh sửa (`mode === 'edit'`) do điều kiện `{defaultRole !== 'child'}`. Ngoài ra, nếu người dùng đổi Cha sang người khác, việc không đồng bộ Mẹ theo cặp hôn phối có thể dẫn đến việc đứa con có Cha A và Mẹ B không phải vợ chồng của nhau, làm vỡ logic hạ nhánh con trên cây Gia Phả.
   - _Xử lý:_
     1. **Thao tác trực tiếp tại Hồ sơ Cha/Mẹ (Section 4. CON CÁI):**
        - Mỗi thẻ con trong `existingChildren` có thêm nút "Gỡ con (Hủy liên kết)" (icon `UserMinus` / `Unlink`). Khi bấm, con được đưa vào danh sách chờ gỡ (`stagedUnlinkChildIds`) và thẻ con chuyển sang trạng thái gạch mờ kèm badge đỏ `[Sẽ gỡ khi Lưu]` và nút `[Hoàn tác]`.
@@ -782,7 +782,7 @@ sequenceDiagram
   - _Bối cảnh & Căn nguyên:_
     1. Trong `UnlinkedMembersDrawer.tsx`, khi người dùng bấm "Nối vào cây" cho một thành viên mồ côi (chưa nối phả), giao diện chỉ cung cấp 1 ô input tìm kiếm và chỉ cho chọn DUY NHẤT 1 người (chọn Cha hoặc chọn Mẹ) rồi bấm `[Xác nhận nối phả]`.
     2. Drawer hoàn toàn thiếu cơ chế đề xuất hoặc xác nhận người phối ngẫu còn lại. Khi người dùng bấm nối cho con, hệ thống chỉ gửi 1 ID duy nhất (`father_id` hoặc `mother_id`), để trống người còn lại (`null`).
-    3. Hậu quả trực quan nghiêm trọng ngoài Cây phả hệ: Khi người dùng nối cháu `Phạm Hải Nam` vào Cụ Bẩy (nam) thì cháu Nam nhận `father_id: Bẩy, mother_id: null` (hiểu là con riêng của Bố, vẽ dây xanh lá từ Bố); còn khi nối cháu `Phạm Hà Phương` vào Bà Hiền (nữ) thì cháu Phương nhận `mother_id: Hiền, father_id: null` (hiểu là con riêng của Mẹ, vẽ dây tím nét đứt từ Mẹ). Hai đứa trẻ cùng một gia đình nhưng ngoài Cây phả hệ lại bị vẽ thành 2 đứa con riêng đơn lẻ của 2 người khác nhau.
+    3. Hậu quả trực quan nghiêm trọng ngoài Cây Gia Phả: Khi người dùng nối cháu `Phạm Hải Nam` vào Cụ Bẩy (nam) thì cháu Nam nhận `father_id: Bẩy, mother_id: null` (hiểu là con riêng của Bố, vẽ dây xanh lá từ Bố); còn khi nối cháu `Phạm Hà Phương` vào Bà Hiền (nữ) thì cháu Phương nhận `mother_id: Hiền, father_id: null` (hiểu là con riêng của Mẹ, vẽ dây tím nét đứt từ Mẹ). Hai đứa trẻ cùng một gia đình nhưng ngoài Cây Gia Phả lại bị vẽ thành 2 đứa con riêng đơn lẻ của 2 người khác nhau.
   - _Xử lý chuẩn mực:_
     1. **Tự động đề xuất người phối ngẫu khi có 1 vợ/chồng (Auto-Suggestion with Opt-Out):**
        - Khi người dùng chọn một người Cha (nam) có duy nhất 1 người vợ: Hệ thống tự động hiển thị thẻ/checkbox đề xuất: `☑ Đồng thời nhận Mẹ: [Tên Mẹ] (Vợ của [Tên Cha])`. Mặc định được CHECKED sẵn. Khi bấm Xác nhận, gửi đồng thời cả `{ father_id, mother_id }` để con hạ nhánh chính thức từ giữa cặp vợ chồng.
@@ -807,7 +807,7 @@ sequenceDiagram
     1. **Thống nhất 100% sang Radio Button:** Dù là 1 vợ hay $\ge 2$ vợ, giao diện dùng DUY NHẤT một danh sách Radio Button:
        - Danh sách người phối ngẫu (1 vợ hoặc các bà vợ): Mỗi option có Radio button amber, nhãn danh xưng và tên đậm, kèm dòng giải thích xanh ngọc nhẹ `✓ Con chung của cả hai người (hạ nhánh chính giữa cặp vợ chồng)`. Mặc định chọn vợ đầu tiên.
        - Option cuối cùng luôn là: `🔘 Không chọn mẹ (Lưu làm con riêng của Bố [Tên])` kèm dòng giải thích hổ phách `⚠️ Lưu làm con riêng của Bố (hạ nhánh trực tiếp từ Bố)`.
-       - Nếu độc thân: Dòng text mờ trang nhã (không bọc box): `ℹ Người này chưa có bạn đời trong phả hệ → Sẽ lưu làm con riêng.`
+       - Nếu độc thân: Dòng text mờ trang nhã (không bọc box): `ℹ Người này chưa có bạn đời trong Gia Phả → Sẽ lưu làm con riêng.`
     2. **Zero Box-in-Box:** Bỏ 100% các container viền lồng hộp (`border border-emerald-200 bg-emerald-50` hay `border border-amber-200 bg-amber-50`). Khối lựa chọn phối ngẫu nằm phẳng, phân cách với danh sách cha mẹ bằng đường kẻ ngang mỏng `border-t border-amber-200/60 pt-2.5 mt-2` và tiêu đề nhỏ thanh lịch `text-[11px] font-semibold text-slate-700`.
 - **Edge Case 41: Chặn Thao Tác Trái Thẩm Quyền & Rào Chắn Mã Lỗi HTTP 403 Forbidden (RBAC Server Gate):**
   - _Bối cảnh:_ Người dùng có role `viewer` (hoặc `claimed_member`) có thể cố tình gửi lệnh HTTP qua Postman/Curl hoặc lợi dụng các lỗ hổng UI cũ để gọi các route mutation (`POST /api/members`, `PUT /api/members/[id]`, `DELETE /api/members/[id]`, `POST /api/admin/import`).
@@ -924,7 +924,7 @@ sequenceDiagram
 - [ ] **UAT_10 (Dynamic Disclosure Giỗ Chạp):** Mặc định chọn `Còn sống`, khối ngày mất Âm lịch ẩn gọn (chiều cao form ~450px, không cần cuộn trên màn hình phổ thông); khi chọn `Đã mất †`, khối Âm lịch mở ra mượt mà.
 - [ ] **UAT_11 (Tạo Vợ/Chồng Ngoài Họ Tại Chỗ):** Chọn tab Segmented "+ Thêm Vợ/Chồng ngoài họ", điền tên và năm sinh, lưu thành công và tự động tạo node phối ngẫu bên cạnh trên Canvas.
 - [ ] **UAT_12 (Xem & Thêm Nhanh Con Cái):** Danh sách con hiện có hiển thị rõ ràng; form thêm con nhanh dạng inline phẳng, nhập họ tên + năm sinh + pill giới tính và lưu kèm hồ sơ.
-- [ ] **UAT_13 (Hiển Thị Cây Phả Hệ Tức Thì - Zero Black Screen):** Truy cập `http://localhost:3000/tree` $\rightarrow$ Toàn bộ 28 node phả hệ xuất hiện rõ nét, căn giữa màn hình, các đường kết nối con cái và phối ngẫu hiển thị đầy đủ, không còn hiện tượng màn hình đen rỗng.
+- [ ] **UAT_13 (Hiển Thị Cây Gia Phả Tức Thì - Zero Black Screen):** Truy cập `http://localhost:3000/tree` $\rightarrow$ Toàn bộ 28 node Gia Phả xuất hiện rõ nét, căn giữa màn hình, các đường kết nối con cái và phối ngẫu hiển thị đầy đủ, không còn hiện tượng màn hình đen rỗng.
 - [ ] **UAT_14 (Thẩm Mỹ Refined Modern Heritage - Góc Bo Hình Học):** Mở `MemberFormModal` $\rightarrow$ Form có các góc bo sắc sảo `rounded-lg` (8px), không còn cảm giác bồng bềnh/bubbly bo tròn quá mức; các tiêu đề phân khu là nhãn Editorial thanh mảnh, không icon màu mè lộn xộn.
 - [ ] **UAT_15 (Giới Tính Con Đầy Đủ 3 Tùy Chọn):** Nhấp `[+ Thêm nhanh con mới]` $\rightarrow$ Xuất hiện đủ 3 nút chọn giới tính: `[ ♂ Nam ]`, `[ ♀ Nữ ]`, `[ ⚪ Khác ]`.
 - [ ] **UAT_16 (Lưu Dữ Liệu Thực Tế Vào DB & F5 Bền Vững):** Tạo thành viên mới hoặc sửa thành viên $\rightarrow$ Bấm Lưu $\rightarrow$ Tải lại trang (F5) $\rightarrow$ Dữ liệu thành viên mới vẫn tồn tại trên cây và trong CSDL, không bị reset về sample data.
@@ -932,7 +932,7 @@ sequenceDiagram
 - [ ] **UAT_18 (Cách Ly Build & Dev Server Không Bị Gián Đoạn):** Khi lệnh build kiểm chứng chạy với `NEXT_DIST_DIR=.next-build` $\rightarrow$ Trình duyệt F5 tải lại trang `/tree` vẫn nhận HTTP 200 cho 100% file JS/CSS, không còn lỗi 404.
 - [ ] **UAT_19 (Đồng Bộ Theme Toàn Trang & Zero Nửa Sáng Nửa Tối):** Truy cập trang chủ `/` và trang cây `/tree` ở cả môi trường OS Dark Mode lẫn Light Mode $\rightarrow$ Giao diện đồng nhất 100%: hoặc toàn bộ sáng (Light), hoặc bấm nút Đổi Theme trên Navbar để chuyển sang toàn bộ tối (Dark); không còn hiện tượng Card trắng lơ lửng trên nền đen kịt.
 - [ ] **UAT_20 (Canvas Tree Viewport Cố Định & Không Bị Footer Đè):** Truy cập `/tree` $\rightarrow$ Khung vẽ hiển thị trọn vẹn 100% viewport, lưới chấm (dots background) và cụm zoom controls ở góc dưới bên phải hiển thị rõ ràng, không bị đẩy tràn xuống dưới hay bị footer che khuất.
-- [ ] **UAT_21 (Hiển Thị 30 Nodes Phả Hệ Ngay Lập Tức & Cụm Controls Góc Phải):** Truy cập `http://localhost:3000/tree` $\rightarrow$ 30 nodes (28 thành viên + phối ngẫu) xuất hiện đầy đủ ở trung tâm màn hình, cụm controls zoom (+ / - / fit view) hiển thị rõ ràng tại góc dưới bên phải, không còn màn hình trắng rỗng.
+- [ ] **UAT_21 (Hiển Thị 30 Nodes Gia Phả Ngay Lập Tức & Cụm Controls Góc Phải):** Truy cập `http://localhost:3000/tree` $\rightarrow$ 30 nodes (28 thành viên + phối ngẫu) xuất hiện đầy đủ ở trung tâm màn hình, cụm controls zoom (+ / - / fit view) hiển thị rõ ràng tại góc dưới bên phải, không còn màn hình trắng rỗng.
 - [ ] **UAT_22 (Tự Động Gợi Ý & Dọn Trùng Thứ Tự Sinh):** Bấm "Thêm con" $\rightarrow$ Ô Thứ tự sinh tự điền số tiếp theo (ví dụ 4 nếu đã có 3 con) $\rightarrow$ Đổi thành số 1 $\rightarrow$ Hiển thị ghi chú dọn trùng $\rightarrow$ Bấm Lưu $\rightarrow$ Người mới mang số 1, người cũ nhường số thành công.
 - [ ] **UAT_23 (Hộp Thoại Xác Nhận Chuyển Giao Con Trưởng):** Gia đình đã có con trưởng Nguyễn Văn A $\rightarrow$ Thêm hoặc sửa con B và tích `⭐ Con trưởng` $\rightarrow$ Xuất hiện popup xác nhận hỏi có muốn chuyển danh hiệu con trưởng từ A sang B không $\rightarrow$ Đồng ý $\rightarrow$ B trở thành Con Trưởng duy nhất, A trở thành con thứ.
 - [ ] **UAT_24 (Validate Chặn Cứng Năm Sinh Con vs Bố Mẹ):** Bố sinh 1990 $\rightarrow$ Thêm con với năm sinh 1978 hoặc 1990 $\rightarrow$ Form báo lỗi đỏ: "Năm sinh của con không thể trước hoặc bằng năm sinh của Bố", nút Lưu bị chặn.
@@ -951,11 +951,11 @@ sequenceDiagram
 - [ ] **UAT_37 (Drawer Chi Tiết Phẳng & Đúng Ngữ Cảnh Hôn Phối):** Mở Drawer của người có vợ tái giá $\rightarrow$ Danh sách Hôn phối hiển thị `• 🌸 Bà cả: Nguyễn Thị Kim — Tái giá (2024)` phẳng, thoáng mắt, không lồng box; mở Drawer của người tái giá hiển thị dòng thông tin gia đạo.
 - [ ] **UAT_38 (Cố Định Tọa Độ Y Tên Trên Thẻ Node):** So sánh trực quan thẻ `Nguyễn Thị Kim` (không có năm sinh/mất) và `Phạm Văn Cường` $\rightarrow$ Vị trí dòng Tên thẳng hàng tắp theo phương ngang, không bị lệch hay thụt dòng.
 - [ ] **UAT_39 (Màu Viền Giới Tính Người Đã Mất & Không Có Ký Tự †):** Kiểm tra thẻ Cụ Phạm Văn Cường (Đã mất, Nam) mang viền xanh nam tính, thẻ nữ đã mất mang viền hồng. Avatar icon bên trong mang màu xám trang trọng. Badge hiển thị chữ `Đã mất` sạch sẽ, không có dấu thập `†`.
-- [ ] **UAT_40 (Avatar Cụ Uyên Hiển Thị Đúng VU):** Trên cây phả hệ và trên Drawer, thẻ của Cụ Phạm Văn Uyên hiển thị avatar chữ cái đại diện là **VU** (thay vì `U(` trước đây).
+- [ ] **UAT_40 (Avatar Cụ Uyên Hiển Thị Đúng VU):** Trên cây Gia Phả và trên Drawer, thẻ của Cụ Phạm Văn Uyên hiển thị avatar chữ cái đại diện là **VU** (thay vì `U(` trước đây).
 - [ ] **UAT_41 (Không Lặp Tên Húy Trên Drawer & Đổi Nhãn Tức):** Mở Drawer Cụ Phạm Văn Uyên $\rightarrow$ Tiêu đề hiển thị `Phạm Văn Uyên`, bên dưới hiển thị `Tức: Nuôi` (không bị lặp lại chữ Nuôi trên tiêu đề).
 - [ ] **UAT_42 (Form Tự Động Bóc Tách Họ Tên và Tên Húy):** Bấm sửa Cụ Phạm Văn Uyên $\rightarrow$ Ô `Họ và Tên (*)` hiển thị `Phạm Văn Uyên`, ô `Tên húy / Tên tự / Bí danh` hiển thị `Nuôi`. Nhãn trạng thái sinh tử hiển thị `Đã mất` (không có dấu thập `†`).
 - [ ] **UAT_43 (Nút Sắp Xếp Đàn Con Trên Thẻ Node & Khởi Động Modal):** Bấm vào badge `{childCount} người con` trên thẻ node ngoài Canvas $\rightarrow$ Mở ngay `ReorderChildrenModal` hiển thị đủ danh sách các con kèm avatar, năm sinh và số thứ tự.
-- [ ] **UAT_44 (Kéo Thả Sắp Xếp & Cây Đảo Nhánh Tức Thì):** Trong `ReorderChildrenModal`, kéo thả con út lên đầu danh sách (hoặc bấm nút `▲`) $\rightarrow$ Bấm Lưu $\rightarrow$ Cây phả hệ tự động bố trí lại, nhánh con vừa đổi xuất hiện ở vị trí đầu tiên bên trái.
+- [ ] **UAT_44 (Kéo Thả Sắp Xếp & Cây Đảo Nhánh Tức Thì):** Trong `ReorderChildrenModal`, kéo thả con út lên đầu danh sách (hoặc bấm nút `▲`) $\rightarrow$ Bấm Lưu $\rightarrow$ Cây Gia Phả tự động bố trí lại, nhánh con vừa đổi xuất hiện ở vị trí đầu tiên bên trái.
 - [ ] **UAT_45 (Khối Hôn Phối Hiển Thị Vợ Hiện Tại & Nút Thêm Vợ):** Mở form sửa Cụ Phạm Văn Uyên $\rightarrow$ Khối Hôn phối hiển thị rõ thẻ `🌸 Bà Cả: Nguyễn Thị Chăm` kèm nút `+ Thêm Vợ`, không còn bị ép vào tab chọn người nội tộc.
 - [ ] **UAT_46 (Thêm Con Chọn Mẹ Thông Minh):** Trong form sửa người cha có 1 vợ, bấm "+ Thêm nhanh con mới" $\rightarrow$ Mẹ tự động được chọn là vợ đó; trong form sửa người cha có 2 vợ $\rightarrow$ xuất hiện dropdown cho phép chọn con là của Bà cả hay Bà hai.
 - [ ] **UAT_47 (Mở Modal Thêm/Sửa Không Còn Màn Hình Đỏ Rules of Hooks):** Bấm sửa bất kỳ thành viên nào trên Canvas hoặc bấm "Thêm con" từ Drawer khi đang ở trang `/tree` $\rightarrow$ Modal mở ra ngay lập tức, console sạch sẽ 0 lỗi đỏ, không còn crash "Rendered more hooks than during the previous render".
@@ -966,7 +966,7 @@ sequenceDiagram
 - [ ] **UAT_52 (Gỡ con trực tiếp từ hồ sơ Người Cha):** Mở form sửa Cụ Phạm Văn Tráng $\rightarrow$ Ở mục 4. CON CÁI, bấm nút "Gỡ con" tại thẻ `Phạm Hà Phương` $\rightarrow$ Thẻ chuyển trạng thái gạch mờ kèm badge "Sẽ gỡ khi Lưu" $\rightarrow$ Bấm Cập nhật $\rightarrow$ Thẻ con biến mất khỏi nhánh ông Tráng và xuất hiện an toàn trong khay Chưa nối phả.
 - [ ] **UAT_53 (Đổi Bố tự động đồng bộ Mẹ theo cặp hôn phối):** Mở form sửa `Phạm Hà Phương` $\rightarrow$ Ở mục 2. BỐ MẸ, dropdown Bố và Mẹ hiển thị đầy đủ $\rightarrow$ Đổi Bố từ `Phạm Văn Tráng` sang `Phạm Văn Khương` $\rightarrow$ Mẹ tự động chuyển thành `Chu Thị Hà` $\rightarrow$ Bấm Cập nhật $\rightarrow$ Nhánh con trên Canvas tự động chuyển sang hạ nhánh dưới gia đình ông Khương.
 - [ ] **UAT_54 (Chặn lưu khi Bố và Mẹ không phải vợ chồng):** Thử chọn Bố và Mẹ của 2 gia đình khác nhau không có quan hệ hôn phối $\rightarrow$ Dropdown Mẹ chỉ lọc các bà vợ của Bố, hoặc nếu có xung đột thì hệ thống cảnh báo đỏ và chặn lưu an toàn.
-- [ ] **UAT_55 (Opt-out Bỏ chọn Mẹ & Xác nhận Con riêng):** Mở form sửa con $\rightarrow$ Chọn Bố có 1 vợ $\rightarrow$ Mẹ tự động điền $\rightarrow$ Bấm nút `[✕ Bỏ chọn Mẹ / Con riêng]` $\rightarrow$ Thẻ xác nhận chuyển sang trạng thái `⚠️ Con riêng của Bố / Chưa rõ Mẹ` màu hổ phách $\rightarrow$ Bấm Lưu $\rightarrow$ Cây phả hệ hạ nhánh con riêng trực tiếp từ thẻ người Bố.
+- [ ] **UAT_55 (Opt-out Bỏ chọn Mẹ & Xác nhận Con riêng):** Mở form sửa con $\rightarrow$ Chọn Bố có 1 vợ $\rightarrow$ Mẹ tự động điền $\rightarrow$ Bấm nút `[✕ Bỏ chọn Mẹ / Con riêng]` $\rightarrow$ Thẻ xác nhận chuyển sang trạng thái `⚠️ Con riêng của Bố / Chưa rõ Mẹ` màu hổ phách $\rightarrow$ Bấm Lưu $\rightarrow$ Cây Gia Phả hạ nhánh con riêng trực tiếp từ thẻ người Bố.
 - [ ] **UAT_56 (Ngữ cảnh Gia đình trong Khay Chưa Nối):** Mở Khay Chưa Nối (`🔗 Chưa nối: X`) $\rightarrow$ Bấm `Nối vào cây` $\rightarrow$ Danh sách tìm kiếm cha mẹ hiển thị rõ ràng thông tin bạn đời: `Phạm Văn Tráng (Chồng bà Phạm Thị Thuý)` và `Phạm Văn Bẩy (Chồng bà Nguyễn Thị Thuý Hiền)` $\rightarrow$ Người dùng không bao giờ bị nhầm lẫn người trùng tên.
 - [ ] **UAT_57 (Nối Phả Chuẩn Giới Tính):** Trong Khay Chưa Nối, chọn nối con vào một người Mẹ (nữ giới) $\rightarrow$ CSDL lưu đúng cột `mother_id`, tuyệt đối không gán nhầm vào cột `father_id`.
 - [ ] **UAT_58 (Nối Phả Thông Minh Trong Khay Chưa Nối - Cặp 1 Vợ Chồng):** Mở Khay Chưa Nối $\rightarrow$ Bấm "Nối vào cây" cho cháu Phương/Nam $\rightarrow$ Chọn Cụ `Phạm Văn Bẩy` $\rightarrow$ Thấy hộp đề xuất `☑ Đồng thời nhận Mẹ: Nguyễn Thị Thuý Hiền (Vợ của Phạm Văn Bẩy)` đã được tick sẵn $\rightarrow$ Bấm Xác nhận nối $\rightarrow$ Trên Canvas, con hạ nhánh chính giữa cặp vợ chồng Cụ Bẩy - Bà Hiền (triệt tiêu hoàn toàn đường nối đơn lẻ 1 xanh 1 tím).
@@ -978,7 +978,7 @@ sequenceDiagram
 - [ ] **UAT_64 (Super Admin Full Control Tree):** Đăng nhập tài khoản Super Admin $\rightarrow$ Truy cập `/tree` $\rightarrow$ Xuất hiện đầy đủ nút `+ Thêm người` màu xanh, nút `Chưa nối: X` (nếu có người chưa nối). Mở Drawer chi tiết: có đầy đủ nút `Sửa hồ sơ` và `Xóa hồ sơ`.
 - [ ] **UAT_65 (Khóa Vị Trí Thẻ Khóa Chặt Cho Viewer):** Với tài khoản Viewer $\rightarrow$ Menu Popover `⚙ Tùy chọn` trên thanh công cụ Cây hiển thị trạng thái `Khóa vị trí thẻ: Đang khóa` và không cho phép bật mở kéo xê dịch node tự do (hoặc ẩn nút mở khóa), tránh xáo trộn hiển thị phả đồ.
 - [ ] **UAT_66 (Rào Chắn Server Trả Về HTTP 403 Cho Thao Tác Trái Quyền):** Dùng tài khoản Viewer gửi request tạo thành viên lên `POST /api/members` hoặc xóa thành viên lên `DELETE /api/members/[id]` $\rightarrow$ Nhận phản hồi `HTTP 403 Forbidden` kèm thông báo *"Bạn không có quyền thực hiện thao tác này"*.
-- [ ] **UAT_67 (Menu Tùy Chọn Cây Phả Hệ Gọn Gàng - Không Còn Dữ Liệu Kiểm Thử):** Mở menu `[ ⚙ Tùy chọn ▾ ]` trên thanh công cụ Cây Phả Hệ (`/tree`) $\rightarrow$ Khối "Nguồn dữ liệu kiểm thử" đã biến mất hoàn toàn. Menu chỉ còn các mục thiết thực: Khóa vị trí thẻ, Hiển thị Rể nội tộc và Lối tắt Nhập liệu Excel.
+- [ ] **UAT_67 (Menu Tùy Chọn Cây Gia Phả Gọn Gàng - Không Còn Dữ Liệu Kiểm Thử):** Mở menu `[ ⚙ Tùy chọn ▾ ]` trên thanh công cụ Cây Gia Phả (`/tree`) $\rightarrow$ Khối "Nguồn dữ liệu kiểm thử" đã biến mất hoàn toàn. Menu chỉ còn các mục thiết thực: Khóa vị trí thẻ, Hiển thị Rể nội tộc và Lối tắt Nhập liệu Excel.
 - [ ] **UAT_68 (Navbar Desktop Hiển Thị Icon Users Cho Xưng Hô):** Quan sát thanh điều hướng trên cùng (Desktop Header) $\rightarrow$ Mục "Xưng hô" hiển thị icon 2 người (`Users`) màu xanh ngọc thanh lịch, hover và click chuyển hướng `/kinship` mượt mà.
 - [ ] **UAT_69 (Mobile Bottom Nav Hiển Thị Icon Users Cho Xưng Hô):** Thu nhỏ màn hình xuống kích thước điện thoại (mobile viewport) $\rightarrow$ Tab "Xưng hô" trên thanh điều hướng đáy hiển thị icon 2 người (`Users`), highlight đúng khi truy cập `/kinship`.
 - [ ] **UAT_70 (Trang Tra Cứu Xưng Hô & Admin Features Đồng Bộ Icon Users):** Truy cập `http://localhost:3000/kinship` và `http://localhost:3000/admin/features` $\rightarrow$ Toàn bộ các biểu tượng đại diện cho công cụ xưng hô đều sử dụng icon `Users` đồng nhất.

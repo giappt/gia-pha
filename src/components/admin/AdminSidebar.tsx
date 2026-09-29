@@ -40,7 +40,7 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'PHẢ HỆ & QUY ƯỚC',
+    title: 'Gia Phả & QUY ƯỚC',
     items: [
       {
         href: '/admin/profile',
@@ -189,7 +189,7 @@ export default function AdminSidebar({
           className="flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Về Cây Phả Hệ</span>
+          <span>Về Cây Gia Phả</span>
         </Link>
       </div>
     </aside>

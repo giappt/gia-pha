@@ -11,7 +11,7 @@ _Dự án: FAT (Family Tree - Hệ Thống Quản Lý Gia Phả Dòng Họ)_
 | **Thuật ngữ Chuẩn (Standard)** | **Ý nghĩa / Định nghĩa** | **Các từ Cấm/Tránh dùng** |
 |---|---|---|
 | **User** | Tài khoản người dùng đã đăng ký/đăng nhập qua Google OAuth | Account, Client, Customer, Profile |
-| **Member** | Một cá nhân/thành viên cụ thể trong phả hệ dòng họ (1 thực thể duy nhất trong CSDL) | Person, Individual, People, Human, NodeRecord |
+| **Member** | Một cá nhân/thành viên cụ thể trong Gia Phả dòng họ (1 thực thể duy nhất trong CSDL) | Person, Individual, People, Human, NodeRecord |
 | **GhostNode** | Node phản chiếu trên giao diện hiển thị tại vị trí phối ngẫu của cuộc hôn nhân nội tộc (có ký hiệu 🔗), trỏ về Member gốc | ShadowNode, VirtualNode, ProxyMember, CloneNode, DummyNode |
 | **ParentChildRelation** | Quan hệ huyết thống trực tiếp giữa cha/mẹ và con ruột | ParentLink, LineageLink, BloodRelation, ChildEdge |
 | **SpouseRelation** | Quan hệ hôn nhân hợp pháp hoặc phong tục giữa hai thành viên | Marriage, Wedding, Partner, CoupleLink |
@@ -49,7 +49,7 @@ _Dự án: FAT (Family Tree - Hệ Thống Quản Lý Gia Phả Dòng Họ)_
 | **ClaimMemberNode** | User gửi yêu cầu xin gắn tài khoản của mình vào một Member cụ thể trên cây | LinkNode, BindMember, AttachProfile, ConnectMe |
 | **ApproveClaimRequest** | Quản trị viên chấp thuận yêu cầu liên kết của User | AcceptClaim, ConfirmLink, GrantNode, VerifyClaim |
 | **RejectClaimRequest** | Quản trị viên từ chối yêu cầu liên kết của User | DenyClaim, DeclineLink, CancelRequest |
-| **CalculateKinship** | Thuật toán xác định quan hệ phả hệ và cách xưng hô 2 chiều giữa 2 Member bất kỳ | FindRelation, GetTitle, SolveKinship, CheckAddress |
+| **CalculateKinship** | Thuật toán xác định quan hệ Gia Phả và cách xưng hô 2 chiều giữa 2 Member bất kỳ | FindRelation, GetTitle, SolveKinship, CheckAddress |
 | **FindLowestCommonAncestor (FindLCA)** | Thuật toán đồ thị tìm cụ tổ chung gần nhất giữa 2 nhánh thành viên | GetCommonRoot, FindAncestor, SearchLCA, TraceRoot |
 | **BulkImportMembers** | Quá trình tải lên file Excel/CSV, validate tính toàn vẹn và nạp hàng loạt thành viên | UploadExcel, ImportData, BatchInsert, ReadSpreadsheet |
 | **SendDeathAnniversaryPush** | Tiến trình Vercel Cron quét và gửi Web Push thông báo ngày giỗ đến con cháu trực hệ | NotifyGio, AlertDeath, BroadcastAnniversary, PingMemorial |

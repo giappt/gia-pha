@@ -33,9 +33,9 @@ interface FeatureFlagConfig {
 const FEATURE_CONFIGS: FeatureFlagConfig[] = [
   {
     key: 'enable_public_tree',
-    title: 'Công Khai Cây Phả Hệ Cho Khách Vãng Lai',
+    title: 'Công Khai Cây Gia Phả Cho Khách Vãng Lai',
     icon: Eye,
-    description: 'Quyết định việc người dùng chưa đăng nhập có được xem Cây Phả Hệ hay không.',
+    description: 'Quyết định việc người dùng chưa đăng nhập có được xem Cây Gia Phả hay không.',
     onDesc: 'Khách vãng lai và mọi người trên mạng đều xem được cây gia phả.',
     offDesc: 'Khách chưa đăng nhập bị chặn xem cây; bắt buộc đăng nhập tài khoản để vào xem.',
     safetyTag: 'Riêng Tư',
@@ -95,7 +95,7 @@ const FEATURE_CONFIGS: FeatureFlagConfig[] = [
     key: 'maintenance_mode',
     title: 'Chế Độ Đóng Cửa Bảo Trì Toàn Tộc',
     icon: AlertTriangle,
-    description: 'Khóa toàn bộ truy cập bên ngoài để nhập phả hệ lớn hoặc đối soát tranh chấp.',
+    description: 'Khóa toàn bộ truy cập bên ngoài để nhập Gia Phả lớn hoặc đối soát tranh chấp.',
     onDesc: 'Toàn bộ người ngoài thấy màn hình thông báo bảo trì trang trọng; chỉ Super Admin vào được.',
     offDesc: 'Hệ thống mở cửa hoạt động bình thường cho mọi thành viên dòng họ.',
     safetyTag: 'Toàn Hệ Thống',
@@ -240,11 +240,10 @@ export default function AdminFeaturesPage() {
 
       {statusMessage && (
         <div
-          className={`p-4 rounded-xl border flex items-center gap-3 text-xs font-semibold ${
-            statusMessage.type === 'success'
+          className={`p-4 rounded-xl border flex items-center gap-3 text-xs font-semibold ${statusMessage.type === 'success'
               ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
               : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
-          }`}
+            }`}
         >
           {statusMessage.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
@@ -265,20 +264,18 @@ export default function AdminFeaturesPage() {
             return (
               <div
                 key={cfg.key}
-                className={`p-4 sm:p-5 rounded-2xl border transition-all ${
-                  isChecked
+                className={`p-4 sm:p-5 rounded-2xl border transition-all ${isChecked
                     ? 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-xs'
                     : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-85'
-                }`}
+                  }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3.5">
                     <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        isChecked
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${isChecked
                           ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700'
-                      }`}
+                        }`}
                     >
                       <Icon className="w-4 h-4" />
                     </div>
@@ -330,15 +327,13 @@ export default function AdminFeaturesPage() {
                       id={`toggle-${cfg.key}`}
                       onClick={() => handleToggle(cfg.key)}
                       disabled={savingKey === cfg.key}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-75 ${
-                        isChecked ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
-                      }`}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-75 ${isChecked ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
+                        }`}
                     >
                       <span
                         aria-hidden="true"
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                          isChecked ? 'translate-x-5' : 'translate-x-0'
-                        }`}
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${isChecked ? 'translate-x-5' : 'translate-x-0'
+                          }`}
                       />
                     </button>
                   </div>

@@ -39,7 +39,7 @@ const ROLES_META = [
     subtitle: 'Đã Đăng Nhập Google',
     badge: 'Viewer',
     badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-800',
-    description: 'Đã xác thực Google nhưng chưa được Admin phê duyệt gắn vào một node phả hệ cụ thể.',
+    description: 'Đã xác thực Google nhưng chưa được Admin phê duyệt gắn vào một node Gia Phả cụ thể.',
     canImpersonate: true,
   },
   {
@@ -54,10 +54,10 @@ const ROLES_META = [
   {
     id: 'branch_editor',
     title: 'Biên Tập Viên Chi',
-    subtitle: 'Cán Bộ Phả Hệ Nhánh',
+    subtitle: 'Cán Bộ Gia Phả Nhánh',
     badge: 'Branch Editor',
     badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-800',
-    description: 'Phụ trách cập nhật thông tin con cháu, phối ngẫu và ngày mất cho nhánh phả hệ được phân công.',
+    description: 'Phụ trách cập nhật thông tin con cháu, phối ngẫu và ngày mất cho nhánh Gia Phả được phân công.',
     canImpersonate: true,
   },
   {
@@ -66,7 +66,7 @@ const ROLES_META = [
     subtitle: 'Trưởng Tộc',
     badge: 'Super Admin',
     badgeColor: 'bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200 border-purple-300 dark:border-purple-800',
-    description: 'Toàn quyền tối cao với toàn bộ cây phả hệ, bàn điều hành, phân quyền và dữ liệu dòng tộc.',
+    description: 'Toàn quyền tối cao với toàn bộ cây Gia Phả, bàn điều hành, phân quyền và dữ liệu dòng tộc.',
     canImpersonate: false,
   },
 ];
@@ -75,7 +75,7 @@ const CATEGORY_NAMES: Record<string, { label: string; icon: any; desc: string }>
   visibility: {
     label: '1. Tiếp Cận & Quyền Riêng Tư',
     icon: Eye,
-    desc: 'Quy định khả năng tra cứu, hiển thị cây phả hệ và bảo mật thông tin liên lạc người sống.',
+    desc: 'Quy định khả năng tra cứu, hiển thị cây Gia Phả và bảo mật thông tin liên lạc người sống.',
   },
   interaction: {
     label: '2. Tự Phục Vụ & Gắn Kết',
@@ -408,7 +408,7 @@ export default function AdminRolesPage() {
             <span>Quy Trình Nâng Cấp Tự Động</span>
           </h4>
           <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-            Khi người dùng Google xác thực lần đầu, họ mặc định mang vai trò <strong>Viewer</strong>. Khi gửi yêu cầu nhận node và được Admin phê duyệt gán vào phả hệ, hệ thống tự động thăng cấp thành <strong>Con Cháu Gắn Node (claimed_member)</strong>.
+            Khi người dùng Google xác thực lần đầu, họ mặc định mang vai trò <strong>Viewer</strong>. Khi gửi yêu cầu nhận node và được Admin phê duyệt gán vào Gia Phả, hệ thống tự động thăng cấp thành <strong>Con Cháu Gắn Node (claimed_member)</strong>.
           </p>
         </div>
 

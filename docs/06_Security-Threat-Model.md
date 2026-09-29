@@ -10,8 +10,8 @@ _Dự án: FAT (Family Tree - Hệ Thống Quản Lý Gia Phả Dòng Họ)_
 
 1. **Thông tin Cá nhân Nhạy cảm của Người Còn Sống (PII):** 
    - Số điện thoại, địa chỉ nơi ở, ngày sinh nhật chính xác, các ghi chú đời tư của thành viên có `life_status = 'living'`. Rủi ro bị kẻ xấu thu thập để lừa đảo mạo danh người nhà.
-2. **Tính Toàn Vẹn Của Cây Phả Hệ (Tree Data Integrity):**
-   - Cấu trúc huyết thống dòng họ (cha, mẹ, con, hôn phối). Rủi ro bị chỉnh sửa sai lệch, đảo lộn thứ bậc, hoặc cố tình tạo vòng lặp phả hệ (vandalism).
+2. **Tính Toàn Vẹn Của Cây Gia Phả (Tree Data Integrity):**
+   - Cấu trúc huyết thống dòng họ (cha, mẹ, con, hôn phối). Rủi ro bị chỉnh sửa sai lệch, đảo lộn thứ bậc, hoặc cố tình tạo vòng lặp Gia Phả (vandalism).
 3. **Quyền Hạn Quản Trị & Duyệt Thành Viên (Administrative Control):**
    - Quyền hạn `super_admin` và `branch_editor`. Tránh bị chiếm quyền hoặc vượt cấp phê duyệt trái phép `claim_requests`.
 4. **Bí Mật Hạ Tầng & Khóa Mật Mã (Infrastructure Secrets):**
@@ -26,12 +26,12 @@ _Dự án: FAT (Family Tree - Hệ Thống Quản Lý Gia Phả Dòng Họ)_
 | **Tài sản** | **Đe doạ (Threat)** | **Ảnh hưởng** | **Biện pháp giảm thiểu (Mitigation)** |
 |---|---|---|---|
 | **Dữ liệu người còn sống** | Thu thập tự động (Web Scraping / Crawling PII) | Rò rỉ thông tin cá nhân của con cháu | **Living Person Privacy Guard:** Route Handlers & RLS tự động che (`phone`, `address`, `notes`) đối với role `viewer`. |
-| **Node phả hệ** | Mạo danh nhận node (Fake Claim Attack) | Nhận bừa cụ/ông/bác làm mình để chiếm quyền | **Approval Gate:** Bắt buộc có Super Admin phê duyệt; Cột `linked_member_id UNIQUE` ngăn 1 node bị 2 người nhận. |
+| **Node Gia Phả** | Mạo danh nhận node (Fake Claim Attack) | Nhận bừa cụ/ông/bác làm mình để chiếm quyền | **Approval Gate:** Bắt buộc có Super Admin phê duyệt; Cột `linked_member_id UNIQUE` ngăn 1 node bị 2 người nhận. |
 | **Cây gia phả** | Chỉnh sửa trái thẩm quyền (IDOR / Unauthorized Write) | Trưởng Chi này sửa dữ liệu của Chi khác | **RBAC & Branch Validation:** `branch_editor` chỉ được sửa thành viên thuộc phạm vi cây con (subtree) của chi mình phụ trách. |
 | **Endpoint Lịch giỗ** | Kích hoạt trái phép Cron Job (`/api/cron/anniversary`) | Bắn thông báo spam liên tục, tốn quota Vercel | **Bearer Token Check:** Bắt buộc kiểm tra Header `Authorization: Bearer CRON_SECRET` khớp với cấu hình Vercel. |
 | **Công cụ Import** | File Excel độc hại / Cố tình tạo vòng lặp (Cycle Attack) | Làm sập thuật toán đệ quy hoặc nghẽn bộ nhớ | Giới hạn file < 5MB; chạy thuật toán Topological Sort / Cycle Detection trước khi insert vào DB. |
 | **CSDL Supabase** | Tấn công tiêm mã (SQL Injection) | Rò rỉ hoặc xóa sạch CSDL | Sử dụng 100% Parameterized Queries qua Supabase Client SDK; không ghép chuỗi SQL thô. |
-| **Giao diện Web** | Tấn công XSS khi hiển thị Tên / Ghi chú phả hệ | Đánh cắp session cookie của Admin | React DOM tự động escape HTML; cấu hình Content Security Policy (CSP) nghiêm ngặt. |
+| **Giao diện Web** | Tấn công XSS khi hiển thị Tên / Ghi chú Gia Phả | Đánh cắp session cookie của Admin | React DOM tự động escape HTML; cấu hình Content Security Policy (CSP) nghiêm ngặt. |
 
 ---
 

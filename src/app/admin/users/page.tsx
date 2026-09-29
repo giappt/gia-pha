@@ -182,12 +182,12 @@ export default function AdminUsersPage() {
               user_role: newRole,
               linked_member: linkedMem
                 ? {
-                    id: linkedMem.id,
-                    full_name: linkedMem.full_name,
-                    gender: linkedMem.gender,
-                    generation_level: Number(linkedMem.generation_level || 1),
-                    branch_name: linkedMem.branch_name || undefined,
-                  }
+                  id: linkedMem.id,
+                  full_name: linkedMem.full_name,
+                  gender: linkedMem.gender,
+                  generation_level: Number(linkedMem.generation_level || 1),
+                  branch_name: linkedMem.branch_name || undefined,
+                }
                 : null,
             };
           })
@@ -196,11 +196,11 @@ export default function AdminUsersPage() {
           type: 'success',
           text: memberId
             ? `Đã liên kết tài khoản với '${linkedMem?.full_name}' thành công!`
-            : 'Đã gỡ liên kết node phả hệ của tài khoản này.',
+            : 'Đã gỡ liên kết node Gia Phả của tài khoản này.',
         });
         setLinkingUser(null);
       } else {
-        setStatusMessage({ type: 'error', text: json.error || 'Lỗi liên kết node phả hệ' });
+        setStatusMessage({ type: 'error', text: json.error || 'Lỗi liên kết node Gia Phả' });
       }
     } catch (err: any) {
       setStatusMessage({ type: 'error', text: err.message || 'Lỗi kết nối máy chủ' });
@@ -243,7 +243,7 @@ export default function AdminUsersPage() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-              Quản Lý Tài Khoản & Gán Node Phả Hệ
+              Quản Lý Tài Khoản & Gán Node Gia Phả
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               Danh sách tài khoản Google đã đăng nhập, phân cấp vai trò và liên kết với thành viên trên cây gia phả.
@@ -265,11 +265,10 @@ export default function AdminUsersPage() {
 
       {statusMessage && (
         <div
-          className={`p-4 rounded-xl border flex items-center gap-3 text-xs font-semibold ${
-            statusMessage.type === 'success'
+          className={`p-4 rounded-xl border flex items-center gap-3 text-xs font-semibold ${statusMessage.type === 'success'
               ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
               : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
-          }`}
+            }`}
         >
           {statusMessage.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
@@ -325,11 +324,10 @@ export default function AdminUsersPage() {
               key={chip.id}
               type="button"
               onClick={() => setRoleFilter(chip.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                roleFilter === chip.id
+              className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${roleFilter === chip.id
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
+                }`}
             >
               {chip.label}
             </button>
@@ -345,7 +343,7 @@ export default function AdminUsersPage() {
               <tr className="bg-slate-50/80 dark:bg-slate-850/80 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                 <th className="py-3 px-4">Tài Khoản Google</th>
                 <th className="py-3 px-4">Vai Trò Hệ Thống</th>
-                <th className="py-3 px-4">Hồ Sơ Phả Hệ Liên Kết</th>
+                <th className="py-3 px-4">Hồ Sơ Gia Phả Liên Kết</th>
                 <th className="py-3 px-4 text-right">Thao Tác</th>
               </tr>
             </thead>
@@ -404,11 +402,10 @@ export default function AdminUsersPage() {
                                     key={r}
                                     type="button"
                                     onClick={() => handleUpdateRole(u.id, r)}
-                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer ${
-                                      u.user_role === r
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer ${u.user_role === r
                                         ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold'
                                         : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
-                                    }`}
+                                      }`}
                                   >
                                     <span>{ROLE_LABELS[r].label.split('(')[0]}</span>
                                     {u.user_role === r && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
@@ -452,7 +449,7 @@ export default function AdminUsersPage() {
                             setMemberSearchQuery('');
                           }}
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
-                          title="Gán hoặc đổi người đại diện trên cây phả hệ"
+                          title="Gán hoặc đổi người đại diện trên cây Gia Phả"
                         >
                           <LinkIcon className="w-3 h-3 text-emerald-600" />
                           <span>{u.linked_member ? 'Đổi Node' : 'Gán Node'}</span>
@@ -463,7 +460,7 @@ export default function AdminUsersPage() {
                             type="button"
                             onClick={() => handleLinkNode(u.id, null)}
                             className="inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 text-xs font-semibold transition-colors cursor-pointer"
-                            title="Gỡ liên kết node phả hệ"
+                            title="Gỡ liên kết node Gia Phả"
                           >
                             <Unlink className="w-3 h-3" />
                             <span>Gỡ</span>
@@ -479,7 +476,7 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Modal: Gán Node Phả Hệ */}
+      {/* Modal: Gán Node Gia Phả */}
       {linkingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-xs">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
@@ -489,7 +486,7 @@ export default function AdminUsersPage() {
                   Gán Node Cho: {linkingUser.full_name || linkingUser.email}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Chọn người đại diện tương ứng trên Cây Phả Hệ cho tài khoản này.
+                  Chọn người đại diện tương ứng trên Cây Gia Phả cho tài khoản này.
                 </p>
               </div>
               <button

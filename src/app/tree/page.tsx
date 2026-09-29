@@ -8,8 +8,8 @@ import { canManageTree } from '@/lib/auth/permissions';
 import { resolveEffectiveRole, resolveFeatureFlags, type ImpersonatedRole } from '@/lib/admin/admin-engine';
 
 export const metadata: Metadata = {
-  title: 'Cây Phả Hệ Tương Tác - FAT Family Tree',
-  description: 'Màn hình trực quan hóa cây phả hệ gia tộc đa thế hệ, hỗ trợ pan zoom và Ghost Node hôn nhân nội tộc.',
+  title: 'Cây Gia Phả Tương Tác - FAT Family Tree',
+  description: 'Màn hình trực quan hóa cây Gia Phả gia tộc đa thế hệ, hỗ trợ pan zoom và Ghost Node hôn nhân nội tộc.',
 };
 
 export default async function TreePage() {
@@ -35,7 +35,7 @@ export default async function TreePage() {
         } else if (parsed?.id === '00000000-0000-0000-0000-000000000001') {
           userRole = 'super_admin';
         }
-      } catch {}
+      } catch { }
     } else {
       try {
         const {
@@ -57,14 +57,14 @@ export default async function TreePage() {
             }
           }
         }
-      } catch {}
+      } catch { }
     }
 
     const devBranchesStr = cookieStore.get('fat_dev_branches')?.value;
     if (devBranchesStr) {
       try {
         clanBranches = JSON.parse(devBranchesStr);
-      } catch {}
+      } catch { }
     }
 
     // Lấy thông tin cài đặt dòng họ & feature flags

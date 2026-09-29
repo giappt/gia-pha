@@ -29,10 +29,10 @@ spawned_specs: []
 - **Điểm chạm 1 - Dropdown Avatar & Cài đặt cá nhân (`AuthButton.tsx` / `PersonalSettingsModal.tsx`):**
   - Trong dropdown Avatar: hiển thị menu nổi bật `[🙋 Bạn là ai trong gia tộc? Nhận hồ sơ →]` (nếu chưa liên kết) hoặc `[⏳ Đang chờ duyệt đơn]` (nếu pending).
   - Trong modal Cài đặt của tôi: Khối "Hồ sơ huyết thống dòng họ" cho phép xem trạng thái liên kết và bấm nhận node bất cứ lúc nào.
-- **Điểm chạm 2 - Smart Banner trên Trang chủ / Cây Phả Hệ:**
+- **Điểm chạm 2 - Smart Banner trên Trang chủ / Cây Gia Phả:**
   - Thanh thông báo thanh mảnh (~40px) dưới Navbar: *"Bạn đã đăng nhập với email `abc@gmail.com`. Bạn là ai trên cây gia phả? [🙋 Nhận hồ sơ] [✕ Để sau]"*.
   - Bấm `[✕ Để sau]`: Tự ẩn đi và lưu nhớ trong 7 ngày không hỏi lại, đảm bảo màn hình luôn sạch sẽ.
-- **Điểm chạm 3 - Ngay trên Cây Phả Hệ (`/tree` - Member Detail Drawer):**
+- **Điểm chạm 3 - Ngay trên Cây Gia Phả (`/tree` - Member Detail Drawer):**
   - Khi con cháu lướt cây tìm thấy thẻ của mình $\rightarrow$ Bấm mở Drawer $\rightarrow$ Xuất hiện nút nổi bật: **`[🙋 Đây chính là tôi (Gửi đơn nhận hồ sơ)]`** (1-click, tự điền sẵn tên, đời, chi nhánh).
 - **Điểm chạm 4 - Trên Trang Tra Cứu Xưng Hô (`/kinship`):**
   - Gợi ý nhận node để hệ thống tự động điền "Người gọi = Chính bạn", không cần chọn lại tên mình mỗi lần tra cứu.
@@ -59,7 +59,7 @@ spawned_specs: []
   - **Tự do 100%:** Được quyền bấm **`[Hủy đơn]`** hoặc **`[Chọn lại]`** bất cứ lúc nào nếu phát hiện chọn nhầm.
   - Chưa được quyền sửa thông tin hay thêm con cái cho node đó.
 - **Đã được duyệt (`claimed_member`):**
-  - Trở thành thành viên chính thức gắn với node phả hệ.
+  - Trở thành thành viên chính thức gắn với node Gia Phả.
   - Khóa nút tự đổi node (chống mượn máy phá hoại hoặc tranh chấp). Muốn đổi phải liên hệ Super Admin/Trưởng Chi gỡ liên kết trên `/admin/users` trước.
 
 ---

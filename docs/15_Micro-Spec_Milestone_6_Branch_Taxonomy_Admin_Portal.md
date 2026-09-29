@@ -19,8 +19,8 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
       - Bỏ giới hạn cứng `tiers.length > 1`. Cho phép xóa đến cấp cuối cùng (về mảng rỗng `[]`) để người dùng có thể thiết lập từ đầu theo danh xưng riêng của dòng họ.
       - **Chặn xóa tuyệt đối khi cấp đang được dùng:** Kiểm tra đệ quy trong cây `branches`. Nếu cấp bậc đang gán cho bất kỳ nhánh nào trong cây $\rightarrow$ Hệ thống từ chối xóa 100% và hiện cảnh báo đỏ nêu danh sách các nhánh vi phạm cần được xử lý trước.
     - Mỗi node trong cây phân chi (`BranchNode`) gồm: `id`, `tierName` (tên cấp lấy từ danh mục dòng họ), `name` (tên nhánh: "Ngành Trưởng", "Chi 2"), và `rootMemberId` (ID của Cụ Tiền nhân khởi nguồn nhánh đó).
-    - **Thuật toán Kế thừa Phả hệ Tự động (`branch-engine.ts`):** Sử dụng hàm thuần túy (pure function) duyệt ngược chuỗi phụ hệ (father chain) từ một thành viên bất kỳ lên Cụ Thủy Tổ. Khớp các thế hệ cha/ông với `rootMemberId` để tự động suy luận danh xưng tôn ti: `Đời ${generation} · ${nganh} · ${chi}` (ví dụ: `Đời 7 · Ngành 3 · Chi 6`) mà không bắt người nhập liệu gõ thủ công.
-  - **Bộ Lọc Đa Tầng Chuẩn Mực:** Thay thế cơ chế nhặt mót chuỗi text tự do trên trang Lịch Giỗ (`/anniversaries`) và Cây Phả Hệ (`/tree`) bằng danh mục Ngành & Chi chính thức từ `clan_settings.branches`. Tự động áp dụng bộ lọc cá nhân nếu người dùng đã ghim.
+    - **Thuật toán Kế thừa Gia Phả Tự động (`branch-engine.ts`):** Sử dụng hàm thuần túy (pure function) duyệt ngược chuỗi phụ hệ (father chain) từ một thành viên bất kỳ lên Cụ Thủy Tổ. Khớp các thế hệ cha/ông với `rootMemberId` để tự động suy luận danh xưng tôn ti: `Đời ${generation} · ${nganh} · ${chi}` (ví dụ: `Đời 7 · Ngành 3 · Chi 6`) mà không bắt người nhập liệu gõ thủ công.
+  - **Bộ Lọc Đa Tầng Chuẩn Mực:** Thay thế cơ chế nhặt mót chuỗi text tự do trên trang Lịch Giỗ (`/anniversaries`) và Cây Gia Phả (`/tree`) bằng danh mục Ngành & Chi chính thức từ `clan_settings.branches`. Tự động áp dụng bộ lọc cá nhân nếu người dùng đã ghim.
 - **Ràng buộc Thẩm Mỹ & UX (Modern Vietnamese Heritage Design System):**
   - **Tách Bạch Rõ Ràng Hai Cụm Nội Dung (Two Distinct Clusters):**
     - **Cụm 1: Danh Mục Thứ Bậc Tông Tộc (Master Data Tiers):** Chỉ quản lý tên gọi và trình tự cấp bậc (`Ngành` → `Chi` → `Nhánh`...).
@@ -30,7 +30,7 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
     - Dải Thứ Bậc Tông Tộc hiển thị dạng **Dải Phẳng (Flat Stepper Bar)** thanh mảnh, ngăn cách bằng hairline `border-b border-slate-100 dark:border-slate-800`, không bọc trong card xám `bg-slate-50 border`.
     - Hộp Tip hướng dẫn tối giản hóa thành Callout thanh thoát với icon nhỏ, không đóng khung hộp viền dày.
     - Toàn bộ cây phân cấp được biểu diễn dưới dạng **Các Dòng Phẳng (Flat Rows)** ngăn cách bằng đường kẻ hairline `border-b border-slate-100 dark:border-slate-800`.
-    - Thể hiện quan hệ cha - con bằng **Đường gióng cây phả hệ (Subtle Tree Guide Lines: `border-l-2 border-emerald-300 dark:border-emerald-800` bo góc cong `rounded-bl-lg`)** thanh thoát.
+    - Thể hiện quan hệ cha - con bằng **Đường gióng cây Gia Phả (Subtle Tree Guide Lines: `border-l-2 border-emerald-300 dark:border-emerald-800` bo góc cong `rounded-bl-lg`)** thanh thoát.
     - Sử dụng ô nhập phẳng (Ghost Inputs), Badge pill cấp bậc màu ngọc bích sang trọng, nút thao tác nhẹ nhàng khi hover.
   - **Thanh Tabs Phẳng (Flat Segmented Bar):** Toàn bộ phân hệ Admin nằm trên trang quản trị với 2 tabs cấu hình thực tế:
     - Tab 1: `[ 🌿 Cấu Trúc Ngành/Chi ]` (Quản lý thứ bậc Cấp bậc, phân cấp Ngành/Chi và gán Cụ Khởi Nguồn).
@@ -97,8 +97,8 @@ sequenceDiagram
     A->>S: Cập nhật clan_settings.branches (Cấu trúc cây đệ quy)
     S-->>A: Phản hồi thành công HTTP 200
 
-    %% Luồng 2: Kế thừa phả hệ tự động
-    U->>N: Xem Cây Phả Hệ hoặc Lịch Giỗ
+    %% Luồng 2: Kế thừa Gia Phả tự động
+    U->>N: Xem Cây Gia Phả hoặc Lịch Giỗ
     N->>E: Gọi resolveMemberBranchHierarchy(memberId, allMembers, branchTree)
     E->>E: Duyệt ngược phụ hệ (father_id chain) tìm rootMemberId
     E-->>N: Trả về danh xưng chuẩn: "Đời 7 · Ngành 1 · Chi Trưởng"
@@ -115,7 +115,7 @@ sequenceDiagram
 ## 4. BACKEND & LOGIC CORE
 
 ### 4.1. File: `src/lib/tree-layout/branch-engine.ts`
-Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
+Mô-đun thuần túy (pure functions) xử lý Gia Phả phân chi:
 
 1. **`DEFAULT_BRANCH_TIERS = ['Ngành', 'Chi', 'Nhánh', 'Phái']`:** Danh sách cấp bậc mặc định khi dòng họ chưa cấu hình riêng.
 2. **`getNextTierName(currentTier?: string | null, availableTiers?: string[]): string`:** Nhận vào cấp bậc hiện tại của cha và mảng cấp bậc dòng họ, tự động suy luận cấp kế tiếp theo thứ bậc phân tầng. Nếu là cấp cuối hoặc không tìm thấy thì giữ nguyên cấp cuối. Khi `availableTiers` rỗng hoặc không truyền, fallback an toàn về `currentTier || 'Nhánh'`.
@@ -166,7 +166,7 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
     - **Callout Hướng Dẫn Kế Thừa:** Tối giản hóa thành thanh ghi chú thanh thoát với icon `HelpCircle`, không bọc trong box viền dày cộp.
 - **Thiết Kế Bảng Cây Phẳng (Flat Tree Outline Table) - Triệt Tiêu Tuyệt Đối Box-in-Box:**
   - **0 Card Lồng Nhau (No Nested Cards):** Danh sách phân cấp hiển thị dạng **Các Dòng Phẳng (Flat Rows)** ngăn cách bằng hairline `border-b border-slate-100 dark:border-slate-800`.
-  - **Đường Gióng Cây Phả Hệ Tinh Tế (Subtle Tree Guides):** Đường nét mảnh màu xanh ngọc (`border-l-2 border-emerald-300 dark:border-emerald-800` với bo góc cong `rounded-bl-lg`) thể hiện quan hệ cha - con mềm mại, dễ nhìn.
+  - **Đường Gióng Cây Gia Phả Tinh Tế (Subtle Tree Guides):** Đường nét mảnh màu xanh ngọc (`border-l-2 border-emerald-300 dark:border-emerald-800` với bo góc cong `rounded-bl-lg`) thể hiện quan hệ cha - con mềm mại, dễ nhìn.
   - **Ghost Controls / Subtle Inputs:**
     - Cấp bậc: Badge pill màu ngọc bích `bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/80` bấm vào để chọn nhanh các cấp đã định nghĩa.
     - Tên nhánh: Ô nhập chữ phẳng (Ghost input) không viền dày đặc, chỉ hiện viền mảnh khi focus/hover.
@@ -188,7 +188,7 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
 - Ngăn chặn xung đột bối cảnh giữa Modal và trang nền.
 
 ### 5.6. File: `src/components/tree/FamilyTreeCanvas.tsx`
-- Truyền `activeSpouseRelations` vào hàm `resolveMemberBranchHierarchy` khi map `branch_name` cho các node thành viên, đảm bảo tính đồng bộ danh xưng phân chi giữa Cây phả hệ và Lịch Giỗ.
+- Truyền `activeSpouseRelations` vào hàm `resolveMemberBranchHierarchy` khi map `branch_name` cho các node thành viên, đảm bảo tính đồng bộ danh xưng phân chi giữa Cây Gia Phả và Lịch Giỗ.
 
 ### 5.7. Bảo Toàn Cụ Tổ Tiền Nhân Trực Hệ & Dynamic Root Tier Lineage Scope (`lineageDepth` V2)
 
@@ -240,7 +240,7 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
 
 | ID | Tên Kịch Bản | File Test Dự Kiến | Tiền điều kiện (Given) | Thao tác kích hoạt (When) | Kết quả kỳ vọng (Then) | Phân loại | Trạng thái |
 |---|---|---|---|---|---|---|---|
-| **TC_UT_BRANCH_INHERITANCE_01** | Kế thừa phả hệ tự động 2 tầng (Ngành → Chi) | `tests/branch-engine.test.ts` | Cụ Khởi (Đời 1) → Cụ Ngành 1 (Đời 2) → Cụ Chi 2 (Đời 3) → Cháu (Đời 4) | Gọi `resolveMemberBranchHierarchy` cho Cháu | Trả về `branchPath: "Ngành 1 · Chi 2"` và `matchedBranchIds` chứa cả 2 ID | Happy Path | - [x] PASS |
+| **TC_UT_BRANCH_INHERITANCE_01** | Kế thừa Gia Phả tự động 2 tầng (Ngành → Chi) | `tests/branch-engine.test.ts` | Cụ Khởi (Đời 1) → Cụ Ngành 1 (Đời 2) → Cụ Chi 2 (Đời 3) → Cháu (Đời 4) | Gọi `resolveMemberBranchHierarchy` cho Cháu | Trả về `branchPath: "Ngành 1 · Chi 2"` và `matchedBranchIds` chứa cả 2 ID | Happy Path | - [x] PASS |
 | **TC_UT_BRANCH_TREE_VALIDATION** | Kiểm tra tính hợp lệ và phát hiện vòng lặp của Cây phân chi | `tests/branch-engine.test.ts` | Cây phân chi có ID trùng lặp hoặc tự trỏ con làm cha | Gọi `validateBranchTree` | Trả về `isValid: false` kèm thông báo lỗi cụ thể | Edge Case | - [x] PASS |
 | **TC_UT_BRANCH_FLATTEN** | Làm phẳng cây phân chi và tính toán đường dẫn phân cấp | `tests/branch-engine.test.ts` | Cây phân chi 3 cấp: Ngành 1 > Chi A > Nhánh X | Gọi `flattenBranchTree` | Trả về mảng 3 phần tử với `pathName` và `depth` tăng dần chính xác | Happy Path | - [x] PASS |
 | **TC_UT_BRANCH_FILTER** | Lọc danh sách con cháu theo Ngành hoặc Chi | `tests/branch-engine.test.ts` | Cây gia phả gồm thành viên thuộc Ngành 1 và Ngành 2 | Gọi `filterMembersByBranch` với `branchId` của Ngành 1 | Chỉ trả về các thành viên hậu duệ trực hệ của Cụ Khởi Ngành 1 | Logic Query | - [x] PASS |
@@ -250,7 +250,7 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
 | **TC_UT_ADMIN_TABS_CLEAN** | Thanh Tab trang Admin Settings chỉ chứa 2 phân hệ cấu hình thực tế | `tests/branch-engine.test.ts` | Đọc mã nguồn `admin/settings/page.tsx` | Kiểm tra danh sách Tab Buttons | Không còn tab thừa trùng lặp `tab-btn-import`, chỉ có `branches` và `info_kinship` | Clean Nav | - [x] PASS |
 | **TC_UT_PORTAL_BODY_ESCAPE** | PersonalSettingsModal sử dụng React Portal gắn vào document.body và hỗ trợ Escape | `tests/branch-engine.test.ts` | Đọc mã nguồn `PersonalSettingsModal.tsx` | Kiểm tra import và sử dụng `createPortal`, target `document.body`, listener phím `Escape` | Modal thoát ly khỏi containing block của header, đóng mượt bằng phím Esc | Architectural Guard | - [x] PASS |
 | **TC_UT_CUSTOM_TIERS_LOGIC** | Hàm getNextTierName và xử lý mảng branch_tiers tùy biến | `tests/branch-engine.test.ts` | Cấu hình tiers: `['Phái', 'Chi', 'Nhánh']` | Gọi `getNextTierName('Phái', tiers)` và `getNextTierName('Nhánh', tiers)` | Lần lượt trả về `'Chi'` và `'Nhánh'` (cấp cuối giữ nguyên); fallback khi mảng rỗng | Logic Engine | - [x] PASS |
-| **TC_UT_FLAT_TREE_NO_BOX_IN_BOX** | Rà soát cấu trúc BranchTaxonomyManager không còn card lồng card xám | `tests/branch-engine.test.ts` | Đọc mã nguồn `BranchTaxonomyManager.tsx` | Kiểm tra các class card lồng `rounded-xl border bg-slate-50/60` | Đảm bảo danh sách nhánh con sử dụng Flat Tree Row và đường gióng phả hệ | UI Anti Box-in-Box | - [x] PASS |
+| **TC_UT_FLAT_TREE_NO_BOX_IN_BOX** | Rà soát cấu trúc BranchTaxonomyManager không còn card lồng card xám | `tests/branch-engine.test.ts` | Đọc mã nguồn `BranchTaxonomyManager.tsx` | Kiểm tra các class card lồng `rounded-xl border bg-slate-50/60` | Đảm bảo danh sách nhánh con sử dụng Flat Tree Row và đường gióng Gia Phả | UI Anti Box-in-Box | - [x] PASS |
 | **TC_UT_BRANCH_TIERS_API_CONTRACT** | API /api/clan-settings hỗ trợ trả về và cập nhật branch_tiers an toàn | `tests/branch-engine.test.ts` | Gửi request PATCH với `branch_tiers: ['Giáp', 'Ngành', 'Chi']` | Gọi API route `/api/clan-settings` | Trả về HTTP 200, lưu mảng tiers hợp lệ và có fallback khi mảng rỗng | API Contract | - [x] PASS |
 | **TC_UT_TIER_INTEGRITY_GUARD_01** | `findBranchesUsingTier` phát hiện đúng các nhánh đang sử dụng cấp bậc kể cả ở tầng sâu đệ quy | `tests/branch-engine.test.ts` | Cây phân cấp gồm `Ngành 1` (gốc) và `Chi 1` (con) | Gọi `findBranchesUsingTier(mockBranches, 'Chi')` | Trả về danh sách chứa `Chi 1`, độ dài $\ge 1$ | Logic Guard | - [x] PASS |
 | **TC_UT_TIER_INTEGRITY_GUARD_02** | `findBranchesUsingTier` trả về rỗng khi cấp bậc không dùng $\rightarrow$ Cho phép xóa cấp cuối an toàn | `tests/branch-engine.test.ts` | Cây phân cấp không có nhánh nào mang cấp `Phái` | Gọi `findBranchesUsingTier(mockBranches, 'Phái')` | Trả về `[]` với độ dài bằng 0 | Logic Guard | - [x] PASS |
@@ -270,8 +270,8 @@ Mô-đun thuần túy (pure functions) xử lý phả hệ phân chi:
 - [ ] **UAT_01 (Lối Vào Quản Trị Rõ Ràng):** Đăng nhập với tài khoản Super Admin → Quan sát thanh Navbar xuất hiện nút `[ 🛡️ Quản Trị Dòng Họ ]` màu đồng/amber sang trọng, bấm 1 phát vào thẳng `/admin`.
 - [ ] **UAT_02 (Giao Diện Admin Phẳng - Anti Box-in-Box):** Truy cập `/admin` → Thấy thanh Tab phẳng với 2 phân hệ rõ ràng: `🌿 Cấu Trúc Ngành/Chi`, `🏛️ Thông Tin & Xưng Hô`. Chuyển tab mượt mà, không giật lag.
 - [ ] **UAT_03 (Thiết Lập Ngành & Chi Trực Quan):** Tại Tab `Cấu Trúc Ngành/Chi`, bấm thêm Ngành 1, thêm Chi con, chọn Cụ Tiền nhân làm Root Member → Lưu cấu trúc thành công.
-- [ ] **UAT_04 (Cài Đặt Cá Nhân Toàn Màn Hình - Portal Chuẩn Xác):** Bấm vào Avatar cá nhân trên Navbar → Chọn `[ ⚙️ Cài đặt của tôi ]` → Thấy Modal hiển thị trọn vẹn ở trung tâm màn hình, lớp nền tối bao phủ 100% trang web (kể cả Cây phả hệ bên dưới). Thân modal hiển thị đầy đủ danh sách phân chi, chuông báo giỗ, nút Lưu. Bấm phím `Escape` hoặc bấm ra ngoài nền tối để đóng modal ngay lập tức.
-- [ ] **UAT_05 (Tự Động Kế Thừa Danh Xưng):** Mở Cây Phả Hệ và Lịch Giỗ → Con cháu tự động hiển thị danh xưng tôn ti `Đời N · Ngành X · Chi Y` mà không cần nhập tay từng người.
+- [ ] **UAT_04 (Cài Đặt Cá Nhân Toàn Màn Hình - Portal Chuẩn Xác):** Bấm vào Avatar cá nhân trên Navbar → Chọn `[ ⚙️ Cài đặt của tôi ]` → Thấy Modal hiển thị trọn vẹn ở trung tâm màn hình, lớp nền tối bao phủ 100% trang web (kể cả Cây Gia Phả bên dưới). Thân modal hiển thị đầy đủ danh sách phân chi, chuông báo giỗ, nút Lưu. Bấm phím `Escape` hoặc bấm ra ngoài nền tối để đóng modal ngay lập tức.
+- [ ] **UAT_05 (Tự Động Kế Thừa Danh Xưng):** Mở Cây Gia Phả và Lịch Giỗ → Con cháu tự động hiển thị danh xưng tôn ti `Đời N · Ngành X · Chi Y` mà không cần nhập tay từng người.
 - [ ] **UAT_06 (Console Sạch):** Mở Developer Tools Console → 0 lỗi đỏ, 0 cảnh báo hydration.
 - [ ] **UAT_07 (Typography Chuẩn Mực):** Mọi văn bản hướng dẫn hiển thị mũi tên Unicode `→`, không còn mã nguồn thô LaTeX.
 - [ ] **UAT_08 (Điều Hướng Không Trùng Lặp):** Thanh Subheader giữ chức năng điều hướng cấp cao, thanh Tab chỉ phục vụ cấu hình trang hiện tại.

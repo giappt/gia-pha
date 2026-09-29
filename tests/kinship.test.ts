@@ -124,7 +124,7 @@ describe('Kinship Engine Test Suite (Comprehensive 7-Generation Clan)', () => {
     assert.ok(res.comparisonFacts.summary.length > 0);
   });
 
-  // TC11: Phả Hệ Đa Thê & Con Nuôi
+  // TC11: Gia Phả Đa Thê & Con Nuôi
   it('TC11: Nhận diện chính xác quan hệ con ruột vs con nuôi trong Chi 2', () => {
     // Nam (con ruột) & Tâm (con nuôi) của ông Hùng
     const lca = findLowestCommonAncestor(ID_NAM, ID_TAM, membersMap);

@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Không tìm thấy một trong hai thành viên trong dữ liệu phả hệ.',
+          error: 'Không tìm thấy một trong hai thành viên trong dữ liệu Gia Phả.',
         },
         { status: 404 }
       );
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     if (lcaResult.relationshipType === 'unrelated') {
       if (isMember1Unlinked || isMember2Unlinked) {
         const unlinkedName = isMember1Unlinked ? member1.full_name : member2.full_name;
-        resolution.explanation = `Thành viên "${unlinkedName}" chưa được liên kết cha/mẹ trong cây phả hệ, do đó chưa thể xác định quan hệ xưng hô.`;
+        resolution.explanation = `Thành viên "${unlinkedName}" chưa được liên kết cha/mẹ trong cây Gia Phả, do đó chưa thể xác định quan hệ xưng hô.`;
       }
     }
 
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Có lỗi xảy ra trong quá trình tính toán vai vế phả hệ.',
+        error: error.message || 'Có lỗi xảy ra trong quá trình tính toán vai vế Gia Phả.',
       },
       { status: 500 }
     );

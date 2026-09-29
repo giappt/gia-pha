@@ -90,7 +90,7 @@ export interface ClanVitalityMetrics {
 }
 
 /**
- * Tính toán các chỉ số sức sống phả hệ và mức độ phủ sóng tài khoản
+ * Tính toán các chỉ số sức sống Gia Phả và mức độ phủ sóng tài khoản
  */
 export function computeClanVitalityMetrics(
   members: any[] = [],
@@ -145,7 +145,7 @@ export function findUnlinkedMembers(members: any[] = []): any[] {
 }
 
 /**
- * Tự động chuyển đổi vai trò người dùng khi gán hoặc gỡ node phả hệ
+ * Tự động chuyển đổi vai trò người dùng khi gán hoặc gỡ node Gia Phả
  * - Khi gán node (linkedMemberId khác null): nếu đang là 'viewer' -> thăng cấp 'claimed_member'
  * - Khi gỡ node (linkedMemberId = null): nếu đang là 'claimed_member' -> hạ cấp về 'viewer'
  * - Các vai trò quản trị ('branch_editor', 'super_admin') được bảo toàn tuyệt đối, không bị thay đổi
@@ -336,8 +336,8 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
   // Nhóm 1: Tiếp Cận & Quyền Riêng Tư
   {
     id: 'view_tree',
-    name: 'Xem Cây Phả Hệ Trực Quan',
-    description: 'Truy cập và điều hướng trên canvas cây phả hệ dòng họ (/tree)',
+    name: 'Xem Cây Gia Phả Trực Quan',
+    description: 'Truy cập và điều hướng trên canvas cây Gia Phả dòng họ (/tree)',
     category: 'visibility',
     roles: { guest: true, viewer: true, claimed_member: true, branch_editor: true, super_admin: true },
   },
@@ -366,7 +366,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
   // Nhóm 2: Tự Phục Vụ & Gắn Kết
   {
     id: 'claim_node',
-    name: 'Gửi Yêu Cầu Nhận Node Phả Hệ',
+    name: 'Gửi Yêu Cầu Nhận Node Gia Phả',
     description: 'Bấm nút "Tôi là người này" để gửi yêu cầu liên kết tài khoản Google',
     category: 'interaction',
     roles: { guest: false, viewer: true, claimed_member: false, branch_editor: false, super_admin: true },
@@ -406,7 +406,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
   {
     id: 'admin_dashboard',
     name: 'Truy Cập Bàn Điều Hành',
-    description: 'Xem các chỉ số sức sống phả hệ và cảnh báo thành viên chưa nối phả (/admin)',
+    description: 'Xem các chỉ số sức sống Gia Phả và cảnh báo thành viên chưa nối phả (/admin)',
     category: 'administration',
     roles: { guest: false, viewer: false, claimed_member: false, branch_editor: false, super_admin: true },
   },
@@ -420,7 +420,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
   {
     id: 'import_excel_data',
     name: 'Nạp Excel Hàng Loạt & Smart Re-map',
-    description: 'Nạp cây phả hệ từ file Excel và tự động bảo tồn liên kết con cháu (/admin/import)',
+    description: 'Nạp cây Gia Phả từ file Excel và tự động bảo tồn liên kết con cháu (/admin/import)',
     category: 'administration',
     roles: { guest: false, viewer: false, claimed_member: false, branch_editor: false, super_admin: true },
   },

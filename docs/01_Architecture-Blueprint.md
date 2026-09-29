@@ -9,7 +9,7 @@ _Dự án: FAT (Family Tree - Hệ Thống Quản Lý Gia Phả Dòng Họ)_
 ## 1. TỔNG QUAN DỰ ÁN (OVERVIEW)
 
 - **Mục tiêu sản phẩm:** 
-  Xây dựng nền tảng số hóa phả hệ dòng họ trực tuyến đa nền tảng (Web & PWA Mobile), giúp toàn bộ con cháu trong dòng họ tra cứu nguồn cội, hình dung trực quan cây gia phả nhiều thế hệ, phân định vai vế xưng hô chính xác theo phong tục văn hóa, và tự động nhắc nhở ngày giỗ theo âm lịch.
+  Xây dựng nền tảng số hóa Gia Phả dòng họ trực tuyến đa nền tảng (Web & PWA Mobile), giúp toàn bộ con cháu trong dòng họ tra cứu nguồn cội, hình dung trực quan cây gia phả nhiều thế hệ, phân định vai vế xưng hô chính xác theo phong tục văn hóa, và tự động nhắc nhở ngày giỗ theo âm lịch.
 - **Đối tượng người dùng:**
   - *Cụ Trưởng Họ / Ban Trị Sự Dòng Họ (60 - 80 tuổi):* Mắt kém, ít am hiểu công nghệ, cần giao diện trực quan, rõ ràng thứ bậc Chi Trưởng - Chi Thứ, bảo vệ nghiêm ngặt tính đúng đắn của dữ liệu dòng họ.
   - *Thư Ký / Người Nhập Liệu Dòng Họ (25 - 45 tuổi):* Thạo công nghệ, phụ trách thu thập, chuẩn hóa và nhập liệu thông tin từ sổ sách cũ vào hệ thống.
@@ -22,18 +22,18 @@ _Dự án: FAT (Family Tree - Hệ Thống Quản Lý Gia Phả Dòng Họ)_
 ## 2. HÀNH TRÌNH NGƯỜI DÙNG (USER JOURNEYS)
 
 ### Luồng 1: Khám phá Cây Gia phả & Tra cứu Thông tin (Dành cho Khách / Con cháu)
-Người dùng truy cập trang chủ $\rightarrow$ Hệ thống hiển thị Cây Phả Hệ từ Cụ Tổ (mặc định mở 3 đời đầu) $\rightarrow$ Người dùng gõ tên mình hoặc ông bà trên thanh tìm kiếm $\rightarrow$ Khung nhìn (viewport) tự động lướt mượt mà (pan/zoom) đến đúng vị trí Node thành viên $\rightarrow$ Click vào Node để xem thẻ chi tiết: Họ tên, Năm sinh - Năm mất, Tên Bố Mẹ, Vợ/Chồng và các Con.
+Người dùng truy cập trang chủ $\rightarrow$ Hệ thống hiển thị Cây Gia Phả từ Cụ Tổ (mặc định mở 3 đời đầu) $\rightarrow$ Người dùng gõ tên mình hoặc ông bà trên thanh tìm kiếm $\rightarrow$ Khung nhìn (viewport) tự động lướt mượt mà (pan/zoom) đến đúng vị trí Node thành viên $\rightarrow$ Click vào Node để xem thẻ chi tiết: Họ tên, Năm sinh - Năm mất, Tên Bố Mẹ, Vợ/Chồng và các Con.
 
 ### Luồng 2: Tra cứu Vai vế Xưng hô (Kinship Finder)
-Người dùng mở công cụ "Tra cứu Vai vế" $\rightarrow$ Chọn Người thứ nhất (Người gọi, ví dụ: Tôi) $\rightarrow$ Chọn Người thứ hai (Người được gọi, ví dụ: Một bác ở Chi 2) $\rightarrow$ Bấm nút "Xác định quan hệ" $\rightarrow$ Hệ thống hiển thị kết quả xưng hô 2 chiều (Tôi gọi người đó là gì / Người đó gọi tôi là gì) kèm sơ đồ phả hệ trực quan nối từ tôi ngược lên Cụ Tổ chung và hạ xuống người đó, kèm giải thích căn cứ chi Trưởng/Thứ.
+Người dùng mở công cụ "Tra cứu Vai vế" $\rightarrow$ Chọn Người thứ nhất (Người gọi, ví dụ: Tôi) $\rightarrow$ Chọn Người thứ hai (Người được gọi, ví dụ: Một bác ở Chi 2) $\rightarrow$ Bấm nút "Xác định quan hệ" $\rightarrow$ Hệ thống hiển thị kết quả xưng hô 2 chiều (Tôi gọi người đó là gì / Người đó gọi tôi là gì) kèm sơ đồ Gia Phả trực quan nối từ tôi ngược lên Cụ Tổ chung và hạ xuống người đó, kèm giải thích căn cứ chi Trưởng/Thứ.
 
-### Luồng 3: Đăng nhập Google & Nhận Node Phả hệ (Claim Profile)
-Người dùng bấm "Đăng nhập với Google" $\rightarrow$ Xác thực qua Google OAuth $\rightarrow$ Chọn tính năng "Nhận tôi trên cây phả hệ" $\rightarrow$ Tìm kiếm và chọn đúng Node của mình $\rightarrow$ Gửi yêu cầu kèm ghi chú xác nhận (ví dụ: SĐT hoặc tên bố mẹ) $\rightarrow$ Yêu cầu chuyển vào danh sách chờ duyệt của Quản trị viên $\rightarrow$ Quản trị viên duyệt (Approve) $\rightarrow$ Tài khoản chính thức liên kết với Node và kích hoạt quyền nhận thông báo ngày giỗ cá nhân hóa.
+### Luồng 3: Đăng nhập Google & Nhận Node Gia Phả (Claim Profile)
+Người dùng bấm "Đăng nhập với Google" $\rightarrow$ Xác thực qua Google OAuth $\rightarrow$ Chọn tính năng "Nhận tôi trên cây Gia Phả" $\rightarrow$ Tìm kiếm và chọn đúng Node của mình $\rightarrow$ Gửi yêu cầu kèm ghi chú xác nhận (ví dụ: SĐT hoặc tên bố mẹ) $\rightarrow$ Yêu cầu chuyển vào danh sách chờ duyệt của Quản trị viên $\rightarrow$ Quản trị viên duyệt (Approve) $\rightarrow$ Tài khoản chính thức liên kết với Node và kích hoạt quyền nhận thông báo ngày giỗ cá nhân hóa.
 
 ### Luồng 4: Quản trị viên Nhập liệu 3 Tầng (3-Tier Ingestion)
 - **Tầng 1 (Bulk Import):** Quản trị viên tải file mẫu Excel $\rightarrow$ Điền danh sách hàng trăm thành viên kèm mã cha/mẹ/vợ/chồng $\rightarrow$ Upload file lên hệ thống $\rightarrow$ Hệ thống tự động kiểm tra lỗi logic (chu trình vòng kín, sai lệch năm sinh) $\rightarrow$ Xác nhận import $\rightarrow$ Dựng toàn bộ cây tự động trong vài giây.
 - **Tầng 2 (Ủy quyền Trưởng Chi):** Super Admin tạo tài khoản Trưởng Chi $\rightarrow$ Gán quyền biên tập riêng cho nhánh con cháu của Chi đó $\rightarrow$ Trưởng Chi đăng nhập và quản lý nhánh của mình.
-- **Tầng 3 (Nhập lẻ trực quan):** Quản trị viên di chuột tới Node bất kỳ $\rightarrow$ Bấm nút (+) $\rightarrow$ Chọn "Thêm Vợ/Chồng" hoặc "Thêm Con" $\rightarrow$ Mở Popup nhập liệu 1 cấp $\rightarrow$ Lưu thông tin $\rightarrow$ Cây phả hệ tự động cập nhật ngay lập tức.
+- **Tầng 3 (Nhập lẻ trực quan):** Quản trị viên di chuột tới Node bất kỳ $\rightarrow$ Bấm nút (+) $\rightarrow$ Chọn "Thêm Vợ/Chồng" hoặc "Thêm Con" $\rightarrow$ Mở Popup nhập liệu 1 cấp $\rightarrow$ Lưu thông tin $\rightarrow$ Cây Gia Phả tự động cập nhật ngay lập tức.
 
 ### Luồng 5: Lịch Giỗ & Nhận Thông Báo Đẩy (Anniversaries & Push Notification)
 Hằng ngày vào 7:00 sáng, Vercel Cron quét CSDL tìm các thành viên có ngày giỗ (tính theo Âm lịch đổi sang Dương lịch) trùng với ngày hiện tại $\rightarrow$ Hệ thống xác định danh sách con cháu thuộc nhánh trực hệ đã liên kết tài khoản $\rightarrow$ Bắn Web Push Notification đến điện thoại của con cháu: *"Hôm nay là ngày giỗ Cụ Nguyễn Văn X (Ông nội của bạn) - ngày 15 tháng 7 Âm lịch"* $\rightarrow$ Con cháu bấm vào thông báo để mở trang chi tiết tưởng nhớ.
@@ -42,7 +42,7 @@ Hằng ngày vào 7:00 sáng, Vercel Cron quét CSDL tìm các thành viên có 
 
 ## 3. CÁC TÍNH NĂNG CỐT LÕI (CORE FEATURES)
 
-### 1. Interactive Family Tree Canvas (Đồ thị Cây Phả hệ Tương tác)
+### 1. Interactive Family Tree Canvas (Đồ thị Cây Gia Phả Tương tác)
 - Dựng cây đồ thị trực quan hỗ trợ Pan, Zoom, Reset view mượt mà trên cả chuột máy tính và cảm ứng di động.
 - Cơ chế thu gọn / mở rộng (Collapse / Expand) từng nhánh để chống ngợp thị giác cho dòng họ lớn (> 1.000 người).
 - Bộ lọc Nhánh Nội - Nhánh Ngoại (Toggle Switch): Ưu tiên hiển thị dòng chính nội tộc, cho phép bật xem đầy đủ cả con gái, dâu, rể và con của con gái.
@@ -107,7 +107,7 @@ graph TD
 
 ### 4.2. Luồng Dữ liệu Chính (Main Data Flows)
 
-#### A. Luồng Dựng Cây Phả Hệ Đệ Quy
+#### A. Luồng Dựng Cây Gia Phả Đệ Quy
 `User mở Cây` $\rightarrow$ `Frontend gửi request lấy cây theo root_id` $\rightarrow$ `Next.js Route Handler gọi câu lệnh PostgreSQL WITH RECURSIVE` $\rightarrow$ `Postgres quét toàn bộ node con cháu từ root_id theo quan hệ cha/mẹ/vợ/chồng` $\rightarrow$ `Backend chuẩn hóa cấu trúc Node & Edge kèm metadata Ghost Node` $\rightarrow$ `Frontend nhận JSON và render đồ thị phẳng qua React Flow`.
 
 #### B. Luồng Xử lý Hôn Nhân Nội Tộc (Ghost Node Flow)

@@ -55,7 +55,7 @@ Bảng đơn bản ghi (Singleton) quản lý tên dòng họ, từ điển xưn
 ---
 
 ### Bảng 2: `members` (Thành viên Gia phả)
-Thực thể trung tâm của cây phả hệ. Mỗi người thực tế chỉ có **DUY NHẤT 1 bản ghi** trong bảng này.
+Thực thể trung tâm của cây Gia Phả. Mỗi người thực tế chỉ có **DUY NHẤT 1 bản ghi** trong bảng này.
 > **Trọng tâm Ngày mất:** Mục tiêu cốt lõi là lưu trữ **Ngày mất Âm lịch** (`death_lunar_day`, `death_lunar_month`, `death_lunar_year_name`) để phục vụ tính ngày giỗ hằng năm. Các trường Dương lịch đóng vai trò hỗ trợ quy đổi/nhập liệu. Không bắt buộc phải có năm mất.
 
 | **Tên trường (Field)** | **Kiểu dữ liệu (Type)** | **Ràng buộc (Constraints)** | **Mô tả / Khóa ngoại (Ref)** |
@@ -133,7 +133,7 @@ Lưu trữ các cặp vợ chồng trong dòng họ. Hỗ trợ trường hợp 
 
 ---
 
-### Bảng 5: `claim_requests` (Yêu cầu Nhận Node Phả hệ)
+### Bảng 5: `claim_requests` (Yêu cầu Nhận Node Gia Phả)
 Hàng đợi kiểm duyệt khi người dùng yêu cầu liên kết tài khoản của mình với một Member Node.
 
 | **Tên trường (Field)** | **Kiểu dữ liệu (Type)** | **Ràng buộc (Constraints)** | **Mô tả / Khóa ngoại (Ref)** |
@@ -218,7 +218,7 @@ Tất cả các Next.js Route Handlers (`/api/*`) BẮT BUỘC trả về dữ l
 | `FORBIDDEN` | `403` | Không đủ thẩm quyền thực hiện thao tác (VD: Viewer cố sửa data) |
 | `NOT_FOUND` | `404` | Không tìm thấy Thành viên / Yêu cầu / Chi nhánh |
 | `VALIDATION_ERROR` | `400` | Dữ liệu gửi lên sai định dạng hoặc vi phạm ràng buộc miền giá trị |
-| `CYCLE_DETECTED` | `400` | Phát hiện vòng tròn phả hệ bất hợp lệ (con làm bố của cha) |
+| `CYCLE_DETECTED` | `400` | Phát hiện vòng tròn Gia Phả bất hợp lệ (con làm bố của cha) |
 | `ALREADY_CLAIMED` | `409` | Node thành viên này đã có người khác liên kết tài khoản |
 | `INTERNAL_ERROR` | `500` | Lỗi máy chủ hoặc kết nối CSDL Supabase thất bại |
 

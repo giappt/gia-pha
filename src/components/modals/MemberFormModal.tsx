@@ -118,7 +118,7 @@ export function resolveParentPairingStatus(
       status: 'single_parent',
       title: `Con riêng của Bố: ${father?.full_name || 'Bố'} (Chưa rõ mẹ)`,
       badge: 'Con riêng của Bố',
-      description: 'Hạ nhánh con cái trực tiếp từ thẻ người Bố trên cây phả hệ.',
+      description: 'Hạ nhánh con cái trực tiếp từ thẻ người Bố trên cây Gia Phả.',
       isValid: true,
     };
   }
@@ -127,7 +127,7 @@ export function resolveParentPairingStatus(
     status: 'single_parent',
     title: `Con riêng của Mẹ: ${mother?.full_name || 'Mẹ'} (Chưa rõ bố)`,
     badge: 'Con riêng của Mẹ',
-    description: 'Hạ nhánh con cái trực tiếp từ thẻ người Mẹ trên cây phả hệ.',
+    description: 'Hạ nhánh con cái trực tiếp từ thẻ người Mẹ trên cây Gia Phả.',
     isValid: true,
   };
 }
@@ -419,10 +419,10 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
     const currentId = initialData?.id || '';
     const siblings = (fatherId || motherId)
       ? allMembers.filter(
-          (m) =>
-            m.id !== currentId &&
-            ((fatherId && m.father_id === fatherId) || (motherId && m.mother_id === motherId))
-        )
+        (m) =>
+          m.id !== currentId &&
+          ((fatherId && m.father_id === fatherId) || (motherId && m.mother_id === motherId))
+      )
       : [];
 
     const existingSenior = siblings.find((s) => s.is_senior);
@@ -884,13 +884,13 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
               {mode === 'edit'
                 ? `Chỉnh Sửa Hồ Sơ: ${initialData?.full_name || 'Thành viên'}`
                 : defaultRole === 'child' && parentMember
-                ? `Thêm Con Cho: ${parentMember.full_name}`
-                : defaultRole === 'spouse' && currentSpouse
-                ? `Thêm Phối Ngẫu Cho: ${currentSpouse.full_name}`
-                : 'Thêm Thành Viên Mới'}
+                  ? `Thêm Con Cho: ${parentMember.full_name}`
+                  : defaultRole === 'spouse' && currentSpouse
+                    ? `Thêm Phối Ngẫu Cho: ${currentSpouse.full_name}`
+                    : 'Thêm Thành Viên Mới'}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Hệ thống phả hệ phẳng 1 cấp, quản lý đa thê và ưu tiên ngày giỗ âm lịch
+              Hệ thống Gia Phả phẳng 1 cấp, quản lý đa thê và ưu tiên ngày giỗ âm lịch
             </p>
           </div>
           <button
@@ -964,22 +964,20 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setSpouseOrigin('external')}
-                  className={`flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    spouseOrigin === 'external'
+                  className={`flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${spouseOrigin === 'external'
                       ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
                       : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
-                  }`}
+                    }`}
                 >
                   🌸 {currentSpouse.gender === 'male' ? KINSHIP_TERMS.CLAN_EXTERNAL_BRIDE : KINSHIP_TERMS.CLAN_EXTERNAL_GROOM}
                 </button>
                 <button
                   type="button"
                   onClick={() => setSpouseOrigin('internal')}
-                  className={`flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    spouseOrigin === 'internal'
+                  className={`flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${spouseOrigin === 'internal'
                       ? 'bg-purple-700 text-white border-purple-700 shadow-sm'
                       : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
-                  }`}
+                    }`}
                 >
                   🔗 {currentSpouse.gender === 'male' ? KINSHIP_TERMS.CLAN_INTERNAL_BRIDE : KINSHIP_TERMS.CLAN_INTERNAL_GROOM}
                 </button>
@@ -997,33 +995,30 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                       setMaritalStatus(null);
                       setMaritalEventYear('');
                     }}
-                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
-                      maritalStatus === null
+                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === null
                         ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold'
                         : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                    }`}
+                      }`}
                   >
                     Bình thường
                   </button>
                   <button
                     type="button"
                     onClick={() => setMaritalStatus('divorced')}
-                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
-                      maritalStatus === 'divorced'
+                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === 'divorced'
                         ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
                         : 'text-slate-500 hover:text-amber-700 dark:text-slate-400'
-                    }`}
+                      }`}
                   >
                     Ly hôn
                   </button>
                   <button
                     type="button"
                     onClick={() => setMaritalStatus('remarried')}
-                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
-                      maritalStatus === 'remarried'
+                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === 'remarried'
                         ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-bold border border-rose-300 dark:border-rose-700'
                         : 'text-slate-500 hover:text-rose-700 dark:text-slate-400'
-                    }`}
+                      }`}
                   >
                     {gender === 'female' ? 'Tái giá' : 'Đã lấy vợ'}
                   </button>
@@ -1098,1064 +1093,1049 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
             </div>
           ) : (
             <>
-          {/* KHỐI CỐ ĐỊNH 2: BỐ MẸ (DÀNH CHO FORM THÊM CON) */}
-          {defaultRole === 'child' && parentMember && (
-            <div className="p-3.5 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 space-y-2.5">
-              <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-blue-600 shrink-0" />
-                <div>
-                  <span className="text-[10px] font-semibold text-blue-800 dark:text-blue-300 block">
-                    {parentMember.gender === 'male' ? KINSHIP_TERMS.FATHER_FULL : KINSHIP_TERMS.MOTHER_FULL} [🔒 Cố định]:
-                  </span>
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    {parentMember.full_name} (Đời {parentMember.generation_level})
-                  </span>
-                </div>
-              </div>
-
-              {/* Thông tin Mẹ ruột (nếu Bố là parentMember) */}
-              {parentMember.gender === 'male' && (
-                fixedMotherId ? (
-                  <div className="flex items-center gap-2 pt-2 border-t border-blue-200/50 dark:border-blue-800/50">
-                    <Lock className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+              {/* KHỐI CỐ ĐỊNH 2: BỐ MẸ (DÀNH CHO FORM THÊM CON) */}
+              {defaultRole === 'child' && parentMember && (
+                <div className="p-3.5 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-blue-600 shrink-0" />
                     <div>
-                      <span className="text-[10px] font-semibold text-purple-800 dark:text-purple-300 block">
-                        {KINSHIP_TERMS.MOTHER_FULL} [🔒 Cố định theo nhánh]:
+                      <span className="text-[10px] font-semibold text-blue-800 dark:text-blue-300 block">
+                        {parentMember.gender === 'male' ? KINSHIP_TERMS.FATHER_FULL : KINSHIP_TERMS.MOTHER_FULL} [🔒 Cố định]:
                       </span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        {allMembers.find((m) => m.id === fixedMotherId)?.full_name || 'Đã chọn'}
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                        {parentMember.full_name} (Đời {parentMember.generation_level})
                       </span>
                     </div>
                   </div>
-                ) : availableMothers.length > 1 ? (
-                  <div className="pt-2 border-t border-blue-200/50 dark:border-blue-800/50">
-                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1 text-xs">
-                      {KINSHIP_TERMS.MOTHER_FULL} <span className="text-amber-600 font-bold">(Bố có {availableMothers.length} người vợ)</span>:
-                    </label>
-                    <select
-                      value={motherId}
-                      onChange={(e) => setMotherId(e.target.value)}
-                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs"
-                    >
-                      <option value="">-- Chưa rõ / Khuyết mẹ --</option>
-                      {availableMothers.map((m, idx) => (
-                        <option key={m.id} value={m.id}>
-                          {m.full_name} ({idx === 0 ? KINSHIP_TERMS.WIFE_FIRST : idx === 1 ? KINSHIP_TERMS.WIFE_SECOND : KINSHIP_TERMS.WIFE_THIRD})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : availableMothers.length === 1 ? (
-                  <div className="flex items-center gap-2 pt-2 border-t border-blue-200/50 dark:border-blue-800/50">
-                    <span className="text-[10px] font-semibold text-slate-500 block">
-                      {KINSHIP_TERMS.MOTHER_FULL}:
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      {availableMothers[0].full_name}
-                    </span>
-                  </div>
-                ) : (
-                  <p className="text-[11px] text-slate-400 italic pt-1">Bố chưa có thông tin phối ngẫu trong gia phả</p>
-                )
-              )}
-            </div>
-          )}
 
-          {/* KHỐI 1: ĐỊNH DANH & THỜI ĐIỂM SINH */}
-          <div className="space-y-4">
-            <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-              1. ĐỊNH DANH & THỜI ĐIỂM SINH
-            </h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                  Họ và Tên (<span className="text-rose-500">*</span>)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  onBlur={() => {
-                    const match = fullName.match(/[\(\[](.*?)[\)\]]/);
-                    if (match) {
-                      if (!aliasName) {
-                        setAliasName(match[1].trim());
-                      }
-                      setFullName(fullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim());
-                    }
-                  }}
-                  placeholder="VD: Phạm Văn Nam"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                  Tên húy / Tên tự / Bí danh
-                </label>
-                <input
-                  type="text"
-                  value={aliasName}
-                  onChange={(e) => setAliasName(e.target.value)}
-                  placeholder="VD: Trọng, Bá, Hiệu..."
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Giới tính: Pill Buttons Chuẩn Hình Học */}
-            <div>
-              <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
-                Giới tính (<span className="text-rose-500">*</span>)
-              </label>
-              <div className="flex gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setGender('male')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    gender === 'male'
-                      ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-blue-600'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <span className="text-sm">♂</span> Nam
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setGender('female')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    gender === 'female'
-                      ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-700 dark:text-rose-300 shadow-sm ring-1 ring-rose-600'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <span className="text-sm">♀</span> Nữ
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setGender('other')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    gender === 'other'
-                      ? 'bg-slate-100 dark:bg-slate-800 border-slate-600 text-slate-800 dark:text-slate-200 shadow-sm ring-1 ring-slate-600'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <span>⚪</span> Khác
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                  Năm sinh (Dương lịch)
-                </label>
-                <input
-                  type="number"
-                  value={birthYear}
-                  onChange={(e) => setBirthYear(e.target.value)}
-                  placeholder="VD: 1985"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
-                />
-                {ageValidation.error && (
-                  <p className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold mt-1 flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{ageValidation.error}</span>
-                  </p>
-                )}
-                {ageValidation.warning && (
-                  <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-1 flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{ageValidation.warning}</span>
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                  Ngày tháng năm sinh đầy đủ
-                </label>
-                <input
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* KHỐI 2: QUAN HỆ HUYẾT THỐNG CHA MẸ & THỨ BẬC (Ẩn khi là dâu/rể ngoại tộc) */}
-          {!(defaultRole === 'spouse' && spouseOrigin === 'external') && (
-            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
-              <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                2. {KINSHIP_TERMS.PARENTS.toUpperCase()} & THỨ BẬC GIA ĐÌNH
-              </h4>
-
-              {(mode === 'edit' || defaultRole !== 'child') && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block font-semibold text-slate-700 dark:text-slate-200">
-                          {KINSHIP_TERMS.FATHER_FULL}
-                        </label>
-                        {motherId && fatherId && (
-                          <button
-                            type="button"
-                            onClick={handleOptOutFather}
-                            className="text-[10px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline"
-                            title="Bỏ chọn bố nếu đây là con riêng của mẹ"
-                          >
-                            ✕ Bỏ chọn Bố (Con riêng)
-                          </button>
-                        )}
+                  {/* Thông tin Mẹ ruột (nếu Bố là parentMember) */}
+                  {parentMember.gender === 'male' && (
+                    fixedMotherId ? (
+                      <div className="flex items-center gap-2 pt-2 border-t border-blue-200/50 dark:border-blue-800/50">
+                        <Lock className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                        <div>
+                          <span className="text-[10px] font-semibold text-purple-800 dark:text-purple-300 block">
+                            {KINSHIP_TERMS.MOTHER_FULL} [🔒 Cố định theo nhánh]:
+                          </span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                            {allMembers.find((m) => m.id === fixedMotherId)?.full_name || 'Đã chọn'}
+                          </span>
+                        </div>
                       </div>
-                      <select
-                        value={fatherId}
-                        onChange={(e) => handleFatherChange(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
-                      >
-                        <option value="">-- Chưa rõ / Không có --</option>
-                        {allMembers
-                          .filter((m) => m.gender === 'male' && m.id !== initialData?.id)
-                          .map((m) => (
+                    ) : availableMothers.length > 1 ? (
+                      <div className="pt-2 border-t border-blue-200/50 dark:border-blue-800/50">
+                        <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1 text-xs">
+                          {KINSHIP_TERMS.MOTHER_FULL} <span className="text-amber-600 font-bold">(Bố có {availableMothers.length} người vợ)</span>:
+                        </label>
+                        <select
+                          value={motherId}
+                          onChange={(e) => setMotherId(e.target.value)}
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs"
+                        >
+                          <option value="">-- Chưa rõ / Khuyết mẹ --</option>
+                          {availableMothers.map((m, idx) => (
                             <option key={m.id} value={m.id}>
-                              {m.full_name} (Đời {m.generation_level})
+                              {m.full_name} ({idx === 0 ? KINSHIP_TERMS.WIFE_FIRST : idx === 1 ? KINSHIP_TERMS.WIFE_SECOND : KINSHIP_TERMS.WIFE_THIRD})
                             </option>
                           ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block font-semibold text-slate-700 dark:text-slate-200">
-                          {KINSHIP_TERMS.MOTHER_FULL} {availableMothers.length > 1 && <span className="text-amber-600 font-bold">(Đa thê)</span>}
-                        </label>
-                        {fatherId && motherId && availableMothers.length === 1 && (
-                          <button
-                            type="button"
-                            onClick={handleOptOutMother}
-                            className="text-[10px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline"
-                            title="Bỏ chọn mẹ nếu đây là con riêng của bố"
-                          >
-                            ✕ Bỏ chọn Mẹ (Con riêng)
-                          </button>
-                        )}
+                        </select>
                       </div>
-                      <select
-                        value={motherId}
-                        onChange={(e) => handleMotherChange(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
-                      >
-                        <option value="">-- Chưa rõ / Khuyết mẹ (Con riêng) --</option>
-                        {availableMothers.length > 0
-                          ? availableMothers.map((m, idx) => (
-                              <option key={m.id} value={m.id}>
-                                {m.full_name} ({idx === 0 ? KINSHIP_TERMS.WIFE_FIRST : idx === 1 ? KINSHIP_TERMS.WIFE_SECOND : KINSHIP_TERMS.WIFE_THIRD})
-                              </option>
-                            ))
-                          : allMembers
-                              .filter((m) => m.gender === 'female' && m.id !== initialData?.id)
-                              .map((m) => (
-                                <option key={m.id} value={m.id}>
-                                  {m.full_name} (Đời {m.generation_level})
-                                </option>
-                              ))}
-                      </select>
-                      {availableMothers.length > 1 && (
-                        <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
-                          Bố có {availableMothers.length} người vợ. Hãy chọn chính xác Mẹ ruột để phân nhóm con cái chuẩn xác.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Thẻ Xác Nhận Cặp Phụ Mẫu (Parent Pairing Confirmation Card) */}
-                  {parentPairingStatus.status !== 'none' && (
-                    <div
-                      className={`p-2.5 rounded-lg border text-xs flex flex-col gap-1 transition-all ${
-                        parentPairingStatus.status === 'valid_couple'
-                          ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300'
-                          : parentPairingStatus.status === 'single_parent'
-                          ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300'
-                          : 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between font-semibold">
-                        <span>{parentPairingStatus.title}</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/80 dark:bg-slate-900/60 border border-current">
-                          {parentPairingStatus.badge}
+                    ) : availableMothers.length === 1 ? (
+                      <div className="flex items-center gap-2 pt-2 border-t border-blue-200/50 dark:border-blue-800/50">
+                        <span className="text-[10px] font-semibold text-slate-500 block">
+                          {KINSHIP_TERMS.MOTHER_FULL}:
+                        </span>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          {availableMothers[0].full_name}
                         </span>
                       </div>
-                      <p className="text-[11px] opacity-90">{parentPairingStatus.description}</p>
-                    </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic pt-1">Bố chưa có thông tin phối ngẫu trong gia phả</p>
+                    )
                   )}
                 </div>
               )}
 
-              {/* Vị trí con thứ mấy & Phân loại */}
-              <div className="space-y-3 pt-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                  <label className="font-semibold text-slate-700 dark:text-slate-200 shrink-0">
-                    Thứ tự sinh:
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      min={1}
-                      value={birthOrder}
-                      onChange={(e) => setBirthOrder(Number(e.target.value))}
-                      className="w-20 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10"
-                    />
-                    <span className="text-slate-500 dark:text-slate-400 text-xs">
-                      (Con thứ mấy trong gia đình cha mẹ)
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={isSenior}
-                      onChange={(e) => handleToggleSenior(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <span className="font-semibold text-amber-700 dark:text-amber-400 text-xs">
-                      ⭐ {KINSHIP_TERMS.SENIOR_CHILD} (Trưởng nam / Trưởng nữ)
-                    </span>
-                  </label>
-
-                  <label className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={isAdopted}
-                      onChange={(e) => setIsAdopted(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <span className="font-semibold text-purple-700 dark:text-purple-400 text-xs">
-                      {KINSHIP_TERMS.ADOPTED_CHILD} / Dưỡng tử
-                    </span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* KHỐI 3: PHỐI NGẪU (VỢ / CHỒNG) - Hiển thị trong chế độ chung hoặc edit */}
-          {(mode === 'edit' || (defaultRole !== 'child' && defaultRole !== 'spouse')) && (
-            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
-              <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                3. {KINSHIP_TERMS.SPOUSE.toUpperCase()} (VỢ / CHỒNG)
-              </h4>
-
-              {/* Phối ngẫu hiện tại */}
-              {currentMemberSpouses.length > 0 && (
-                <div className="space-y-2">
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {gender === 'female' ? 'Chồng hiện tại:' : 'Vợ hiện tại:'} ({currentMemberSpouses.length} người)
-                  </span>
-                  <div className="space-y-1.5">
-                    {currentMemberSpouses.map((sp) => {
-                      const isMultiSpouse = currentMemberSpouses.length > 1;
-                      const orderLabel = !isMultiSpouse
-                        ? (gender === 'female' ? 'Chồng' : 'Vợ')
-                        : sp.marriageOrder === 1
-                        ? (gender === 'female' ? 'Chồng' : `${KINSHIP_TERMS.WIFE_FIRST} (Bà cả)`)
-                        : sp.marriageOrder === 2
-                        ? `${KINSHIP_TERMS.WIFE_SECOND} (Bà hai)`
-                        : `Bà ${sp.marriageOrder}`;
-                      return (
-                        <div
-                          key={sp.relation.id}
-                          className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">🌸</span>
-                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                              {sp.partner?.full_name || 'Phối ngẫu'}
-                            </span>
-                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                              {orderLabel}
-                            </span>
-                            {sp.partner?.birth_year && (
-                              <span className="text-[10px] text-slate-400">
-                                (SN: {sp.partner.birth_year})
-                              </span>
-                            )}
-                            {sp.partner?.generation_level && (
-                              <span className="text-[10px] text-slate-400">
-                                · Đời {sp.partner.generation_level}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Nút thao tác thêm phối ngẫu */}
-              {spouseMode === 'none' ? (
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setSpouseMode('new')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> {gender === 'female' ? '+ Thêm Chồng ngoài họ' : '+ Thêm Vợ ngoài họ'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSpouseMode('existing')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900 transition-colors"
-                  >
-                    <Link2 className="w-3.5 h-3.5" /> Ghép người trong tộc
-                  </button>
-                  {currentMemberSpouses.length === 0 && (
-                    <span className="text-xs text-slate-400 italic">
-                      (Hiện tại chưa ghép phối ngẫu)
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    {spouseMode === 'new' ? 'Thêm phối ngẫu mới ngoài họ:' : 'Ghép phối ngẫu trong dòng họ:'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSpouseMode('none');
-                      setSpouseId('');
-                      setNewSpouseName('');
-                      setNewSpouseBirthYear('');
-                    }}
-                    className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline"
-                  >
-                    Đóng / Hủy thêm
-                  </button>
-                </div>
-              )}
-
-              {/* Chế độ 1: Thêm Vợ/Chồng Mới Ngoài Tộc Tại Chỗ */}
-              {spouseMode === 'new' && (
-                <div className="p-4 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/60 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="sm:col-span-2">
-                      <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                        Họ và Tên Vợ/Chồng mới ngoài tộc (<span className="text-rose-500">*</span>)
-                      </label>
-                      <input
-                        type="text"
-                        value={newSpouseName}
-                        onChange={(e) => setNewSpouseName(e.target.value)}
-                        placeholder="VD: Lê Thị Mai (Dâu ngoài tộc)"
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                        Năm sinh
-                      </label>
-                      <input
-                        type="number"
-                        value={newSpouseBirthYear}
-                        onChange={(e) => setNewSpouseBirthYear(e.target.value)}
-                        placeholder="VD: 1992"
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 gap-2">
-                    <span>
-                      Giới tính phối ngẫu tự suy luận ngược chiều: <strong className="text-emerald-700 dark:text-emerald-400">{gender === 'male' ? KINSHIP_TERMS.CLAN_EXTERNAL_BRIDE : KINSHIP_TERMS.CLAN_EXTERNAL_GROOM}</strong>
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span>Thứ bậc:</span>
-                      <select
-                        value={newSpouseMarriageOrder}
-                        onChange={(e) => setNewSpouseMarriageOrder(Number(e.target.value))}
-                        className="px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-                      >
-                        <option value={1}>{KINSHIP_TERMS.WIFE_FIRST} / {KINSHIP_TERMS.HUSBAND_FIRST}</option>
-                        <option value={2}>{KINSHIP_TERMS.WIFE_SECOND} (Bà hai)</option>
-                        <option value={3}>{KINSHIP_TERMS.WIFE_THIRD} (Bà ba)</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Chế độ 2: Ghép với Thành Viên Trong Họ (Nội Tộc) */}
-              {spouseMode === 'existing' && (
-                <div>
-                  <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                    Chọn người phối ngẫu trong dòng họ
-                  </label>
-                  <select
-                    value={spouseId}
-                    onChange={(e) => setSpouseId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10"
-                  >
-                    <option value="">-- Chọn thành viên --</option>
-                    {allMembers
-                      .filter((m) => m.id !== initialData?.id)
-                      .map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.full_name} ({m.gender === 'male' ? 'Nam' : 'Nữ'}, Đời {m.generation_level})
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Tình trạng hôn nhân phẳng */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Tình trạng hôn nhân:
-                </span>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMaritalStatus(null);
-                      setMaritalEventYear('');
-                    }}
-                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
-                      maritalStatus === null
-                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold'
-                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    Bình thường
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMaritalStatus('divorced')}
-                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
-                      maritalStatus === 'divorced'
-                        ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
-                        : 'text-slate-500 hover:text-amber-700 dark:text-slate-400'
-                    }`}
-                  >
-                    Ly hôn
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMaritalStatus('remarried')}
-                    className={`py-1 px-2.5 rounded-md text-xs transition-all ${
-                      maritalStatus === 'remarried'
-                        ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-bold border border-rose-300 dark:border-rose-700'
-                        : 'text-slate-500 hover:text-rose-700 dark:text-slate-400'
-                    }`}
-                  >
-                    {gender === 'female' ? 'Tái giá' : 'Đã lấy vợ'}
-                  </button>
-                  {maritalStatus && (
-                    <div className="flex items-center gap-1 ml-2">
-                      <span className="text-xs text-slate-500 dark:text-slate-400">Năm:</span>
-                      <input
-                        type="number"
-                        value={maritalEventYear}
-                        onChange={(e) => setMaritalEventYear(e.target.value)}
-                        placeholder="VD: 2024"
-                        className="w-20 px-2 py-0.5 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-900/10"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* KHỐI 4: CON CÁI (Ẩn khi là dâu/rể ngoại tộc) */}
-          {!(defaultRole === 'spouse' && spouseOrigin === 'external') && (
-            <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
-              <div className="flex items-center justify-between">
+              {/* KHỐI 1: ĐỊNH DANH & THỜI ĐIỂM SINH */}
+              <div className="space-y-4">
                 <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                  4. {KINSHIP_TERMS.CHILDREN.toUpperCase()}
+                  1. ĐỊNH DANH & THỜI ĐIỂM SINH
                 </h4>
-                <div className="flex items-center gap-2">
-                  {existingChildren.length > 1 && (
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                      Họ và Tên (<span className="text-rose-500">*</span>)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      onBlur={() => {
+                        const match = fullName.match(/[\(\[](.*?)[\)\]]/);
+                        if (match) {
+                          if (!aliasName) {
+                            setAliasName(match[1].trim());
+                          }
+                          setFullName(fullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim());
+                        }
+                      }}
+                      placeholder="VD: Phạm Văn Nam"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                      Tên húy / Tên tự / Bí danh
+                    </label>
+                    <input
+                      type="text"
+                      value={aliasName}
+                      onChange={(e) => setAliasName(e.target.value)}
+                      placeholder="VD: Trọng, Bá, Hiệu..."
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Giới tính: Pill Buttons Chuẩn Hình Học */}
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
+                    Giới tính (<span className="text-rose-500">*</span>)
+                  </label>
+                  <div className="flex gap-2.5">
                     <button
                       type="button"
-                      onClick={() => setShowReorderModal(true)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Sắp xếp thứ tự đàn con"
+                      onClick={() => setGender('male')}
+                      className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${gender === 'male'
+                          ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-blue-600'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        }`}
                     >
-                      <ArrowUpDown className="w-3.5 h-3.5" /> Sắp xếp thứ tự
+                      <span className="text-sm">♂</span> Nam
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setShowAddChildInline(!showAddChildInline)}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Thêm nhanh con mới
-                  </button>
-                </div>
-              </div>
-
-              {/* Danh sách con đã có trong CSDL */}
-              {existingChildren.length > 0 && (
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                      Con hiện có trong gia phả ({existingChildren.length} người):
-                    </p>
-                    {stagedUnlinkChildIds.length > 0 && (
-                      <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400">
-                        (Sẽ gỡ {stagedUnlinkChildIds.length} người con khi bấm Cập nhật)
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {(() => {
-                      const seen = new Set<number>();
-                      let hasDuplicate = false;
-                      for (const ch of existingChildren) {
-                        if (ch.birth_order != null) {
-                          if (seen.has(ch.birth_order)) {
-                            hasDuplicate = true;
-                            break;
-                          }
-                          seen.add(ch.birth_order);
-                        }
-                      }
-                      return existingChildren.map((c, idx) => {
-                        const isStagedUnlink = stagedUnlinkChildIds.includes(c.id);
-                        const displayOrder = hasDuplicate ? idx + 1 : (c.birth_order || idx + 1);
-                        return (
-                          <div
-                            key={c.id}
-                            className={`p-2.5 rounded-md border flex items-center justify-between transition-colors ${
-                              isStagedUnlink
-                                ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 opacity-70'
-                                : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/60'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span
-                                className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${
-                                  isStagedUnlink
-                                    ? 'bg-rose-100 text-rose-600 dark:bg-rose-900 dark:text-rose-300'
-                                    : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
-                                }`}
-                              >
-                                {displayOrder}
-                              </span>
-                              <span
-                                className={`font-semibold truncate text-xs ${
-                                  isStagedUnlink
-                                    ? 'line-through text-slate-400 dark:text-slate-500'
-                                    : 'text-slate-800 dark:text-slate-200'
-                                }`}
-                              >
-                                {c.full_name}
-                              </span>
-                              <span className="text-[10px] text-slate-400 shrink-0">
-                                ({c.gender === 'male' ? 'Nam' : c.gender === 'female' ? 'Nữ' : 'Khác'}
-                                {c.birth_year ? `, ${c.birth_year}` : ''})
-                              </span>
-                              {c.is_senior && !isStagedUnlink && (
-                                <span className="text-[10px] font-bold text-amber-600 shrink-0">
-                                  ({KINSHIP_TERMS.SENIOR_CHILD})
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-1 shrink-0 ml-2">
-                              {isStagedUnlink ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleUnlinkChild(c.id)}
-                                  className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-900/50 dark:hover:bg-rose-900 dark:text-rose-300 font-medium transition-colors"
-                                  title="Hủy gỡ con"
-                                >
-                                  Hoàn tác
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleUnlinkChild(c.id)}
-                                  className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-900/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
-                                  title="Gỡ con khỏi cha mẹ (chuyển về khay Chưa nối phả)"
-                                >
-                                  <UserMinus className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                </div>
-              )}
-
-              {/* Danh sách con thêm nhanh chuẩn bị lưu */}
-              {stagedQuickChildren.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-                    Con mới thêm nhanh (sẽ tạo kèm cùng hồ sơ):
-                  </p>
-                  <div className="space-y-1.5">
-                    {stagedQuickChildren.map((sc, idx) => {
-                      const motherPartner = allMembers.find((m) => m.id === sc.motherId);
-                      return (
-                        <div
-                          key={sc.id}
-                          className="p-2.5 rounded-md bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">Con #{existingChildren.length + idx + 1}</span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">{sc.name}</span>
-                            <span className="text-[10px] text-slate-500">
-                              ({sc.gender === 'male' ? 'Nam' : sc.gender === 'female' ? 'Nữ' : 'Khác'}{sc.birthYear ? `, ${sc.birthYear}` : ''})
-                            </span>
-                            {motherPartner && (
-                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                · Mẹ: {motherPartner.full_name}
-                              </span>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveStagedChild(sc.id)}
-                            className="text-rose-500 hover:text-rose-700 p-1"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Input thêm nhanh con: 3 nút Giới tính Nam / Nữ / Khác */}
-              {showAddChildInline && (
-                <div className="p-3.5 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/70 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div className="sm:col-span-2">
-                      <input
-                        type="text"
-                        value={quickChildName}
-                        onChange={(e) => setQuickChildName(e.target.value)}
-                        placeholder="Họ và tên con..."
-                        className="w-full px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-900"
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="number"
-                        value={quickChildBirthYear}
-                        onChange={(e) => setQuickChildBirthYear(e.target.value)}
-                        placeholder="Năm sinh..."
-                        className="w-full px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-900"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Chọn Mẹ cho con nếu người cha đang được sửa */}
-                  {gender === 'male' && (
-                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
-                      {availableWivesForChildren.length === 1 ? (
-                        <div className="flex items-center justify-between p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
-                          <span className="text-slate-700 dark:text-slate-300">
-                            Mẹ của con: <strong className="text-emerald-700 dark:text-emerald-400">🌸 {availableWivesForChildren[0].partner.full_name} ({KINSHIP_TERMS.WIFE_FIRST})</strong>
-                          </span>
-                          {quickChildMotherId === availableWivesForChildren[0].partner.id ? (
-                            <button
-                              type="button"
-                              onClick={() => setQuickChildMotherId('')}
-                              className="text-[11px] text-slate-400 hover:text-rose-500 underline"
-                            >
-                              Bỏ chọn (Chưa rõ mẹ)
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setQuickChildMotherId(availableWivesForChildren[0].partner.id)}
-                              className="text-[11px] text-emerald-600 font-semibold underline"
-                            >
-                              Đặt lại mặc định ({availableWivesForChildren[0].partner.full_name})
-                            </button>
-                          )}
-                        </div>
-                      ) : availableWivesForChildren.length >= 2 ? (
-                        <div className="space-y-1">
-                          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">
-                            Chọn Mẹ ruột của con (<span className="text-rose-500">*</span> Đa thê: Bố có {availableWivesForChildren.length} người vợ)
-                          </label>
-                          <select
-                            value={quickChildMotherId}
-                            onChange={(e) => setQuickChildMotherId(e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-900"
-                          >
-                            <option value="">-- Chọn mẹ ruột của con --</option>
-                            {availableWivesForChildren.map((w) => (
-                              <option key={w.partner.id} value={w.partner.id}>
-                                🌸 {w.partner.full_name} ({w.marriageOrder === 1 ? KINSHIP_TERMS.WIFE_FIRST : w.marriageOrder === 2 ? KINSHIP_TERMS.WIFE_SECOND : `Bà ${w.marriageOrder}`})
-                              </option>
-                            ))}
-                            <option value="">❓ Chưa rõ thông tin mẹ</option>
-                          </select>
-                        </div>
-                      ) : (
-                        <p className="text-[11px] text-slate-400 italic">
-                          Bố chưa có thông tin vợ trong gia phả (Con sẽ lưu là chưa rõ mẹ).
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500 font-medium text-xs">Giới tính con:</span>
-                      <div className="flex gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setQuickChildGender('male')}
-                          className={`px-3 py-1 rounded-md border text-xs font-semibold transition-all ${
-                            quickChildGender === 'male'
-                              ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-blue-300 ring-1 ring-blue-600'
-                              : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
-                          }`}
-                        >
-                          ♂ Nam
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setQuickChildGender('female')}
-                          className={`px-3 py-1 rounded-md border text-xs font-semibold transition-all ${
-                            quickChildGender === 'female'
-                              ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-700 dark:text-rose-300 ring-1 ring-rose-600'
-                              : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
-                          }`}
-                        >
-                          ♀ Nữ
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setQuickChildGender('other')}
-                          className={`px-3 py-1 rounded-md border text-xs font-semibold transition-all ${
-                            quickChildGender === 'other'
-                              ? 'bg-slate-100 dark:bg-slate-800 border-slate-600 text-slate-800 dark:text-slate-200 ring-1 ring-slate-600'
-                              : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
-                          }`}
-                        >
-                          ⚪ Khác
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowAddChildInline(false)}
-                        className="px-3 py-1 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      >
-                        Hủy
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleAddQuickChild}
-                        className="px-3 py-1 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition-colors"
-                      >
-                        Thêm vào danh sách
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Chọn con từ danh sách mồ côi / chưa nối */}
-              {unlinkedCandidates.length > 0 && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
-                    🔗 Hoặc nhận con từ danh sách thành viên chưa nối phả:
-                  </p>
-                  <div className="max-h-28 overflow-y-auto space-y-1 p-2 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/60 scrollbar-thin">
-                    {unlinkedCandidates.map((cand) => {
-                      const isSelected = selectedChildIdsToLink.includes(cand.id);
-                      return (
-                        <label
-                          key={cand.id}
-                          className="flex items-center justify-between p-1.5 rounded-md hover:bg-white dark:hover:bg-slate-700/50 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleChildLink(cand.id)}
-                              className="w-3.5 h-3.5 rounded text-emerald-600"
-                            />
-                            <span className="font-medium text-slate-800 dark:text-slate-200">{cand.full_name}</span>
-                            <span className="text-[10px] text-slate-400">({cand.gender === 'male' ? 'Nam' : cand.gender === 'female' ? 'Nữ' : 'Khác'})</span>
-                          </div>
-                          <span className="text-[10px] text-amber-600 font-medium">Chưa có cha mẹ</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* KHỐI 5: TRẠNG THÁI SINH - TỬ & NGÀY GIỖ ÂM LỊCH */}
-          <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
-            <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-              5. TRẠNG THÁI SINH - TỬ & NGÀY GIỖ
-            </h4>
-
-            <div>
-              <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
-                Trạng thái hiện tại
-              </label>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setLifeStatus('living')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    lifeStatus === 'living'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-600 text-emerald-700 dark:text-emerald-300 shadow-sm ring-1 ring-emerald-600'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <span>🌱</span> Còn sống
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLifeStatus('deceased')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    lifeStatus === 'deceased'
-                      ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-600 text-amber-800 dark:text-amber-200 shadow-sm ring-1 ring-amber-600'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  Đã mất
-                </button>
-              </div>
-            </div>
-
-            {/* Dynamic Disclosure */}
-            {lifeStatus === 'deceased' && (
-              <div className="p-4 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/40 space-y-4 animate-in fade-in duration-200">
-                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold text-[11px]">
-                  <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Quy ước gia phả: Ưu tiên ngày và tháng mất Âm lịch để quét lịch giỗ chính xác hàng năm.</span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                      Ngày mất (Âm)
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={30}
-                      value={deathLunarDay}
-                      onChange={(e) => setDeathLunarDay(e.target.value)}
-                      placeholder="1 - 30"
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                      Tháng mất (Âm)
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={12}
-                      value={deathLunarMonth}
-                      onChange={(e) => setDeathLunarMonth(e.target.value)}
-                      placeholder="1 - 12"
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
-                    />
-                  </div>
-                  <div className="col-span-2 flex items-center pt-5">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={deathLunarIsLeap}
-                        onChange={(e) => setDeathLunarIsLeap(e.target.checked)}
-                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">
-                        Tháng nhuận Âm lịch
-                      </span>
-                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setGender('female')}
+                      className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${gender === 'female'
+                          ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-700 dark:text-rose-300 shadow-sm ring-1 ring-rose-600'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        }`}
+                    >
+                      <span className="text-sm">♀</span> Nữ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGender('other')}
+                      className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${gender === 'other'
+                          ? 'bg-slate-100 dark:bg-slate-800 border-slate-600 text-slate-800 dark:text-slate-200 shadow-sm ring-1 ring-slate-600'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        }`}
+                    >
+                      <span>⚪</span> Khác
+                    </button>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                      Năm Can Chi khi mất
-                    </label>
-                    <input
-                      list="can-chi-list"
-                      value={deathLunarYearName}
-                      onChange={(e) => setDeathLunarYearName(e.target.value)}
-                      placeholder="VD: Canh Tý, Ất Mão..."
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
-                    />
-                    <datalist id="can-chi-list">
-                      {CAN_CHI_YEARS.map((y) => (
-                        <option key={y} value={y} />
-                      ))}
-                    </datalist>
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                      Năm mất (Dương lịch - Tùy chọn)
+                      Năm sinh (Dương lịch)
                     </label>
                     <input
                       type="number"
-                      value={deathYear}
-                      onChange={(e) => setDeathYear(e.target.value)}
+                      value={birthYear}
+                      onChange={(e) => setBirthYear(e.target.value)}
                       placeholder="VD: 1985"
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
+                    />
+                    {ageValidation.error && (
+                      <p className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold mt-1 flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{ageValidation.error}</span>
+                      </p>
+                    )}
+                    {ageValidation.warning && (
+                      <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-1 flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{ageValidation.warning}</span>
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                      Ngày tháng năm sinh đầy đủ
+                    </label>
+                    <input
+                      type="date"
+                      value={birthDate}
+                      onChange={(e) => setBirthDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* KHỐI 2: QUAN HỆ HUYẾT THỐNG CHA MẸ & THỨ BẬC (Ẩn khi là dâu/rể ngoại tộc) */}
+              {!(defaultRole === 'spouse' && spouseOrigin === 'external') && (
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                    2. {KINSHIP_TERMS.PARENTS.toUpperCase()} & THỨ BẬC GIA ĐÌNH
+                  </h4>
+
+                  {(mode === 'edit' || defaultRole !== 'child') && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block font-semibold text-slate-700 dark:text-slate-200">
+                              {KINSHIP_TERMS.FATHER_FULL}
+                            </label>
+                            {motherId && fatherId && (
+                              <button
+                                type="button"
+                                onClick={handleOptOutFather}
+                                className="text-[10px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline"
+                                title="Bỏ chọn bố nếu đây là con riêng của mẹ"
+                              >
+                                ✕ Bỏ chọn Bố (Con riêng)
+                              </button>
+                            )}
+                          </div>
+                          <select
+                            value={fatherId}
+                            onChange={(e) => handleFatherChange(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
+                          >
+                            <option value="">-- Chưa rõ / Không có --</option>
+                            {allMembers
+                              .filter((m) => m.gender === 'male' && m.id !== initialData?.id)
+                              .map((m) => (
+                                <option key={m.id} value={m.id}>
+                                  {m.full_name} (Đời {m.generation_level})
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block font-semibold text-slate-700 dark:text-slate-200">
+                              {KINSHIP_TERMS.MOTHER_FULL} {availableMothers.length > 1 && <span className="text-amber-600 font-bold">(Đa thê)</span>}
+                            </label>
+                            {fatherId && motherId && availableMothers.length === 1 && (
+                              <button
+                                type="button"
+                                onClick={handleOptOutMother}
+                                className="text-[10px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline"
+                                title="Bỏ chọn mẹ nếu đây là con riêng của bố"
+                              >
+                                ✕ Bỏ chọn Mẹ (Con riêng)
+                              </button>
+                            )}
+                          </div>
+                          <select
+                            value={motherId}
+                            onChange={(e) => handleMotherChange(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-100/10 transition-colors"
+                          >
+                            <option value="">-- Chưa rõ / Khuyết mẹ (Con riêng) --</option>
+                            {availableMothers.length > 0
+                              ? availableMothers.map((m, idx) => (
+                                <option key={m.id} value={m.id}>
+                                  {m.full_name} ({idx === 0 ? KINSHIP_TERMS.WIFE_FIRST : idx === 1 ? KINSHIP_TERMS.WIFE_SECOND : KINSHIP_TERMS.WIFE_THIRD})
+                                </option>
+                              ))
+                              : allMembers
+                                .filter((m) => m.gender === 'female' && m.id !== initialData?.id)
+                                .map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    {m.full_name} (Đời {m.generation_level})
+                                  </option>
+                                ))}
+                          </select>
+                          {availableMothers.length > 1 && (
+                            <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                              Bố có {availableMothers.length} người vợ. Hãy chọn chính xác Mẹ ruột để phân nhóm con cái chuẩn xác.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Thẻ Xác Nhận Cặp Phụ Mẫu (Parent Pairing Confirmation Card) */}
+                      {parentPairingStatus.status !== 'none' && (
+                        <div
+                          className={`p-2.5 rounded-lg border text-xs flex flex-col gap-1 transition-all ${parentPairingStatus.status === 'valid_couple'
+                              ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300'
+                              : parentPairingStatus.status === 'single_parent'
+                                ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300'
+                                : 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between font-semibold">
+                            <span>{parentPairingStatus.title}</span>
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/80 dark:bg-slate-900/60 border border-current">
+                              {parentPairingStatus.badge}
+                            </span>
+                          </div>
+                          <p className="text-[11px] opacity-90">{parentPairingStatus.description}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Vị trí con thứ mấy & Phân loại */}
+                  <div className="space-y-3 pt-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <label className="font-semibold text-slate-700 dark:text-slate-200 shrink-0">
+                        Thứ tự sinh:
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          min={1}
+                          value={birthOrder}
+                          onChange={(e) => setBirthOrder(Number(e.target.value))}
+                          className="w-20 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10"
+                        />
+                        <span className="text-slate-500 dark:text-slate-400 text-xs">
+                          (Con thứ mấy trong gia đình cha mẹ)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={isSenior}
+                          onChange={(e) => handleToggleSenior(e.target.checked)}
+                          className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="font-semibold text-amber-700 dark:text-amber-400 text-xs">
+                          ⭐ {KINSHIP_TERMS.SENIOR_CHILD} (Trưởng nam / Trưởng nữ)
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={isAdopted}
+                          onChange={(e) => setIsAdopted(e.target.checked)}
+                          className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="font-semibold text-purple-700 dark:text-purple-400 text-xs">
+                          {KINSHIP_TERMS.ADOPTED_CHILD} / Dưỡng tử
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* KHỐI 3: PHỐI NGẪU (VỢ / CHỒNG) - Hiển thị trong chế độ chung hoặc edit */}
+              {(mode === 'edit' || (defaultRole !== 'child' && defaultRole !== 'spouse')) && (
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                    3. {KINSHIP_TERMS.SPOUSE.toUpperCase()} (VỢ / CHỒNG)
+                  </h4>
+
+                  {/* Phối ngẫu hiện tại */}
+                  {currentMemberSpouses.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {gender === 'female' ? 'Chồng hiện tại:' : 'Vợ hiện tại:'} ({currentMemberSpouses.length} người)
+                      </span>
+                      <div className="space-y-1.5">
+                        {currentMemberSpouses.map((sp) => {
+                          const isMultiSpouse = currentMemberSpouses.length > 1;
+                          const orderLabel = !isMultiSpouse
+                            ? (gender === 'female' ? 'Chồng' : 'Vợ')
+                            : sp.marriageOrder === 1
+                              ? (gender === 'female' ? 'Chồng' : `${KINSHIP_TERMS.WIFE_FIRST} (Bà cả)`)
+                              : sp.marriageOrder === 2
+                                ? `${KINSHIP_TERMS.WIFE_SECOND} (Bà hai)`
+                                : `Bà ${sp.marriageOrder}`;
+                          return (
+                            <div
+                              key={sp.relation.id}
+                              className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">🌸</span>
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                                  {sp.partner?.full_name || 'Phối ngẫu'}
+                                </span>
+                                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                                  {orderLabel}
+                                </span>
+                                {sp.partner?.birth_year && (
+                                  <span className="text-[10px] text-slate-400">
+                                    (SN: {sp.partner.birth_year})
+                                  </span>
+                                )}
+                                {sp.partner?.generation_level && (
+                                  <span className="text-[10px] text-slate-400">
+                                    · Đời {sp.partner.generation_level}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Nút thao tác thêm phối ngẫu */}
+                  {spouseMode === 'none' ? (
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setSpouseMode('new')}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> {gender === 'female' ? '+ Thêm Chồng ngoài họ' : '+ Thêm Vợ ngoài họ'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSpouseMode('existing')}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900 transition-colors"
+                      >
+                        <Link2 className="w-3.5 h-3.5" /> Ghép người trong tộc
+                      </button>
+                      {currentMemberSpouses.length === 0 && (
+                        <span className="text-xs text-slate-400 italic">
+                          (Hiện tại chưa ghép phối ngẫu)
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        {spouseMode === 'new' ? 'Thêm phối ngẫu mới ngoài họ:' : 'Ghép phối ngẫu trong dòng họ:'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSpouseMode('none');
+                          setSpouseId('');
+                          setNewSpouseName('');
+                          setNewSpouseBirthYear('');
+                        }}
+                        className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline"
+                      >
+                        Đóng / Hủy thêm
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Chế độ 1: Thêm Vợ/Chồng Mới Ngoài Tộc Tại Chỗ */}
+                  {spouseMode === 'new' && (
+                    <div className="p-4 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/60 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="sm:col-span-2">
+                          <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                            Họ và Tên Vợ/Chồng mới ngoài tộc (<span className="text-rose-500">*</span>)
+                          </label>
+                          <input
+                            type="text"
+                            value={newSpouseName}
+                            onChange={(e) => setNewSpouseName(e.target.value)}
+                            placeholder="VD: Lê Thị Mai (Dâu ngoài tộc)"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                            Năm sinh
+                          </label>
+                          <input
+                            type="number"
+                            value={newSpouseBirthYear}
+                            onChange={(e) => setNewSpouseBirthYear(e.target.value)}
+                            placeholder="VD: 1992"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 gap-2">
+                        <span>
+                          Giới tính phối ngẫu tự suy luận ngược chiều: <strong className="text-emerald-700 dark:text-emerald-400">{gender === 'male' ? KINSHIP_TERMS.CLAN_EXTERNAL_BRIDE : KINSHIP_TERMS.CLAN_EXTERNAL_GROOM}</strong>
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span>Thứ bậc:</span>
+                          <select
+                            value={newSpouseMarriageOrder}
+                            onChange={(e) => setNewSpouseMarriageOrder(Number(e.target.value))}
+                            className="px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                          >
+                            <option value={1}>{KINSHIP_TERMS.WIFE_FIRST} / {KINSHIP_TERMS.HUSBAND_FIRST}</option>
+                            <option value={2}>{KINSHIP_TERMS.WIFE_SECOND} (Bà hai)</option>
+                            <option value={3}>{KINSHIP_TERMS.WIFE_THIRD} (Bà ba)</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Chế độ 2: Ghép với Thành Viên Trong Họ (Nội Tộc) */}
+                  {spouseMode === 'existing' && (
+                    <div>
+                      <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                        Chọn người phối ngẫu trong dòng họ
+                      </label>
+                      <select
+                        value={spouseId}
+                        onChange={(e) => setSpouseId(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 focus:ring-1 focus:ring-slate-900/10"
+                      >
+                        <option value="">-- Chọn thành viên --</option>
+                        {allMembers
+                          .filter((m) => m.id !== initialData?.id)
+                          .map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.full_name} ({m.gender === 'male' ? 'Nam' : 'Nữ'}, Đời {m.generation_level})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Tình trạng hôn nhân phẳng */}
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Tình trạng hôn nhân:
+                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMaritalStatus(null);
+                          setMaritalEventYear('');
+                        }}
+                        className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === null
+                            ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold'
+                            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                          }`}
+                      >
+                        Bình thường
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMaritalStatus('divorced')}
+                        className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === 'divorced'
+                            ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-700'
+                            : 'text-slate-500 hover:text-amber-700 dark:text-slate-400'
+                          }`}
+                      >
+                        Ly hôn
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMaritalStatus('remarried')}
+                        className={`py-1 px-2.5 rounded-md text-xs transition-all ${maritalStatus === 'remarried'
+                            ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-bold border border-rose-300 dark:border-rose-700'
+                            : 'text-slate-500 hover:text-rose-700 dark:text-slate-400'
+                          }`}
+                      >
+                        {gender === 'female' ? 'Tái giá' : 'Đã lấy vợ'}
+                      </button>
+                      {maritalStatus && (
+                        <div className="flex items-center gap-1 ml-2">
+                          <span className="text-xs text-slate-500 dark:text-slate-400">Năm:</span>
+                          <input
+                            type="number"
+                            value={maritalEventYear}
+                            onChange={(e) => setMaritalEventYear(e.target.value)}
+                            placeholder="VD: 2024"
+                            className="w-20 px-2 py-0.5 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-900/10"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* KHỐI 4: CON CÁI (Ẩn khi là dâu/rể ngoại tộc) */}
+              {!(defaultRole === 'spouse' && spouseOrigin === 'external') && (
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                      4. {KINSHIP_TERMS.CHILDREN.toUpperCase()}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      {existingChildren.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowReorderModal(true)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          title="Sắp xếp thứ tự đàn con"
+                        >
+                          <ArrowUpDown className="w-3.5 h-3.5" /> Sắp xếp thứ tự
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowAddChildInline(!showAddChildInline)}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Thêm nhanh con mới
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Danh sách con đã có trong CSDL */}
+                  {existingChildren.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                          Con hiện có trong gia phả ({existingChildren.length} người):
+                        </p>
+                        {stagedUnlinkChildIds.length > 0 && (
+                          <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400">
+                            (Sẽ gỡ {stagedUnlinkChildIds.length} người con khi bấm Cập nhật)
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {(() => {
+                          const seen = new Set<number>();
+                          let hasDuplicate = false;
+                          for (const ch of existingChildren) {
+                            if (ch.birth_order != null) {
+                              if (seen.has(ch.birth_order)) {
+                                hasDuplicate = true;
+                                break;
+                              }
+                              seen.add(ch.birth_order);
+                            }
+                          }
+                          return existingChildren.map((c, idx) => {
+                            const isStagedUnlink = stagedUnlinkChildIds.includes(c.id);
+                            const displayOrder = hasDuplicate ? idx + 1 : (c.birth_order || idx + 1);
+                            return (
+                              <div
+                                key={c.id}
+                                className={`p-2.5 rounded-md border flex items-center justify-between transition-colors ${isStagedUnlink
+                                    ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 opacity-70'
+                                    : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/60'
+                                  }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span
+                                    className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${isStagedUnlink
+                                        ? 'bg-rose-100 text-rose-600 dark:bg-rose-900 dark:text-rose-300'
+                                        : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                                      }`}
+                                  >
+                                    {displayOrder}
+                                  </span>
+                                  <span
+                                    className={`font-semibold truncate text-xs ${isStagedUnlink
+                                        ? 'line-through text-slate-400 dark:text-slate-500'
+                                        : 'text-slate-800 dark:text-slate-200'
+                                      }`}
+                                  >
+                                    {c.full_name}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 shrink-0">
+                                    ({c.gender === 'male' ? 'Nam' : c.gender === 'female' ? 'Nữ' : 'Khác'}
+                                    {c.birth_year ? `, ${c.birth_year}` : ''})
+                                  </span>
+                                  {c.is_senior && !isStagedUnlink && (
+                                    <span className="text-[10px] font-bold text-amber-600 shrink-0">
+                                      ({KINSHIP_TERMS.SENIOR_CHILD})
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-1 shrink-0 ml-2">
+                                  {isStagedUnlink ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleUnlinkChild(c.id)}
+                                      className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-900/50 dark:hover:bg-rose-900 dark:text-rose-300 font-medium transition-colors"
+                                      title="Hủy gỡ con"
+                                    >
+                                      Hoàn tác
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleUnlinkChild(c.id)}
+                                      className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-900/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                                      title="Gỡ con khỏi cha mẹ (chuyển về khay Chưa nối phả)"
+                                    >
+                                      <UserMinus className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Danh sách con thêm nhanh chuẩn bị lưu */}
+                  {stagedQuickChildren.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                        Con mới thêm nhanh (sẽ tạo kèm cùng hồ sơ):
+                      </p>
+                      <div className="space-y-1.5">
+                        {stagedQuickChildren.map((sc, idx) => {
+                          const motherPartner = allMembers.find((m) => m.id === sc.motherId);
+                          return (
+                            <div
+                              key={sc.id}
+                              className="p-2.5 rounded-md bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">Con #{existingChildren.length + idx + 1}</span>
+                                <span className="font-semibold text-slate-800 dark:text-slate-200">{sc.name}</span>
+                                <span className="text-[10px] text-slate-500">
+                                  ({sc.gender === 'male' ? 'Nam' : sc.gender === 'female' ? 'Nữ' : 'Khác'}{sc.birthYear ? `, ${sc.birthYear}` : ''})
+                                </span>
+                                {motherPartner && (
+                                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                    · Mẹ: {motherPartner.full_name}
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveStagedChild(sc.id)}
+                                className="text-rose-500 hover:text-rose-700 p-1"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Input thêm nhanh con: 3 nút Giới tính Nam / Nữ / Khác */}
+                  {showAddChildInline && (
+                    <div className="p-3.5 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/70 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div className="sm:col-span-2">
+                          <input
+                            type="text"
+                            value={quickChildName}
+                            onChange={(e) => setQuickChildName(e.target.value)}
+                            placeholder="Họ và tên con..."
+                            className="w-full px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-900"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="number"
+                            value={quickChildBirthYear}
+                            onChange={(e) => setQuickChildBirthYear(e.target.value)}
+                            placeholder="Năm sinh..."
+                            className="w-full px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-900"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Chọn Mẹ cho con nếu người cha đang được sửa */}
+                      {gender === 'male' && (
+                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                          {availableWivesForChildren.length === 1 ? (
+                            <div className="flex items-center justify-between p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                              <span className="text-slate-700 dark:text-slate-300">
+                                Mẹ của con: <strong className="text-emerald-700 dark:text-emerald-400">🌸 {availableWivesForChildren[0].partner.full_name} ({KINSHIP_TERMS.WIFE_FIRST})</strong>
+                              </span>
+                              {quickChildMotherId === availableWivesForChildren[0].partner.id ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setQuickChildMotherId('')}
+                                  className="text-[11px] text-slate-400 hover:text-rose-500 underline"
+                                >
+                                  Bỏ chọn (Chưa rõ mẹ)
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setQuickChildMotherId(availableWivesForChildren[0].partner.id)}
+                                  className="text-[11px] text-emerald-600 font-semibold underline"
+                                >
+                                  Đặt lại mặc định ({availableWivesForChildren[0].partner.full_name})
+                                </button>
+                              )}
+                            </div>
+                          ) : availableWivesForChildren.length >= 2 ? (
+                            <div className="space-y-1">
+                              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                Chọn Mẹ ruột của con (<span className="text-rose-500">*</span> Đa thê: Bố có {availableWivesForChildren.length} người vợ)
+                              </label>
+                              <select
+                                value={quickChildMotherId}
+                                onChange={(e) => setQuickChildMotherId(e.target.value)}
+                                className="w-full px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-900"
+                              >
+                                <option value="">-- Chọn mẹ ruột của con --</option>
+                                {availableWivesForChildren.map((w) => (
+                                  <option key={w.partner.id} value={w.partner.id}>
+                                    🌸 {w.partner.full_name} ({w.marriageOrder === 1 ? KINSHIP_TERMS.WIFE_FIRST : w.marriageOrder === 2 ? KINSHIP_TERMS.WIFE_SECOND : `Bà ${w.marriageOrder}`})
+                                  </option>
+                                ))}
+                                <option value="">❓ Chưa rõ thông tin mẹ</option>
+                              </select>
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-slate-400 italic">
+                              Bố chưa có thông tin vợ trong gia phả (Con sẽ lưu là chưa rõ mẹ).
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 font-medium text-xs">Giới tính con:</span>
+                          <div className="flex gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setQuickChildGender('male')}
+                              className={`px-3 py-1 rounded-md border text-xs font-semibold transition-all ${quickChildGender === 'male'
+                                  ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-blue-300 ring-1 ring-blue-600'
+                                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
+                                }`}
+                            >
+                              ♂ Nam
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setQuickChildGender('female')}
+                              className={`px-3 py-1 rounded-md border text-xs font-semibold transition-all ${quickChildGender === 'female'
+                                  ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-700 dark:text-rose-300 ring-1 ring-rose-600'
+                                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
+                                }`}
+                            >
+                              ♀ Nữ
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setQuickChildGender('other')}
+                              className={`px-3 py-1 rounded-md border text-xs font-semibold transition-all ${quickChildGender === 'other'
+                                  ? 'bg-slate-100 dark:bg-slate-800 border-slate-600 text-slate-800 dark:text-slate-200 ring-1 ring-slate-600'
+                                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
+                                }`}
+                            >
+                              ⚪ Khác
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowAddChildInline(false)}
+                            className="px-3 py-1 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleAddQuickChild}
+                            className="px-3 py-1 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition-colors"
+                          >
+                            Thêm vào danh sách
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Chọn con từ danh sách mồ côi / chưa nối */}
+                  {unlinkedCandidates.length > 0 && (
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                        🔗 Hoặc nhận con từ danh sách thành viên chưa nối phả:
+                      </p>
+                      <div className="max-h-28 overflow-y-auto space-y-1 p-2 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/60 scrollbar-thin">
+                        {unlinkedCandidates.map((cand) => {
+                          const isSelected = selectedChildIdsToLink.includes(cand.id);
+                          return (
+                            <label
+                              key={cand.id}
+                              className="flex items-center justify-between p-1.5 rounded-md hover:bg-white dark:hover:bg-slate-700/50 cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleChildLink(cand.id)}
+                                  className="w-3.5 h-3.5 rounded text-emerald-600"
+                                />
+                                <span className="font-medium text-slate-800 dark:text-slate-200">{cand.full_name}</span>
+                                <span className="text-[10px] text-slate-400">({cand.gender === 'male' ? 'Nam' : cand.gender === 'female' ? 'Nữ' : 'Khác'})</span>
+                              </div>
+                              <span className="text-[10px] text-amber-600 font-medium">Chưa có cha mẹ</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* KHỐI 5: TRẠNG THÁI SINH - TỬ & NGÀY GIỖ ÂM LỊCH */}
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  5. TRẠNG THÁI SINH - TỬ & NGÀY GIỖ
+                </h4>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                    Vị trí an táng / Khu mộ
+                  <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
+                    Trạng thái hiện tại
                   </label>
-                  <input
-                    type="text"
-                    value={burialLocation}
-                    onChange={(e) => setBurialLocation(e.target.value)}
-                    placeholder="VD: Nghĩa trang Cây Gạo, Lô B..."
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
-                  />
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setLifeStatus('living')}
+                      className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${lifeStatus === 'living'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-600 text-emerald-700 dark:text-emerald-300 shadow-sm ring-1 ring-emerald-600'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        }`}
+                    >
+                      <span>🌱</span> Còn sống
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLifeStatus('deceased')}
+                      className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${lifeStatus === 'deceased'
+                          ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-600 text-amber-800 dark:text-amber-200 shadow-sm ring-1 ring-amber-600'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        }`}
+                    >
+                      Đã mất
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
 
-          {/* KHỐI 6: TIỂU SỬ & CÔNG TRẠNG */}
-          <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-2">
-            <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-              6. TIỂU SỬ & CÔNG TRẠNG
-            </h4>
-            <textarea
-              rows={2}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ghi chép công đức, chức vụ, hoàn cảnh lịch sử, đóng góp cho dòng họ..."
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-900"
-            />
-          </div>
+                {/* Dynamic Disclosure */}
+                {lifeStatus === 'deceased' && (
+                  <div className="p-4 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/40 space-y-4 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold text-[11px]">
+                      <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Quy ước gia phả: Ưu tiên ngày và tháng mất Âm lịch để quét lịch giỗ chính xác hàng năm.</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                          Ngày mất (Âm)
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={deathLunarDay}
+                          onChange={(e) => setDeathLunarDay(e.target.value)}
+                          placeholder="1 - 30"
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                          Tháng mất (Âm)
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={12}
+                          value={deathLunarMonth}
+                          onChange={(e) => setDeathLunarMonth(e.target.value)}
+                          placeholder="1 - 12"
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
+                        />
+                      </div>
+                      <div className="col-span-2 flex items-center pt-5">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={deathLunarIsLeap}
+                            onChange={(e) => setDeathLunarIsLeap(e.target.checked)}
+                            className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                          />
+                          <span className="font-semibold text-slate-700 dark:text-slate-200">
+                            Tháng nhuận Âm lịch
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                          Năm Can Chi khi mất
+                        </label>
+                        <input
+                          list="can-chi-list"
+                          value={deathLunarYearName}
+                          onChange={(e) => setDeathLunarYearName(e.target.value)}
+                          placeholder="VD: Canh Tý, Ất Mão..."
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
+                        />
+                        <datalist id="can-chi-list">
+                          {CAN_CHI_YEARS.map((y) => (
+                            <option key={y} value={y} />
+                          ))}
+                        </datalist>
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                          Năm mất (Dương lịch - Tùy chọn)
+                        </label>
+                        <input
+                          type="number"
+                          value={deathYear}
+                          onChange={(e) => setDeathYear(e.target.value)}
+                          placeholder="VD: 1985"
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                        Vị trí an táng / Khu mộ
+                      </label>
+                      <input
+                        type="text"
+                        value={burialLocation}
+                        onChange={(e) => setBurialLocation(e.target.value)}
+                        placeholder="VD: Nghĩa trang Cây Gạo, Lô B..."
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-slate-900"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* KHỐI 6: TIỂU SỬ & CÔNG TRẠNG */}
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  6. TIỂU SỬ & CÔNG TRẠNG
+                </h4>
+                <textarea
+                  rows={2}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Ghi chép công đức, chức vụ, hoàn cảnh lịch sử, đóng góp cho dòng họ..."
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-900"
+                />
+              </div>
             </>
           )}
         </form>
@@ -2185,8 +2165,8 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                   {mode === 'edit'
                     ? 'Cập nhật hồ sơ'
                     : defaultRole === 'spouse' && spouseOrigin === 'internal'
-                    ? 'Tạo liên kết nội tộc'
-                    : 'Lưu thành viên'}
+                      ? 'Tạo liên kết nội tộc'
+                      : 'Lưu thành viên'}
                 </span>
               </>
             )}

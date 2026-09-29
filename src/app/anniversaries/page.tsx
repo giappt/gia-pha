@@ -337,8 +337,8 @@ export default function AnniversariesPage() {
                     }
                   }}
                   className={`px-2.5 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${scope === 'my_lineage' && lineageDepth === 'from_root'
-                      ? 'bg-emerald-600 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   title="Từ Đời 1: Trục dọc gia đình từ Cụ Tổ Đời 1 đến bản thân"
                 >
@@ -357,8 +357,8 @@ export default function AnniversariesPage() {
                     }
                   }}
                   className={`px-2.5 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${scope === 'my_lineage' && lineageDepth === 'from_branch'
-                      ? 'bg-emerald-600 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   title={`Nhánh của tôi (${rootTierLabel}): Bắt đầu từ Cụ Khởi Nguồn của cấp gốc trở xuống`}
                 >
@@ -405,7 +405,7 @@ export default function AnniversariesPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm tên cụ..."
+                placeholder="Nhập tên..."
                 className="w-full pl-8 pr-3 py-1.5 rounded-md text-xs border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
@@ -449,7 +449,7 @@ export default function AnniversariesPage() {
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors shadow-sm"
                 >
                   <FamilyTreeIcon className="w-3.5 h-3.5" />
-                  <span>Quay về Cây Phả Hệ</span>
+                  <span>Quay về Cây Gia Phả</span>
                 </Link>
               </div>
             </div>

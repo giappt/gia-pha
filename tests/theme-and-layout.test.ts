@@ -251,9 +251,9 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
 
     // 1. Không còn chứa các tiêu đề thẻ tính năng tiếp thị cũ
     assert.strictEqual(
-      homeContent.includes('Cây Phả Hệ Tương Tác'),
+      homeContent.includes('Cây Gia Phả Tương Tác'),
       false,
-      'src/app/page.tsx không được chứa thẻ "Cây Phả Hệ Tương Tác"'
+      'src/app/page.tsx không được chứa thẻ "Cây Gia Phả Tương Tác"'
     );
     assert.strictEqual(
       homeContent.includes('Tra Cứu Vai Vế Xưng Hô'),
@@ -332,7 +332,7 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
 
     // 2. Phải có đủ 4 liên kết phân hệ chính
     assert.ok(navContent.includes("href: '/'"), 'MobileBottomNav phải có tab Trang Chủ (/)');
-    assert.ok(navContent.includes("href: '/tree'"), 'MobileBottomNav phải có tab Phả Hệ (/tree)');
+    assert.ok(navContent.includes("href: '/tree'"), 'MobileBottomNav phải có tab Gia Phả (/tree)');
     assert.ok(navContent.includes("href: '/anniversaries'"), 'MobileBottomNav phải có tab Lịch Giỗ (/anniversaries)');
     assert.ok(navContent.includes("href: '/kinship'"), 'MobileBottomNav phải có tab Vai Vế (/kinship)');
 
@@ -432,7 +432,7 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
     );
   });
 
-  // TC_UT_FAMILY_TREE_ICON_STRUCTURE: Cấu trúc SVG biểu tượng Cây Phả Hệ chuẩn 3 ô vuông
+  // TC_UT_FAMILY_TREE_ICON_STRUCTURE: Cấu trúc SVG biểu tượng Cây Gia Phả chuẩn 3 ô vuông
   it('TC_UT_FAMILY_TREE_ICON_STRUCTURE: FamilyTreeIcon.tsx tồn tại và render chuẩn cấu trúc 3 ô vuông', () => {
     const iconPath = path.resolve(process.cwd(), 'src/components/icons/FamilyTreeIcon.tsx');
     assert.ok(fs.existsSync(iconPath), 'src/components/icons/FamilyTreeIcon.tsx phải tồn tại');

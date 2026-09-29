@@ -1,4 +1,4 @@
-# ĐẶC TẢ KỸ THUẬT: MILESTONE 3.1 - MÀN HÌNH CÂY PHẢ HỆ TƯƠNG TÁC, GỐC TÙY BIẾN & BUS HIERARCHY
+# ĐẶC TẢ KỸ THUẬT: MILESTONE 3.1 - MÀN HÌNH CÂY Gia Phả TƯƠNG TÁC, GỐC TÙY BIẾN & BUS HIERARCHY
 
 _Tài liệu này là Single Source of Truth của Milestone 3.1. Mọi mã nguồn và kịch bản test bắt buộc phải bám sát 100% tài liệu này._
 
@@ -122,7 +122,7 @@ sequenceDiagram
     participant API as GET /api/tree
 
     User->>Canvas: Mở trang /tree
-    Canvas->>API: Fetch dữ liệu phả hệ
+    Canvas->>API: Fetch dữ liệu Gia Phả
     API-->>Canvas: { members, spouseRelations, clanName }
     Canvas->>LayoutEngine: calculateTreeLayout(members, spouseRelations, { showMaternalBranches, focusRootId })
     Note over LayoutEngine: Sắp xếp anh em theo birth_order / birth_year<br/>Nếu có focusRootId: Lọc cây con hậu duệ & tự đổi vai dâu/rể, cháu nội/ngoại<br/>Vẽ hệ trục thước thợ Bus Hierarchy với Y_bus = Y_parent + 128
@@ -215,7 +215,7 @@ Triệt tiêu 100% hiện tượng "bấm chuyển màn không có phản hồi"
 - **Kích hoạt tức thì:** Khởi động thanh tiến trình ngay trong vòng $50\text{ms}$ khi người dùng click vào bất kỳ link điều hướng nào trong toàn ứng dụng (PC Navbar, Mobile Bottom Nav, thẻ bài trang chủ).
 
 #### 5.3.2. Phản Hồi Xúc Giác & Thị Giác Tức Thì Trên Navigation (Tactile / Visual Feedback):
-- **Mobile Bottom Nav:** Khi người dùng chạm (tap) vào tab (ví dụ "Phả Hệ"):
+- **Mobile Bottom Nav:** Khi người dùng chạm (tap) vào tab (ví dụ "Gia Phả"):
   - Icon tab lập tức nảy nhẹ (scale bounce `active:scale-95 -> scale-100`).
   - Viền sáng ngọc bích pulse xoay nhẹ báo hiệu *"Hệ thống đã nhận lệnh và đang tải"*.
 - **PC Navbar:** Tab được click hiển thị vệt sáng indicator chuyển động ngay dưới link.
@@ -223,7 +223,7 @@ Triệt tiêu 100% hiện tượng "bấm chuyển màn không có phản hồi"
 #### 5.3.3. Bộ Màn Hình Loading Skeleton Toàn Diện & Chuẩn Hóa [R-UI.LOADING] Cho TẤT CẢ 6 Route:
 Tuân thủ tuyệt đối quy định cứng `[R-UI.LOADING]` trong `.agents/AGENTS.md`, toàn bộ 6 route chính đều bắt buộc phải có file `loading.tsx` chuẩn Next.js App Router và tích hợp component chuẩn hóa `SyncLoadingBadge`:
 1. `src/app/loading.tsx`: **Global Root Skeleton** (Cho Trang Chủ `/` và fallback toàn hệ thống).
-2. `src/app/tree/loading.tsx`: **Cây Phả Hệ Skeleton** (Toolbar skeleton, lưới chấm canvas mờ ảo, hiệu ứng shimmer card gia phả).
+2. `src/app/tree/loading.tsx`: **Cây Gia Phả Skeleton** (Toolbar skeleton, lưới chấm canvas mờ ảo, hiệu ứng shimmer card gia phả).
 3. `src/app/anniversaries/loading.tsx`: **Lịch Giỗ Skeleton** (Thanh tab tháng âm lịch, danh sách thẻ ngày giỗ skeleton).
 4. `src/app/kinship/loading.tsx`: **Tra Cứu Xưng Hô Skeleton** (2 ô dropdown chọn người, khung card kết quả vai vế).
 5. `src/app/admin/loading.tsx`: **Cổng Quản Trị Skeleton** (Sidebar skeleton, các card thống kê số liệu, khung bảng dữ liệu).
@@ -235,7 +235,7 @@ Tuân thủ tuyệt đối quy định cứng `[R-UI.LOADING]` trong `.agents/AG
 
 ---
 
-### 5.4. Kiến Trúc UI/UX & Kỹ Thuật Cho Cây Phả Hệ Quy Mô 1.500 Người (Scale 1500+ Architecture)
+### 5.4. Kiến Trúc UI/UX & Kỹ Thuật Cho Cây Gia Phả Quy Mô 1.500 Người (Scale 1500+ Architecture)
 
 Giải pháp toàn diện giải quyết triệt để quá tải nhận thức (Cognitive Overload) và quá tải DOM (DOM Bloat) cho dòng họ 1.500 người:
 
@@ -287,7 +287,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 | **TC_UT12** | Toàn bộ 6 file Loading Skeletons tồn tại, dùng SyncLoadingBadge & spinner chuẩn | `tests/theme-and-layout.test.ts` | 6 file `loading.tsx` | Quét AST, kiểm tra export default, kiểm tra import SyncLoadingBadge | Đủ 6 route (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`, `/login-gate`) tuân thủ `[R-UI.LOADING]`, dùng duy nhất thông điệp "Đang tải dữ liệu..." | Unit Test |
 | **TC_UT13** | Phản hồi xúc giác / Pending feedback trên MobileBottomNav | `tests/theme-and-layout.test.ts` | `MobileBottomNav.tsx` | Phân tích mã nguồn và trạng thái tap | Chứa class/logic phản hồi chuyển trang `active:scale-95`, pending ring | Unit Test |
 | **TC_UT14** | Viewport Virtualization trong FamilyTreeCanvas | `tests/theme-and-layout.test.ts` | `FamilyTreeCanvas.tsx` | Phân tích props của `<ReactFlow>` | Chứa cấu hình `onlyRenderVisibleElements={true}` | Unit Test |
-| **TC_UT15** | Trải nghiệm phả hệ mặc định cho người chưa liên kết node | `tests/theme-and-layout.test.ts` | `FamilyTreeCanvas.tsx` / `TreeToolbar.tsx` | Kiểm tra logic banner và nhánh mặc định | Có cơ chế gợi ý nhận node và xem theo cội nguồn | Unit Test |
+| **TC_UT15** | Trải nghiệm Gia Phả mặc định cho người chưa liên kết node | `tests/theme-and-layout.test.ts` | `FamilyTreeCanvas.tsx` / `TreeToolbar.tsx` | Kiểm tra logic banner và nhánh mặc định | Có cơ chế gợi ý nhận node và xem theo cội nguồn | Unit Test |
 
 #### Danh Sách Tiêu Chí Kiểm Thử Tự Động (Acceptance Criteria):
 - [x] **AC_UT01 (Zero Collision Layout):** Thuật toán phân tầng $Y$ chuẩn, không cặp node nào cùng thế hệ bị đè tọa độ $X$.
@@ -304,7 +304,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 - [x] **AC11_TOP_PROGRESS_BAR_THEMED:** Thanh tiến trình đỉnh trang kích hoạt tức thì khi click, sử dụng màu động theo theme CSS token.
 - [x] **AC12_ALL_ROUTES_LOADING_SKELETONS:** Toàn bộ 6 route (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`, `/login-gate`) có file `loading.tsx` tích hợp `SyncLoadingBadge`, hiển thị thông điệp thống nhất `"Đang tải dữ liệu..."`, spinner `Loader2` tròn 100% không méo.
 - [x] **AC13_MOBILE_NAV_ACTIVE_FEEDBACK:** Khi tap vào tab di động hoặc navbar, có phản hồi thị giác tức thì (active/pending ring).
-- [x] **AC14_TREE_1500_VIEWPORT_VIRTUALIZATION:** Canvas cây phả hệ kích hoạt `onlyRenderVisibleElements`, cắt tỉa $90\%+$ DOM node ngoài viewport giúp mobile không bị lag/OOM.
+- [x] **AC14_TREE_1500_VIEWPORT_VIRTUALIZATION:** Canvas cây Gia Phả kích hoạt `onlyRenderVisibleElements`, cắt tỉa $90\%+$ DOM node ngoài viewport giúp mobile không bị lag/OOM.
 - [x] **AC15_UNLINKED_MEMBER_TREE_EXPERIENCE:** Khách/người chưa liên kết được đón nhận bằng giao diện 3 đời trang nghiêm kèm nút mở rộng chi và banner hướng dẫn nhận node/chọn tâm điểm 5 đời.
 
 ---

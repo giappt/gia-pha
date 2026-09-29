@@ -7,6 +7,7 @@ import { getUpcomingAnniversaries, formatSolarDateWithDayOfWeek } from '@/lib/an
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
 import InstallPwaButton, { PwaInstallBanner } from '@/components/pwa/InstallPwaButton';
+import IdentityContextWidget from '@/components/home/IdentityContextWidget';
 import type { MemberRecord } from '@/types/tree';
 
 export default async function HomePage({
@@ -35,10 +36,11 @@ export default async function HomePage({
     }
   }
 
+  let branches: any[] = [];
   try {
     const { data: clanData, error } = await supabase
       .from('clan_settings')
-      .select('clan_name, feature_flags')
+      .select('clan_name, feature_flags, branches')
       .limit(1)
       .single();
 
@@ -49,11 +51,24 @@ export default async function HomePage({
       isDbConnected = true;
     }
 
+    if (clanData?.branches && Array.isArray(clanData.branches)) {
+      branches = clanData.branches;
+    }
+
     if (!targetFlagsCookie && clanData?.feature_flags) {
       featureFlags = resolveFeatureFlags(clanData.feature_flags);
     }
   } catch (err) {
     console.error('Failed to read clan settings:', err);
+  }
+
+  // Fetch spouse relations for branch and kinship resolution
+  let spouseRelations: any[] = [];
+  try {
+    const { data: dbSpouses } = await supabase.from('spouse_relations').select('*');
+    if (dbSpouses) spouseRelations = dbSpouses;
+  } catch {
+    spouseRelations = [];
   }
 
   // Get current user session on server
@@ -107,6 +122,22 @@ export default async function HomePage({
     membersList = [];
   }
 
+  // Fetch claimed member IDs to prevent duplicate claims
+  let claimedMemberIds: string[] = [];
+  try {
+    const { data: linkedUsers } = await supabase
+      .from('users')
+      .select('linked_member_id')
+      .not('linked_member_id', 'is', null);
+    if (linkedUsers) {
+      claimedMemberIds = linkedUsers
+        .map((u: any) => u.linked_member_id)
+        .filter(Boolean);
+    }
+  } catch {
+    claimedMemberIds = [];
+  }
+
   // Calculate upcoming anniversaries over a full 365-day window to guarantee finding the nearest one
   const upcomingAnniversaries = getUpcomingAnniversaries(membersList, {
     daysAhead: 365,
@@ -138,7 +169,7 @@ export default async function HomePage({
       {/* Hero Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-400 mb-3">
-          Hệ Thống Phả Hệ Trực Tuyến
+          Hệ Thống Gia Phả Trực Tuyến
         </p>
 
         <h1
@@ -152,43 +183,21 @@ export default async function HomePage({
         </h1>
 
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-6 font-normal">
-          Nền tảng số hóa gia phả trực tuyến hiện đại. Kết nối mọi thế hệ con cháu và nhắc nhở ngày giỗ theo Âm lịch truyền thống.
+          Nền tảng số hóa gia phả trực tuyến hiện đại.
+          <br />
+          Kết nối mọi thế hệ con cháu và nhắc nhở ngày giỗ theo Âm lịch truyền thống.
         </p>
 
-        {/* User Greeting if logged in */}
-        {user ? (
-          <div className="inline-flex items-center gap-3 px-4 py-2 mb-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800 shadow-sm text-left">
-            {user.user_metadata?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={user.user_metadata.avatar_url}
-                alt={user.user_metadata.full_name || 'User Avatar'}
-                className="w-9 h-9 rounded-full border border-emerald-500/50 object-cover aspect-square shrink-0 shadow-sm"
-              />
-            ) : (
-              <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs aspect-square shrink-0 shadow-sm">
-                {getMemberInitials(user.user_metadata?.full_name || user.email)}
-              </div>
-            )}
-            <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                Xin chào, {user.user_metadata?.full_name || user.email}!
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Vai trò:{' '}
-                <span className="font-semibold text-emerald-700 dark:text-emerald-400">
-                  {isSuperAdmin
-                    ? 'Super Admin (Toàn quyền)'
-                    : userProfile?.user_role === 'branch_editor'
-                      ? 'Trưởng Chi'
-                      : userProfile?.user_role === 'claimed_member'
-                        ? 'Thành Viên Dòng Họ'
-                        : 'Khách Xem'}
-                </span>
-              </p>
-            </div>
-          </div>
-        ) : null}
+        {/* User Identity Context Widget */}
+        <IdentityContextWidget
+          user={user}
+          userProfile={userProfile}
+          members={membersList}
+          branches={branches}
+          spouseRelations={spouseRelations}
+          userInitials={user ? getMemberInitials(user.user_metadata?.full_name || user.email) : ''}
+          claimedMemberIds={claimedMemberIds}
+        />
       </div>
 
       {/* Banner nhẹ cho Khách chưa đăng nhập */}

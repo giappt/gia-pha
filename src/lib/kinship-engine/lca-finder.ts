@@ -88,7 +88,7 @@ export function findConsanguinealLca(
       minTotalDist = totalDist;
       bestLcaId = ancId;
     } else if (totalDist === minTotalDist) {
-      // Ưu tiên dòng họ nội (cha) theo truyền thống phả hệ Việt Nam
+      // Ưu tiên dòng họ nội (cha) theo truyền thống Gia Phả Việt Nam
       const ancMember = membersMap.get(ancId);
       if (ancMember?.gender === 'male') {
         bestLcaId = ancId;

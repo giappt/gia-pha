@@ -506,7 +506,7 @@ export function getTermFromSSOT(
 }
 
 /**
- * Ánh xạ kết quả tính toán đồ thị phả hệ sang danh xưng xưng hô 2 chiều
+ * Ánh xạ kết quả tính toán đồ thị Gia Phả sang danh xưng xưng hô 2 chiều
  * theo phong tục 3 miền Bắc - Trung - Nam và cấu hình tùy biến của dòng họ
  */
 export function resolveKinshipTerms(
@@ -719,8 +719,8 @@ function resolveInLawPair(
               ? 'Em'
               : 'Chú'
             : region === 'south'
-            ? 'Em'
-            : 'Cô');
+              ? 'Em'
+              : 'Cô');
         return {
           inLawCallsBlood,
           bloodCallsInLaw,
@@ -736,8 +736,8 @@ function resolveInLawPair(
               ? 'Bác'
               : 'Anh'
             : region === 'north'
-            ? 'Cô'
-            : 'Chị');
+              ? 'Cô'
+              : 'Chị');
         return {
           inLawCallsBlood,
           bloodCallsInLaw,
@@ -892,15 +892,15 @@ function resolveInLawPair(
         ? getTermFromSSOT('grand_daughter_in_law', 'senior', region, customDictionary, 'Cháu dâu')
         : 'Chắt dâu'
       : delta === -2
-      ? getTermFromSSOT('grand_son_in_law', 'senior', region, customDictionary, 'Cháu rể')
-      : 'Chắt rể';
+        ? getTermFromSSOT('grand_son_in_law', 'senior', region, customDictionary, 'Cháu rể')
+        : 'Chắt rể';
     const inLawCallsBlood = isBloodMale
       ? delta === -2
         ? getTermFromSSOT('grandparent_direct_male', 'senior', region, customDictionary, region === 'south' ? 'Ông' : 'Ông nội')
         : getTermFromSSOT('great_grandparent', 'senior', region, customDictionary, 'Cụ ông')
       : delta === -2
-      ? getTermFromSSOT('grandparent_direct_female', 'senior', region, customDictionary, region === 'south' ? 'Bà' : 'Bà nội')
-      : getTermFromSSOT('great_grandparent', 'senior', region, customDictionary, 'Cụ bà');
+        ? getTermFromSSOT('grandparent_direct_female', 'senior', region, customDictionary, region === 'south' ? 'Bà' : 'Bà nội')
+        : getTermFromSSOT('great_grandparent', 'senior', region, customDictionary, 'Cụ bà');
     return {
       inLawCallsBlood,
       bloodCallsInLaw,
@@ -914,8 +914,8 @@ function resolveInLawPair(
       ? getTermFromSSOT('grandparent_collateral_female', 'senior', region, customDictionary, 'Bà họ')
       : 'Cụ bà họ'
     : delta === 2
-    ? getTermFromSSOT('grandparent_collateral_male', 'senior', region, customDictionary, 'Ông họ')
-    : 'Cụ ông họ';
+      ? getTermFromSSOT('grandparent_collateral_male', 'senior', region, customDictionary, 'Ông họ')
+      : 'Cụ ông họ';
   const inLawCallsBlood = delta === 2 ? 'Cháu' : 'Chắt';
   return {
     inLawCallsBlood,
@@ -1139,8 +1139,8 @@ function resolveSeniorGeneration(
           ? 'Má'
           : (region === 'central' ? 'Mạ' : 'Mẹ')
         : region === 'south'
-        ? 'Ba'
-        : (region === 'central' ? 'Ba' : 'Bố');
+          ? 'Ba'
+          : (region === 'central' ? 'Ba' : 'Bố');
       const parentLabel = getTermFromSSOT(parentRuleId, 'senior', region, customDictionary, defaultParentLabel);
       const childLabel = getTermFromSSOT(parentRuleId, 'junior', region, customDictionary, 'Con');
 
@@ -1196,8 +1196,8 @@ function resolveSeniorGeneration(
           ? 'Cô họ'
           : 'Bác gái'
         : region === 'central'
-        ? 'O'
-        : 'Cô';
+          ? 'O'
+          : 'Cô';
       const auntLabel = getTermFromSSOT(auntRuleId, 'senior', region, customDictionary, defaultAuntLabel);
       const juniorLabel = getTermFromSSOT(auntRuleId, 'junior', region, customDictionary, 'Cháu');
       return {
@@ -1443,12 +1443,10 @@ function attachStructuredMetadata(
   const comparisonFacts = {
     labelA: a.full_name,
     labelB: b.full_name,
-    detailA: `Đời ${a.generation_level ?? a.generation_number ?? 1} · Sinh ${a.birth_year || '---'}${
-      formatBirthOrder(a.birth_order) ? ' · ' + formatBirthOrder(a.birth_order) : ''
-    }${a.is_adopted ? ' · Con Nuôi' : ''}`,
-    detailB: `Đời ${b.generation_level ?? b.generation_number ?? 1} · Sinh ${b.birth_year || '---'}${
-      formatBirthOrder(b.birth_order) ? ' · ' + formatBirthOrder(b.birth_order) : ''
-    }${b.is_adopted ? ' · Con Nuôi' : ''}`,
+    detailA: `Đời ${a.generation_level ?? a.generation_number ?? 1} · Sinh ${a.birth_year || '---'}${formatBirthOrder(a.birth_order) ? ' · ' + formatBirthOrder(a.birth_order) : ''
+      }${a.is_adopted ? ' · Con Nuôi' : ''}`,
+    detailB: `Đời ${b.generation_level ?? b.generation_number ?? 1} · Sinh ${b.birth_year || '---'}${formatBirthOrder(b.birth_order) ? ' · ' + formatBirthOrder(b.birth_order) : ''
+      }${b.is_adopted ? ' · Con Nuôi' : ''}`,
     summary,
   };
 
