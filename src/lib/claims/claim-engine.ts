@@ -1,4 +1,4 @@
-import type { ProposedChildData, BranchNode, UserRole } from '@/types/database';
+import type { ProposedChildData, BranchNode, UserRole, ClaimRequestRow } from '@/types/database';
 import type { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import {
   resolveMemberBranchHierarchy,
@@ -477,5 +477,108 @@ export function filterUnclaimedCandidateMembers(
     const fatherMatch = father?.full_name?.toLowerCase().includes(q);
     return nameMatch || fatherMatch;
   });
+}
+
+/**
+ * Xác thực xem một người dùng có quyền hạn phê duyệt / xử lý phiếu claimRequest hay không
+ * Tuân thủ mô hình phân quyền 3 tầng theo huyết thống:
+ * 1. super_admin: Luôn có quyền với mọi phiếu
+ * 2. branch_editor:
+ *    - Được giao đích danh: claim.assigned_to === user.id
+ *    - Khớp mã chi mục tiêu: claim.target_branch_code === user.assigned_branch_code
+ *    - Hoặc thành viên đích (khi claim_existing) hoặc cha/mẹ được chọn (khi propose_child) thuộc cây con của user.assigned_branch_code
+ * 3. claimed_member (Bố/Mẹ):
+ *    - Khi là propose_child: proposed_data.parent_id === user.linked_member_id
+ *    - Khi là claim_existing: node đích là con đẻ của user (có father_id hoặc mother_id === user.linked_member_id)
+ * 4. Khác (viewer, khách vãng lai, người ngoài): false
+ */
+export function canUserReviewClaim(
+  user: {
+    id?: string;
+    user_role?: UserRole | string;
+    linked_member_id?: string | null;
+    assigned_branch_code?: string | null;
+  } | null | undefined,
+  claim: Partial<ClaimRequestRow> | null | undefined,
+  members: MemberRecord[] = [],
+  branches: BranchNode[] = [],
+  spouseRelations: SpouseRelationRecord[] = []
+): boolean {
+  if (!user || !claim) return false;
+
+  // 1. Super Admin luôn có quyền
+  if (user.user_role === 'super_admin') return true;
+
+  const membersMap = new Map<string, MemberRecord>();
+  for (const m of members) {
+    if (m?.id) membersMap.set(m.id, m);
+  }
+
+  // 2. Branch Editor (Trưởng Chi / Thư Ký Chi)
+  if (user.user_role === 'branch_editor') {
+    // Được giao việc đích danh
+    if (claim.assigned_to && user.id && claim.assigned_to === user.id) {
+      return true;
+    }
+
+    if (user.assigned_branch_code) {
+      // Khớp target_branch_code của phiếu
+      if (
+        claim.target_branch_code &&
+        claim.target_branch_code.toLowerCase() === user.assigned_branch_code.toLowerCase()
+      ) {
+        return true;
+      }
+
+      // Kiểm tra node thành viên liên quan có thuộc cây con của assigned_branch_code không
+      const relevantMemberId =
+        claim.request_type === 'claim_existing'
+          ? claim.member_id
+          : claim.proposed_data?.parent_id;
+
+      if (relevantMemberId) {
+        const branchRes = resolveMemberBranchHierarchy(
+          relevantMemberId,
+          members,
+          branches,
+          spouseRelations
+        );
+        const matchesBranch =
+          branchRes.matchedBranchIds.includes(user.assigned_branch_code) ||
+          branchRes.hierarchyLabels.some(
+            (lbl) => lbl.toLowerCase() === user.assigned_branch_code?.toLowerCase()
+          );
+        if (matchesBranch) return true;
+      }
+    }
+
+    return false;
+  }
+
+  // 3. Claimed Member (Bố / Mẹ có liên kết node)
+  if (user.user_role === 'claimed_member' && user.linked_member_id) {
+    const myId = user.linked_member_id;
+
+    // Đề xuất nối làm con mới của user
+    if (claim.request_type === 'propose_child') {
+      if (claim.proposed_data?.parent_id === myId) {
+        return true;
+      }
+      return false;
+    }
+
+    // Nhận node có sẵn: Kiểm tra node đích có phải là con đẻ của user không
+    if (claim.request_type === 'claim_existing' && claim.member_id) {
+      const targetMember = membersMap.get(claim.member_id);
+      if (targetMember && (targetMember.father_id === myId || targetMember.mother_id === myId)) {
+        return true;
+      }
+      return false;
+    }
+
+    return false;
+  }
+
+  return false;
 }
 

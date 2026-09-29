@@ -11,6 +11,9 @@ import {
   Sparkles,
   X,
   Loader2,
+  Bell,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import type { UserProfile, BranchNode } from '@/types/database';
@@ -88,6 +91,64 @@ export default function IdentityContextWidget({
 
 
   // Cancel pending claim
+  const [incomingClaims, setIncomingClaims] = useState<any[]>([]);
+  const [reviewingClaim, setReviewingClaim] = useState<any | null>(null);
+  const [isProcessingReview, setIsProcessingReview] = useState(false);
+
+  // Fetch incoming claims for household approval
+  const loadIncomingClaims = async () => {
+    if (!user || !userProfile?.linked_member_id) return;
+    try {
+      const res = await fetch('/api/claims/pending');
+      if (res.ok) {
+        const json = await res.json();
+        setIncomingClaims(json.data || []);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    if (user && userProfile?.linked_member_id) {
+      loadIncomingClaims();
+    }
+  }, [user, userProfile?.linked_member_id]);
+
+  const handleReviewDecision = async (decision: 'approved' | 'rejected') => {
+    if (!reviewingClaim) return;
+    let rejectionReason: string | undefined = undefined;
+    if (decision === 'rejected') {
+      const promptRes = window.prompt('Nhập lý do từ chối yêu cầu kết nối:', 'Thông tin chưa trùng khớp với gia phả gia đình');
+      if (promptRes === null) return;
+      rejectionReason = promptRes.trim() || 'Thông tin chưa trùng khớp';
+    } else {
+      if (!window.confirm('Bạn có chắc chắn muốn phê duyệt kết nối thành viên này vào gia đình?')) return;
+    }
+
+    setIsProcessingReview(true);
+    try {
+      const res = await fetch(`/api/claims/${reviewingClaim.id}/review`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, rejection_reason: rejectionReason }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json.error || 'Lỗi khi xử lý phê duyệt');
+      } else {
+        alert(json.message || 'Thao tác thành công');
+        setIncomingClaims((prev) => prev.filter((c) => c.id !== reviewingClaim.id));
+        setReviewingClaim(null);
+        window.location.reload();
+      }
+    } catch {
+      alert('Lỗi mạng khi xử lý');
+    } finally {
+      setIsProcessingReview(false);
+    }
+  };
+
   const handleCancelClaim = async () => {
     if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu kết nối gia phả này không?')) return;
     setIsCancellingClaim(true);
@@ -222,7 +283,121 @@ export default function IdentityContextWidget({
             ) : null}
           </div>
         </div>
+
+        {/* Banner Thông Báo Có Con Cháu Chờ Duyệt (Anti-Pill Typography) */}
+        {incomingClaims.length > 0 && (
+          <div className="mt-3.5 pt-3 border-t border-amber-200/80 dark:border-amber-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50/70 dark:bg-amber-950/30 p-3 rounded-xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 flex items-center justify-center shrink-0">
+                <Bell className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200">
+                  Có {incomingClaims.length} yêu cầu kết nối từ con cháu cần phê duyệt
+                </p>
+                <p className="text-[11px] text-amber-700/90 dark:text-amber-400 mt-0.5">
+                  {incomingClaims[0].request_type === 'propose_child'
+                    ? `Con cháu "${incomingClaims[0].proposed_data?.full_name}" xin nối vào gia đình của bạn`
+                    : `Hồ sơ "${incomingClaims[0].target_member?.full_name || 'thành viên'}" có người xin nhận diện`}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReviewingClaim(incomingClaims[0])}
+              className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs active:scale-95 transition-all self-end sm:self-center shrink-0 cursor-pointer"
+            >
+              Xem & Phê Duyệt
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Modal Phê Duyệt Con Cháu Cho Bố Mẹ */}
+      {reviewingClaim && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  Xác Nhận Kết Nối Con Cháu
+                </h3>
+              </div>
+              <button
+                onClick={() => setReviewingClaim(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs sm:text-sm">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 space-y-1.5">
+                <p className="font-semibold text-slate-800 dark:text-slate-200">
+                  Người gửi yêu cầu:{' '}
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                    {reviewingClaim.applicant?.full_name || reviewingClaim.applicant?.email}
+                  </span>
+                </p>
+                <p className="text-slate-500">Email: {reviewingClaim.applicant?.email}</p>
+                {reviewingClaim.request_type === 'propose_child' && reviewingClaim.proposed_data && (
+                  <>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-2">
+                      Thông tin con đề xuất:
+                    </p>
+                    <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-300">
+                      <li>
+                        Họ và tên: <strong>{reviewingClaim.proposed_data.full_name}</strong>
+                      </li>
+                      <li>
+                        Giới tính: {reviewingClaim.proposed_data.gender === 'male' ? 'Nam' : 'Nữ'}
+                      </li>
+                      {reviewingClaim.proposed_data.birth_year && (
+                        <li>Năm sinh: {reviewingClaim.proposed_data.birth_year}</li>
+                      )}
+                      {reviewingClaim.proposed_data.birth_order && (
+                        <li>Thứ tự con trong nhà: Thứ {reviewingClaim.proposed_data.birth_order}</li>
+                      )}
+                      {reviewingClaim.proposed_data.is_senior && (
+                        <li className="text-amber-700 dark:text-amber-400 font-semibold">
+                          Nguyện vọng: Con Trưởng (Trưởng Nam)
+                        </li>
+                      )}
+                    </ul>
+                  </>
+                )}
+                {reviewingClaim.verification_notes && (
+                  <p className="text-slate-600 dark:text-slate-300 italic pt-1">
+                    Lời nhắn gửi: &quot;{reviewingClaim.verification_notes}&quot;
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => handleReviewDecision('rejected')}
+                disabled={isProcessingReview}
+                className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+              >
+                Từ Chối
+              </button>
+              <button
+                type="button"
+                onClick={() => handleReviewDecision('approved')}
+                disabled={isProcessingReview}
+                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 disabled:opacity-50"
+              >
+                {isProcessingReview ? 'Đang duyệt...' : 'Chấp Thuận & Gắn Node'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Connect Genealogy Modal */}
       <ConnectGenealogyModal
@@ -241,3 +416,4 @@ export default function IdentityContextWidget({
     </>
   );
 }
+

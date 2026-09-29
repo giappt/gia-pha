@@ -13,6 +13,7 @@ import {
   calculateSuggestedBirthOrder,
   calculateBirthOrderExplanation,
   filterUnclaimedCandidateMembers,
+  canUserReviewClaim,
 } from '../src/lib/claims/claim-engine';
 import type { BranchNode } from '../src/types/database';
 import type { MemberRecord, SpouseRelationRecord } from '../src/types/tree';
@@ -887,4 +888,438 @@ describe('Decentralized Member Onboarding & Household Management (Milestone 8 - 
     );
   });
 });
+
+// ==========================================
+// MILESTONE 8 - PHASE 3 TEST SUITE
+// ==========================================
+
+describe('Decentralized Approval & Branch Portal (Milestone 8 - Phase 3)', () => {
+  const phase3Members: MemberRecord[] = [
+    {
+      id: 'm1',
+      full_name: 'Phạm Thủy Tổ',
+      gender: 'male',
+      life_status: 'deceased',
+      father_id: null,
+      generation_level: 1,
+      is_root: true,
+    },
+    {
+      id: 'm2',
+      full_name: 'Phạm Văn Ngành Một',
+      gender: 'male',
+      life_status: 'deceased',
+      father_id: 'm1',
+      generation_level: 2,
+      is_root: false,
+    },
+    {
+      id: 'm3',
+      full_name: 'Phạm Văn Ngành Hai',
+      gender: 'male',
+      life_status: 'deceased',
+      father_id: 'm1',
+      generation_level: 2,
+      is_root: false,
+    },
+    {
+      id: 'm4',
+      full_name: 'Phạm Văn Bình',
+      gender: 'male',
+      life_status: 'living',
+      father_id: 'm2',
+      generation_level: 3,
+      birth_year: 1965,
+      is_root: false,
+    },
+    {
+      id: 'm4_spouse',
+      full_name: 'Trần Thị Mai',
+      gender: 'female',
+      life_status: 'living',
+      father_id: null,
+      generation_level: 3,
+      birth_year: 1968,
+      is_root: false,
+    },
+    {
+      id: 'm5',
+      full_name: 'Phạm Văn Hùng',
+      gender: 'male',
+      life_status: 'living',
+      father_id: 'm3',
+      generation_level: 3,
+      birth_year: 1970,
+      is_root: false,
+    },
+    {
+      id: 'm5_spouse',
+      full_name: 'Lê Thị Hoa',
+      gender: 'female',
+      life_status: 'living',
+      father_id: null,
+      generation_level: 3,
+      birth_year: 1972,
+      is_root: false,
+    },
+    {
+      id: 'm6',
+      full_name: 'Phạm Văn Tuấn',
+      gender: 'male',
+      life_status: 'living',
+      father_id: 'm4',
+      mother_id: 'm4_spouse',
+      generation_level: 4,
+      birth_year: 1995,
+      birth_order: 1,
+      is_root: false,
+    },
+    {
+      id: 'm7',
+      full_name: 'Phạm Văn Tuấn',
+      gender: 'male',
+      life_status: 'living',
+      father_id: 'm5',
+      mother_id: 'm5_spouse',
+      generation_level: 4,
+      birth_year: 2001,
+      birth_order: 2,
+      is_root: false,
+    },
+  ];
+
+  const phase3Branches: BranchNode[] = [
+    {
+      id: 'b_nganh1',
+      tierName: 'Ngành',
+      name: 'Ngành 1',
+      rootMemberId: 'm2',
+      children: [
+        {
+          id: 'b_chi1',
+          tierName: 'Chi',
+          name: 'Chi 1',
+          rootMemberId: 'm4',
+        },
+      ],
+    },
+    {
+      id: 'b_nganh2',
+      tierName: 'Ngành',
+      name: 'Ngành 2',
+      rootMemberId: 'm3',
+      children: [
+        {
+          id: 'b_chi2',
+          tierName: 'Chi',
+          name: 'Chi 2',
+          rootMemberId: 'm5',
+        },
+      ],
+    },
+  ];
+
+  const phase3SpouseRelations: SpouseRelationRecord[] = [
+    {
+      id: 'sp1',
+      member_a_id: 'm4',
+      member_b_id: 'm4_spouse',
+      marriage_order: 1,
+    },
+    {
+      id: 'sp2',
+      member_a_id: 'm5',
+      member_b_id: 'm5_spouse',
+      marriage_order: 1,
+    },
+  ];
+
+  it('TC_UT_CLAIM_CAN_USER_REVIEW_CLAIM: Xác thực quyền duyệt 3 tầng (Bố mẹ / Trưởng Chi / Super Admin)', () => {
+    // 1. Super Admin luôn có quyền với mọi phiếu
+    const adminUser = { id: 'u_admin', user_role: 'super_admin' };
+    const arbitraryClaim = {
+      id: 'c1',
+      request_type: 'claim_existing' as const,
+      member_id: 'm7',
+      target_branch_code: 'b_chi2',
+    };
+    assert.strictEqual(
+      canUserReviewClaim(adminUser, arbitraryClaim, phase3Members, phase3Branches, phase3SpouseRelations),
+      true,
+      'Super Admin phải có quyền duyệt bất kỳ phiếu nào'
+    );
+
+    // 2. Branch Editor Chi 1 (b_chi1)
+    const branchEditorChi1 = {
+      id: 'u_editor1',
+      user_role: 'branch_editor',
+      assigned_branch_code: 'b_chi1',
+    };
+
+    // A. Phiếu có target_branch_code khớp Chi 1
+    const claimMatchingBranchCode = {
+      id: 'c2',
+      request_type: 'find_origin' as const,
+      target_branch_code: 'b_chi1',
+    };
+    assert.strictEqual(
+      canUserReviewClaim(branchEditorChi1, claimMatchingBranchCode, phase3Members, phase3Branches, phase3SpouseRelations),
+      true,
+      'Branch Editor phải duyệt được phiếu có target_branch_code khớp với mình'
+    );
+
+    // B. Phiếu claim_existing trỏ tới m6 (thuộc Chi 1)
+    const claimM6 = {
+      id: 'c3',
+      request_type: 'claim_existing' as const,
+      member_id: 'm6',
+    };
+    assert.strictEqual(
+      canUserReviewClaim(branchEditorChi1, claimM6, phase3Members, phase3Branches, phase3SpouseRelations),
+      true,
+      'Branch Editor Chi 1 phải duyệt được phiếu claim m6 thuộc Chi 1'
+    );
+
+    // C. Phiếu claim_existing trỏ tới m7 (thuộc Chi 2) -> Phải từ chối
+    const claimM7 = {
+      id: 'c4',
+      request_type: 'claim_existing' as const,
+      member_id: 'm7',
+    };
+    assert.strictEqual(
+      canUserReviewClaim(branchEditorChi1, claimM7, phase3Members, phase3Branches, phase3SpouseRelations),
+      false,
+      'Branch Editor Chi 1 không được duyệt phiếu m7 thuộc Chi 2'
+    );
+
+    // D. Phiếu được phân công đích danh (assigned_to)
+    const assignedClaim = {
+      id: 'c5',
+      request_type: 'find_origin' as const,
+      assigned_to: 'u_editor1',
+    };
+    assert.strictEqual(
+      canUserReviewClaim(branchEditorChi1, assignedClaim, phase3Members, phase3Branches, phase3SpouseRelations),
+      true,
+      'Branch Editor phải duyệt được phiếu được phân công đích danh cho mình'
+    );
+
+    // 3. Claimed Member (Bố Mẹ: Bác Bình m4)
+    const parentBinh = {
+      id: 'u_binh',
+      user_role: 'claimed_member',
+      linked_member_id: 'm4',
+    };
+
+    // A. Propose child chọn cha mẹ là m4
+    const proposeChildToBinh = {
+      id: 'c6',
+      request_type: 'propose_child' as const,
+      proposed_data: { parent_id: 'm4', full_name: 'Phạm Tuấn Anh', gender: 'male' as const },
+    };
+    assert.strictEqual(
+      canUserReviewClaim(parentBinh, proposeChildToBinh, phase3Members, phase3Branches, phase3SpouseRelations),
+      true,
+      'Bố Bình m4 phải duyệt được phiếu con xin nối vào mình'
+    );
+
+    // B. Propose child chọn cha mẹ là m5 (Chú Hùng) -> Bác Bình không được duyệt
+    const proposeChildToHung = {
+      id: 'c7',
+      request_type: 'propose_child' as const,
+      proposed_data: { parent_id: 'm5', full_name: 'Phạm Hồng', gender: 'female' as const },
+    };
+    assert.strictEqual(
+      canUserReviewClaim(parentBinh, proposeChildToHung, phase3Members, phase3Branches, phase3SpouseRelations),
+      false,
+      'Bác Bình m4 không được duyệt phiếu con của Chú Hùng m5'
+    );
+
+    // C. Claim existing con đẻ m6 của Bác Bình
+    assert.strictEqual(
+      canUserReviewClaim(parentBinh, claimM6, phase3Members, phase3Branches, phase3SpouseRelations),
+      true,
+      'Bác Bình m4 phải duyệt được phiếu con đẻ m6 xin nhận tài khoản'
+    );
+
+    // 4. Viewer / Khách ngoài
+    const viewerUser = { id: 'u_viewer', user_role: 'viewer' };
+    assert.strictEqual(
+      canUserReviewClaim(viewerUser, proposeChildToBinh, phase3Members, phase3Branches, phase3SpouseRelations),
+      false,
+      'Viewer vãng lai không có quyền duyệt bất kỳ phiếu nào'
+    );
+  });
+
+  it('TC_UT_CLAIM_ASSIGN_TO_BRANCH_EDITOR: Super Admin ủy quyền phiếu cho Trưởng Chi xác minh', () => {
+    const reviewRoutePath = path.resolve(__dirname, '../src/app/api/claims/[id]/review/route.ts');
+    const reviewCode = fs.readFileSync(reviewRoutePath, 'utf-8');
+
+    // Kiểm tra API chấp thuận decision 'assign'
+    assert.ok(
+      reviewCode.includes("decision === 'assign'"),
+      'API review phải có khối xử lý decision assign'
+    );
+
+    // Chỉ super_admin mới được assign
+    assert.ok(
+      reviewCode.includes("userProfile.user_role !== 'super_admin'"),
+      'API review phải kiểm tra chỉ super_admin mới được ủy quyền'
+    );
+
+    // Yêu cầu trường assigned_to
+    assert.ok(
+      reviewCode.includes('if (!assigned_to)'),
+      'API review phải yêu cầu assigned_to khi ủy quyền'
+    );
+
+    // Cập nhật assigned_to vào claim_requests
+    assert.ok(
+      reviewCode.includes('.update({\n          assigned_to,'),
+      'API review phải cập nhật cột assigned_to trong DB'
+    );
+  });
+
+  it('TC_INT_CLAIMS_API_AUTH_GUARD: Chặn người dùng không có quyền duyệt phiếu', () => {
+    const reviewRoutePath = path.resolve(__dirname, '../src/app/api/claims/[id]/review/route.ts');
+    const reviewCode = fs.readFileSync(reviewRoutePath, 'utf-8');
+
+    // Chặn người chưa đăng nhập (401)
+    assert.ok(
+      reviewCode.includes('if (!userProfile) {') && reviewCode.includes('status: 401'),
+      'API review phải trả về 401 nếu chưa đăng nhập'
+    );
+
+    // Sử dụng canUserReviewClaim để rào chắn quyền duyệt
+    assert.ok(
+      reviewCode.includes('canUserReviewClaim('),
+      'API review phải gọi canUserReviewClaim để kiểm tra thẩm quyền'
+    );
+
+    // Trả về 403 Forbidden nếu không đủ quyền
+    assert.ok(
+      reviewCode.includes('if (!hasPermission) {') && reviewCode.includes('status: 403'),
+      'API review phải trả về 403 Forbidden nếu user không đủ thẩm quyền'
+    );
+
+    // Chặn duyệt trực tiếp phiếu find_origin khi chưa xác định cha mẹ
+    assert.ok(
+      reviewCode.includes("claim.request_type === 'find_origin'") &&
+      reviewCode.includes('Phiếu Tìm Cội Nguồn chưa rõ cha mẹ'),
+      'API review phải từ chối phê duyệt trực tiếp phiếu find_origin'
+    );
+  });
+
+  it('TC_INT_CLAIMS_API_PENDING_FILTER_BY_ROLE: API pending lọc danh sách phiếu chặt chẽ theo phân quyền người gọi', () => {
+    const pendingRoutePath = path.resolve(__dirname, '../src/app/api/claims/pending/route.ts');
+    const pendingCode = fs.readFileSync(pendingRoutePath, 'utf-8');
+
+    // Chặn viewer không có linked_member_id (403)
+    assert.ok(
+      pendingCode.includes("userProfile.user_role === 'viewer' && !userProfile.linked_member_id") &&
+      pendingCode.includes('status: 403'),
+      'API pending phải chặn viewer không liên kết hồ sơ truy cập hàng đợi'
+    );
+
+    // Lọc visible claims thông qua canUserReviewClaim
+    assert.ok(
+      pendingCode.includes('canUserReviewClaim(userProfile, claim, members, branches, spouseRelations)'),
+      'API pending phải lọc các phiếu hiển thị bằng canUserReviewClaim'
+    );
+
+    // Enrich thông tin applicant và target_member cho frontend
+    assert.ok(
+      pendingCode.includes('applicant') && pendingCode.includes('target_member: targetMember'),
+      'API pending phải enrich thông tin applicant và target_member'
+    );
+  });
+
+  it('TC_UT_CLAIM_APPROVE_PROPOSE_CHILD_INSERT_SHIFT: Phê duyệt đề xuất con mới tự động chèn node vào members và tịnh tiến thứ tự con sau', () => {
+    const reviewRoutePath = path.resolve(__dirname, '../src/app/api/claims/[id]/review/route.ts');
+    const reviewCode = fs.readFileSync(reviewRoutePath, 'utf-8');
+
+    // Kiểm tra xử lý propose_child
+    assert.ok(
+      reviewCode.includes("claim.request_type === 'propose_child'"),
+      'API review phải có nhánh xử lý riêng cho propose_child'
+    );
+
+    // Tự động tính thế hệ con = parent.generation_level + 1
+    assert.ok(
+      reviewCode.includes('(parent.generation_level || 1) + 1'),
+      'API review phải tính generation_level của con bằng cha mẹ + 1'
+    );
+
+    // Tìm và lọc siblings cần tịnh tiến birth_order
+    assert.ok(
+      reviewCode.includes('s.birth_order != null && s.birth_order >= targetOrder'),
+      'API review phải lọc các con hiện có với birth_order >= targetOrder để tịnh tiến'
+    );
+
+    // Tịnh tiến thứ tự sinh: birth_order + 1
+    assert.ok(
+      reviewCode.includes('birth_order: (s.birth_order || 0) + 1'),
+      'API review phải tịnh tiến thứ tự con cũ: birth_order + 1'
+    );
+
+    // Insert bản ghi con mới vào bảng members với birth_order = targetOrder
+    assert.ok(
+      reviewCode.includes(".from('members')\n          .insert(newMemberPayload)"),
+      'API review phải insert bản ghi con mới vào bảng members'
+    );
+
+    // Gán tài khoản user thành claimed_member với linked_member_id mới
+    assert.ok(
+      reviewCode.includes("user_role: 'claimed_member'"),
+      'API review phải nâng cấp vai trò user thành claimed_member khi duyệt'
+    );
+  });
+
+  it('TC_UT_ANTI_PILL_BRANCH_PORTAL: Cổng /branch tuân thủ nghiêm ngặt chuẩn Anti-Pill, không lạm dụng rounded-full', () => {
+    const clientPath = path.resolve(__dirname, '../src/components/branch/BranchPortalClient.tsx');
+    const clientCode = fs.readFileSync(clientPath, 'utf-8');
+    const loadingPath = path.resolve(__dirname, '../src/app/branch/loading.tsx');
+    const loadingCode = fs.readFileSync(loadingPath, 'utf-8');
+    const pagePath = path.resolve(__dirname, '../src/app/branch/page.tsx');
+    const pageCode = fs.readFileSync(pagePath, 'utf-8');
+
+    // 1. Loading tuân thủ [R-UI.LOADING]
+    assert.ok(
+      loadingCode.includes('<SyncLoadingBadge message="Đang tải dữ liệu..." />'),
+      'Cổng /branch loading phải dùng SyncLoadingBadge với thông điệp "Đang tải dữ liệu..."'
+    );
+
+    // 2. Bảo vệ route trong page.tsx: Cho phép branch_editor và super_admin
+    assert.ok(
+      pageCode.includes("user_role !== 'branch_editor' && userProfile.user_role !== 'super_admin'"),
+      'Cổng /branch page.tsx phải kiểm tra quyền branch_editor hoặc super_admin'
+    );
+
+    // 3. Kỷ luật Anti-Pill:
+    // Kiểm tra không có rounded-full được áp dụng vào button hoặc badge
+    // (chỉ cho phép rounded-full với avatar img/div hoặc loader)
+    const matches = clientCode.match(/className="[^"]*rounded-full[^"]*"/g) || [];
+    for (const m of matches) {
+      // Cho phép rounded-full cho avatar (w-7 h-7, w-8 h-8, w-9 h-9, w-10 h-10) hoặc icon/dot indicator (w-1.5 h-1.5, w-2 h-2)
+      const isAvatarOrIndicator = /w-[0-9.]+\s+h-[0-9.]+/.test(m) || /h-[0-9.]+\s+w-[0-9.]+/.test(m);
+      assert.ok(
+        isAvatarOrIndicator,
+        `Phát hiện vi phạm Anti-Pill: class rounded-full dùng cho phần tử không phải avatar hay indicator dot: ${m}`
+      );
+    }
+
+    // Các button hành động trong portal phải dùng rounded-lg
+    assert.ok(
+      clientCode.includes('rounded-lg'),
+      'Nút bấm trong BranchPortalClient phải dùng rounded-lg chuẩn mực'
+    );
+
+    // Dùng dấu chấm trung tâm · để phân tách thông tin thay vì pill tags
+    assert.ok(
+      clientCode.includes('·'),
+      'BranchPortalClient phải dùng dấu chấm · để phân cấp typography'
+    );
+  });
+});
+
 

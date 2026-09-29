@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { UserProfile, ClanFeatureFlags } from '@/types/database';
-import { LogIn, LogOut, ShieldCheck, User as UserIcon, Loader2, Sparkles, Settings } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck, User as UserIcon, Loader2, Sparkles, Settings, Building2 } from 'lucide-react';
 import PersonalSettingsModal from './PersonalSettingsModal';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 
@@ -366,6 +366,20 @@ export default function AuthButton({
               <span>Cài đặt của tôi</span>
             </button>
           </div>
+
+          {(profile?.user_role === 'branch_editor' || isSuperAdmin) && (
+            <div className="py-1 border-b border-slate-100 dark:border-slate-800">
+              <Link
+                href="/branch"
+                onClick={() => setIsOpen(false)}
+                id="branch-portal-dropdown-link"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors font-medium text-left"
+              >
+                <Building2 className="w-4 h-4 text-emerald-600" />
+                <span>Quản trị Chi Nhánh</span>
+              </Link>
+            </div>
+          )}
 
           {isSuperAdmin && (
             <div className="py-1 border-b border-slate-100 dark:border-slate-800">

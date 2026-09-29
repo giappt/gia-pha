@@ -7,25 +7,15 @@ import {
   Clock,
   Flame,
   Star,
-  Users,
   Smartphone,
   Monitor,
-  Maximize2,
   Sun,
   Moon,
   ArrowRight,
-  ExternalLink,
-  ShieldCheck,
-  Sparkles,
-  Info,
-  CheckCircle2,
-  ChevronRight,
-  History,
 } from 'lucide-react';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 
-// Mock data mô phỏng các kịch bản thực tế của dòng họ
-interface MockAnniversaryMember {
+interface MockMember {
   id: string;
   fullName: string;
   honorific?: string;
@@ -34,11 +24,9 @@ interface MockAnniversaryMember {
   birthYear?: number;
   deathYear?: number;
   relativeKinship?: string;
-  gender: 'male' | 'female';
-  avatarUrl?: string;
 }
 
-interface MockAnniversaryGroup {
+interface MockAnnivDay {
   solarDay: number;
   solarMonth: number;
   solarYear: number;
@@ -47,10 +35,10 @@ interface MockAnniversaryGroup {
   lunarMonth: number;
   lunarYearCanChi: string;
   daysLeft: number;
-  members: MockAnniversaryMember[];
+  members: MockMember[];
 }
 
-const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
+const MOCK_DATA: Record<string, MockAnnivDay> = {
   single_today: {
     solarDay: 29,
     solarMonth: 9,
@@ -58,7 +46,7 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
     solarDayOfWeek: 'Thứ Ba',
     lunarDay: 19,
     lunarMonth: 8,
-    lunarYearCanChi: 'Năm Bính Ngọ',
+    lunarYearCanChi: 'Bính Ngọ',
     daysLeft: 0,
     members: [
       {
@@ -67,7 +55,6 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
         honorific: 'Cụ',
         generation: 4,
         branchName: 'Chi 1',
-        gender: 'female',
         relativeKinship: 'Cụ Bà Thủy Tổ',
       },
     ],
@@ -79,7 +66,7 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
     solarDayOfWeek: 'Thứ Tư',
     lunarDay: 20,
     lunarMonth: 8,
-    lunarYearCanChi: 'Năm Bính Ngọ',
+    lunarYearCanChi: 'Bính Ngọ',
     daysLeft: 1,
     members: [
       {
@@ -90,7 +77,6 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
         branchName: 'Chi 1 - Trưởng',
         birthYear: 1948,
         deathYear: 2020,
-        gender: 'male',
         relativeKinship: 'Ông nội',
       },
       {
@@ -101,7 +87,6 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
         branchName: 'Chi 1 - Trưởng',
         birthYear: 1952,
         deathYear: 2019,
-        gender: 'female',
         relativeKinship: 'Bà nội',
       },
     ],
@@ -113,7 +98,7 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
     solarDayOfWeek: 'Thứ Ba',
     lunarDay: 26,
     lunarMonth: 8,
-    lunarYearCanChi: 'Năm Bính Ngọ',
+    lunarYearCanChi: 'Bính Ngọ',
     daysLeft: 7,
     members: [
       {
@@ -124,7 +109,6 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
         branchName: 'Chi 2',
         birthYear: 1890,
         deathYear: 1965,
-        gender: 'male',
         relativeKinship: 'Cụ Cố',
       },
       {
@@ -135,7 +119,6 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
         branchName: 'Chi 2',
         birthYear: 1894,
         deathYear: 1970,
-        gender: 'female',
         relativeKinship: 'Cụ Bà Cố',
       },
       {
@@ -146,7 +129,6 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
         branchName: 'Chi 2',
         birthYear: 1965,
         deathYear: 2022,
-        gender: 'male',
         relativeKinship: 'Bác họ',
       },
     ],
@@ -154,404 +136,446 @@ const MOCK_SCENARIOS: Record<string, MockAnniversaryGroup> = {
 };
 
 /**
- * Component Tờ Lịch Bloc Thu Nhỏ Neo-Heritage
- * Đảm bảo kích thước cố định, khóa cứng tỷ lệ, TUYỆT ĐỐI không bị dãn khi bên phải có nhiều người!
+ * COMPONENT TỜ LỊCH BLOC NGUYÊN BẢN (FIT KHÍT 100% 3 MÉP)
+ * - KÉO PHẦN ÂM LỊCH LÊN CỐ ĐỊNH NGAY DƯỚI DƯƠNG LỊCH!
+ * - Tuyệt đối không để khoảng trắng dài ở giữa (0% khoảng trống thừa).
  */
-function CalendarBlocItem({
-  group,
-  compact = false,
+function HeritageCalendarBloc({
+  day,
+  widthClass = 'w-full',
 }: {
-  group: MockAnniversaryGroup;
-  compact?: boolean;
+  day: MockAnnivDay;
+  widthClass?: string;
 }) {
-  const isToday = group.daysLeft === 0;
-  const isTomorrow = group.daysLeft === 1;
+  const isToday = day.daysLeft === 0;
+  const isTomorrow = day.daysLeft === 1;
 
-  // Tông màu phân tầng
+  // Header màu đỏ son tươi tắn cho hôm nay, vàng tươi rực rỡ cho ngày mai, xanh đen cho ngày khác
   const headerBg = isToday
-    ? 'bg-rose-600 text-white'
+    ? 'bg-red-600 text-white font-black'
     : isTomorrow
-      ? 'bg-amber-500 text-amber-950'
-      : 'bg-emerald-700 text-white';
-
-  const cardBorder = isToday
-    ? 'border-rose-300 dark:border-rose-900/60 shadow-rose-500/10'
-    : isTomorrow
-      ? 'border-amber-300 dark:border-amber-900/60 shadow-amber-500/10'
-      : 'border-slate-200 dark:border-slate-800 shadow-slate-500/5';
-
-  const lunarColor = isToday
-    ? 'text-rose-600 dark:text-rose-400'
-    : isTomorrow
-      ? 'text-amber-600 dark:text-amber-400'
-      : 'text-emerald-700 dark:text-emerald-400';
+      ? 'bg-amber-400 text-slate-950 font-black'
+      : 'bg-slate-900 text-slate-100 font-bold';
 
   return (
     <div
-      className={`shrink-0 self-start flex flex-col rounded-2xl border bg-white dark:bg-slate-900/90 shadow-md overflow-hidden transition-all select-none ${
-        compact ? 'w-[110px]' : 'w-[124px] sm:w-[136px]'
-      } ${cardBorder}`}
+      className={`${widthClass} bg-white dark:bg-slate-900 flex flex-col select-none overflow-hidden h-full`}
     >
-      {/* 1. Header tờ lịch */}
-      <div
-        className={`px-2 py-1.5 text-center flex items-center justify-between text-[11px] font-black uppercase tracking-wider ${headerBg}`}
-      >
-        <span>Tháng {group.solarMonth < 10 ? `0${group.solarMonth}` : group.solarMonth}</span>
-        <span>{group.solarYear}</span>
+      {/* 1. Header Đỏ Tươi / Vàng Sáng: Tháng Chín · 2026 */}
+      <div className={`px-4 py-2 flex items-center justify-between text-xs tracking-wide shrink-0 ${headerBg}`}>
+        <span>Tháng {day.solarMonth === 9 ? 'Chín' : day.solarMonth === 10 ? 'Mười' : day.solarMonth}</span>
+        <span>{day.solarYear}</span>
       </div>
 
-      {/* 2. Thân Dương Lịch */}
-      <div className="py-2.5 px-2 text-center bg-linear-to-b from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-850">
-        <div className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
-          {group.solarDay < 10 ? `0${group.solarDay}` : group.solarDay}
+      {/* 2. Thân Dương Lịch: Số 29 to đen + Thứ Ba (Gắn kết tự nhiên, không rỗng ruột) */}
+      <div className="py-4 text-center bg-white dark:bg-slate-900 shrink-0">
+        <div className="text-6xl font-black text-slate-950 dark:text-white tracking-tighter leading-none">
+          {day.solarDay < 10 ? `0${day.solarDay}` : day.solarDay}
         </div>
-        <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase">
-          {group.solarDayOfWeek}
+        <div className="text-sm font-semibold text-slate-800 dark:text-slate-300 mt-2">
+          {day.solarDayOfWeek}
         </div>
       </div>
 
-      {/* 3. Vết răng cưa xé lịch (Perforation Hairline) */}
-      <div className="relative border-t-2 border-dashed border-slate-200 dark:border-slate-700 my-0.5">
-        <span className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800" />
-        <span className="absolute -right-1.5 -top-1.5 w-3 h-3 rounded-full bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800" />
-      </div>
+      {/* 3. Vết răng cưa xé lịch */}
+      <div className="border-t-2 border-dashed border-slate-300 dark:border-slate-700 mx-3 shrink-0" />
 
-      {/* 4. Thân Âm Lịch */}
-      <div className="py-2 px-1 text-center bg-slate-50/80 dark:bg-slate-900/60">
-        <div className="flex items-baseline justify-center gap-1">
-          <span className={`text-xl sm:text-2xl font-black leading-none ${lunarColor}`}>
-            {group.lunarDay < 10 ? `0${group.lunarDay}` : group.lunarDay}
+      {/* 4. Thân Âm Lịch: KÉO LÊN NGAY DƯỚI DƯƠNG LỊCH, CỐ ĐỊNH LIỀN KHỐI (KHÔNG BỊ ĐẨY XUỐNG ĐÁY) */}
+      <div className="p-3.5 flex items-baseline justify-between bg-white dark:bg-slate-900 shrink-0">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-3xl font-black text-red-600 dark:text-red-400 leading-none">
+            {day.lunarDay < 10 ? `0${day.lunarDay}` : day.lunarDay}
           </span>
-          <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-            tháng {group.lunarMonth < 10 ? `0${group.lunarMonth}` : group.lunarMonth}
+          <span className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-tight">
+            tháng {day.lunarMonth} <br />
+            âm lịch
           </span>
         </div>
-        <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-0.5">
-          {group.lunarYearCanChi}
+        <div className="text-right">
+          <span className="text-xs text-slate-500 dark:text-slate-400 block leading-tight">
+            Năm
+          </span>
+          <span className="text-xs font-bold text-slate-900 dark:text-slate-200">
+            {day.lunarYearCanChi}
+          </span>
         </div>
       </div>
 
-      {/* 5. Chân tờ lịch: Huy hiệu Countdown */}
-      <div
-        className={`py-1 px-1.5 text-center text-[10px] font-bold border-t flex items-center justify-center gap-1 ${
-          isToday
-            ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-900/40 animate-pulse'
-            : isTomorrow
-              ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-900/40'
-              : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40'
-        }`}
-      >
-        {isToday ? (
-          <>
-            <Flame className="w-3 h-3" /> HÔM NAY
-          </>
-        ) : isTomorrow ? (
-          <>
-            <Star className="w-3 h-3" /> NGÀY MAI
-          </>
-        ) : (
-          <>
-            <Clock className="w-3 h-3" /> Còn {group.daysLeft} ngày
-          </>
-        )}
+      {/* 5. Phần nền còn lại bên dưới (nếu thẻ bên phải dài do có 3 người) giữ phẳng phiu, không xé đôi lịch */}
+      <div className="flex-1 bg-white dark:bg-slate-900" />
+    </div>
+  );
+}
+
+/**
+ * 1. MÀN HÌNH TRANG CHỦ — PC (DÀN NGANG): THẺ GIA PHẢ 2 NỬA LIỀN MẠCH
+ * - Nửa trái: Tờ lịch bloc fit khít 100% 3 mép (185px).
+ * - Dương lịch & Âm lịch gắn kết chặt chẽ ở trên, KHÔNG BỊ XÉ RÁCH RỖNG RUỘT!
+ */
+function HomePcHorizontalWidget({ day }: { day: MockAnnivDay }) {
+  const isToday = day.daysLeft === 0;
+  const isTomorrow = day.daysLeft === 1;
+
+  const statusText = isToday
+    ? 'Hôm nay giỗ'
+    : isTomorrow
+      ? 'Ngày mai giỗ'
+      : `Còn ${day.daysLeft} ngày`;
+
+  const statusColor = isToday
+    ? 'text-red-600 dark:text-red-400'
+    : isTomorrow
+      ? 'text-amber-600 dark:text-amber-400'
+      : 'text-slate-600 dark:text-slate-400';
+
+  return (
+    <div className="w-full max-w-xl mx-auto rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden flex flex-row items-stretch">
+      {/* NỬA TRÁI: TỜ LỊCH BLOC NGUYÊN BẢN (185px, Fit khít 100% 3 mép, Âm lịch kéo lên liền khối) */}
+      <div className="w-[185px] shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col">
+        <HeritageCalendarBloc day={day} widthClass="w-full" />
+      </div>
+
+      {/* NỬA PHẢI: KHU VỰC THÔNG TIN NGƯỜI GIỖ & HÀNH ĐỘNG */}
+      <div className="flex-1 p-5 flex flex-col justify-between bg-stone-50/60 dark:bg-slate-850/40">
+        <div>
+          {/* Nhãn trạng thái */}
+          <div className={`text-xs font-bold uppercase tracking-wider mb-2.5 flex items-center gap-1.5 ${statusColor}`}>
+            {isToday ? <Flame className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
+            <span>{statusText}</span>
+          </div>
+
+          {/* Danh sách người giỗ (Hỗ trợ 1 người hoặc 2+ người phẳng phiu) */}
+          <div className="divide-y divide-slate-200/80 dark:divide-slate-800">
+            {day.members.map((member, idx) => (
+              <div key={member.id} className={`${idx > 0 ? 'pt-3 mt-3' : ''}`}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-950 dark:text-white leading-snug">
+                    {member.honorific ? `${member.honorific} ` : ''}{member.fullName}
+                  </h3>
+                  {member.relativeKinship && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
+                      {member.relativeKinship}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 mt-1">
+                  <span>Đời thứ {member.generation}</span>
+                  {member.branchName && <span>· {member.branchName}</span>}
+                  {member.birthYear && member.deathYear && (
+                    <span>· Hưởng thọ {member.deathYear - member.birthYear}t</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Nút hành động */}
+        <div className="pt-4 mt-4 border-t border-slate-200/80 dark:border-slate-800">
+          <Link
+            href="/tree"
+            className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-950 text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-xs"
+          >
+            <span>
+              {day.members.length === 1
+                ? `Xem ${day.members[0].honorific || 'cụ'} trên cây gia phả`
+                : `Xem các cụ trên cây gia phả`}
+            </span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
 
 /**
- * Prototype Trang Chủ: Thẻ Ngang Spotlight Lịch Giỗ Gần Nhất
+ * 2. MÀN HÌNH TRANG CHỦ — MOBILE: TỜ LỊCH BLOC NGUYÊN BẢN (Đúng chuẩn Ảnh 1)
  */
-function HomeSpotlightPrototype({
-  group,
-  isMobileView,
-}: {
-  group: MockAnniversaryGroup;
-  isMobileView: boolean;
-}) {
-  const isToday = group.daysLeft === 0;
-  const isTomorrow = group.daysLeft === 1;
+function HomeMobileVerticalWidget({ day }: { day: MockAnnivDay }) {
+  const isToday = day.daysLeft === 0;
+  const isTomorrow = day.daysLeft === 1;
 
-  const containerBg = isToday
-    ? 'bg-gradient-to-br from-rose-50/90 via-white to-amber-50/40 dark:from-rose-950/30 dark:via-slate-900 dark:to-amber-950/20 border-rose-200/90 dark:border-rose-900/50 shadow-lg shadow-rose-500/5'
+  const statusText = isToday
+    ? 'Hôm nay giỗ'
     : isTomorrow
-      ? 'bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/40 dark:from-amber-950/30 dark:via-slate-900 dark:to-emerald-950/20 border-amber-200/90 dark:border-amber-900/50 shadow-lg shadow-amber-500/5'
-      : 'bg-gradient-to-br from-emerald-50/90 via-white to-slate-50/40 dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900 border-emerald-200/90 dark:border-emerald-900/50 shadow-lg shadow-emerald-500/5';
+      ? 'Ngày mai giỗ'
+      : `Còn ${day.daysLeft} ngày`;
+
+  const statusColor = isToday
+    ? 'text-red-600 dark:text-red-400'
+    : isTomorrow
+      ? 'text-amber-600 dark:text-amber-400'
+      : 'text-slate-600 dark:text-slate-400';
 
   return (
-    <div className={`w-full rounded-3xl border p-5 sm:p-6 transition-all ${containerBg}`}>
-      {/* Header bar của thẻ Spotlight */}
-      <div className="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-200/60 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            Ngày Giỗ Gần Nhất
-          </h3>
-          <span className="text-xs text-slate-400 font-medium hidden sm:inline">
-            · {group.members.length} người giỗ
-          </span>
+    <div className="w-[330px] mx-auto rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg overflow-hidden flex flex-col">
+      {/* KHỐI LỊCH BLOC NGUYÊN BẢN */}
+      <HeritageCalendarBloc day={day} widthClass="w-full" />
+
+      {/* KHU VỰC THÔNG TIN NGƯỜI GIỖ Ở DƯỚI */}
+      <div className="p-4 bg-stone-50/80 dark:bg-slate-850/60 border-t border-slate-200 dark:border-slate-800">
+        <div className={`text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5 ${statusColor}`}>
+          {isToday ? <Flame className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
+          <span>{statusText}</span>
         </div>
 
-        <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-            isToday
-              ? 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/80 dark:text-rose-200 dark:border-rose-800 animate-pulse'
-              : isTomorrow
-                ? 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800'
-                : 'bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-800'
-          }`}
-        >
-          {isToday ? (
-            <>
-              <Flame className="w-3.5 h-3.5" /> Hôm nay là Ngày Giỗ
-            </>
-          ) : isTomorrow ? (
-            <>
-              <Star className="w-3.5 h-3.5" /> Ngày mai là Ngày Giỗ
-            </>
-          ) : (
-            <>
-              <Clock className="w-3.5 h-3.5" /> Còn {group.daysLeft} ngày nữa
-            </>
-          )}
-        </span>
+        <div className="divide-y divide-slate-200/80 dark:divide-slate-800">
+          {day.members.map((member, idx) => (
+            <div key={member.id} className={`${idx > 0 ? 'pt-2.5 mt-2.5' : ''}`}>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base font-bold text-slate-950 dark:text-white leading-snug">
+                  {member.honorific ? `${member.honorific} ` : ''}{member.fullName}
+                </h3>
+                {member.relativeKinship && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
+                    {member.relativeKinship}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                <span>Đời thứ {member.generation}</span>
+                {member.branchName && <span>· {member.branchName}</span>}
+                {member.birthYear && member.deathYear && (
+                  <span>· Hưởng thọ {member.deathYear - member.birthYear}t</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Nút xem cây ở đáy */}
+        <div className="mt-4 pt-2">
+          <Link
+            href="/tree"
+            className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-xs"
+          >
+            <span>
+              {day.members.length === 1
+                ? `Xem ${day.members[0].honorific || 'cụ'} trên cây gia phả`
+                : `Xem các cụ trên cây gia phả`}
+            </span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Thân thẻ: Bố cục Dàn Ngang (Cột Lịch Bloc bên trái + Cột Người Giỗ bên phải) */}
-      <div className={`flex ${isMobileView ? 'flex-col gap-4' : 'flex-row items-start gap-6'}`}>
-        {/* CỘT TRÁI: TỜ LỊCH BLOC (Khóa cứng kích thước, tự đứng vững, 0% bị kéo dãn!) */}
-        <div className="flex flex-col items-center">
-          <CalendarBlocItem group={group} compact={isMobileView} />
-          <span className="text-[10px] text-slate-400 font-medium mt-1.5 text-center hidden sm:block">
-            Tờ lịch bloc
+/**
+ * 3. MÀN HÌNH DANH SÁCH LỊCH GIỖ (/anniversaries) — BẢN FIT KHÍT 100% 3 MÉP
+ * - Cột lịch bên trái chạm khít mép trên, trái, dưới.
+ * - Âm lịch kéo lên ngay dưới Dương lịch, cố định liền khối, KHÔNG BỊ XÉ RÁCH RỖNG RUỘT.
+ * - Tên người giỗ hiển thị trọn vẹn, không truncate.
+ */
+function AnniversariesCleanListView({ isMobile = false }: { isMobile?: boolean }) {
+  const groups = [
+    MOCK_DATA.single_today,
+    MOCK_DATA.dual_tomorrow,
+    MOCK_DATA.triple_upcoming,
+  ];
+
+  return (
+    <div className={`w-full mx-auto space-y-4 ${isMobile ? 'max-w-full' : 'max-w-2xl'}`}>
+      {groups.map((group) => {
+        const isToday = group.daysLeft === 0;
+        const isTomorrow = group.daysLeft === 1;
+
+        // Header màu đỏ son tươi tắn cho hôm nay, vàng tươi cho ngày mai, slate cho ngày khác
+        const stampHeaderBg = isToday
+          ? 'bg-red-600 text-white'
+          : isTomorrow
+            ? 'bg-amber-400 text-slate-950'
+            : 'bg-slate-800 text-white';
+
+        const statusTag = isToday ? (
+          <span className="text-red-600 dark:text-red-400 font-bold flex items-center gap-1.5">
+            <Flame className="w-3.5 h-3.5" /> HÔM NAY GIỖ
           </span>
-        </div>
+        ) : isTomorrow ? (
+          <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1.5">
+            <Star className="w-3.5 h-3.5" /> NGÀY MAI GIỖ
+          </span>
+        ) : (
+          <span className="text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" /> Còn {group.daysLeft} ngày
+          </span>
+        );
 
-        {/* CỘT PHẢI: DANH SÁCH NGƯỜI GIỖ (Nếu có 2 người, hiển thị cả 2 người phẳng phiu!) */}
-        <div className="flex-1 w-full divide-y divide-slate-100 dark:divide-slate-800/80">
-          {group.members.map((member, idx) => {
-            const isMale = member.gender === 'male';
+        // TRÊN BẢN MOBILE: Chuẩn xác theo phản hồi:
+        // - Icon gọn gàng (w-58px), viền chạm sát mép trên & trái của thẻ ngoài (như trên PC)
+        // - Bên phải có 3 dòng: (1) Hôm nay giỗ, (2) 19/8 Âm Lịch, (3) Số người giỗ
+        // - Phía dưới: Cụ XXXXXXXXXXXX full-width, Xem Cây ở mép phải
+        if (isMobile) {
+          return (
+            <div
+              key={group.solarDay}
+              className="rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all overflow-hidden"
+            >
+              {/* 1. KHU VỰC ĐỈNH CARD: ICON LỊCH CHẠM KHÍT VIỀN TRÊN & TRÁI + 3 DÒNG BÊN PHẢI */}
+              <div className="flex items-stretch border-b border-slate-100 dark:border-slate-800">
+                {/* ICON LỊCH CHẠM VIỀN THẺ NGOÀI (FLUSH TOP-LEFT, GỌN GÀNG 58px) */}
+                <div className="w-[58px] shrink-0 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col justify-between text-center select-none overflow-hidden">
+                  <div className={`py-1 text-[9px] font-black uppercase tracking-wider text-center shrink-0 ${stampHeaderBg}`}>
+                    T.{group.solarMonth < 10 ? `0${group.solarMonth}` : group.solarMonth}
+                  </div>
+                  <div className="py-1 flex-1 flex flex-col justify-center items-center">
+                    <div className="text-xl font-black text-slate-950 dark:text-white leading-none">
+                      {group.solarDay < 10 ? `0${group.solarDay}` : group.solarDay}
+                    </div>
+                    <div className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase mt-0.5">
+                      {group.solarDayOfWeek}
+                    </div>
+                  </div>
+                </div>
 
-            return (
-              <div
-                key={member.id}
-                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                  idx > 0 ? 'pt-4 mt-4' : ''
-                }`}
-              >
-                <div className="flex items-start gap-3.5">
-                  {/* Avatar / Chân dung */}
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-xs border ${
-                      isMale
-                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800'
-                        : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-800'
-                    }`}
-                  >
-                    {member.fullName
-                      .split(' ')
-                      .slice(-2)
-                      .map((n) => n[0])
-                      .join('')}
+                {/* BÊN PHẢI: 3 DÒNG THÔNG TIN NGÀY */}
+                <div className="flex-1 px-3.5 py-2 flex flex-col justify-center bg-stone-50/40 dark:bg-slate-850/20">
+                  {/* Dòng 1: Hôm nay giỗ / Ngày mai giỗ / Còn X ngày */}
+                  <div className="text-xs font-black uppercase tracking-wide">
+                    {statusTag}
                   </div>
 
-                  <div>
-                    {/* Tên thành viên + Huy hiệu danh xưng */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                        {member.honorific ? `${member.honorific} ` : ''}
-                        {member.fullName}
-                      </h4>
+                  {/* Dòng 2: Ngày Âm lịch to rõ */}
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5 flex items-center gap-1.5">
+                    <span className="text-red-600 dark:text-red-400 font-black">
+                      {group.lunarDay}/{group.lunarMonth}
+                    </span>
+                    <span>Âm Lịch</span>
+                  </div>
 
+                  {/* Dòng 3: Số người giỗ */}
+                  <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-0.5">
+                    {group.members.length} người giỗ
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. KHU VỰC THÔNG TIN NGƯỜI GIỖ (FULL WIDTH DƯỚI HEADER) */}
+              <div className="p-3.5 divide-y divide-slate-100 dark:divide-slate-800">
+                {group.members.map((member, idx) => (
+                  <div
+                    key={member.id}
+                    className={`${idx > 0 ? 'pt-3 mt-3' : 'pt-0'} flex flex-col gap-1.5`}
+                  >
+                    {/* Cụ XXXXXXXXXXXX + Nhãn thân tộc (Tràn ngập 100% bề ngang) */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-base font-bold text-slate-950 dark:text-white leading-snug">
+                        {member.honorific ? `${member.honorific} ` : ''}{member.fullName}
+                      </h4>
                       {member.relativeKinship && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                          <Users className="w-3 h-3" />
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
                           {member.relativeKinship}
                         </span>
                       )}
                     </div>
 
-                    {/* Typography Hierarchy: Đời thứ · Chi nhánh · Tuổi thọ */}
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-slate-600 dark:text-slate-300">
-                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">
-                        Đời thứ {member.generation}
-                      </span>
-                      {member.branchName && (
-                        <>
-                          <span className="text-slate-300 dark:text-slate-700">·</span>
-                          <span>{member.branchName}</span>
-                        </>
-                      )}
-                      {member.birthYear && member.deathYear ? (
-                        <>
-                          <span className="text-slate-300 dark:text-slate-700">·</span>
-                          <span className="text-slate-500 dark:text-slate-400">
-                            Hưởng thọ {member.deathYear - member.birthYear} tuổi ({member.birthYear} -{' '}
-                            {member.deathYear})
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-slate-300 dark:text-slate-700">·</span>
-                          <span className="text-slate-400 italic">Chưa rõ năm sinh - mất</span>
-                        </>
-                      )}
+                    {/* Thông tin bên trái & Xem cây ở mép phải */}
+                    <div className="flex items-center justify-between gap-2 mt-0.5">
+                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
+                        <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                          Đời {member.generation}
+                        </span>
+                        {member.branchName && <span>· {member.branchName}</span>}
+                        {member.birthYear && member.deathYear && (
+                          <span>· Hưởng thọ {member.deathYear - member.birthYear}t</span>
+                        )}
+                      </div>
+
+                      {/* Xem Cây ở góc dưới bên phải */}
+                      <Link
+                        href="/tree"
+                        className="shrink-0 px-2.5 py-1 rounded-lg bg-stone-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-2xs"
+                        title="Xem trên Cây Gia Phả"
+                      >
+                        <FamilyTreeIcon className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Xem Cây</span>
+                      </Link>
                     </div>
                   </div>
-                </div>
-
-                {/* Nút Xem trên Cây riêng cho từng cụ */}
-                <div className="sm:self-center shrink-0">
-                  <Link
-                    href="/tree"
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 w-full sm:w-auto"
-                  >
-                    <FamilyTreeIcon className="w-3.5 h-3.5" />
-                    <span>Xem trên Cây</span>
-                  </Link>
-                </div>
+                ))}
               </div>
-            );
-          })}
+            </div>
+          );
+        }
 
-          {/* Footer liên kết nhanh sang toàn bộ lịch giỗ */}
-          <div className="pt-3.5 mt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
-            <span className="text-slate-400">
-              Đồng bộ theo Lịch Âm truyền thống Việt Nam (UTC+7)
-            </span>
-            <Link
-              href="/anniversaries"
-              className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
-            >
-              <span>Xem lịch giỗ cả năm ({group.members.length > 1 ? '12 sự kiện' : '15 sự kiện'})</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Prototype Trang Danh Sách Lịch Giỗ (/anniversaries): Cột Ngày Bên Trái
- */
-function AnniversariesListPrototype({ isMobileView }: { isMobileView: boolean }) {
-  const groups = [
-    MOCK_SCENARIOS.single_today,
-    MOCK_SCENARIOS.dual_tomorrow,
-    MOCK_SCENARIOS.triple_upcoming,
-  ];
-
-  return (
-    <div className="space-y-6">
-      {groups.map((group) => {
-        const isToday = group.daysLeft === 0;
-        const isTomorrow = group.daysLeft === 1;
-
-        const cardBorder = isToday
-          ? 'border-rose-200 dark:border-rose-900/50 shadow-rose-500/5'
-          : isTomorrow
-            ? 'border-amber-200 dark:border-amber-900/50 shadow-amber-500/5'
-            : 'border-slate-200/80 dark:border-slate-800/80 shadow-slate-500/5';
-
+        // TRÊN BẢN DESKTOP (PC): Giữ nguyên bản 2 cột Fit Khít 100% 3 mép đã tạm chốt
         return (
           <div
             key={group.solarDay}
-            className={`rounded-2xl border bg-white dark:bg-slate-900 shadow-sm p-4 sm:p-5 transition-all ${cardBorder}`}
+            className="rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-row items-stretch transition-all hover:shadow-md"
           >
-            {/* Bố cục 2 Cột: Cột Ngày Bên Trái + Cột Danh Sách Người Giỗ Bên Phải */}
-            <div className={`flex ${isMobileView ? 'flex-col gap-4' : 'flex-row items-start gap-5'}`}>
-              {/* CỘT TRÁI: LỊCH BLOC ĐỘC LẬP - NEO CHẶT Ở ĐỈNH, KHÔNG BỊ KÉO DÃN! */}
-              <div className="flex flex-col items-center">
-                <CalendarBlocItem group={group} compact={isMobileView} />
-                <span className="text-[10px] text-slate-400 mt-1 font-medium">
-                  {group.members.length} người giỗ
+            {/* CỘT TRÁI: CON DẤU LỊCH BLOC THU NHỎ - FIT KHÍT 100% 3 MÉP */}
+            <div className="w-[90px] shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col text-center select-none overflow-hidden">
+              <div className={`py-1.5 font-black uppercase tracking-wider text-center shrink-0 ${stampHeaderBg} text-xs`}>
+                Tháng {group.solarMonth < 10 ? `0${group.solarMonth}` : group.solarMonth}
+              </div>
+              <div className="py-2 text-center shrink-0">
+                <div className="text-4xl font-black text-slate-950 dark:text-white leading-none tracking-tight">
+                  {group.solarDay < 10 ? `0${group.solarDay}` : group.solarDay}
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mt-1">
+                  {group.solarDayOfWeek}
+                </div>
+              </div>
+              <div className="border-t border-dashed border-slate-300 dark:border-slate-700 mx-1 shrink-0" />
+              <div className="py-1 bg-stone-50 dark:bg-slate-850 text-center shrink-0">
+                <span className="text-xs font-black text-red-600 dark:text-red-400">
+                  {group.lunarDay}/{group.lunarMonth} ÂL
+                </span>
+              </div>
+              <div className="flex-1 bg-white dark:bg-slate-900" />
+            </div>
+
+            {/* CỘT PHẢI: NỘI DUNG NGƯỜI GIỖ & TRẠNG THÁI */}
+            <div className="flex-1 p-4 flex flex-col justify-between min-w-0 bg-stone-50/50 dark:bg-slate-850/30">
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                {statusTag}
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  Năm {group.lunarYearCanChi} · {group.members.length} người giỗ
                 </span>
               </div>
 
-              {/* CỘT PHẢI: NỘI DUNG NGƯỜI GIỖ - ÂM LỊCH & DƯƠNG LỊCH KHÔNG BỊ LẶP LẠI */}
-              <div className="flex-1 w-full divide-y divide-slate-100 dark:divide-slate-800">
-                {group.members.map((member, idx) => {
-                  const isMale = member.gender === 'male';
-
-                  return (
-                    <div
-                      key={member.id}
-                      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                        idx > 0 ? 'pt-4 mt-4' : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-3.5">
-                        <div
-                          className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-xs shrink-0 border ${
-                            isMale
-                              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800'
-                              : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-800'
-                          }`}
-                        >
-                          {member.fullName
-                            .split(' ')
-                            .slice(-2)
-                            .map((n) => n[0])
-                            .join('')}
-                        </div>
-
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                              {member.honorific ? `${member.honorific} ` : ''}
-                              {member.fullName}
-                            </h4>
-
-                            {member.relativeKinship && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                                <Users className="w-3 h-3" />
-                                {member.relativeKinship}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-slate-600 dark:text-slate-300">
-                            <span className="font-semibold text-emerald-700 dark:text-emerald-400">
-                              Đời thứ {member.generation}
-                            </span>
-                            {member.branchName && (
-                              <>
-                                <span className="text-slate-300 dark:text-slate-700">·</span>
-                                <span>{member.branchName}</span>
-                              </>
-                            )}
-                            {member.birthYear && member.deathYear ? (
-                              <>
-                                <span className="text-slate-300 dark:text-slate-700">·</span>
-                                <span className="text-slate-500 dark:text-slate-400">
-                                  Hưởng thọ {member.deathYear - member.birthYear} tuổi ({member.birthYear} -{' '}
-                                  {member.deathYear})
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <span className="text-slate-300 dark:text-slate-700">·</span>
-                                <span className="text-slate-400 italic">Chưa rõ năm sinh - mất</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="sm:self-center shrink-0">
-                        <Link
-                          href="/tree"
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors w-full sm:w-auto"
-                        >
-                          <FamilyTreeIcon className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Xem trên Cây</span>
-                        </Link>
-                      </div>
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 py-1 flex-1 flex flex-col justify-center">
+                {group.members.map((member, idx) => (
+                  <div
+                    key={member.id}
+                    className={`${idx > 0 ? 'pt-3 mt-3' : 'pt-0'} flex flex-col gap-1.5`}
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
+                        {member.honorific ? `${member.honorific} ` : ''}{member.fullName}
+                      </h4>
+                      {member.relativeKinship && (
+                        <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
+                          {member.relativeKinship}
+                        </span>
+                      )}
                     </div>
-                  );
-                })}
+
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
+                        <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                          Đời {member.generation}
+                        </span>
+                        {member.branchName && <span>· {member.branchName}</span>}
+                        {member.birthYear && member.deathYear && (
+                          <span>· Hưởng thọ {member.deathYear - member.birthYear}t</span>
+                        )}
+                      </div>
+
+                      <Link
+                        href="/tree"
+                        className="shrink-0 px-2.5 py-1 rounded-lg bg-stone-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-2xs"
+                        title="Xem trên Cây Gia Phả"
+                      >
+                        <FamilyTreeIcon className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Xem Cây</span>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -562,137 +586,111 @@ function AnniversariesListPrototype({ isMobileView }: { isMobileView: boolean })
 }
 
 export default function PrototypeAnniversaryPage() {
-  const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile' | 'responsive'>('desktop');
-  const [pageTab, setPageTab] = useState<'home' | 'list'>('home');
+  const [currentTab, setCurrentTab] = useState<'home' | 'list'>('list');
+  const [deviceView, setDeviceView] = useState<'pc' | 'mobile'>('mobile');
   const [scenarioKey, setScenarioKey] = useState<string>('dual_tomorrow');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
-  const currentGroup = MOCK_SCENARIOS[scenarioKey] || MOCK_SCENARIOS.dual_tomorrow;
+  const currentGroup = MOCK_DATA[scenarioKey] || MOCK_DATA.triple_upcoming;
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'} py-8 px-4 sm:px-6`}>
-      {/* 1. Header Toolbar Điều Khiển Prototype */}
-      <div className="max-w-5xl mx-auto mb-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-stone-100 text-slate-900'} py-8 px-4`}>
+      {/* 1. Header Toolbar */}
+      <div className="max-w-3xl mx-auto mb-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3.5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-rose-600 text-white">
-              PROTOTYPE
-            </span>
-            <h1 className="text-lg font-black text-slate-900 dark:text-white">
-              Trực Quan Hóa Lịch Bloc Gia Tộc (PC & Mobile)
-            </h1>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Kiểm tra tỷ lệ tờ lịch bloc, bố cục cột trái, tính chống méo và trải nghiệm đa màn hình.
+          <h1 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
+            Bản Mẫu Chuẩn Lịch Bloc (Fit Khít 100% · Âm Lịch Kéo Lên Cố Định)
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Cột lịch fit khít 3 mép · Ngày Âm lịch kéo lên sát dưới Dương lịch, không còn khoảng trống dài.
           </p>
         </div>
 
-        {/* Cụm công tắc điều khiển */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Chuyển đổi Thiết bị: PC vs Mobile vs Responsive */}
-          <div className="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold">
+        <div className="flex items-center gap-2">
+          {/* Switch Tab Trang */}
+          <div className="inline-flex p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold">
             <button
-              onClick={() => setDeviceMode('desktop')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
-                deviceMode === 'desktop'
-                  ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              onClick={() => setCurrentTab('home')}
+              className={`px-3 py-1 rounded-md transition-all ${
+                currentTab === 'home' ? 'bg-white dark:bg-slate-700 text-slate-950 dark:text-white shadow-xs' : 'text-slate-500'
               }`}
             >
-              <Monitor className="w-3.5 h-3.5" />
-              <span>PC / Laptop</span>
+              1. Trang Chủ
             </button>
             <button
-              onClick={() => setDeviceMode('mobile')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
-                deviceMode === 'mobile'
-                  ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              onClick={() => setCurrentTab('list')}
+              className={`px-3 py-1 rounded-md transition-all ${
+                currentTab === 'list' ? 'bg-white dark:bg-slate-700 text-slate-950 dark:text-white shadow-xs' : 'text-slate-500'
               }`}
             >
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>Mobile (390px)</span>
-            </button>
-            <button
-              onClick={() => setDeviceMode('responsive')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
-                deviceMode === 'responsive'
-                  ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
-            >
-              <Maximize2 className="w-3.5 h-3.5" />
-              <span>Tự do</span>
+              2. Danh Sách Lịch Giỗ
             </button>
           </div>
 
-          {/* Nút bật/tắt Dark Mode */}
+          {/* Toggle Dark Mode */}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-            title="Đổi Chế Độ Sáng / Tối"
+            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
           >
             {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
           </button>
         </div>
       </div>
 
-      {/* 2. Sub-Toolbar: Chọn Màn Hình (Home vs Lịch Giỗ) & Kịch Bản Số Lượng Người */}
-      <div className="max-w-5xl mx-auto mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-        {/* Tab chuyển trang */}
-        <div className="flex items-center gap-2 border-b sm:border-b-0 border-slate-200 dark:border-slate-800 pb-2 sm:pb-0 w-full sm:w-auto">
+      {/* 2. Sub-Toolbar: Chọn Thiết Bị & Kịch Bản */}
+      <div className="max-w-3xl mx-auto mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Chọn thiết bị PC vs Mobile */}
+        <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 rounded-lg text-xs font-bold">
           <button
-            onClick={() => setPageTab('home')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              pageTab === 'home'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
+            onClick={() => setDeviceView('pc')}
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-md transition-all ${
+              deviceView === 'pc' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950' : 'text-slate-500'
             }`}
           >
-            🏠 1. Thẻ Trang Chủ (Home Spotlight)
+            <Monitor className="w-3.5 h-3.5" />
+            <span>Màn hình PC (Thẻ Ngang)</span>
           </button>
           <button
-            onClick={() => setPageTab('list')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              pageTab === 'list'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
+            onClick={() => setDeviceView('mobile')}
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-md transition-all ${
+              deviceView === 'mobile' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950' : 'text-slate-500'
             }`}
           >
-            📅 2. Trang Danh Sách Lịch Giỗ (/anniversaries)
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>Màn hình Mobile</span>
           </button>
         </div>
 
-        {/* Dropdown / Chips chọn kịch bản số người (cho tab Home) */}
-        {pageTab === 'home' && (
-          <div className="flex items-center gap-1.5 self-start sm:self-auto text-xs">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Kịch bản:</span>
+        {/* Chọn số người giỗ (Chỉ cho Tab Home) */}
+        {currentTab === 'home' && (
+          <div className="flex items-center gap-1 text-xs">
+            <span className="text-slate-400 font-medium">Kịch bản:</span>
             <button
               onClick={() => setScenarioKey('single_today')}
-              className={`px-2.5 py-1 rounded-lg font-bold border transition-colors ${
+              className={`px-2 py-1 rounded font-bold border transition-colors ${
                 scenarioKey === 'single_today'
-                  ? 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200 border-rose-300'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'
+                  ? 'bg-red-100 text-red-600 border-red-300 dark:bg-red-950/60'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 border-slate-200 dark:border-slate-800'
               }`}
             >
               1 Người (Hôm nay)
             </button>
             <button
               onClick={() => setScenarioKey('dual_tomorrow')}
-              className={`px-2.5 py-1 rounded-lg font-bold border transition-colors ${
+              className={`px-2 py-1 rounded font-bold border transition-colors ${
                 scenarioKey === 'dual_tomorrow'
-                  ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border-amber-300'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'
+                  ? 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/60'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 border-slate-200 dark:border-slate-800'
               }`}
             >
-              2 Người (Trùng ngày giỗ)
+              2 Người (Trùng ngày)
             </button>
             <button
               onClick={() => setScenarioKey('triple_upcoming')}
-              className={`px-2.5 py-1 rounded-lg font-bold border transition-colors ${
+              className={`px-2 py-1 rounded font-bold border transition-colors ${
                 scenarioKey === 'triple_upcoming'
-                  ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 border-emerald-300'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'
+                  ? 'bg-slate-200 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-white'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 border-slate-200 dark:border-slate-800'
               }`}
             >
               3 Người (7 ngày tới)
@@ -701,99 +699,37 @@ export default function PrototypeAnniversaryPage() {
         )}
       </div>
 
-      {/* 3. KHU VỰC HIỂN THỊ CHÍNH (PREVIEW CANVAS) */}
-      <div className="max-w-5xl mx-auto">
-        {deviceMode === 'mobile' ? (
-          /* Khung mô phỏng điện thoại iPhone 15 Pro (390px) */
-          <div className="flex flex-col items-center py-4">
-            <div className="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5">
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>Khung nhìn Mobile thực tế (Width: 390px)</span>
-            </div>
-            <div className="w-[390px] min-h-[640px] max-h-[820px] bg-white dark:bg-slate-900 rounded-[44px] border-[10px] border-slate-900 dark:border-slate-800 shadow-2xl p-4 overflow-y-auto relative">
-              {/* Dynamic Island */}
-              <div className="w-24 h-4 bg-slate-900 dark:bg-slate-800 rounded-full mx-auto mb-4" />
-
-              {pageTab === 'home' ? (
-                <HomeSpotlightPrototype group={currentGroup} isMobileView={true} />
-              ) : (
-                <AnniversariesListPrototype isMobileView={true} />
-              )}
-            </div>
-          </div>
-        ) : deviceMode === 'desktop' ? (
-          /* Khung nhìn PC / Laptop chuẩn (Width max-w-3xl) */
-          <div className="max-w-3xl mx-auto py-4">
-            <div className="text-xs font-bold text-slate-500 mb-3 flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <Monitor className="w-3.5 h-3.5" />
-                <span>Khung nhìn Desktop Thẻ Ngang (max-w-3xl)</span>
-              </span>
-              <span className="text-[11px] text-emerald-600 font-semibold">
-                ✓ Khối lịch bloc bên trái neo đỉnh tự nhiên (self-start), 0% bị kéo dãn!
-              </span>
-            </div>
-
-            {pageTab === 'home' ? (
-              <HomeSpotlightPrototype group={currentGroup} isMobileView={false} />
+      {/* 3. KHU VỰC PREVIEW CHÍNH */}
+      <div className="max-w-3xl mx-auto py-2">
+        {deviceView === 'pc' ? (
+          /* Khung nhìn PC / Desktop (Thoáng đãng, rộng rãi) */
+          <div className="py-4">
+            {currentTab === 'home' ? (
+              <HomePcHorizontalWidget day={currentGroup} />
             ) : (
-              <AnniversariesListPrototype isMobileView={false} />
+              <AnniversariesCleanListView isMobile={false} />
             )}
           </div>
         ) : (
-          /* Khung nhìn Responsive Tự Do */
-          <div className="w-full py-4">
-            <div className="text-xs font-bold text-slate-500 mb-3 flex items-center gap-1.5">
-              <Maximize2 className="w-3.5 h-3.5" />
-              <span>Chế độ tự do (Kéo giãn cửa sổ trình duyệt để kiểm tra Breakpoint)</span>
+          /* Khung nhìn Mobile mô phỏng điện thoại di động (iPhone 375px) */
+          <div className="flex flex-col items-center py-4">
+            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Giao diện thực tế trên màn hình điện thoại (Width: 375px)</span>
             </div>
-            {pageTab === 'home' ? (
-              <HomeSpotlightPrototype group={currentGroup} isMobileView={false} />
-            ) : (
-              <AnniversariesListPrototype isMobileView={false} />
-            )}
+
+            <div className="w-[375px] min-h-[580px] max-h-[760px] bg-slate-50 dark:bg-slate-950 rounded-[44px] border-[9px] border-slate-900 dark:border-slate-800 shadow-2xl p-3 overflow-y-auto relative">
+              {/* Dynamic Island của điện thoại */}
+              <div className="w-24 h-4 bg-slate-900 dark:bg-slate-800 rounded-full mx-auto mb-4" />
+
+              {currentTab === 'home' ? (
+                <HomeMobileVerticalWidget day={currentGroup} />
+              ) : (
+                <AnniversariesCleanListView isMobile={true} />
+              )}
+            </div>
           </div>
         )}
-      </div>
-
-      {/* 4. BẢNG PHÂN TÍCH THIẾT KẾ & GIẢI ĐÁP KỸ THUẬT (INSPECTOR HIGHLIGHTS) */}
-      <div className="max-w-3xl mx-auto mt-12 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 mb-4">
-          <Info className="w-4 h-4 text-emerald-600" />
-          <span>Giải Pháp Cho 3 Vấn Đề Bạn Đã Nêu</span>
-        </h3>
-
-        <div className="space-y-4 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 flex items-start gap-3">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <div>
-              <strong className="text-slate-900 dark:text-white">1. Cột bên trái có bị kéo dài ra không?</strong>
-              <p className="mt-1 text-slate-500 dark:text-slate-400">
-                Nhờ sử dụng <code>shrink-0 self-start</code> và khóa cứng tỷ lệ vàng <code>w-[124px]</code>, tờ lịch bloc luôn neo vững chãi ở góc trên bên trái. Kể cả khi bên phải có 2 hay 3 người giỗ (chiều cao cột phải phình to), tờ lịch bloc bên trái vẫn giữ trọn vẹn 100% hình dạng chuẩn, tuyệt đối không bị méo hay kéo dãn.
-              </p>
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 flex items-start gap-3">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <div>
-              <strong className="text-slate-900 dark:text-white">2. Ngày có 2 người giỗ thì thế nào?</strong>
-              <p className="mt-1 text-slate-500 dark:text-slate-400">
-                Ở cả thẻ Home lẫn danh sách Lịch Giỗ, 2 cụ cùng giỗ chia sẻ chung 1 tờ lịch bloc duy nhất. Cột bên phải phân thành 2 hàng trang nhã (ngăn cách bởi đường hairline siêu mảnh). Cả 2 cụ đều có Avatar, Họ tên, Đời thứ và nút <em>Xem trên Cây</em> riêng biệt, không ai bị giấu!
-              </p>
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 flex items-start gap-3">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <div>
-              <strong className="text-slate-900 dark:text-white">3. Tông màu và sự lặp lại âm - dương:</strong>
-              <p className="mt-1 text-slate-500 dark:text-slate-400">
-                Tông màu chuẩn: <strong>Hôm nay Đỏ</strong> (rực rỡ, trang nghiêm) $\rightarrow$ <strong>Ngày mai Vàng</strong> (ấm áp, chuẩn bị) $\rightarrow$ <strong>Ngày khác Bình thường</strong> (xanh ngọc / slate). Vì Dương lịch và Âm lịch đã nằm trọn vẹn và nổi bật ở tờ lịch bloc bên trái, cột bên phải hoàn toàn không bị lặp lại ngày tháng nữa!
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

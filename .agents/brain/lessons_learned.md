@@ -1,5 +1,30 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
+- **Tieu Chuan The Lich Gio Mobile 3 Dong & Icon Cham Vien (Mobile Flush Calendar Icon & 3-Line Header):**
+  1. *Icon cham vien the ngoai:* Tren mobile, icon lich thu nho (58px) cham khit mep tren va mep trai cua the ngoai (tuong tu nhu the PC), bo theo goc rounded-2xl cua the ngoai nho overflow-hidden, khong bi lo lung boi padding.
+  2. *Header 3 dong ro rang:* Ben phai icon gom chinh xac 3 dong: (1) Nhan trang thai (Hom nay / Ngay mai / Con X ngay); (2) Ngay am lich (19/8 Am Lich); (3) So nguoi gio (X nguoi gio). Toan bo phan duoi danh tron 100% be ngang cho Ho ten va nut Xem Cay o mep phai.
+
+- **Bo Cuc The Lich Gio Mobile Toi Gian (Wireframe Mobile Card Standard):**
+  1. *Triet tieu va cham nam am:* Tren Mobile, bo phan Nam am vi de gay va cham chu; dua ngay am (19/8 Am Lich) len ben phai icon lich, ngay duoi Hom nay gio.
+  2. *Full-width Members Section:* Nua duoi cua card danh tron 100% be ngang cho Ho ten tien nhan, thong tin ben trai va nut [Xem Cay] o mep phai.
+
+- **Tan Dung Toan Bo Dien Tich Mobile & Doi Trong Nut Hanh Dong (Full-Width Mobile Hierarchy & Balanced Action Anchor):**
+  1. *Can nguyen nut tro troi:* Neu tach nut hanh dong ([Xem Cay]) ra mot dong rieng nhung lai ghim ben trai (self-start), nua ben phai se bi bo trong hoan toan gay lang phi dien tich.
+  2. *Giai phap 2 tang doi trong:* Dong 1 danh 100% be ngang cho Ho ten va Nhan quan he (chu to ro, khong truncate). Dong 2 dung flex items-center justify-between: ben trai la Thong tin the he, ben phai la nut [Xem Cay] (day du icon va text). Tan dung 100% dien tich the, can doi thi giac va thuan tien ngon tay cai bam tren mobile.
+
+- **Thiet Ke Cot Lich Bloc Fit Khit 3 Mep & Keo Ngay Am Lich Len Sat Duong Lich (Flush 3-Edge Fit & Pull-Up Lunar Block):**
+  1. *Can nguyen khoang trang dai (Bottom-Pin Lunar Trap):* Khi the card co 2-3 nguoi gio, chieu cao ben phai phinh to. Neu dat ngay am lich o day the (bottom-pin hoac justify-between), phan duong lich va am lich bi tach roi xa nhau boi 1 khoang trang menh mong o giua rat phan cam.
+  2. *Giai phap Keo len va Co dinh lien khoi:* Du cot lich fit khit 100% 3 mep (tren, trai, duoi), toan bo cum du lieu lich (Header thang -> Duong lich -> Rang cua xe lich -> Am lich) bat buoc phai KEO LEN va CO DINH LIEN KHOI o phan nua tren, khoang cach giua Duong va Am luon tu nhien, chat che. Phan chieu cao thua con lai o duoi giu phang phiu dong nhat voi mau the, tuyet doi 0% bi xo xe lam doi.
+
+- **Khoa Cung Kich Thuoc Bieu Tuong Lich (Fixed Size Calendar Badge) & Triet Tieu Truncate Ten Thanh Vien:**
+  1. *Can nguyen keo gian ro rong ruot (Stretchy Void Bug):* Khi the card co 2-3 nguoi gio, chieu cao card tang len (~250-340px). Neu cot lich ben trai dung h-full hoac justify-between, ngay duong va ngay am se bi xe toac ve 2 cuc, de lai 1 khoang trang hoang vu o giua rat phan cam.
+  2. *Giai phap Khoa Cung 1 Size:* Bieu tuong lich bloc bat buoc phai KHOA CUNG 1 SIZE DUY NHAT (84x94px tren PC, 68x80px tren Mobile), neo tu nhien o top-left (self-start). Ngay duong, thu va ngay am gan ket chat che, tuyet doi 0% bi keo gian.
+  3. *Triet tieu loi cat chu Mobile (Anti-Truncate Mobile Name):* Ho ten tien nhan la thong tin thieng lieng toi thuong trong gia pha. Tuyet doi CAM dung class truncate tren ho ten nguoi gio. Tren man hinh hep (Mobile 375px), bo nut bam cong kenh canh ten; tach rieng ho ten thanh 1 dong to ro day du (ho tro wrap tu nhien neu ten dai), giup con chau va cac cu doc ro 100% tung chu.
+
+- **Mau Sac Lich Bloc Co Truyen Ruc Ro & Cot Ngay Fit Khit 100% (Vibrant Heritage Palette & 100% Flush Fit Date Pillar):**
+  1. *Can nguyen mau xin:* Khong dung mau nau do dam (#b91c1c), ho phach xin (#b45309). Dung do son tuoi (bg-red-600) va vang hoang kim tuoi sang (bg-amber-400 text-slate-950 font-black).
+  2. *Cot ngay fit khit 100%:* Trong /anniversaries, the ngay dung items-stretch keo dai cham 3 mep (tren, trai, duoi), header tran vien y het Home widget, khong de khoang trong lo lung.
+
 - **Typography Hierarchy Thay Thế Lạm Dụng Pill Capsules (Anti-Pill Drawer Header Design):**
   1. *Căn nguyên thẩm mỹ:* Khi thiết kế Drawer hoặc Modal chi tiết hồ sơ gia phả, thói quen gom 5–7 thuộc tính (Đời thứ, Con trưởng, Trạng thái sinh tử, Chi nhánh, Hôn nhân) thành một cụm các viên thuốc bo tròn (`px-2 py-0.5 rounded-full bg-... text-...`) xếp chồng chéo tạo cảm giác "ngộ độc pill", lòe loẹt, rối mắt và làm giảm tính tôn nghiêm của hồ sơ tiền nhân/hậu duệ.
   2. *Giải pháp chuẩn hóa Typography:* Thay thế toàn bộ cụm pill badges bằng **Typography Hierarchy Phân Tầng Trang Nhã**:
@@ -633,3 +658,26 @@
      - Khi $F_0$ xem Drawer con đẻ ($F_1$), khối con cái hiển thị rõ nhãn thân tộc: `Con cái (Cháu của bạn) (N):`, giúp người dùng nhận thức vai vế ngay trong ngữ cảnh.
      - Triệt tiêu thuật ngữ kỹ thuật "phối ngẫu": Căn cứ vào giới tính thành viên mục tiêu để hiển thị nhãn và nút bấm chuẩn mực văn hóa: Nam $\rightarrow$ `Vợ` và `[+ Thêm vợ]`; Nữ $\rightarrow$ `Chồng` và `[+ Thêm chồng]`; tiêu đề Modal hiển thị trang trọng `Thêm Vợ Cho: ...` / `Thêm Chồng Cho: ...`.
      - Tooltip nút `[🎯 Đặt làm Gốc]`: Bổ sung tooltip tường minh giải thích ý nghĩa tính năng Focus Root (lọc nhánh con cháu và đổi góc nhìn xưng hô thân tộc), xua tan lo ngại của người dùng về việc làm xáo trộn gốc rễ phả hệ.
+
+- **Phê Duyệt Phân Tán 3 Tầng, Kỷ Luật Anti-Pill & Cơ Chế Insert & Shift (Milestone 8 - Phase 3):**
+  1. *Phân quyền Phê duyệt 3 Tầng theo Huyết Thống (`canUserReviewClaim`):*
+     - **Tầng 1 (Super Admin):** Toàn quyền xử lý, duyệt, từ chối và ủy quyền (`assign`) bất kỳ phiếu nào trên toàn hệ thống.
+     - **Tầng 2 (Branch Editor / Trưởng Chi):** Được phân quyền kiểm duyệt hàng đợi scoped theo chi nhánh (`assigned_branch_code`) hoặc khi được Super Admin phân công đích danh (`assigned_to`). Kiểm tra huyết thống cây con phụ hệ thông qua `resolveMemberBranchHierarchy` để cho phép Trưởng Chi (dù ở đời thấp) vẫn quản lý và duyệt toàn diện con cháu trong Chi phụ trách.
+     - **Tầng 3 (Bố Mẹ / Chủ Hộ `claimed_member`):** Nhận diện điểm chạm gia đình tức thì ngay tại trang chủ (`IdentityContextWidget`). Bố Mẹ có quyền duyệt 1-chạm chấp thuận hoặc từ chối phiếu con ruột xin nối vào tiểu gia đình mình mà không cần chờ Ban Quản Trị can thiệp.
+  2. *Kỷ Luật Thiết Kế Anti-Pill Trong Giao Diện Quản Trị & Cổng Chi Nhánh:*
+     - Tuyệt đối CẤM lạm dụng `rounded-full` làm pill badges sặc sỡ bọc trạng thái, đời, chi hay nút bấm (gây cảm giác đồ chơi, đại trà).
+     - Thay thế bằng **Typography Phân Cấp (Typography Hierarchy)**: Tên thành viên/chi nhánh in đậm, đời và chi dùng text mộc thanh mảnh ngăn cách bằng dấu chấm trung tâm (`·`).
+     - Lớp viền bo của nút bấm và container chuẩn mực: Dùng `rounded-lg` (8px) viền mỏng hairline (`border-slate-200 dark:border-slate-700`), lớp `rounded-full` chỉ được phép dùng cho Avatar và dot chỉ báo trạng thái siêu nhỏ (`w-1.5 h-1.5 rounded-full`).
+  3. *Cơ Chế Tịnh Tiến Thứ Tự Sinh (Insert & Shift Kinship Integrity):*
+     - Khi phê duyệt đề xuất con mới với thứ tự sinh $k$ (`birth_order = k`), toàn bộ các con hiện có của cha mẹ đó có `birth_order >= k` sẽ tự động được tịnh tiến thành `birth_order + 1`.
+     - Tuyệt đối không ghi đè làm mất hoặc sai lệch thứ tự con cũ; sau khi insert bản ghi mới thành công, tài khoản người nộp phiếu được nâng cấp tức thì thành `claimed_member` gắn với node mới.
+  4. *Chuẩn Hóa Next.js App Router Dynamic Handlers (`export const dynamic = 'force-dynamic'`):*
+     - Mọi API route handler có đọc `request.headers` hoặc `cookies()` (như `/api/claims/pending`, `/api/claims/[id]/review`) bắt buộc phải khai báo `export const dynamic = 'force-dynamic'`. Điều này ngăn chặn việc Next.js prerender tĩnh lúc build và triệt tiêu 100% warning `DYNAMIC_SERVER_USAGE`.
+
+- **Thiết Kế Lịch Bloc Gia Tộc Thuần Việt & Bài Học Chống Lạm Dụng Khung Hộp Rẻ Tiền (Authentic Heritage Calendar Bloc & Anti-Gimmick Design):**
+  1. *Căn nguyên thẩm mỹ & Sai lầm nghiêm trọng:* Việc lồng một tờ lịch bloc vào một chiếc thẻ ngoài bo tròn lòe loẹt (box-in-box), nhuộm nền đỏ toàn khối (như banner quảng cáo giảm giá), hoặc dùng đường viền bôi màu ở mép (border-l-4) làm rẻ tiền hóa tính tôn nghiêm của ngày giỗ tổ tiên và gây cảm giác chắp vá, đại trà. Đồng thời, việc ép 2 cột thô bạo trên màn hình điện thoại hẹp (<400px) khiến chữ bị bẻ gãy từng từ, phá hủy hoàn toàn trải nghiệm đọc.
+  2. *Giải pháp Chuẩn mực: Tôn trọng 100% ADN Thiết kế Tờ Lịch Bloc Truyền Thống:*
+     - **Tờ lịch chính là chiếc thẻ duy nhất:** Triệt tiêu hoàn toàn thẻ bọc ngoài. Bản thân tờ lịch bloc (Header đỏ son #b91c1c, số dương to đen, rãnh xé đục lỗ nét đứt, số âm đỏ son, năm Can Chi) là điểm neo thị giác trung tâm.
+     - **Bố cục 2 Nửa Liền Mạch trên PC (Desktop Horizontal Layout):** Nửa bên trái là tờ lịch bloc nguyên bản (rộng 185px); nửa bên phải là thông tin người giỗ (trắng ngà, vừa khít chiều cao, không có hố đen khoảng trống thừa).
+     - **Tờ Lịch Dọc Tự Nhiên trên Mobile (Mobile Vertical Flow):** Trên điện thoại di động, bảo toàn 100% hình hài tờ lịch bloc đứng truyền thống. Người dùng cầm máy dọc đọc thông tin liền mạch từ trên xuống dưới, tên thành viên dàn thẳng hàng trên 1 dòng, tuyệt đối không bị rớt chữ.
+     - **Danh Sách Lịch Giỗ Phẳng Tinh Giản (Clean Agenda List):** Loại bỏ toàn bộ border-l-4 bôi mép. Mỗi ngày là một dòng phẳng thanh lịch: bên trái là con dấu lịch bloc thu nhỏ (68px), bên phải là danh sách các cụ giỗ thẳng thớm, ngăn cách bằng đường hairline siêu mảnh 1px.
