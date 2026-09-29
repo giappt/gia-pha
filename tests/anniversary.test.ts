@@ -351,5 +351,102 @@ describe('Anniversary Calculation & Kinship Integration Test Suite (Milestone 5)
     assert.strictEqual(grandma.honorific_prefix, 'Bà nội');
     assert.strictEqual(grandma.display_name, 'Bà nội Lê Thị Nguồn');
   });
+
+  // TC_UT_ANNIV_BRANCH_01: Phân giải chính xác Ngành & Chi cho người giỗ
+  it('TC_UT_ANNIV_BRANCH_01: Phân giải chính xác Ngành & Chi cho người giỗ', () => {
+    const mockTree: MemberRecord[] = [
+      {
+        id: 'ancestor',
+        full_name: 'Cụ Thủy Tổ',
+        gender: 'male',
+        life_status: 'deceased',
+        death_lunar_day: 21,
+        death_lunar_month: 7,
+        generation_level: 1,
+        is_root: true,
+      },
+      {
+        id: 'branch-root-chi2',
+        full_name: 'Cụ Khởi Chi 2',
+        gender: 'male',
+        father_id: 'ancestor',
+        life_status: 'deceased',
+        death_lunar_day: 21,
+        death_lunar_month: 7,
+        generation_level: 2,
+        is_root: false,
+      },
+      {
+        id: 'member-chi2',
+        full_name: 'Ông Phạm Văn Cường',
+        gender: 'male',
+        father_id: 'branch-root-chi2',
+        life_status: 'deceased',
+        death_lunar_day: 21,
+        death_lunar_month: 7,
+        generation_level: 3,
+        is_root: false,
+      },
+    ];
+
+    const branches = [
+      {
+        id: 'b-nganh1',
+        name: 'Ngành 1',
+        tierName: 'Ngành',
+        rootMemberId: 'ancestor',
+        children: [
+          {
+            id: 'b-chi2',
+            name: 'Chi 2',
+            tierName: 'Chi',
+            rootMemberId: 'branch-root-chi2',
+          },
+        ],
+      },
+    ];
+
+    const refDate = new Date(2026, 8, 1);
+    const groups = getUpcomingAnniversaries(mockTree, {
+      referenceDate: refDate,
+      daysAhead: 30,
+      branches,
+    });
+
+    assert.ok(groups.length > 0);
+    const cuong = groups[0].members.find((m) => m.id === 'member-chi2');
+    assert.ok(cuong);
+    assert.strictEqual(cuong.branch_name, 'Chi 2');
+    assert.strictEqual(cuong.branch_path, 'Ngành 1 · Chi 2');
+  });
+
+  // TC_UT_ANNIV_BRANCH_02: Xử lý an toàn khi không thuộc nhánh hoặc không có cấu hình
+  it('TC_UT_ANNIV_BRANCH_02: Xử lý an toàn khi không thuộc nhánh hoặc không có cấu hình', () => {
+    const mockTree: MemberRecord[] = [
+      {
+        id: 'isolated-ancestor',
+        full_name: 'Cụ Khởi Đầu',
+        gender: 'male',
+        life_status: 'deceased',
+        death_lunar_day: 21,
+        death_lunar_month: 7,
+        generation_level: 1,
+        is_root: true,
+      },
+    ];
+
+    const refDate = new Date(2026, 8, 1);
+    const groups = getUpcomingAnniversaries(mockTree, {
+      referenceDate: refDate,
+      daysAhead: 30,
+      branches: [],
+    });
+
+    assert.ok(groups.length > 0);
+    const member = groups[0].members[0];
+    assert.ok(member);
+    assert.strictEqual(member.branch_name, null);
+    assert.strictEqual(member.branch_path, null);
+  });
 });
 

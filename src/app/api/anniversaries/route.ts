@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
     let customDictionary: CustomKinshipDictionary | null = null;
     let spouseMap: Map<string, string[]> | undefined;
 
+    let branches: any[] = [];
+    let spouseRelations: any[] = [];
+
     try {
       const supabase = createClient();
 
@@ -51,11 +54,11 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Nạp cấu hình từ điển và vùng miền SSOT từ clan_settings
+      // Nạp cấu hình từ điển, vùng miền và cây phân chi SSOT từ clan_settings
       try {
         const { data: clanSettings } = await supabase
           .from('clan_settings')
-          .select('default_kinship_region, custom_kinship_dictionary')
+          .select('default_kinship_region, custom_kinship_dictionary, branches')
           .limit(1)
           .maybeSingle();
 
@@ -64,6 +67,9 @@ export async function GET(request: NextRequest) {
         }
         if (clanSettings?.custom_kinship_dictionary) {
           customDictionary = clanSettings.custom_kinship_dictionary as CustomKinshipDictionary;
+        }
+        if (clanSettings?.branches && Array.isArray(clanSettings.branches)) {
+          branches = clanSettings.branches;
         }
       } catch {
         // Bỏ qua lỗi cấu hình settings
@@ -75,6 +81,7 @@ export async function GET(request: NextRequest) {
           .from('spouse_relations')
           .select('member_a_id, member_b_id');
         if (dbSpouses && dbSpouses.length > 0) {
+          spouseRelations = dbSpouses;
           spouseMap = buildSpouseMap(dbSpouses, undefined);
         }
       } catch {
@@ -102,6 +109,8 @@ export async function GET(request: NextRequest) {
       region,
       customDictionary,
       spouseMap,
+      branches,
+      spouseRelations,
     });
 
     // Lọc theo nhánh gia đình mở rộng của người xem nếu có yêu cầu scope=my_lineage

@@ -1,4 +1,4 @@
-import { Gender } from './database';
+import { Gender, BranchNode, SpouseRelation } from './database';
 
 export interface AnniversaryMemberItem {
   id: string;
@@ -7,6 +7,8 @@ export interface AnniversaryMemberItem {
   avatar_url: string | null;
   generation: number;
   branch_code: string | null;
+  branch_name?: string | null;
+  branch_path?: string | null;
   birth_year: number | null;
   death_year: number | null;
   death_lunar_day: number;
@@ -47,6 +49,8 @@ export interface AnniversaryOptions {
   region?: KinshipRegion;
   customDictionary?: CustomKinshipDictionary | null;
   spouseMap?: Map<string, string[]>;
+  branches?: BranchNode[];
+  spouseRelations?: SpouseRelation[] | any[];
 }
 
 export interface PushSubscribePayload {

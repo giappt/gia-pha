@@ -42,3 +42,10 @@ html.dark body {
     radial-gradient(ellipse 70% 45% at 50% -5%, rgba(16, 185, 129, 0.12), transparent 70%),
     radial-gradient(ellipse 40% 30% at 85% 20%, rgba(245, 158, 11, 0.05), transparent 60%);
 }
+
+/* Modern Vietnamese Heritage Profile Tokens (Tôn trọng Brand Sovereignty) */
+html[data-theme-profile="heritage"] {
+  --heritage-accent-red: #dc2626;
+  --heritage-accent-gold: #f59e0b;
+}
+

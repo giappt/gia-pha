@@ -5,9 +5,10 @@ import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 import { Calendar, Compass, Shield, AlertCircle, Sparkles, Clock, ArrowRight } from 'lucide-react';
 import { getUpcomingAnniversaries, formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
-import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
+import { resolveFeatureFlags, resolveThemeConfig, resolveEffectiveThemeProfile } from '@/lib/admin/admin-engine';
 import InstallPwaButton, { PwaInstallBanner } from '@/components/pwa/InstallPwaButton';
 import IdentityContextWidget from '@/components/home/IdentityContextWidget';
+import AnniversaryBlocCard from '@/components/anniversaries/AnniversaryBlocCard';
 import type { MemberRecord } from '@/types/tree';
 
 export default async function HomePage({
@@ -36,11 +37,24 @@ export default async function HomePage({
     }
   }
 
+  // Đọc theme config: Ưu tiên cookie cache
+  let themeConfig = resolveThemeConfig(undefined);
+  const themeCacheCookie = cookieStore.get('fat_theme_config_cache')?.value;
+  const devThemeCookie = cookieStore.get('fat_dev_theme_config')?.value;
+  const targetThemeCookie = devThemeCookie || themeCacheCookie;
+  if (targetThemeCookie) {
+    try {
+      themeConfig = resolveThemeConfig(JSON.parse(decodeURIComponent(targetThemeCookie)));
+    } catch {
+      // ignore
+    }
+  }
+
   let branches: any[] = [];
   try {
     const { data: clanData, error } = await supabase
       .from('clan_settings')
-      .select('clan_name, feature_flags, branches')
+      .select('clan_name, feature_flags, branches, theme_config')
       .limit(1)
       .single();
 
@@ -57,6 +71,10 @@ export default async function HomePage({
 
     if (!targetFlagsCookie && clanData?.feature_flags) {
       featureFlags = resolveFeatureFlags(clanData.feature_flags);
+    }
+
+    if (!targetThemeCookie && clanData?.theme_config) {
+      themeConfig = resolveThemeConfig(clanData.theme_config);
     }
   } catch (err) {
     console.error('Failed to read clan settings:', err);
@@ -105,6 +123,12 @@ export default async function HomePage({
 
   const isSuperAdmin = userProfile?.user_role === 'super_admin';
 
+  const effectiveThemeProfile = resolveEffectiveThemeProfile(themeConfig, {
+    id: user?.id,
+    role: userProfile?.user_role as any,
+    isSuperAdmin,
+  });
+
   // Fetch members to compute the nearest upcoming anniversary
   let membersList: MemberRecord[] = [];
   try {
@@ -142,6 +166,8 @@ export default async function HomePage({
   const upcomingAnniversaries = getUpcomingAnniversaries(membersList, {
     daysAhead: 365,
     viewerMemberId: userProfile?.linked_member_id || undefined,
+    branches,
+    spouseRelations,
   });
 
   const nearestGroup = upcomingAnniversaries.length > 0 ? upcomingAnniversaries[0] : null;
@@ -168,7 +194,7 @@ export default async function HomePage({
 
       {/* Hero Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-400 mb-3">
+        <p className="text-xs font-bold uppercase tracking-[0.25em] mb-3 text-emerald-700 dark:text-emerald-400">
           Hệ Thống Gia Phả Trực Tuyến
         </p>
 
@@ -211,6 +237,11 @@ export default async function HomePage({
 
       {/* Spotlight: Ngày Giỗ Gần Nhất (Chỉ hiển thị khi tính năng bật và người dùng đã đăng nhập) */}
       {!isGuest && nearestGroup && nearestMember && featureFlags.enable_anniversaries && (
+        effectiveThemeProfile === 'heritage' ? (
+          <div className="w-full mb-10">
+            <AnniversaryBlocCard group={nearestGroup} />
+          </div>
+        ) : (
         <div className="max-w-3xl w-full mb-10 p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-emerald-500/10 dark:from-amber-950/40 dark:via-slate-900/60 dark:to-emerald-950/40 border border-amber-500/30 dark:border-amber-700/40 shadow-lg shadow-amber-500/[0.03]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-amber-500/20 dark:border-amber-700/30">
             <div className="flex items-center gap-2">
@@ -316,6 +347,7 @@ export default async function HomePage({
             </div>
           </div>
         </div>
+        )
       )}
 
       {/* Banner Tiện Ích Cài Đặt Ứng Dụng PWA (Chuẩn max-w-3xl, gióng thẳng hàng với Thẻ Ngày Giỗ) */}

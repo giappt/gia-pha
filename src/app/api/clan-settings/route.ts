@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { validateBranchTree, DEFAULT_BRANCH_TIERS } from '@/lib/tree-layout/branch-engine';
-import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
+import { resolveFeatureFlags, resolveThemeConfig } from '@/lib/admin/admin-engine';
 
 export async function GET() {
   const cookieStore = cookies();
@@ -63,6 +63,16 @@ export async function GET() {
       }
     }
 
+    const devThemeConfigStr = cookieStore.get('fat_dev_theme_config')?.value;
+    let devThemeConfig = null;
+    if (devThemeConfigStr) {
+      try {
+        devThemeConfig = JSON.parse(devThemeConfigStr);
+      } catch (e) {
+        console.warn('Failed to parse dev theme config cookie:', e);
+      }
+    }
+
     const clan_name = devClanName || clanData?.clan_name || 'GIA PHẢ PHẠM VĂN';
     const root_ancestor_id = clanData?.root_ancestor_id || null;
     const default_kinship_region = clanData?.regional_preset || clanData?.default_kinship_region || 'north';
@@ -74,6 +84,7 @@ export async function GET() {
         ? clanData.branch_tiers
         : DEFAULT_BRANCH_TIERS;
     const feature_flags = resolveFeatureFlags(devFeatureFlags || clanData?.feature_flags);
+    const theme_config = resolveThemeConfig(devThemeConfig || clanData?.theme_config);
 
     return NextResponse.json({
       success: true,
@@ -85,6 +96,7 @@ export async function GET() {
         branch_tiers,
         branches,
         feature_flags,
+        theme_config,
       },
     });
   } catch (err) {
@@ -99,6 +111,7 @@ export async function GET() {
         branch_tiers: DEFAULT_BRANCH_TIERS,
         branches: [],
         feature_flags: resolveFeatureFlags(undefined),
+        theme_config: resolveThemeConfig(undefined),
       },
     });
   }
@@ -215,6 +228,7 @@ export async function PATCH(request: Request) {
     }
 
     let feature_flags = body.feature_flags !== undefined ? resolveFeatureFlags(body.feature_flags) : undefined;
+    let theme_config = body.theme_config !== undefined ? resolveThemeConfig(body.theme_config) : undefined;
 
     const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -236,6 +250,9 @@ export async function PATCH(request: Request) {
     }
     if (feature_flags !== undefined) {
       updatePayload.feature_flags = feature_flags;
+    }
+    if (theme_config !== undefined) {
+      updatePayload.theme_config = theme_config;
     }
     if (body.root_ancestor_id !== undefined) {
       updatePayload.root_ancestor_id = body.root_ancestor_id || null;
@@ -305,6 +322,21 @@ export async function PATCH(request: Request) {
       });
     }
 
+    if (theme_config !== undefined) {
+      cookieStore.set('fat_dev_theme_config', JSON.stringify(theme_config), {
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: false,
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+      cookieStore.set('fat_theme_config_cache', JSON.stringify(theme_config), {
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: false,
+        maxAge: 300, // 5 minutes cache
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Cập nhật thông tin dòng họ thành công',
@@ -316,6 +348,7 @@ export async function PATCH(request: Request) {
         branch_tiers: branch_tiers || DEFAULT_BRANCH_TIERS,
         branches: branches || [],
         feature_flags: feature_flags || resolveFeatureFlags(undefined),
+        theme_config: theme_config || resolveThemeConfig(undefined),
       },
     });
   } catch (err) {

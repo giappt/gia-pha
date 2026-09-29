@@ -1,5 +1,34 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
+- **Chuẩn Hóa Nhận Diện Lịch Giỗ Phương Án A (Clean Lunar Red), Bố Cục 2 Tầng Âm Lịch & Phân Giải Ngành/Chi Tự Động:**
+  1. *Chuẩn hóa Màu sắc Lịch Giỗ (Clean Lunar Red & Brand Synergy Headers):*
+     - Căn nguyên phân mảnh: Sử dụng nền vàng kem ngà (`bg-amber-100`) ở chân thẻ PC tạo cảm giác cắt khúc và phân mảnh thị giác. Đỉnh tháng tương lai màu xám than u ám thiếu sinh khí dòng họ.
+     - Giải pháp Clean Lunar Red: Toàn bộ ngày âm trên hệ sinh thái Lịch Giỗ (Home Spotlight & `/anniversaries`) sử dụng đồng nhất màu ĐỎ SON (`text-red-600 dark:text-red-400`) trên nền giấy trắng sứ; chữ ngữ cảnh mang màu xám chì. Đỉnh tháng tương lai đổi sang Xanh Ngọc Lục Bảo Trầm (`bg-emerald-800 text-white font-bold`) tạo sự ấm cúng, sang trọng và kết nối với nhận diện dòng họ, đồng thời nhường trọn sự thiêng liêng rực rỡ cho ngày Hôm Nay Giỗ (`bg-red-600`).
+  2. *Bố cục Âm lịch Tối ưu hóa Riêng biệt cho PC và Mobile (Responsive Dual Anatomy):*
+     - Trên PC (Cột 185px): Dùng bố cục **Lệch Trái 2 Dòng (Left-Aligned 2-Row Split)**. Số ngày âm to đỏ (`text-3xl font-black`) căn trái cao 2 dòng; kề bên phải gồm 2 dòng: dòng trên là `tháng 8 âm lịch` (`text-xs font-bold`), dòng dưới là `Năm Bính Ngọ` (`text-[11px] font-medium text-slate-500`). Cụm nội dung vừa vặn tuyệt đối trong bề ngang hẹp 185px, không bị gãy dòng hay ép chữ.
+     - Trên Mobile (Toàn bề ngang thẻ): Dùng bố cục **Dàn Ngang 2 Mép (`justify-between`)**. Mép trái là `19 tháng 8 âm lịch` (số 19 đỏ to, tháng kề bên), mép phải là `Năm Bính Ngọ`, tận dụng trọn vẹn bề ngang màn hình điện thoại mà không bị xộc xệch.
+  3. *Phân giải Phụ hệ Tự động cho Ngành & Chi (Automated Branch Hierarchy Resolution):*
+     - Tận dụng `resolveMemberBranchHierarchy` từ `branch-engine.ts` để tự động truy vết phụ hệ từ người giỗ lên Cụ Khởi Nhánh (`rootMemberId`) đã cấu hình trong `clan_settings.branches`.
+     - Hiển thị chuẩn hóa phân tầng dạng `Đời 12 · Chi 2 · Hưởng thọ 46t` (hoặc `Đời 12 · Ngành 1 · Chi 2 · Hưởng thọ 46t`), giúp con cháu nhận diện ngay danh tính và cội nguồn người giỗ trên cả trang chủ lẫn trang Lịch Giỗ.
+
+- **Tôn Trọng Nhận Diện Thương Hiệu Cốt Lõi (Brand Sovereignty) vs Phong Cách Bố Cục (Presentation Profile) & Hình Học Mực Thước (Anti-Bubble Geometry):**
+  1. *Căn nguyên lỗi "Lạc Quẻ" (Presentation Style vs Full Theme Override Trap):* Khi bổ sung Design Profile mới (như `heritage`), việc nhầm lẫn giữa "Phong cách trình bày" (thay đổi cấu trúc thẻ Lịch Giỗ sang cuốn Bloc truyền thống) với "Chủ đề màu sắc toàn hệ thống" (nhuộm đỏ toàn bộ H1, eyebrow, selection, glow nền) sẽ phá vỡ bản sắc nhận diện thương hiệu của dòng họ. Tiêu đề H1 "DÒNG HỌ PHẠM VĂN" và Eyebrow bắt buộc phải là Xanh Lục Bảo Gradient (`emerald-600`/`teal-600`). Tính năng đổi màu chủ đề cho sự kiện/chào mừng phải là một phân hệ độc lập riêng sau này, không được gộp vào Profile.
+  2. *Hình học mực thước Anti-Bubble & Trục gióng đồng nhất:*
+     - Lạm dụng góc bo quá tròn `rounded-2xl` (16px) làm giao diện dòng họ có cảm giác bong bóng, thiếu đi nét tôn nghiêm mực thước của phả hệ. Quy chuẩn: Dùng `rounded-xl` (12px) cho card và `rounded-lg` (8px) cho controls/nút bấm.
+     - Thẻ Spotlight Lịch Giỗ trang chủ bắt buộc nới rộng lên `max-w-3xl` (768px) để gióng thẳng hàng tuyệt đối với Khung Hero và Banner PWA, xóa bỏ hoàn toàn lỗi "thắt eo" bố cục.
+  3. *Làm dịu bảng màu & Nút hành động đồng điệu:*
+     - Thẻ trang chủ: Nút CTA chính đổi sang Xanh Lục Bảo `bg-emerald-600 hover:bg-emerald-700` để hài hòa tự nhiên với toàn trang.
+     - Trang `/anniversaries`: Đỉnh các ngày tương lai đổi từ đen xì sang xám trầm thanh lịch `bg-slate-700`; chân âm lịch đổi từ vàng nghệ chói sang kem ngà dịu mắt `bg-amber-100 text-amber-900`; dọn sạch chữ `| Năm Bính Ngọ` lơ lửng trên header PC.
+  1. *Căn nguyên bài toán (Visual Transformation vs Risk Governance):* Khi nâng cấp giao diện toàn diện (như chuyển từ phong cách Classic Minimalist ngọc lục bảo sang Modern Vietnamese Heritage Đỏ son - Hoàng kim và Lịch Bloc), việc thay thế cứng nhắc sẽ tiềm ẩn rủi ro sốc thị giác cho con cháu, hoặc không thể kiểm thử an toàn trên dữ liệu thật của dòng họ.
+  2. *Kiến trúc Design Profile Switcher (`/admin/theme`):*
+     - Lưu trữ tập trung tại `clan_settings.theme_config` JSONB với 2 Profile chuẩn hóa: `classic` (Tối giản hiện đại) và `heritage` (Truyền thống dòng tộc).
+     - Hỗ trợ 3 tầng phân quyền triển khai (Rollout Scope): `all` (Toàn bộ dòng họ và công chúng), `admin_only` (Chỉ Super Admin trải nghiệm trước để duyệt và nghiệm thu trên live data), `custom_users` (Chỉ định whitelist các thành viên cụ thể cùng tham gia beta test).
+  3. *Kỹ thuật Phân giải Server-Side Zero-FOUC (Zero Flash of Unstyled Content):*
+     - Tuyệt đối KHÔNG phân giải theme profile thuần túy bằng Client-side State/Hook vì sẽ gây nháy giao diện (FOUC: Flash từ Classic sang Heritage sau khi load).
+     - Phân giải profile hiệu lực (`effectiveThemeProfile`) ngay trong Server Component tại `src/app/layout.tsx` thông qua `cookies()` (`fat_theme_config_cache` maxAge 300s, `fat_dev_theme_config`), tiêm trực tiếp thuộc tính `data-theme-profile="heritage" | "classic"` vào thẻ `<html>` trong HTML stream ban đầu.
+     - Khi `data-theme-profile="heritage"`, toàn bộ CSS ambient background, selection highlight và các widget Lịch Giỗ tự động chuyển sang phong cách Lịch Bloc truyền thống mượt mà, tức thì, 0ms delay.
+  4. *Tương thích Role Impersonation:* Khi Super Admin sử dụng chế độ đóng vai khách vãng lai (`guest`) hoặc con cháu (`claimed_member`), nếu scope đang là `admin_only`, hàm phân giải `resolveEffectiveThemeProfile` tôn trọng vai đóng để Admin kiểm chứng chính xác những gì con cháu đang nhìn thấy.
+
 - **Đồng Bộ Ma Trận Phân Quyền & Cờ Tính Năng Kill Switch Quản Trị Rủi Ro Dữ Liệu Gia Tộc (Role Matrix Sync & Risk Governance Kill Switch):**
   1. *Căn nguyên rủi ro (Data Sprawl & Governance Dilemma):* Khi trao quyền cho con cháu (`claimed_member`) tự quản lý gia đình của mình (thêm vợ con, sửa hồ sơ), hệ thống đối mặt với nguy cơ mất kiểm soát dữ liệu nếu có sự cố nhập liệu sai lệch hàng loạt hoặc trong thời gian dòng họ cần "chốt sổ phả hệ" để in ấn, đối soát. Nếu chỉ dựa vào quyền RBAC cứng, BQT buộc phải hạ quyền từng tài khoản rất phức tạp.
   2. *Giải pháp Kill Switch 2 Tầng (Feature Flag + RBAC Synergy):*

@@ -1,4 +1,75 @@
-import type { ClanFeatureFlags, UserRole } from '@/types/database';
+import type {
+  ClanFeatureFlags,
+  ClanThemeConfig,
+  DesignProfileId,
+  ThemeApplyScope,
+  UserRole,
+} from '@/types/database';
+
+export const DEFAULT_THEME_CONFIG: ClanThemeConfig = {
+  active_profile: 'classic',
+  apply_scope: 'all',
+  allowed_user_ids: [],
+};
+
+/**
+ * Phân giải an toàn cấu hình Theme Profile với fallback mặc định
+ */
+export function resolveThemeConfig(config?: Partial<ClanThemeConfig> | null): ClanThemeConfig {
+  if (!config || typeof config !== 'object') {
+    return { ...DEFAULT_THEME_CONFIG };
+  }
+
+  const active_profile: DesignProfileId =
+    config.active_profile === 'heritage' ? 'heritage' : 'classic';
+
+  const apply_scope: ThemeApplyScope =
+    config.apply_scope === 'admin_only' || config.apply_scope === 'custom_users'
+      ? config.apply_scope
+      : 'all';
+
+  const allowed_user_ids: string[] = Array.isArray(config.allowed_user_ids)
+    ? config.allowed_user_ids.filter((id): id is string => typeof id === 'string')
+    : [];
+
+  return {
+    active_profile,
+    apply_scope,
+    allowed_user_ids,
+  };
+}
+
+/**
+ * Tính toán Theme Profile hiệu lực dựa trên cấu hình và người dùng hiện tại
+ */
+export function resolveEffectiveThemeProfile(
+  config?: Partial<ClanThemeConfig> | null,
+  currentUser?: { id?: string; role?: UserRole; isSuperAdmin?: boolean } | null
+): DesignProfileId {
+  const resolved = resolveThemeConfig(config);
+  if (resolved.active_profile === 'classic') {
+    return 'classic';
+  }
+
+  // Nếu active_profile là 'heritage':
+  if (resolved.apply_scope === 'all') {
+    return 'heritage';
+  }
+
+  if (resolved.apply_scope === 'admin_only') {
+    return currentUser?.isSuperAdmin ? 'heritage' : 'classic';
+  }
+
+  if (resolved.apply_scope === 'custom_users') {
+    if (currentUser?.isSuperAdmin) return 'heritage';
+    if (currentUser?.id && resolved.allowed_user_ids.includes(currentUser.id)) {
+      return 'heritage';
+    }
+    return 'classic';
+  }
+
+  return 'classic';
+}
 
 export const DEFAULT_FEATURE_FLAGS: ClanFeatureFlags = {
   enable_public_tree: true,

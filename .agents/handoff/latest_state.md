@@ -1,33 +1,35 @@
 # STATE MANIFEST
 ### 1. Key Context
-- Dự án: FAT - Family Tree Management System (Next.js 14 App Router, TypeScript, TailwindCSS, Supabase PostgreSQL).
-- Milestone 8: Member Onboarding & Decentralized Approval.
-  + Phase 1: Onboarding, Form Nhận/Nối Người Thân & Refinement UX (Hoàn thành 100%).
-  + Phase 2: Quyền Tự Quản Gia Đình Của Bạn & Ngữ Cảnh Thao Tác Trong Drawer (Anti-Pill & Contextual Actions, Hoàn thành 100%).
-  + Phase 2.5: Quản Trị Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc Drawer (Hoàn thành 100%):
-    * Lõi RBAC Tam Đại: Mở rộng `canUserManageMember` trong `src/lib/claims/claim-engine.ts` cho phép ông bà ($F_0$) quản lý/sửa hồ sơ cháu trực hệ ($F_2$).
-    * Edge Case 9: Tự động thu hồi quyền sửa của $F_0$ khi cháu ($F_2$) hoặc cha/mẹ ($F_1$) đã tự nhận tài khoản riêng (`linked_user_id` / `claimed_by`).
-    * Định vị thân tộc: Khối con cái trong `MemberDetailDrawer.tsx` hiển thị `Con cái (Cháu của bạn) (N):` khi $F_0$ xem con ruột $F_1$.
-    * Thuần Việt hóa Hôn phối: `Vợ (N):` & `+ Thêm vợ` cho Nam; `Chồng (N):` & `+ Thêm chồng` cho Nữ; `MemberFormModal.tsx` hiển thị `Thêm Vợ Cho:` / `Thêm Chồng Cho:`.
-    * Tooltip Đặt làm Gốc: Bổ sung tooltip giải thích ý nghĩa lọc nhánh và đổi góc nhìn xưng hô thân tộc cho nút `[🎯 Đặt làm Gốc]` (vừa được tinh chỉnh câu chữ trực tiếp trong Drawer).
-- Hệ thống kiểm chứng Code-First 3 Tầng:
-  + Typecheck: 0 lỗi (`npm.cmd run typecheck`).
-  + Build: 34/34 routes xanh (`npm.cmd run build`).
-  + Test Suite: 388/388 tests PASS, 37/37 suites (`npm.cmd test`, bổ sung 5 tests mới cho Phase 2.5, 0 failures so với Known_Failing_Baseline).
-- Các file đang mở / vừa chỉnh sửa:
-  + `src/lib/claims/claim-engine.ts`
-  + `src/components/tree/MemberDetailDrawer.tsx`
-  + `src/components/modals/MemberFormModal.tsx`
-  + `tests/decentralized-claim.test.ts`
-  + `docs/17_Micro-Spec_Milestone_8_Member_Onboarding_Decentralized_Approval.md` (Đã reverse-sync tick PASS Mục 7.1)
-  + `.agents/brain/lessons_learned.md` (Đã ghi nhận bài học kinh nghiệm Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc)
-  + `task.md` (Đã cập nhật tiến độ Phase 2.5)
+- **Nhiệm vụ vừa thực hiện:** Hoàn thiện Milestone 9 (Design Profiles Switcher & Tái thiết kế Lịch Giỗ theo phong cách Lịch Bloc truyền thống), chuẩn hóa nhận diện thương hiệu theo Phương Án A (Clean Lunar Red) và bố cục riêng biệt cho PC vs Mobile.
+- **Các quyết định kỹ thuật & thiết kế đã chốt:**
+  1. *Brand Sovereignty:* Giữ nguyên nhận diện màu chủ đạo Xanh Lục Bảo (`emerald-600`) cho H1 "DÒNG HỌ PHẠM VĂN", Eyebrow, Logo, Navbar, và nút CTA chính. Tính năng đổi màu chủ đề cho sự kiện/chào mừng sẽ tách riêng, không gộp vào Design Profile.
+  2. *Phương Án A (Clean Lunar Red):* Xóa bỏ hoàn toàn dải chân nền vàng kem ngà (`bg-amber-100`) tại Desktop Timeline. Mọi ngày âm lịch trên hệ thống đồng nhất sử dụng số màu ĐỎ SON (`text-red-600 dark:text-red-400 font-black`) trên nền giấy trắng sứ, chữ ngữ cảnh mang màu xám chì.
+  3. *Đỉnh Bloc Tháng Tương Lai:* Chuyển từ xám than sang Xanh Ngọc Lục Bảo Trầm (`bg-emerald-800 text-white font-bold`) để kết nối với nhận diện dòng họ, nhường sắc đỏ rực cho ngày Hôm Nay Giỗ (`bg-red-600`).
+  4. *Bố cục Âm lịch Thẻ Home Spotlight (Responsive Dual Anatomy):*
+     - **Trên Desktop (PC - md+):** Bố cục Lệch Trái 2 Dòng (Left-Aligned 2-Row Split). Số ngày âm `19` đỏ to căn trái cao 2 dòng; kề bên phải gồm 2 tầng: tầng trên là `tháng 8 âm lịch` (`text-xs font-bold`), tầng dưới là `Năm Bính Ngọ` (`text-[11px] font-medium`). Cụm được căn giữa hoàn hảo trong cột Lịch Bloc 185px.
+     - **Trên Mobile (< md):** Bố cục Dàn Ngang 2 Mép (`justify-between`). Mép trái là `19 tháng 8 âm lịch`, mép phải là `Năm Bính Ngọ` (chuẩn 100% theo ảnh chụp thiết kế thực tế).
+  5. *Tự động phân giải Ngành & Chi:* Tích hợp `resolveMemberBranchHierarchy` từ `branch-engine.ts` để tự động truy vết phụ hệ từ người giỗ lên Cụ Khởi Nhánh (`rootMemberId`) đã khai báo trong `clan_settings.branches`, hiển thị chuẩn hóa phân tầng `Đời 12 · Chi 2 · Hưởng thọ 46t`.
+- **Môi trường & Trạng thái Kiểm chứng:**
+  - `npm run typecheck` $\rightarrow$ Exit 0 (0 errors).
+  - `npm test` $\rightarrow$ Exit 0 (417/417 tests passed, 0 failures, 0 regressions).
+  - `npm run build` $\rightarrow$ Exit 0 (38/38 routes compile & generate tĩnh thành công).
+  - Dev server đang chạy trên terminal nền tại cổng `http://localhost:3000`.
+- **Log / Lưu ý khi test trên trình duyệt:**
+  - Khi chạy `npm run build` kiểm chứng trong lúc dev server đang chạy, Next.js sinh lại chunk hash mới. Trình duyệt client nếu đang mở tab cũ cần **Hard Refresh (`Ctrl + Shift + R` hoặc `Ctrl + F5`)** để nạp lại đúng bundle dev sạch, tránh lỗi chunk 404 tạm thời.
 
 ### 2. Task Checklist
-- [x] Phase 1: Onboarding, Form Nhận/Nối Người Thân & Refinement UX
-- [x] Phase 2: Quyền Tự Quản Gia Đình Của Bạn & Ngữ Cảnh Thao Tác Trong Drawer (Anti-Pill & Contextual Actions)
-- [x] Phase 2.5: Quản Trị Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc Drawer
-- [ ] Phase 3: Phê Duyệt Phân Tán (3 tầng), Cơ Chế Ủy Quyền Cho Trưởng Chi & Cổng Quản Trị Chi Nhánh (`/branch`)
+- [x] Tạo migration `20260930000000_add_theme_config.sql` & cập nhật `src/types/database.ts`
+- [x] Xây dựng theme engine `admin-engine.ts`, cập nhật API `/api/clan-settings` và `AdminSidebar.tsx`
+- [x] Tạo trang Quản trị Giao diện `/admin/theme` với 2 Profile, 3 mức Scope và Live Preview
+- [x] Triển khai Server-side Zero-FOUC injection trong `src/app/layout.tsx` & CSS tokens trong `src/app/globals.css`
+- [x] Xây dựng `AnniversaryBlocCard.tsx` (Home Spotlight) và `AnniversaryBlocTimeline.tsx` (`/anniversaries`)
+- [x] Tích hợp phân giải Ngành & Chi tự động vào `src/lib/anniversaries/anniversary-engine.ts`
+- [x] Chuẩn hóa Phương Án A (Clean Lunar Red) và đỉnh tháng tương lai `bg-emerald-800`
+- [x] Cập nhật bố cục Âm lịch Home Spotlight: PC (Lệch trái 2 dòng) vs Mobile (Dàn ngang 2 mép)
+- [x] Viết unit tests tự động cho Theme Engine (`tests/theme-profile-engine.test.ts`) và Ngành/Chi Lịch Giỗ (`tests/anniversary.test.ts`)
+- [x] Vòng lặp kiểm chứng 3 tầng: Typecheck pass, Test pass (417/417), Build pass (38/38 routes)
+- [x] Cập nhật Đặc tả Vi mô `docs/18_Micro-Spec_Milestone_9_Design_Profiles_And_Anniversary_Bloc.md` và ghi bài học vào `.agents/brain/lessons_learned.md`
+- [ ] Mời User thực hiện Human Visual UAT trên trình duyệt tại `http://localhost:3000`
 
 ### 3. Immediate Next Step
-- Khởi động **Phase 3 của Milestone 8**: Thảo luận / Lên đặc tả chi tiết cho cơ chế Phê duyệt phân tán (Super Admin gán phiếu cho Trưởng Chi xác minh, Trưởng Chi duyệt phiếu tạo node tự động cập nhật cây) và giao diện Cổng Quản Trị Chi (`/branch`).
+- Người dùng mở trình duyệt, thực hiện Hard Refresh (`Ctrl + Shift + R`) tại `http://localhost:3000` và `http://localhost:3000/anniversaries` để nghiệm thu thị giác (Human Visual UAT) trên cả giao diện Desktop và Mobile.

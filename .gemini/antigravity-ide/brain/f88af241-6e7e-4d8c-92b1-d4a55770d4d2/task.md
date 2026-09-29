@@ -1,0 +1,21 @@
+# Task Tracking: Hệ Thống Cấu Hình Profile Giao Diện & Tái Thiết Kế Lịch Giỗ
+
+- [x] Phục hồi trạng thái từ handoff `thiet-ke-lai-giao-dien-lich-gio.md` <!-- id: 0 -->
+- [x] Thực hiện `/feature-brainstorm`: Khảo sát kiến trúc hiện tại (DB, Admin Settings, Feature Flags, Theme Context) <!-- id: 1 -->
+- [x] Đánh giá 3 chiều (Litmus Test), Blast Radius, Phân tích rủi ro & cơ chế Canary/Rollout <!-- id: 2 -->
+- [x] Thiết kế kiến trúc Design Profiles (Classic vs Heritage), Clan Settings schema & Scope Targeting <!-- id: 3 -->
+- [x] Xuất bản `implementation_plan.md` và chốt Phương án A, Route `/admin/theme` cùng User <!-- id: 4 -->
+- [x] Chạy `/feature-spec` khởi tạo `docs/18_Micro-Spec_Milestone_9_Design_Profiles_And_Anniversary_Bloc.md` <!-- id: 5 -->
+- [x] Thực hiện `/feature-code`:
+  - [x] Tạo migration `20260930000000_add_theme_config.sql` & cập nhật `src/types/database.ts`
+  - [x] Triển khai theme engine `admin-engine.ts` & cập nhật API `/api/clan-settings`
+  - [x] Tạo test suite `tests/theme-profile-engine.test.ts` (7/7 tests passed)
+  - [x] Cập nhật `AdminSidebar.tsx`, tạo `src/app/admin/theme/loading.tsx` & `page.tsx`
+  - [x] Cập nhật Server-side Zero-FOUC trong `src/app/layout.tsx` & CSS tokens `globals.css`
+  - [x] Tạo component `AnniversaryBlocCard.tsx` & `AnniversaryBlocTimeline.tsx`
+  - [x] Tích hợp conditional rendering trong `src/app/page.tsx` & `src/app/anniversaries/page.tsx`
+  - [x] Kiểm chứng Tầng 1: `npm run typecheck` (0 errors), `npm run build` (38/38 routes ok)
+  - [x] Kiểm chứng Tầng 2: `npm test` (415/415 tests pass, 0 failures)
+  - [x] Ghi nhận bài học kinh nghiệm vào `.agents/brain/lessons_learned.md`
+  - [x] Reverse-sync Spec: Tick `[x]` cho Mục 7.1 và Mục 8 trong Milestone 9 Spec
+- [ ] Bàn giao cho User thực hiện Human Visual UAT (Mục 7.2) <!-- id: 6 -->

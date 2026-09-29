@@ -15,6 +15,7 @@ import {
   Shield,
   X,
   ClipboardList,
+  Palette,
 } from 'lucide-react';
 import FamilyTreeIcon from '../icons/FamilyTreeIcon';
 
@@ -83,6 +84,11 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: 'VẬN HÀNH & HỆ THỐNG',
     items: [
+      {
+        href: '/admin/theme',
+        label: 'Giao Diện & Profile',
+        icon: Palette,
+      },
       {
         href: '/admin/features',
         label: 'Bật/Tắt Tính Năng',

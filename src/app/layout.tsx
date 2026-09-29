@@ -8,7 +8,13 @@ import TopProgressBar from '@/components/navigation/TopProgressBar';
 import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister';
 import RoleImpersonationBanner from '@/components/admin/RoleImpersonationBanner';
 import { createClient } from '@/lib/supabase/server';
-import { resolveFeatureFlags, resolveEffectiveRole, type ImpersonatedRole } from '@/lib/admin/admin-engine';
+import {
+  resolveFeatureFlags,
+  resolveEffectiveRole,
+  resolveThemeConfig,
+  resolveEffectiveThemeProfile,
+  type ImpersonatedRole,
+} from '@/lib/admin/admin-engine';
 import { cookies } from 'next/headers';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -53,12 +59,15 @@ export default async function RootLayout({
   let isGuest = true;
   let enablePublicTree = true;
   let featureFlags = resolveFeatureFlags(undefined);
+  let themeConfig = resolveThemeConfig(undefined);
   let isSuperAdmin = false;
+  let currentUserId: string | undefined = undefined;
 
   try {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    currentUserId = user?.id;
 
     const devUser = cookieStore.get('fat_dev_user')?.value;
     isGuest = !user && !(process.env.NODE_ENV === 'development' && devUser);
@@ -90,6 +99,11 @@ export default async function RootLayout({
     const devFlagsCookie = cookieStore.get('fat_dev_feature_flags')?.value;
     const targetCookie = devFlagsCookie || cacheCookie;
 
+    // Đọc theme config: Ưu tiên cookie cache
+    const themeCacheCookie = cookieStore.get('fat_theme_config_cache')?.value;
+    const devThemeCookie = cookieStore.get('fat_dev_theme_config')?.value;
+    const targetThemeCookie = devThemeCookie || themeCacheCookie;
+
     if (targetCookie) {
       try {
         const parsed = JSON.parse(decodeURIComponent(targetCookie));
@@ -97,15 +111,29 @@ export default async function RootLayout({
       } catch {
         // ignore
       }
-    } else {
+    }
+
+    if (targetThemeCookie) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(targetThemeCookie));
+        themeConfig = resolveThemeConfig(parsed);
+      } catch {
+        // ignore
+      }
+    }
+
+    if (!targetCookie || !targetThemeCookie) {
       const { data: clanData } = await supabase
         .from('clan_settings')
-        .select('feature_flags')
+        .select('feature_flags, theme_config')
         .limit(1)
         .single();
 
-      if (clanData?.feature_flags) {
+      if (!targetCookie && clanData?.feature_flags) {
         featureFlags = resolveFeatureFlags(clanData.feature_flags);
+      }
+      if (!targetThemeCookie && clanData?.theme_config) {
+        themeConfig = resolveThemeConfig(clanData.theme_config);
       }
     }
 
@@ -122,8 +150,15 @@ export default async function RootLayout({
   const effectiveIsGuest = isGuest || effectiveRole === 'guest';
   const effectiveIsSuperAdmin = isSuperAdmin && effectiveRole === 'super_admin';
 
+  // Xác định Theme Profile hiệu lực
+  const effectiveThemeProfile = resolveEffectiveThemeProfile(themeConfig, {
+    id: currentUserId,
+    role: effectiveRole as any,
+    isSuperAdmin: effectiveIsSuperAdmin,
+  });
+
   return (
-    <html lang="vi" className={`h-full ${beVietnamPro.variable}`} suppressHydrationWarning>
+    <html lang="vi" data-theme-profile={effectiveThemeProfile} className={`h-full ${beVietnamPro.variable}`} suppressHydrationWarning>
       <head>
         {/* Script khởi tạo Theme an toàn chống FOUC: Mặc định Light, chỉ Dark khi đã lưu */}
         <script
@@ -161,7 +196,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased min-h-screen flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900">
+      <body className="antialiased min-h-screen flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900 dark:selection:bg-emerald-950/80 dark:selection:text-emerald-200">
         <TopProgressBar />
         <ServiceWorkerRegister />
         <RoleImpersonationBanner />

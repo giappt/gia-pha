@@ -39,6 +39,16 @@ export interface ClanFeatureFlags {
   maintenance_mode: boolean;
 }
 
+export type DesignProfileId = 'classic' | 'heritage';
+
+export type ThemeApplyScope = 'all' | 'admin_only' | 'custom_users';
+
+export interface ClanThemeConfig {
+  active_profile: DesignProfileId;
+  apply_scope: ThemeApplyScope;
+  allowed_user_ids: string[];
+}
+
 export interface ClanSettings {
   id: string;
   clan_name: string;
@@ -50,6 +60,7 @@ export interface ClanSettings {
   anniversary_notify_days_before: number;
   allow_public_tree_view: boolean;
   feature_flags?: ClanFeatureFlags;
+  theme_config?: ClanThemeConfig;
   created_at: string;
   updated_at: string;
 }

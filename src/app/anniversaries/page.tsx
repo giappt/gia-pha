@@ -33,6 +33,7 @@ import {
 import type { BranchNode } from '@/types/database';
 import type { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
+import AnniversaryBlocTimeline from '@/components/anniversaries/AnniversaryBlocTimeline';
 
 export default function AnniversariesPage() {
   const [dayGroups, setDayGroups] = useState<AnniversaryDayGroup[]>([]);
@@ -48,6 +49,17 @@ export default function AnniversariesPage() {
   const [scope, setScope] = useState<string>('all');
   const [lineageDepth, setLineageDepth] = useState<'from_root' | 'from_branch'>('from_root');
   const [viewerMemberId, setViewerMemberId] = useState<string | null>(null);
+  const [themeProfile, setThemeProfile] = useState<'classic' | 'heritage'>('classic');
+
+  // Khởi tạo theme profile từ attribute data-theme-profile trên thẻ html
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const profile = document.documentElement.getAttribute('data-theme-profile') as 'classic' | 'heritage';
+      if (profile === 'heritage' || profile === 'classic') {
+        setThemeProfile(profile);
+      }
+    }
+  }, []);
 
   // Nhận diện query param scope & depth từ URL (ví dụ mở từ Web Push Notification: /anniversaries?scope=my_lineage)
   useEffect(() => {
@@ -453,6 +465,9 @@ export default function AnniversariesPage() {
                 </Link>
               </div>
             </div>
+          ) : themeProfile === 'heritage' ? (
+            /* Modern Vietnamese Heritage Bloc Timeline */
+            <AnniversaryBlocTimeline groups={filteredGroups} />
           ) : (
             /* Timeline List */
             <div className="space-y-6">

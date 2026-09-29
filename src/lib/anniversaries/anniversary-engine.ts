@@ -9,6 +9,7 @@ import {
 } from '@/lib/lunar/vietnamese-lunar';
 import { findLowestCommonAncestor } from '@/lib/kinship-engine/lca-finder';
 import { resolveKinshipTerms } from '@/lib/kinship-engine/regional-dictionaries';
+import { resolveMemberBranchHierarchy } from '@/lib/tree-layout/branch-engine';
 
 function padZero(num: number): string {
   return num < 10 ? `0${num}` : `${num}`;
@@ -209,6 +210,8 @@ export function getUpcomingAnniversaries(
     region = 'north',
     customDictionary,
     spouseMap,
+    branches,
+    spouseRelations,
   } = options;
 
   const maxGen = members.reduce((max, m) => Math.max(max, getMemberGen(m)), 1);
@@ -286,6 +289,21 @@ export function getUpcomingAnniversaries(
       const lunarFormatted = `Âm lịch: Ngày ${padZero(day)}/${padZero(month)}`;
       const generation = getMemberGen(m);
       const branch = getMemberBranch(m);
+
+      let branchName: string | null = null;
+      let branchPath: string | null = null;
+      if (Array.isArray(branches) && branches.length > 0) {
+        try {
+          const branchRes = resolveMemberBranchHierarchy(m.id, members as any, branches, spouseRelations as any);
+          if (branchRes) {
+            branchName = branchRes.primaryBranchName || null;
+            branchPath = branchRes.branchPath ? branchRes.branchPath.replace(/\s*>\s*/g, ' · ') : null;
+          }
+        } catch {
+          // Bỏ qua lỗi nếu đồ thị rỗng
+        }
+      }
+
       const honorificPrefix = computeDeceasedHonorificPrefix(m, maxGen, relativeKinship);
       const displayName = honorificPrefix ? `${honorificPrefix} ${m.full_name}` : m.full_name;
 
@@ -295,7 +313,9 @@ export function getUpcomingAnniversaries(
         gender: m.gender,
         avatar_url: getMemberAvatar(m),
         generation,
-        branch_code: branch,
+        branch_code: branchName || branch,
+        branch_name: branchName,
+        branch_path: branchPath,
         birth_year: m.birth_year || null,
         death_year: m.death_year || null,
         death_lunar_day: day,
