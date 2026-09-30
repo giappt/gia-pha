@@ -29,7 +29,7 @@ Dự án tuân thủ nghiêm ngặt quy trình phát triển phần mềm có t�
 - 📖 [`docs/02_Project-Glossary.md`](file:///d:/pj/other/fat/docs/02_Project-Glossary.md): Bảng chỉ mục từ vựng chuẩn mực (Ubiquitous Language) và quy tắc nghiệp vụ.
 - 🗄️ [`docs/03_DB-Schema.md`](file:///d:/pj/other/fat/docs/03_DB-Schema.md): Lược đồ CSDL PostgreSQL chi tiết, ERD Mermaid và chuẩn API Contract.
 - 🎨 [`docs/04_UI-UX-Flow.md`](file:///d:/pj/other/fat/docs/04_UI-UX-Flow.md): Kiểm kê 9 màn hình, luồng điều hướng, Wireframe ASCII và khay thành viên chưa nối phả.
-- ⚙️ [`docs/05_Technical-Blueprint.md`](file:///d:/pj/other/fat/docs/05_Technical-Blueprint.md): Quyết định Tech Stack, cấu trúc thư mục và kế hoạch 5 Milestones.
+- [`docs/05_Technical-Blueprint.md`](file:///d:/pj/other/fat/docs/05_Technical-Blueprint.md): Quyết định Tech Stack, cấu trúc thư mục và kế hoạch 5 Milestones.
 - 🛡️ [`docs/06_Security-Threat-Model.md`](file:///d:/pj/other/fat/docs/06_Security-Threat-Model.md): Ma trận đe dọa, kiểm soát quyền riêng tư PII và bảo mật Cron.
 - 🧪 [`docs/07_Test-QA-Strategy.md`](file:///d:/pj/other/fat/docs/07_Test-QA-Strategy.md): Chiến lược kiểm thử 3 tầng, Fixture test và tiêu chuẩn Definition of Done.
 - 🚀 [`docs/08_Deployment-Environments.md`](file:///d:/pj/other/fat/docs/08_Deployment-Environments.md): Cấu hình Vercel, Supabase, biến môi trường và Vercel Cron.

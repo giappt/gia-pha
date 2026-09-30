@@ -48,22 +48,22 @@ export default function AnniversaryBlocTimeline({
         return (
           <div
             key={group.solar_date_str}
-            className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden"
+            className="rounded-card border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden"
           >
             {/* 1. GIAO DIỆN MOBILE (< sm): CHUẨN XÁC THEO WIREFRAME ĐÃ DUYỆT */}
             <div className="sm:hidden flex flex-col">
               {/* Header đỉnh: Icon lịch 58px chạm 2 mép + 3 dòng thông tin */}
               <div className="flex items-stretch border-b border-slate-100 dark:border-slate-800">
-                {/* Icon lịch chạm mép trên và mép trái (58px) */}
-                <div className="w-[58px] shrink-0 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col justify-between text-center select-none overflow-hidden">
-                  <div className={`py-1 text-[9px] font-black uppercase tracking-wider text-center shrink-0 ${stampHeaderBg}`}>
+                {/* Icon lịch chạm mép trên và mép trái (76px to rõ chuẩn tờ lịch bloc) */}
+                <div className="w-[76px] shrink-0 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col justify-between text-center select-none overflow-hidden">
+                  <div className={`py-1.5 text-xs font-black uppercase tracking-wider text-center shrink-0 ${stampHeaderBg}`}>
                     T.{group.solar_month < 10 ? `0${group.solar_month}` : group.solar_month}
                   </div>
-                  <div className="py-1 flex-1 flex flex-col justify-center items-center">
-                    <div className="text-xl font-black text-slate-950 dark:text-white leading-none">
+                  <div className="py-2 flex-1 flex flex-col justify-center items-center">
+                    <div className="text-3xl font-black text-slate-950 dark:text-white leading-none py-0.5">
                       {group.solar_day < 10 ? `0${group.solar_day}` : group.solar_day}
                     </div>
-                    <div className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase mt-0.5">
+                    <div className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase mt-1 tracking-wider">
                       {dayOfWeek}
                     </div>
                   </div>
@@ -128,7 +128,7 @@ export default function AnniversaryBlocTimeline({
 
                       <Link
                         href={`/tree?focusId=${member.id}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-200/80 dark:border-emerald-800 transition-colors shrink-0 shadow-xs"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-control bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-200/80 dark:border-emerald-800 transition-colors shrink-0 shadow-xs"
                       >
                         <FamilyTreeIcon className="w-3.5 h-3.5" />
                         <span>Xem Cây</span>
@@ -214,7 +214,7 @@ export default function AnniversaryBlocTimeline({
                       <div className="flex items-center gap-2 self-end sm:self-center">
                         <Link
                           href={`/tree?focusId=${member.id}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-200/80 dark:border-emerald-800 transition-colors shadow-xs"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-control bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-200/80 dark:border-emerald-800 transition-colors shadow-xs"
                         >
                           <FamilyTreeIcon className="w-3.5 h-3.5" />
                           <span>Xem Cây</span>

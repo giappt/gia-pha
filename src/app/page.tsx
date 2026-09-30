@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 import { Calendar, Compass, Shield, AlertCircle, Sparkles, Clock, ArrowRight } from 'lucide-react';
-import { getUpcomingAnniversaries, formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
+import { formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
+import { getUpcomingAnniversariesFeed } from '@/lib/services/anniversary.service';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 import { resolveFeatureFlags, resolveThemeConfig, resolveEffectiveThemeProfile } from '@/lib/admin/admin-engine';
 import InstallPwaButton, { PwaInstallBanner } from '@/components/pwa/InstallPwaButton';
@@ -129,7 +130,7 @@ export default async function HomePage({
     isSuperAdmin,
   });
 
-  // Fetch members to compute the nearest upcoming anniversary
+  // Fetch members to pass to IdentityContextWidget and AnniversaryService
   let membersList: MemberRecord[] = [];
   try {
     const { data: dbMembers, error: memberErr } = await supabase
@@ -139,8 +140,6 @@ export default async function HomePage({
 
     if (!memberErr && dbMembers && dbMembers.length > 0) {
       membersList = dbMembers as unknown as MemberRecord[];
-    } else {
-      membersList = [];
     }
   } catch {
     membersList = [];
@@ -162,12 +161,13 @@ export default async function HomePage({
     claimedMemberIds = [];
   }
 
-  // Calculate upcoming anniversaries over a full 365-day window to guarantee finding the nearest one
-  const upcomingAnniversaries = getUpcomingAnniversaries(membersList, {
+  // Calculate upcoming anniversaries over a full 365-day window via SSOT Domain Service
+  const upcomingAnniversaries = await getUpcomingAnniversariesFeed({
     daysAhead: 365,
     viewerMemberId: userProfile?.linked_member_id || undefined,
-    branches,
-    spouseRelations,
+    injectedMembers: membersList.length > 0 ? membersList : undefined,
+    injectedBranches: branches.length > 0 ? branches : undefined,
+    injectedSpouseRelations: spouseRelations.length > 0 ? spouseRelations : undefined,
   });
 
   const nearestGroup = upcomingAnniversaries.length > 0 ? upcomingAnniversaries[0] : null;

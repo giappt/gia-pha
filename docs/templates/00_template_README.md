@@ -23,7 +23,7 @@ Dưới đây là bản đồ tài liệu:
 - 📖 `02_Project-Glossary.md`: Từ điển thuật ngữ.
 - 🗄️ `03_DB-Schema.md`: Cấu trúc Database.
 - 🎨 `04_UI-UX-Flow.md`: Luồng hành vi người dùng (Wireframes).
-- ⚙️ `05_Technical-Blueprint.md`: Quyết định chọn Tech Stack.
+- `05_Technical-Blueprint.md`: Quyết định chọn Tech Stack.
 - 🛡️ `06_Security-Threat-Model.md`: Ma trận rủi ro và cách phòng chống.
 - 🧪 `07_Test-QA-Strategy.md`: Chiến lược kiểm thử.
 - 🚀 `08_Deployment-Environments.md`: Hướng dẫn Deploy và cấu hình CI/CD.

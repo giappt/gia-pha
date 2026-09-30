@@ -438,16 +438,16 @@ describe('Kinship SSOT & Seniority Engine Test Suite (TC37 - TC42)', () => {
       }
     }
 
-    // TC45: Kiểm tra cờ hiển thị badge 💍 Hôn phối
+    // TC45: Kiểm tra cờ hiển thị badge Hôn phối
     assert.strictEqual(
       directLineageNodes.find((n) => n.id === '4')?.isSpouse,
       false,
-      'Thẻ của Phạm Khắc Tường không được mang cờ isSpouse (không gắn badge 💍 Hôn phối)'
+      'Thẻ của Phạm Khắc Tường không được mang cờ isSpouse (không gắn badge Hôn phối)'
     );
     assert.strictEqual(
       directLineageNodes.find((n) => n.id === '5')?.isSpouse,
       true,
-      'Thẻ của Nguyễn Thị Hiến mang cờ isSpouse: true (gắn badge 💍 Hôn phối)'
+      'Thẻ của Nguyễn Thị Hiến mang cờ isSpouse: true (gắn badge Hôn phối)'
     );
   });
 

@@ -177,7 +177,7 @@ export default function IdentityContextWidget({
 
   return (
     <>
-      <div className="w-full max-w-2xl mx-auto mb-8 p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-xs transition-all">
+      <div className="w-full max-w-2xl mx-auto mb-8 p-3.5 sm:p-4 rounded-card bg-white/95 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-xs transition-all">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* User Avatar + Greeting */}
           <div className="flex items-center gap-3">

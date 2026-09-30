@@ -9,7 +9,7 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
 - **Thư viện cho phép:** Next.js 14 App Router, React 18, TypeScript, TailwindCSS, Lucide Icons (`lucide-react`), Supabase client.
 - **Ràng buộc Kiến trúc Nghiệp vụ Gia Phả:**
   - **Phân Định Hai Không Gian Rạch Ròi ("Hai Chiếc Áo"):**
-    1. **Không Gian Cá Nhân (User Settings):** Nằm gọn trong Dropdown Avatar (`AuthButton.tsx`) qua nút `[⚙️ Cài đặt của tôi]`. Mở Modal/Popover cá nhân: cho phép chọn chi nhánh theo dõi mặc định (`Toàn dòng họ` vs `Riêng [Tên Chi/Ngành]`), bật/tắt nhận chuông thông báo giỗ trên thiết bị này, lưu vào `localStorage` (khách) và `user_metadata` (khi đã đăng nhập).
+    1. **Không Gian Cá Nhân (User Settings):** Nằm gọn trong Dropdown Avatar (`AuthButton.tsx`) qua nút `[ Cài đặt của tôi]`. Mở Modal/Popover cá nhân: cho phép chọn chi nhánh theo dõi mặc định (`Toàn dòng họ` vs `Riêng [Tên Chi/Ngành]`), bật/tắt nhận chuông thông báo giỗ trên thiết bị này, lưu vào `localStorage` (khách) và `user_metadata` (khi đã đăng nhập).
     2. **Khu Vực Quản Trị Dòng Họ (Admin Portal):** Nằm tại `/admin`. Khi người dùng mang quyền `super_admin`, hiển thị nút **`[ 🛡️ Quản Trị Dòng Họ ]`** trực tiếp trên thanh Navbar (`Navbar.tsx`) giúp truy cập 1-click. Tuyệt đối không giấu lối vào admin vào dropdown cá nhân.
   - **Tôn Trọng Quyết Định Phạm Vi (Scope Boundary):** Tính năng con cháu xin nhận hồ sơ (Claim Profile / Approval Queue) được **GÁC LẠI (DEFERRED)** theo yêu cầu của User để hệ thống tinh gọn, tập trung hoàn thiện hạ tầng Ngành/Chi trước.
   - **Hệ Thống Phân Cấp Ngành & Chi Đa Tầng (Multi-Tier Branch Taxonomy):**
@@ -104,7 +104,7 @@ sequenceDiagram
     E-->>N: Trả về danh xưng chuẩn: "Đời 7 · Ngành 1 · Chi Trưởng"
 
     %% Luồng 3: Cài đặt cá nhân
-    U->>N: Click Avatar -> [⚙️ Cài đặt của tôi]
+    U->>N: Click Avatar -> [ Cài đặt của tôi]
     N->>U: Hiển thị Modal Cài đặt Cá nhân
     U->>N: Chọn focus "Chi Trưởng" -> Lưu
     N->>N: Lưu vào localStorage & lọc Lịch Giỗ theo Chi Trưởng
@@ -146,7 +146,7 @@ Mô-đun thuần túy (pure functions) xử lý Gia Phả phân chi:
   - Link: `/admin`.
 
 ### 5.2. File: `src/components/auth/AuthButton.tsx` & `PersonalSettingsModal.tsx`
-- Trong Dropdown Avatar, tách bạch mục **`[ ⚙️ Cài đặt của tôi ]`**:
+- Trong Dropdown Avatar, tách bạch mục **`[ Cài đặt của tôi ]`**:
   - Khi click: Mở Modal/Dialog nhỏ gọn `PersonalSettingsModal`.
   - **Kiến trúc Thoát Ly Containing Block (React Portal Architecture):** Sử dụng `createPortal(modalJSX, document.body)`, gắn `Escape` listener, lớp phủ `fixed inset-0 bg-slate-900/60 backdrop-blur-sm`, hộp modal cố định Header/Footer chống co cụt viewport.
 
@@ -270,7 +270,7 @@ Mô-đun thuần túy (pure functions) xử lý Gia Phả phân chi:
 - [ ] **UAT_01 (Lối Vào Quản Trị Rõ Ràng):** Đăng nhập với tài khoản Super Admin → Quan sát thanh Navbar xuất hiện nút `[ 🛡️ Quản Trị Dòng Họ ]` màu đồng/amber sang trọng, bấm 1 phát vào thẳng `/admin`.
 - [ ] **UAT_02 (Giao Diện Admin Phẳng - Anti Box-in-Box):** Truy cập `/admin` → Thấy thanh Tab phẳng với 2 phân hệ rõ ràng: `Cấu Trúc Ngành/Chi`, `🏛️ Thông Tin & Xưng Hô`. Chuyển tab mượt mà, không giật lag.
 - [ ] **UAT_03 (Thiết Lập Ngành & Chi Trực Quan):** Tại Tab `Cấu Trúc Ngành/Chi`, bấm thêm Ngành 1, thêm Chi con, chọn Cụ Tiền nhân làm Root Member → Lưu cấu trúc thành công.
-- [ ] **UAT_04 (Cài Đặt Cá Nhân Toàn Màn Hình - Portal Chuẩn Xác):** Bấm vào Avatar cá nhân trên Navbar → Chọn `[ ⚙️ Cài đặt của tôi ]` → Thấy Modal hiển thị trọn vẹn ở trung tâm màn hình, lớp nền tối bao phủ 100% trang web (kể cả Cây Gia Phả bên dưới). Thân modal hiển thị đầy đủ danh sách phân chi, chuông báo giỗ, nút Lưu. Bấm phím `Escape` hoặc bấm ra ngoài nền tối để đóng modal ngay lập tức.
+- [ ] **UAT_04 (Cài Đặt Cá Nhân Toàn Màn Hình - Portal Chuẩn Xác):** Bấm vào Avatar cá nhân trên Navbar → Chọn `[ Cài đặt của tôi ]` → Thấy Modal hiển thị trọn vẹn ở trung tâm màn hình, lớp nền tối bao phủ 100% trang web (kể cả Cây Gia Phả bên dưới). Thân modal hiển thị đầy đủ danh sách phân chi, chuông báo giỗ, nút Lưu. Bấm phím `Escape` hoặc bấm ra ngoài nền tối để đóng modal ngay lập tức.
 - [ ] **UAT_05 (Tự Động Kế Thừa Danh Xưng):** Mở Cây Gia Phả và Lịch Giỗ → Con cháu tự động hiển thị danh xưng tôn ti `Đời N · Ngành X · Chi Y` mà không cần nhập tay từng người.
 - [ ] **UAT_06 (Console Sạch):** Mở Developer Tools Console → 0 lỗi đỏ, 0 cảnh báo hydration.
 - [ ] **UAT_07 (Typography Chuẩn Mực):** Mọi văn bản hướng dẫn hiển thị mũi tên Unicode `→`, không còn mã nguồn thô LaTeX.

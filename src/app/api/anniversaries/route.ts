@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { MemberRecord } from '@/types/tree';
-import { getUpcomingAnniversaries, getExtendedFamilyMemberIds } from '@/lib/anniversaries/anniversary-engine';
-import { buildSpouseMap } from '@/lib/kinship-engine/lca-finder';
-import { KinshipRegion, CustomKinshipDictionary } from '@/types/kinship';
+import { getUpcomingAnniversariesFeed } from '@/lib/services/anniversary.service';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,105 +21,34 @@ export async function GET(request: NextRequest) {
     }
 
     let effectiveViewerId = viewerMemberId;
-    let members: MemberRecord[] = [];
-    let region: KinshipRegion = 'north';
-    let customDictionary: CustomKinshipDictionary | null = null;
-    let spouseMap: Map<string, string[]> | undefined;
 
-    let branches: any[] = [];
-    let spouseRelations: any[] = [];
-
-    try {
-      const supabase = createClient();
-
-      // Nếu chưa có viewerMemberId từ query, thử lấy từ session của user đăng nhập
-      if (!effectiveViewerId) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const { data: profile } = await supabase
-              .from('users')
-              .select('linked_member_id')
-              .eq('id', user.id)
-              .single();
-            if (profile?.linked_member_id) {
-              effectiveViewerId = profile.linked_member_id;
-            }
+    // Nếu chưa có viewerMemberId từ query, thử lấy từ session của user đăng nhập
+    if (!effectiveViewerId) {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('linked_member_id')
+            .eq('id', user.id)
+            .single();
+          if (profile?.linked_member_id) {
+            effectiveViewerId = profile.linked_member_id;
           }
-        } catch {
-          // Bỏ qua lỗi auth để fallback khách
-        }
-      }
-
-      // Nạp cấu hình từ điển, vùng miền và cây phân chi SSOT từ clan_settings
-      try {
-        const { data: clanSettings } = await supabase
-          .from('clan_settings')
-          .select('default_kinship_region, custom_kinship_dictionary, branches')
-          .limit(1)
-          .maybeSingle();
-
-        if (clanSettings?.default_kinship_region) {
-          region = clanSettings.default_kinship_region as KinshipRegion;
-        }
-        if (clanSettings?.custom_kinship_dictionary) {
-          customDictionary = clanSettings.custom_kinship_dictionary as CustomKinshipDictionary;
-        }
-        if (clanSettings?.branches && Array.isArray(clanSettings.branches)) {
-          branches = clanSettings.branches;
         }
       } catch {
-        // Bỏ qua lỗi cấu hình settings
+        // Bỏ qua lỗi auth để fallback khách
       }
-
-      // Nạp danh sách liên kết hôn phối từ database
-      try {
-        const { data: dbSpouses } = await supabase
-          .from('spouse_relations')
-          .select('member_a_id, member_b_id');
-        if (dbSpouses && dbSpouses.length > 0) {
-          spouseRelations = dbSpouses;
-          spouseMap = buildSpouseMap(dbSpouses, undefined);
-        }
-      } catch {
-        // Bỏ qua lỗi quan hệ hôn phối
-      }
-
-      const { data: dbMembers, error } = await supabase
-        .from('members')
-        .select('*')
-        .order('generation_level', { ascending: true });
-
-      if (!error && dbMembers && dbMembers.length > 0) {
-        members = dbMembers as unknown as MemberRecord[];
-      } else {
-        members = [];
-      }
-    } catch {
-      members = [];
     }
 
-    let data = getUpcomingAnniversaries(members, {
+    // Tiêu thụ dữ liệu tập trung từ SSOT Domain Service
+    const data = await getUpcomingAnniversariesFeed({
       daysAhead,
       viewerMemberId: effectiveViewerId,
-      branchFilter: branch,
-      region,
-      customDictionary,
-      spouseMap,
-      branches,
-      spouseRelations,
+      branch,
+      scope,
     });
-
-    // Lọc theo nhánh gia đình mở rộng của người xem nếu có yêu cầu scope=my_lineage
-    if (scope === 'my_lineage' && effectiveViewerId && members.length > 0) {
-      const lineageIds = getExtendedFamilyMemberIds(effectiveViewerId, members, spouseMap);
-      data = data
-        .map((group) => ({
-          ...group,
-          members: group.members.filter((m) => lineageIds.has(m.id)),
-        }))
-        .filter((group) => group.members.length > 0);
-    }
 
     const totalCount = data.reduce((acc, g) => acc + g.members.length, 0);
 

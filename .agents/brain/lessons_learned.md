@@ -1,5 +1,25 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
+- **Kiến Trúc Rào Chắn 4 Tầng, SSOT Domain Service & Semantic Design Tokens Động (Chấm Dứt Cát Cứ Dữ Liệu & Mockup Chắp Vá):**
+  1. *Căn nguyên Cát Cứ Dữ Liệu (Siloed Data Fetching Trap):*
+     - Khi mỗi Server Component (`src/app/page.tsx`) và Route API (`/api/anniversaries`) tự viết code query Supabase và tính toán ngày giỗ riêng lẻ, dẫn tới trang `/anniversaries` bị mất Ngành & Chi trong khi Home có.
+     - Giải pháp: Thiết lập luật `[R-ARCH.DOMAIN_SERVICE]` và xây dựng `src/lib/services/anniversary.service.ts` làm Single Source of Truth duy nhất nạp DB, tính toán ngày giỗ Âm - Dương và phân giải `branch_path`. Cả Home, API và Cron chỉ gọi chung một hàm `getUpcomingAnniversariesFeed`.
+  2. *Căn nguyên Mockup Thô Sơ Trong Xem Trước (SSOT Preview Contract):*
+     - Khi làm Live Preview tại `/admin/theme`, việc dev tự gõ chay thẻ `<div>` HTML giả lập (`"19/08 Âm Lịch"`, chân pill vàng) khiến Preview bị chắp vá và không bao giờ phản ánh đúng component thật khi production thay đổi.
+     - Giải pháp: Thiết lập luật `[R-UI.SSOT_PREVIEW]`, tạo Shared Fixtures Factory `src/fixtures/anniversary-fixtures.ts` và xuất khẩu `AnniversaryBlocCardPreview` tái sử dụng 100% component thật. Khóa mã bằng test AST `tests/architecture-ssot.test.ts`.
+  3. *Căn nguyên Hardcode Hình Học Phân Tán (Dynamic Semantic Tokens First):*
+     - Việc rải rác class `rounded-2xl` hay `rounded-xl` cứng ngắc trên 50+ files khiến khi đổi Profile giao diện không thể đổi bo góc đồng bộ (thẻ 12px, widget 16px cọc cạch).
+     - Giải pháp: Thiết lập luật `[R-DESIGN.TOKENS]`, khai báo biến CSS `--radius-card` theo thuộc tính `data-theme-profile` trong `globals.css`, nối vào `tailwind.config.ts` thành semantic class `rounded-card`. Toàn bộ các card trên hệ thống (Home, Admin, Banner, Modal) tự động co/dãn bo góc đồng loạt theo Profile mà 95% component không cần viết lại.
+  4. *Căn nguyên Lỗi Mất Dữ Liệu Ngầm do Sai Tên Cột SQL (Silent Column Drift):*
+     - Khi truy vấn Supabase trong Service tập trung: `select('default_kinship_region, custom_kinship_dictionary, branches')`, trong khi tên cột thực tế trong bảng `clan_settings` của PostgreSQL là `regional_preset`. Postgres ném lỗi `column does not exist`, `try...catch` nuốt lỗi làm `branches` rỗng, dẫn đến trang `/anniversaries` mất sạch Ngành/Chi.
+     - Giải pháp: Sửa câu lệnh select thành `regional_preset`, viết unit test khóa cứng tên cột SQL trong file service.
+  5. *Đồng Bộ Nhịp Điệu Hình Học Nút & Khung (Geometric Rhythm via rounded-control):*
+     - Nút dùng `rounded-lg` (8px), nút dùng `rounded-xl` (12px), khung dùng 12px gây lệch nhịp thị giác.
+     - Giải pháp: Quy tụ 100% nút bấm về `rounded-control` (4px cho heritage, 8px cho classic) và khung thẻ về `rounded-card` (6px cho heritage, 16px cho classic). Mọi nút bấm và card đều chuyển động mượt mà, đồng điệu khi đổi Profile.
+  6. *Phân Định Phong Cách Hình Học Hai Profile (Heritage Bo Góc Ít Hơn Để Tạo Khác Biệt Với Classic):*
+     - Việc tăng bo góc lên 20px cho Profile `heritage` khiến giao diện bị "tròn bồng bềnh" (bubbly), mất đi tính uy nghiêm, mực thước của tờ lịch bloc cổ kính.
+     - Bài học & Giải pháp: Profile `classic` giữ phong cách hiện đại bo cong mềm mại (`--radius-card: 1rem` [16px], `--radius-control: 0.5rem` [8px]). Profile `heritage` quy chuẩn **góc bo tròn ít hơn rõ rệt** (`--radius-card: 0.375rem` [6px], `--radius-control: 0.25rem` [4px]) tạo nên đường nét vuông vắn, đĩnh đạc, cứng cáp như tờ lịch bloc xé tay truyền thống, khắc họa sự tương phản phong cách dứt khoát giữa hai Theme Profile.
+
 - **Chuẩn Hóa Ma Trận Bật/Tắt Tính Năng & Phân Quyền Hợp Nhất (Unified Governance Matrix & Zero-Clutter UI Standardization):**
   1. *Khắc phục lỗi "Cái có cái không" (Strict System Feature Scoping):*
      - Căn nguyên: Khi gộp bảng cờ tính năng và ma trận phân quyền, việc để lẫn các quyền hạn nội bộ cố định (nạp Excel, sửa toàn chi, xóa node lá) khiến bảng bị phân mảnh thành dòng có công tắc, dòng mang nhãn `Cố định theo chức trách` gây cảm giác thiếu quy tắc và thiếu nhất quán.
@@ -218,7 +238,7 @@
   1. *Triệt tiêu nhiễu thị giác do lặp lại ngày giỗ:* Trong danh sách gom nhóm theo mốc thời gian, toàn bộ thông tin ngày tháng chung bắt buộc phải đưa lên Header khối ngày (Âm lịch làm tiêu điểm chính, Dương lịch đối chiếu kế bên, loại bỏ từ cổ "Nhằm ngày"). Dòng từng cá nhân bên dưới tuyệt đối không in lại chuỗi ngày âm này, mà dành diện tích hiển thị năm sinh - mất và tuổi thọ (`Sinh 1935 — Mất 2005 (Hưởng thọ 71 tuổi)`), giúp giao diện thoáng đãng, tôn nghiêm.
   2. *Quy chuẩn Avatar Initials cho gia tộc:* Trong một dòng họ, đại đa số thành viên đều mang chung một Họ. Thuật toán trích xuất Avatar chữ cái bắt buộc phải lấy 2 chữ cái đầu của 2 từ cuối (`Tên đệm + Tên chính`), thay vì lấy chữ cái đầu của Họ, bảo đảm tính nhận diện thị giác cao và đồng nhất 100% giữa Sơ đồ Cây, Drawer và Lịch Giỗ.
 - **Phân Định Hai Không Gian & Kế Thừa Gia Phả Đa Tầng (Two-Hats Architecture & Multi-Tier Branch Taxonomy):**
-  1. *Giải quyết triệt để bài toán "Hai Chiếc Áo" (Admin vs Member):* Tách bạch rạch ròi giữa Cài đặt Cá Nhân (`Personal Settings`) và Quản Trị Dòng Họ (`Admin Portal`). Cài đặt Cá Nhân nằm gọn trong Dropdown Avatar (`AuthButton.tsx > [⚙️ Cài đặt của tôi]`) cho phép bất kỳ ai (kể cả Super Admin với tư cách thành viên) chọn nhánh theo dõi riêng và bật/tắt chuông thiết bị mà không ảnh hưởng người khác. Quản Trị Dòng Họ có nút riêng trực tiếp trên Navbar (`[🛡️ Quản Trị Dòng Họ]`) chỉ hiển thị cho Super Admin.
+  1. *Giải quyết triệt để bài toán "Hai Chiếc Áo" (Admin vs Member):* Tách bạch rạch ròi giữa Cài đặt Cá Nhân (`Personal Settings`) và Quản Trị Dòng Họ (`Admin Portal`). Cài đặt Cá Nhân nằm gọn trong Dropdown Avatar (`AuthButton.tsx > [ Cài đặt của tôi]`) cho phép bất kỳ ai (kể cả Super Admin với tư cách thành viên) chọn nhánh theo dõi riêng và bật/tắt chuông thiết bị mà không ảnh hưởng người khác. Quản Trị Dòng Họ có nút riêng trực tiếp trên Navbar (`[🛡️ Quản Trị Dòng Họ]`) chỉ hiển thị cho Super Admin.
   2. *Triệt tiêu Box-in-Box bằng Flat Segmented Tabs:* Phân hệ quản trị `/admin` quy tụ về thanh Tab phẳng liền mạch (`[Cấu Trúc Ngành/Chi]`, `[🏛️ Thông Tin & Xưng Hô]`, `[📥 Nhập File Excel]`), chuyển đổi 0ms không lồng hộp hay phân mảnh đường dẫn.
   3. *Lõi Kế Thừa Gia Phả Tự Động (Branch Inheritance Pure Engine):* Thay vì bắt người nhập liệu gõ tay từng chữ "Ngành X, Chi Y", hệ thống chỉ cần gán Cụ Khởi Nguồn (`rootMemberId`) cho mỗi nhánh trong cây phân cấp. Thuật toán pure function `resolveMemberBranchHierarchy` tự động duyệt ngược chuỗi phụ hệ và gán danh xưng chuẩn (`Đời N · Ngành X · Chi Y`) cho toàn bộ con cháu các đời sau trên toàn hệ thống.
 - **Khắc Phục Lỗi Bố Cục Modal & Tinh Gọn Phân Tầng Điều Hướng (Modal Viewport Resilience & Clean Navigation):**
@@ -785,3 +805,15 @@
   4. *Chuẩn mực Bảng Ma Trận Fluid Full-Width & Anti-Pill Geometry:*
      - Bảng ma trận 7 cột tích hợp trực tiếp cột Cầu Dao Tổng với công tắc gạt trực tiếp `[🟢 BẬT]` / `[🔴 TẮT]` tự động lưu (Instant Auto-Save) kèm loading spinner và rollback an toàn khi mất mạng.
      - Tuân thủ thiết kế Anti-Pill: dùng `rounded-xl` (12px) cho khung bảng, `rounded-md` (6px) cho badge và switch, dấu chấm giữa `·` phân cấp typography, và chân bảng tích hợp Xem chứ năng với vai trò giúp Admin kiểm nghiệm trực quan trải nghiệm người dùng ngay tức thì.
+
+- **Chữa Triệt Để "Căn Bệnh Sửa Cục Bộ" Bằng Global Tailwind Scale Mapping & SSOT CSS Variables (Milestone 9 Polish):**
+  1. *Căn nguyên của việc sửa cục bộ (Local Patching Anti-Pattern):*
+     - Khi hệ thống có nhiều màn hình (/tree, /kinship, /admin/*), việc dùng các class tĩnh của Tailwind như rounded-2xl, rounded-xl, rounded-lg khiến style bị cứng pixel.
+     - Nếu chỉ tạo semantic token (rounded-card, rounded-control) rồi đi thay thế thủ công từng file, dev sẽ liên tục bỏ sót các ngóc ngách, dẫn đến việc đổi theme profile chỉ ăn ở vài trang (như Home hay Anniversaries) còn các trang khác vẫn trơ trơ không đổi.
+  2. *Giải pháp kiến trúc dứt điểm (Global Scale SSOT):*
+     - Khai báo toàn bộ thang đo --radius-sm, --radius-md, --radius-lg, --radius-xl, --radius-2xl, --radius-3xl, --radius-card, --radius-control trong globals.css theo từng theme profile (:root cho Classic mềm mại 16px/12px/8px, html[data-theme-profile="heritage"] cho Heritage mực thước vuông vắn 6px/4px/2px).
+     - Ghi đè toàn bộ theme.borderRadius trong tailwind.config.ts map trực tiếp vào các biến CSS tương ứng. Nhờ vậy, 100% mọi class rounded-* cũ hay mới trên toàn bộ dự án tự động chuyển mình đồng bộ theo profile hiện hành mà không cần sửa từng dòng JSX.
+     - Khả năng mở rộng tối đa: Khi muốn tạo thêm một Style/Profile mới (ví dụ royal hay sharp), dev chỉ cần khai báo thêm một khối CSS trong globals.css (chưa đầy 30 giây), 0% can thiệp mã nguồn JSX.
+  3. *Tỷ lệ Typography Cột Lịch Bloc Mobile:*
+     - Trên màn hình nhỏ di động, cột lịch ngày giỗ nếu chỉ để bề ngang 58px và font chữ nhỏ sẽ gây cảm giác li ti, khó đọc cho người lớn tuổi.
+     - Mở rộng cột lên 76px, nâng cấp số ngày Dương lên 30px (text-3xl font-black), đỉnh tháng lên 12px (text-xs font-black), thứ trong tuần lên 10px (text-[10px] font-bold tracking-wider) giúp tờ lịch mini trở nên bề thế, đĩnh đạc và chuẩn nhận diện tờ lịch bloc xé tay thật.

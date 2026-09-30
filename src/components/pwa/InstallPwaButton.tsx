@@ -389,7 +389,7 @@ export default function InstallPwaButton({
               disabled={isInstalling}
               data-testid="pwa-install-button"
               aria-label="Cài đặt ứng dụng PWA"
-              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer select-none"
+              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-control text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer select-none"
             >
               {renderButtonContent('w-3.5 h-3.5')}
             </button>
@@ -406,10 +406,10 @@ export default function InstallPwaButton({
       <>
         <div
           data-testid="pwa-install-banner"
-          className={`max-w-3xl w-full p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 dark:from-emerald-950/40 dark:via-slate-900/60 dark:to-emerald-950/40 border border-emerald-500/30 dark:border-emerald-700/40 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${className}`}
+          className={`max-w-3xl w-full p-4 sm:p-5 rounded-card bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 dark:from-emerald-950/40 dark:via-slate-900/60 dark:to-emerald-950/40 border border-emerald-500/30 dark:border-emerald-700/40 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${className}`}
         >
           <div className="flex items-start sm:items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-10 h-10 rounded-control bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
               {isIOS ? <Smartphone className="w-5 h-5" /> : <Download className="w-5 h-5" />}
             </div>
             <div>
@@ -427,7 +427,7 @@ export default function InstallPwaButton({
             disabled={isInstalling}
             data-testid="pwa-install-button"
             aria-label="Cài đặt ứng dụng PWA"
-            className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer select-none"
+            className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-control text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer select-none"
           >
             {renderButtonContent('w-4 h-4')}
           </button>

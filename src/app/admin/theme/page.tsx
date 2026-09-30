@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import type { ClanThemeConfig, DesignProfileId, ThemeApplyScope, UserProfile } from '@/types/database';
 import { DEFAULT_THEME_CONFIG, resolveThemeConfig } from '@/lib/admin/admin-engine';
+import { AnniversaryBlocCardPreview } from '@/components/anniversaries/AnniversaryBlocCard';
+import { MOCK_ANNIVERSARY_GROUP_TODAY } from '@/fixtures/anniversary-fixtures';
 
 export default function AdminThemePage() {
   const [themeConfig, setThemeConfig] = useState<ClanThemeConfig>(DEFAULT_THEME_CONFIG);
@@ -203,7 +205,7 @@ export default function AdminThemePage() {
             <div
               id="theme-card-classic"
               onClick={() => handleProfileSelect('classic')}
-              className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+              className={`relative p-5 rounded-card border-2 cursor-pointer transition-all ${
                 themeConfig.active_profile === 'classic'
                   ? 'border-emerald-600 bg-white dark:bg-slate-900 shadow-md ring-2 ring-emerald-500/20'
                   : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 opacity-80 hover:opacity-100 hover:border-slate-300'
@@ -256,7 +258,7 @@ export default function AdminThemePage() {
             <div
               id="theme-card-heritage"
               onClick={() => handleProfileSelect('heritage')}
-              className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+              className={`relative p-5 rounded-card border-2 cursor-pointer transition-all ${
                 themeConfig.active_profile === 'heritage'
                   ? 'border-red-600 bg-white dark:bg-slate-900 shadow-md ring-2 ring-red-500/20'
                   : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 opacity-80 hover:opacity-100 hover:border-slate-300'
@@ -311,7 +313,7 @@ export default function AdminThemePage() {
         </div>
 
         {/* Phần 2: Phạm Vi Áp Dụng (Rollout Scope) */}
-        <div className="space-y-4 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+        <div className="space-y-4 p-5 rounded-card border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
               2. Phạm Vi Triển Khai (Canary Rollout Scope)
@@ -461,59 +463,15 @@ export default function AdminThemePage() {
             </span>
           </div>
 
-          <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col items-center justify-center">
+          <div className="p-6 rounded-card border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col items-center justify-center">
             {themeConfig.active_profile === 'heritage' ? (
-              /* Heritage Preview Card */
-              <div className="w-full max-w-lg rounded-2xl border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-slate-900 shadow-lg overflow-hidden flex items-stretch">
-                {/* Cột lịch bên trái */}
-                <div className="w-40 bg-red-600 text-white flex flex-col justify-between p-3.5 text-center flex-shrink-0 relative overflow-hidden">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-amber-200">
-                    THÁNG 09
-                  </div>
-                  <div className="my-1">
-                    <div className="text-4xl font-black tracking-tighter text-white drop-shadow-xs">
-                      29
-                    </div>
-                    <div className="text-[10px] font-bold text-amber-200 uppercase mt-0.5">
-                      Thứ Ba
-                    </div>
-                  </div>
-                  <div className="bg-amber-400 text-slate-950 font-black text-[11px] py-1 px-1.5 rounded-lg shadow-xs">
-                    19/08 Âm Lịch
-                  </div>
-                </div>
-
-                {/* Nửa bên phải */}
-                <div className="flex-1 p-4 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 dark:bg-red-950/80 dark:text-red-200 flex items-center gap-1">
-                        <Flame className="w-3 h-3 text-red-600" />
-                        HÔM NAY GIỖ
-                      </span>
-                      <span className="text-[10px] text-slate-400">1 người giỗ</span>
-                    </div>
-
-                    <div className="mt-2.5">
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                        Cụ Nguyễn Thị Hiến
-                      </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        Đời thứ 4 · Cụ Bà Thủy Tổ
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                    <span className="text-[10px] font-bold text-red-600 dark:text-red-400">
-                      Phong cách Modern Heritage Bloc →
-                    </span>
-                  </div>
-                </div>
+              /* Heritage Preview Card tái sử dụng 100% Production Component */
+              <div className="w-full flex justify-center">
+                <AnniversaryBlocCardPreview variant="today" />
               </div>
             ) : (
               /* Classic Preview Card */
-              <div className="w-full max-w-lg rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-emerald-500/10 p-5 shadow-xs">
+              <div className="w-full max-w-lg rounded-card border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-emerald-500/10 p-5 shadow-xs">
                 <div className="flex items-center justify-between pb-3 border-b border-amber-500/20">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-emerald-600" />
@@ -529,10 +487,10 @@ export default function AdminThemePage() {
 
                 <div className="mt-3">
                   <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    Cụ Nguyễn Thị Hiến
+                    {MOCK_ANNIVERSARY_GROUP_TODAY.members[0].display_name || MOCK_ANNIVERSARY_GROUP_TODAY.members[0].full_name}
                   </h4>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                    Hôm nay (29/09/2026) · Âm lịch: 19/08 (Bính Ngọ)
+                    Hôm nay ({MOCK_ANNIVERSARY_GROUP_TODAY.solar_day}/{MOCK_ANNIVERSARY_GROUP_TODAY.solar_month}/{MOCK_ANNIVERSARY_GROUP_TODAY.solar_year}) · Âm lịch: {MOCK_ANNIVERSARY_GROUP_TODAY.lunar_day}/{MOCK_ANNIVERSARY_GROUP_TODAY.lunar_month} ({MOCK_ANNIVERSARY_GROUP_TODAY.lunar_year_name})
                   </p>
                 </div>
               </div>

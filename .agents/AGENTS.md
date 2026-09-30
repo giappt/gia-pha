@@ -40,6 +40,9 @@ Dưới đây là các nguyên tắc TỐI THƯỢNG mà AI Agent BẮT BUỘC P
   - Mọi route page chính trong `src/app/` (`/`, `/tree`, `/anniversaries`, `/kinship`, `/admin`, `/login-gate`) **BẮT BUỘC PHẢI CÓ** file `loading.tsx`.
   - Component `loading.tsx` bắt buộc phải sử dụng component chuẩn hóa `SyncLoadingBadge` với duy nhất một thông điệp thống nhất: `"Đang tải dữ liệu..."`. Tuyệt đối CẤM phân mảnh các câu chữ khác nhau giữa các trang.
   - Vòng tròn xoay (spinner) bắt buộc dùng Lucide SVG (`Loader2`) với thuộc tính `shrink-0 aspect-square text-emerald-600 animate-spin` để đảm bảo 100% không bao giờ bị méo hình (oval/elip) trên bất kỳ thiết bị di động nào. Tuyệt đối CẤM tự chế thẻ div border spinner méo mó.
+- **[R-ARCH.DOMAIN_SERVICE] Mandatory Domain Service Policy (Chính sách Dịch vụ Nghiệp vụ Tập trung):**
+  - Mọi bài toán dữ liệu có logic tính toán và liên kết đa bảng (như Lịch Giỗ Âm - Dương, phân chi Ngành/Chi, quan hệ thân tộc) BẮT BUỘC gom về Tầng Service `src/lib/services/`.
+  - CẤM TUYỆT ĐỐI việc viết lặp lại các câu lệnh query database và biến đổi dữ liệu phân tán rải rác ở nhiều Server Components hay API Routes.
 
 ## 4. [R-SPEC] STRICT EXECUTION & REVERSE SYNC
 - **No Hallucination:** Khi code tính năng, phải bám sát **100%** vào file Đặc tả Vi mô (`Micro-Spec`). Không tự ý bịa thêm tính năng không có trong tài liệu.

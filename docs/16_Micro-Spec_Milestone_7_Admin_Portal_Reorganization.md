@@ -15,7 +15,7 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
   1. `❖ TỔNG QUAN`: 📊 Bàn Điều Hành (`/admin`).
   2. `❖ Gia Phả & QUY ƯỚC`: 🏛️ Căn Cước Dòng Họ (`/admin/profile`), Cấu Trúc Ngành & Chi (`/admin/branches`), 🗣️ Quy Ước Xưng Hô (`/admin/kinship`).
   3. `❖ THÀNH VIÊN & TÀI KHOẢN`: 👥 Quản Lý Tài Khoản (`/admin/users`).
-  4. `❖ VẬN HÀNH & HỆ THỐNG`: ⚙️ Bật/Tắt Tính Năng (`/admin/features`), 📥 Nạp & Sao Lưu (`/admin/import`).
+  4. `❖ VẬN HÀNH & HỆ THỐNG`: Bật/Tắt Tính Năng (`/admin/features`), 📥 Nạp & Sao Lưu (`/admin/import`).
 - **Nguyên tắc "Không Giữ Chỗ / Không Placeholder":**
   - Mọi trang trong menu đều là **tính năng hoạt động thật 100%**. Không tạo trang rỗng có nhãn "Sắp ra mắt".
 - **Kiểm chứng thực nghiệm:** Tuân thủ `[R-VERIFY.TIERS]` trong `.agents/AGENTS.md`: Typecheck 0 lỗi, Build 0 lỗi, Test tự động PASS 100%, User tự nghiệm thu thị giác (Human UAT).
@@ -83,7 +83,7 @@ sequenceDiagram
     DB-->>API: Thành công
     API-->>UsersPage: Toast thành công & cập nhật UI
 
-    Admin->>Shell: Bấm chuyển sang "⚙️ Bật/Tắt Tính Năng" (/admin/features)
+    Admin->>Shell: Bấm chuyển sang " Bật/Tắt Tính Năng" (/admin/features)
     Shell->>FeatPage: Render 6 công tắc tính năng
     Admin->>FeatPage: Gạt tắt "enable_public_tree" -> Bấm "Lưu Cấu Hình"
     FeatPage->>API: PATCH /api/clan-settings { feature_flags: { ... } }
@@ -150,7 +150,7 @@ sequenceDiagram
   - `❖ THÀNH VIÊN & TÀI KHOẢN`:
     - `👥 Quản Lý Tài Khoản` trỏ tới `/admin/users`.
   - `❖ VẬN HÀNH & HỆ THỐNG`:
-    - `⚙️ Bật/Tắt Tính Năng` trỏ tới `/admin/features`.
+    - ` Bật/Tắt Tính Năng` trỏ tới `/admin/features`.
     - `📥 Nạp Dữ Liệu Excel` trỏ tới `/admin/import`.
 - **UI/UX & Hình học Sắc sảo (Crisp Geometry):**
   - Active item: Nền Emerald phẳng (`bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 font-semibold border-l-2 border-emerald-600 rounded-r-md`).
@@ -179,7 +179,7 @@ sequenceDiagram
     - Cho phép quản trị viên xem chi tiết danh sách người chưa nối, tìm kiếm tên, thực hiện **Nối vào Cha/Mẹ** (chọn cha mẹ, tự động kiểm tra chu trình `validateNoCycle`) hoặc xóa node rác an toàn. Sau khi thao tác, hệ thống tự động làm tươi số liệu trên Dashboard.
     - Cảnh báo tài khoản mới chưa gán node kèm nút điều hướng nhanh tới `/admin/users`.
   - **Khối 3: Phím Tắt Tác Vụ Thường Nhật (Quick Actions):**
-    - Phím tắt dạng card `rounded-md` viền phẳng: `[Ngành & Chi]`, `[👥 Tài Khoản]`, `[⚙️ Bật/Tắt Cờ]`, `[📥 Nạp Excel]`.
+    - Phím tắt dạng card `rounded-md` viền phẳng: `[Ngành & Chi]`, `[👥 Tài Khoản]`, `[ Bật/Tắt Cờ]`, `[📥 Nạp Excel]`.
   - **Khối 4: Nhật Ký Biến Động Gần Đây (Activity Audit):**
     - Danh sách các thao tác gần đây trong khung `rounded-lg`.
 
@@ -1530,7 +1530,7 @@ sequenceDiagram
    - Cung cấp trang quản trị trực quan **`/admin/roles` ("Phân Quyền & Vai Trò")** nằm trong nhóm **`THÀNH VIÊN & TÀI KHOẢN`** của Sidebar Admin.
    - Thống kê và cấu hình ma trận quyền hạn cho **5 vai trò cốt lõi**: `guest`, `viewer`, `claimed_member`, `branch_editor`, `super_admin`.
    - Trang bị tính năng **Chế độ Đóng Vai Nghiệm Thu (Role Impersonation / View-As Mode)**: Cho phép Super Admin lập tức trải nghiệm góc nhìn thực tế của bất kỳ vai trò nào (xem che mờ SĐT, xem cờ tắt/bật, xem nút Claim node) ngay trên trình duyệt mà không cần tài khoản phụ.
-   - **Nguyên tắc "Never Locked Out":** Dù đang đóng vai vai trò nào, giao diện luôn giữ thanh banner nổi với nút `[⚙️ Vào Quản Trị]` và quyền bảo mật thật của Super Admin không bao giờ bị hạ thấp ở tầng Backend/API.
+   - **Nguyên tắc "Never Locked Out":** Dù đang đóng vai vai trò nào, giao diện luôn giữ thanh banner nổi với nút `[ Vào Quản Trị]` và quyền bảo mật thật của Super Admin không bao giờ bị hạ thấp ở tầng Backend/API.
 
 ### 19.9.2. Thiết Kế Chi Tiết & Tệp Bị Ảnh Hưởng
 
@@ -1579,7 +1579,7 @@ sequenceDiagram
 - Component Client nổi trên đầu trang (Sticky Top Banner), chỉ xuất hiện khi `impersonatedRole !== null` và người dùng thật là Super Admin:
   - Hiển thị nhãn: ` Bạn đang xem với vai trò: [TÊN ROLE]`.
   - Nút chuyển nhanh sang role khác qua Select/Dropdown.
-  - Nút `[⚙️ Vào Quản Trị]` trỏ về `/admin/roles` để không bao giờ bị kẹt.
+  - Nút `[ Vào Quản Trị]` trỏ về `/admin/roles` để không bao giờ bị kẹt.
   - Nút `[✕ Thoát Đóng Vai]` để hủy cookie/state và trở về Super Admin gốc.
 
 #### 5. File Mới: `src/app/admin/roles/page.tsx` [NEW]
@@ -1625,7 +1625,7 @@ sequenceDiagram
   - Banner nổi xuất hiện trên đỉnh màn hình: ` Bạn đang xem với vai trò: KHÁCH VÃNG LAI`.
   - Lướt ra `/tree` $\rightarrow$ Thấy thông tin SĐT người sống bị che `***`, không thấy nút Sửa/Claim.
 - [ ] **UAT_45 (Bảo Đảm Không Bị Khóa Quyền Quản Trị):**
-  - Trong lúc đang đóng vai Khách vãng lai, click nút `[⚙️ Vào Quản Trị]` trên Banner nổi $\rightarrow$ Truy cập lại thẳng vào trang Admin mà không bị chặn 403.
+  - Trong lúc đang đóng vai Khách vãng lai, click nút `[ Vào Quản Trị]` trên Banner nổi $\rightarrow$ Truy cập lại thẳng vào trang Admin mà không bị chặn 403.
 - [ ] **UAT_46 (Thoát Chế Độ Đóng Vai):**
   - Bấm `[✕ Thoát đóng vai]` $\rightarrow$ Banner biến mất, toàn bộ giao diện trở về trạng thái Super Admin toàn quyền gốc.
 
@@ -1647,7 +1647,7 @@ Khi Super Admin chọn đóng vai tại `/admin/roles`, cookie `fat_impersonated
    - **Bảo Vệ Quyền Riêng Tư :** Số điện thoại của người còn sống bị che mờ thành `0912 *** ***` đối với vai `guest` và `viewer`. Chỉ vai `claimed_member`, `branch_editor` và `super_admin` mới thấy số đầy đủ.
    - **Nút Nhận Node (Claim Node):** Khi đóng vai `viewer`, trên các thẻ thành viên còn sống chưa ai liên kết (`!linked_user_id`), hiển thị nút to màu xanh ngọc bích: `[🙋 Tôi là người này (Gửi yêu cầu nhận node)]`.
    - **Ẩn Nút Chỉnh Sửa:** Ẩn hoàn toàn các nút `[✏️ Sửa]`, `[➕ Thêm con]`, `[➕ Thêm vợ/chồng]`, `[🗑️ Xóa]` khi không có quyền quản lý (`canManageTree = false`).
-4. **Nguyên Tắc Bất Biến "Never Locked Out":** Thanh Banner nổi `RoleImpersonationBanner` luôn hiện diện trên đỉnh màn hình với nút `[⚙️ Vào Quản Trị]` (href=`/admin/roles`) và nút `[✕ Thoát]`.
+4. **Nguyên Tắc Bất Biến "Never Locked Out":** Thanh Banner nổi `RoleImpersonationBanner` luôn hiện diện trên đỉnh màn hình với nút `[ Vào Quản Trị]` (href=`/admin/roles`) và nút `[✕ Thoát]`.
 
 #### 2. Thiết Kế Chi Tiết & Tệp Bị Ảnh Hưởng
 
@@ -1732,7 +1732,7 @@ Khi Super Admin chọn đóng vai tại `/admin/roles`, cookie `fat_impersonated
   - Đổi vai sang `claimed_member` trên thanh Banner.
   - Vào `/tree`: Bấm vào thành viên còn sống $\rightarrow$ SĐT hiển thị đầy đủ `0912 345 678` có link gọi điện, không thấy nút Sửa/Thêm/Xóa của ban biên tập.
 - [ ] **UAT_50 (Nguyên Tắc Never Locked Out — Thoát Vai Dễ Dàng):**
-  - Trong bất kỳ vai trò đóng vai nào, bấm nút `[⚙️ Vào Quản Trị]` trên Banner nổi $\rightarrow$ Lập tức quay lại `/admin/roles` an toàn mà không bị chặn 403. Bấm `[✕ Thoát]` $\rightarrow$ Hệ thống hoàn nguyên 100% về Super Admin gốc.
+  - Trong bất kỳ vai trò đóng vai nào, bấm nút `[ Vào Quản Trị]` trên Banner nổi $\rightarrow$ Lập tức quay lại `/admin/roles` an toàn mà không bị chặn 403. Bấm `[✕ Thoát]` $\rightarrow$ Hệ thống hoàn nguyên 100% về Super Admin gốc.
 
 #### 5. Bổ Sung Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
 
@@ -1880,7 +1880,7 @@ graph TD
   - Vào `/admin/features`, gạt TẮT "Công Khai Cây Gia Phả Cho Khách Vãng Lai".
   - Sang `/admin/roles`, bấm `[ Thử đóng vai]` tại cột "Khách vãng lai".
   - Bấm vào link `/tree` $\rightarrow$ Lập tức bị chuyển hướng sang `/login-gate?returnTo=%2Ftree`.
-  - Màn hình Login Gate hiển thị ổn định, không bị văng ngược lại. Banner nổi ở đỉnh màn hình vẫn có nút `[⚙️ Vào Quản Trị]`.
+  - Màn hình Login Gate hiển thị ổn định, không bị văng ngược lại. Banner nổi ở đỉnh màn hình vẫn có nút `[ Vào Quản Trị]`.
 - [ ] **UAT_52 (Cờ Che Mờ SĐT TẮT $\rightarrow$ Đóng vai Guest/Viewer thấy SĐT đầy đủ):**
   - Vào `/admin/features`, gạt TẮT "Bảo Vệ Quyền Riêng Tư Người Còn Sống".
   - Đóng vai `guest` hoặc `viewer` $\rightarrow$ Vào `/tree` bấm vào người sống $\rightarrow$ SĐT hiển thị rõ ràng đầy đủ `0912 345 678` (không bị che mờ).
@@ -1897,7 +1897,7 @@ graph TD
   - Gạt BẬT "Chế Độ Bảo Trì Hệ Thống".
   - Đóng vai `guest` hoặc `viewer` $\rightarrow$ Truy cập bất kỳ trang dân cư nào $\rightarrow$ Bị chuyển hướng sang `/login-gate?maintenance=true` kèm thông điệp bảo trì trang trọng.
 - [ ] **UAT_57 (Never Locked Out Admin Access):**
-  - Dù bất kỳ cờ nào bật/tắt hay đang đóng vai vai trò nào, nút `[⚙️ Vào Quản Trị]` và `[✕ Thoát]` trên thanh Banner nổi luôn đưa Admin về `/admin/roles` an toàn.
+  - Dù bất kỳ cờ nào bật/tắt hay đang đóng vai vai trò nào, nút `[ Vào Quản Trị]` và `[✕ Thoát]` trên thanh Banner nổi luôn đưa Admin về `/admin/roles` an toàn.
 
 #### 6. Bảo Vệ Chống Thoái Lui (Mục 8 — Regression Guards)
 

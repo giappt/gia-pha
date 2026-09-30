@@ -574,7 +574,7 @@ export default function KinshipPage() {
                   title="Thay đổi mặc định trong Cài đặt Dòng họ"
                   className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5 ml-1"
                 >
-                  (Cài đặt ⚙️)
+                  (Cài đặt)
                 </Link>
               </div>
 
@@ -593,7 +593,6 @@ export default function KinshipPage() {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
                     <span>Xác định quan hệ</span>
                   </>
                 )}
@@ -744,9 +743,6 @@ export default function KinshipPage() {
 
                       {/* Cầu nối Hôn phối */}
                       <div className="flex flex-col items-center gap-1 shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-950/60 border border-pink-300 dark:border-pink-800 flex items-center justify-center text-pink-600 dark:text-pink-300 shadow-sm text-lg">
-                          💍
-                        </div>
                         <span className="text-[11px] font-extrabold text-pink-700 dark:text-pink-400 tracking-wide">
                           ═(Hôn phối)═
                         </span>
@@ -839,7 +835,7 @@ export default function KinshipPage() {
                                 <div className="flex items-center gap-1.5">
                                   {node.isSpouse && (
                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300">
-                                      💍 Hôn phối
+                                      Hôn phối
                                     </span>
                                   )}
                                   <span
@@ -1094,7 +1090,7 @@ function renderNodeItem(node: KinshipPathNode, isTarget: boolean) {
         <div className="flex items-center gap-1">
           {node.isSpouse && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300 font-bold">
-              💍 Hôn phối
+              Hôn phối
             </span>
           )}
           {node.relation && node.relation !== 'Bản thân' && (

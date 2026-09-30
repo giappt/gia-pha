@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Flame, Star, Clock, ArrowRight } from 'lucide-react';
 import type { AnniversaryDayGroup } from '@/types/anniversary';
 import { formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
+import { MOCK_ANNIVERSARY_GROUP_TODAY, MOCK_ANNIVERSARY_GROUP_UPCOMING } from '@/fixtures/anniversary-fixtures';
 
 interface AnniversaryBlocCardProps {
   group: AnniversaryDayGroup;
@@ -30,7 +31,7 @@ export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps)
     ? 'bg-red-600 text-white font-black'
     : isTomorrow
       ? 'bg-amber-400 text-slate-950 font-black'
-      : 'bg-slate-700 text-slate-100 font-bold';
+      : 'bg-emerald-800 text-white font-bold';
 
   // Format thứ
   const solarFull = formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day);
@@ -42,7 +43,7 @@ export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps)
   const monthWord = monthNames[group.solar_month] || `${group.solar_month}`;
 
   return (
-    <div className="w-full max-w-3xl mx-auto rounded-xl border border-slate-300/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden">
+    <div className="w-full max-w-3xl mx-auto rounded-card border border-slate-300/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden">
       {/* 1. Phiên bản Desktop (md+): Dàn ngang 2 nửa liền mạch */}
       <div className="hidden md:flex flex-row items-stretch">
         {/* Nửa trái: Cột Lịch Bloc 185px fit khít 3 mép */}
@@ -55,10 +56,10 @@ export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps)
 
           {/* Số ngày Dương lịch to đậm */}
           <div className="py-4 text-center bg-white dark:bg-slate-900 shrink-0">
-            <div className="text-6xl font-black text-slate-950 dark:text-white tracking-tighter leading-none">
+            <div className="text-6xl sm:text-7xl font-black text-slate-950 dark:text-white tracking-tighter leading-none">
               {group.solar_day < 10 ? `0${group.solar_day}` : group.solar_day}
             </div>
-            <div className="text-sm font-semibold text-slate-800 dark:text-slate-300 mt-2">
+            <div className="text-sm font-bold tracking-wide text-slate-800 dark:text-slate-300 mt-1.5">
               {dayOfWeek}
             </div>
           </div>
@@ -128,7 +129,7 @@ export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps)
           <div className="pt-4 mt-4 border-t border-slate-200/80 dark:border-slate-800 flex items-center gap-2">
             <Link
               href={`/tree?focusId=${group.members[0]?.id || ''}`}
-              className="flex-1 py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs"
+              className="flex-1 py-2.5 px-4 rounded-control bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs"
             >
               <span>Xem trên cây gia phả</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -146,11 +147,11 @@ export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps)
         </div>
 
         {/* Thân Dương Lịch */}
-        <div className="py-4 text-center bg-white dark:bg-slate-900">
-          <div className="text-5xl font-black text-slate-950 dark:text-white tracking-tighter leading-none">
+        <div className="py-5 sm:py-6 text-center bg-white dark:bg-slate-900">
+          <div className="text-7xl sm:text-8xl font-black text-slate-950 dark:text-white tracking-tight leading-none">
             {group.solar_day < 10 ? `0${group.solar_day}` : group.solar_day}
           </div>
-          <div className="text-sm font-semibold text-slate-800 dark:text-slate-300 mt-1.5">
+          <div className="text-base sm:text-lg font-bold tracking-wide text-slate-800 dark:text-slate-200 mt-2">
             {dayOfWeek}
           </div>
         </div>
@@ -211,7 +212,7 @@ export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps)
           <div className="mt-4 pt-2">
             <Link
               href={`/tree?focusId=${group.members[0]?.id || ''}`}
-              className="w-full py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs"
+              className="w-full py-2.5 px-4 rounded-control bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs"
             >
               <span>Xem trên cây gia phả</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -222,3 +223,17 @@ export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps)
     </div>
   );
 }
+
+/**
+ * Sub-component phục vụ Live Preview trên trang Quản trị (/admin/theme)
+ * và Storybook/Tests. Tái sử dụng 100% component thật với fixture chuẩn SSOT.
+ */
+export function AnniversaryBlocCardPreview({
+  variant = 'today',
+}: {
+  variant?: 'today' | 'upcoming';
+}) {
+  const group = variant === 'today' ? MOCK_ANNIVERSARY_GROUP_TODAY : MOCK_ANNIVERSARY_GROUP_UPCOMING;
+  return <AnniversaryBlocCard group={group} />;
+}
+
