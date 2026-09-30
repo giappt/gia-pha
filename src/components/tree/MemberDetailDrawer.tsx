@@ -168,7 +168,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
         <div className="relative px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="absolute top-5 right-5 p-1.5 rounded-control text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title="Đóng (Esc)"
           >
             <X className="w-5 h-5" />
@@ -386,7 +386,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                   </div>
                   {!canViewPhone && (
                     <p className="text-[11px] text-amber-700 dark:text-amber-400/90 leading-snug pt-0.5">
-                      🔒 Quyền riêng tư: Chỉ con cháu trong họ đã được phê duyệt gắn node mới có thể xem số điện thoại để liên lạc nội bộ.
+                      Quyền riêng tư: Chỉ con cháu trong họ đã được phê duyệt gắn node mới có thể xem số điện thoại để liên lạc nội bộ.
                     </p>
                   )}
                 </div>
@@ -637,7 +637,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                         >
                           <div className="flex items-center justify-between">
                             <p className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-1">
-                              <span>{grp.motherId ? '🌸' : '❓'}</span> {groupTitle}
+                              {groupTitle}
                             </p>
                             {(canManageTree || canManageCurrentMember) && onAddChild && target && (
                               <button
@@ -665,7 +665,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                                     className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
                                   >
                                     <div className="flex items-center gap-2">
-                                      <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
+                                      <span className="w-5 h-5 rounded-control bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
                                         {displayOrder}
                                       </span>
                                       <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
@@ -710,7 +710,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                             className="flex items-center justify-between p-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-emerald-400 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer transition-colors"
                           >
                             <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
+                              <span className="w-5 h-5 rounded-control bg-slate-200 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-600 dark:text-slate-400">
                                 {displayOrder}
                               </span>
                               <span className="text-xs font-medium text-slate-800 dark:text-slate-200">

@@ -343,7 +343,7 @@ export default function AuthButton({
       <button
         id="user-menu-btn"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center sm:justify-start gap-2 p-0.5 sm:p-1 sm:pr-2.5 rounded-full aspect-square sm:aspect-auto hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors border border-slate-200/80 dark:border-slate-800 shrink-0"
+        className="flex items-center justify-center sm:justify-start gap-2 p-1 sm:px-2.5 sm:py-1 rounded-control hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors border border-slate-200/80 dark:border-slate-800 shrink-0"
       >
         {user.user_metadata?.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element

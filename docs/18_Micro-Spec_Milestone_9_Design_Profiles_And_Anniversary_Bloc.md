@@ -17,12 +17,14 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
 
 - **Thư viện cho phép:** Không cài thêm thư viện UI bên ngoài. Sử dụng chuẩn hiện có: Next.js 14+ (App Router), React 18, TailwindCSS, Lucide Icons, `cookies()` của Next.js Server Components.
 - **Tính Bất Biến Kiến Trúc [R-SPEC.INVARIANT]:**
-  - **Layout Shell:** Màn hình Quản trị Giao diện `/admin/theme` bắt buộc sử dụng chuẩn `AdminShell` (Sidebar 256px + Fluid Content), không dùng container đóng hộp `max-w-5xl` ngoài cùng gây co thắt bố cục.
+  - **Layout Shell:** Mọi màn hình Quản trị (`/admin/theme`, `/admin/kinship`, `/admin/governance`, `/admin/roles`) bắt buộc sử dụng chuẩn `AdminShell` (Sidebar 256px + Fluid Canvas toàn màn hình), tuyệt đối CẤM dùng container đóng hộp `max-w-5xl` ngoài cùng gây co thắt bố cục.
   - **Navigation Model:** Bổ sung menu item độc lập `/admin/theme` ("Giao Diện & Profile") trên `AdminSidebar.tsx`. Tuyệt đối không dùng Tab ngang `activeTab` gây co giật layout.
-  - **Geometry & Tokens (Anti-Pill & Anti-Bubble - Phân Định Hai Phong Cách Rõ Rệt):**
+  - **Geometry & Tokens (Anti-Pill & Anti-Bubble - Toàn Diện Toàn Hệ Thống):**
     * **Profile `classic` (Tối giản Hiện đại):** Giữ góc bo mềm mại (`--radius-card: 1rem` [16px], `--radius-control: 0.5rem` [8px]).
     * **Profile `heritage` (Di sản Mực thước):** **Góc bo tròn ít hơn rõ rệt** (`--radius-card: 0.375rem` [6px], `--radius-control: 0.25rem` [4px]). Thiết kế vuông vắn, dứt khoát, đĩnh đạc như góc cạnh tờ lịch bloc xé tay truyền thống, hoành phi câu đối và bia đá; tuyệt đối CẤM bo cong lớn `1.25rem` (20px) gây hiệu ứng bóng bóng (bubbly) phá vỡ tính uy nghiêm cổ kính.
-    * Typography phân cấp bằng dấu chấm giữa `·`. Tuyệt đối CẤM lạm dụng `rounded-full` làm nhãn phân loại.
+    * **Strict Whitelist duy nhất cho `rounded-full`:** Chỉ cho phép với Avatar tròn (`w-X h-X rounded-full object-cover`), Đèn báo vi mô (`w-1.5 h-1.5 rounded-full`) và Toggle switch thumb.
+    * **LỆNH CẤM TUYỆT ĐỐI:** CẤM bọc bất kỳ văn bản, nhãn phân loại (badges/tags/chips) hoặc nút bấm (buttons) nào trong class `rounded-full`.
+    * **Phân cấp Typography bằng dấu chấm giữa `·`:** Loại bỏ hoàn toàn thói quen vibe-coding dán nhãn viên thuốc. Thẻ cây (`MemberNode`) xóa bỏ chữ `Còn sống`/`Đã mất`, dùng chấm vi mô `w-1.5 h-1.5` và niên đại di sản (`1920 – 1985`). Phân hệ `/admin/kinship` và `/kinship` xóa sạch 100% emoji rác, thay bằng Segmented Filter Bar và Lucide Icons.
   - **Unified RBAC:** Phân quyền lưu cấu hình giới hạn nghiêm ngặt cho `super_admin`.
 - **Nguyên Tắc Bảo Toàn Thương Hiệu (Brand Sovereignty Rule):**
   - Profile giao diện chỉ thay đổi **Phong cách Bố cục & Trình bày (Presentation / Layout Style)**, KHÔNG ĐƯỢC làm đổi màu nhận diện chủ đạo của thương hiệu dòng họ.
@@ -428,6 +430,74 @@ Nhằm chấm dứt triệt để căn bệnh "cát cứ ốc đảo, code chắ
     - `src/components/tree/TreeToolbar.tsx`: Dropdown chọn Gốc, thanh công cụ, popover tùy chọn phả đồ.
     - Kết hợp cùng Tầng 1 (Global Tailwind Scale Mapping) đảm bảo 100% toàn bộ hệ thống thoát khỏi hoàn toàn căn bệnh "sửa cục bộ".
 
+### 5.7. Kiến Trúc Thanh Lọc Toàn Diện Anti-Pill & Nâng Cấp Thẩm Mỹ Biên Tập (System-wide Anti-Pill & Editorial Cleansing Architecture)
+
+Nhằm xóa bỏ dứt điểm thói quen "vibe coding" (bội thực viên thuốc, nhãn kẹo ngọt, emoji lộn xộn) và nâng tầm hệ thống lên chuẩn mực Biên tập Di sản (Editorial & Vietnamese Heritage Design):
+
+#### 5.7.1. Cây Gia Phả & Thẻ Thành Viên (`MemberNode.tsx`, `GhostNode.tsx`, `FamilyTreeCanvas.tsx`):
+1. **Trạng thái Sinh / Tử trên `MemberNode.tsx`:**
+   - **Xóa bỏ hoàn toàn nhãn chữ `Còn sống` / `Đã mất` ở góc trên bên phải thẻ.**
+   - Thay thế bằng chấm đèn vi mô tinh xảo:
+     * Người còn sống: `<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Còn sống" />`.
+     * Người đã mất: `<span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 shrink-0" title="Đã mất" />`.
+   - Dòng phụ dưới tên (`birthDeathText`):
+     * Người đã mất: Hiển thị niên đại di sản trang trọng `1920 – 1985` (hoặc `Sinh 1920 · Mất 1985`).
+     * Người còn sống: Hiển thị `Sinh 1985`.
+2. **Huy hiệu Cụ Tổ & Khuyết Danh:**
+   - Cụ Tổ: Chuyển sang nhãn hình học mực thước `<span className="px-1.5 py-0.5 rounded-control text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Cụ Tổ</span>` (loại bỏ emoji `Sparkles` rườm rà).
+   - Khuyết danh: Chuyển sang `<span className="px-1.5 py-0.5 rounded-control text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">Khuyết danh</span>`.
+3. **Phối ngẫu:**
+   - Loại bỏ emoji `🌸`, dùng nhãn mực thước: `<span className="px-1 py-0.5 rounded-control text-[9px] font-medium bg-amber-50 text-amber-800 border border-amber-200/60">...</span>`.
+4. **`GhostNode.tsx`:**
+   - Chuyển pill `rounded-full` sang nhãn chữ nhật nét đứt mực thước `rounded-control text-[9px] font-bold border border-dashed border-amber-400`.
+5. **`FamilyTreeCanvas.tsx`:**
+   - Hộp thông báo nổi trên đỉnh canvas chuyển từ `rounded-full` sang `rounded-card`.
+
+#### 5.7.2. Công Cụ Tra Cứu Vai Vế (`src/app/kinship/page.tsx`):
+1. **Xóa sạch 16 điểm Pill trang trí:**
+   - Hero Header: Xóa pill `rounded-full bg-emerald-50 ... ĐỒ THỊ GIA PHẢ VIỆT NAM`. Dùng heading phân cấp tinh giản.
+   - Banner kết quả: Xóa pill `rounded-full bg-white/15 ... Quan Hệ Họ Hàng`. Dùng thẻ tiêu đề mực thước `text-xs font-bold tracking-wider text-emerald-100 uppercase`.
+   - Sơ đồ hôn phối: Hiển thị trực tiếp danh xưng lớn đậm (`text-base font-extrabold text-emerald-800`), xóa bỏ pill bao quanh `{result.termBtoA}` và `{result.termAtoB}`.
+   - Sơ đồ trực hệ & chữ V ngược: Chuyển toàn bộ các nhãn `Đời X`, `Hôn phối`, `Gốc Gần Nhất` sang thẻ hình học mực thước `rounded-control` hoặc phân cách bằng dấu chấm `·`.
+
+#### 5.7.3. Quản Trị Quy Ước Xưng Hô (`src/app/admin/kinship/page.tsx`):
+1. **Layout Shell:** Xóa bỏ `max-w-5xl mx-auto`, bung tràn toàn màn hình theo chuẩn `AdminShell`.
+2. **Chuẩn Mực Không Icon Trang Trí (Zero-Icon Standard):**
+   - **XÓA BỎ 100% ICON KHỎI THANH BỘ LỌC VÀ TIÊU ĐỀ NHÓM.**
+   - Tuyệt đối CẤM thay thế emoji bằng các icon Lucide vô nghĩa (`GitBranch`, `Shield`, `Heart`, `Compass`...) gây hiểu sai ngữ nghĩa văn hóa dòng tộc.
+   - Bộ lọc chỉ sử dụng văn bản thuần khiết kết hợp số đếm tinh gọn:
+     `[ Tất Cả (36) ]  [ Trực Hệ (8) ]  [ Cùng Đời & Dâu Rể (8) ]  [ Bên Nội (8) ]  [ Bên Ngoại (6) ]  [ Dâu & Rể (4) ]  [ Lệch Đời (2) ]`.
+   - Toàn bộ 7 nút dàn phẳng phiu trên một hàng, **triệt tiêu hoàn toàn thanh cuộn ngang (horizontal scrollbar)** trên màn hình máy tính.
+3. **Bộ lọc Segmented:** Chuyển cụm filter sang **Segmented Filter Bar** mực thước `rounded-control`. Số lượng hiển thị nhẹ nhàng trong ngoặc đơn `(n)` thay vì lồng viên thuốc con.
+4. **Tiêu đề nhóm:** Bỏ icon và pill counter `rounded-full`, hiển thị dạng heading thanh lịch kèm subtitle `— n quy ước`.
+
+#### 5.7.4. Các Màn Hình Quản Trị & Dashboard Khác:
+1. `src/app/admin/roles/page.tsx`: Thay pill `rounded-full` "GOD MODE" và role badges sang `rounded-control`.
+2. `src/app/admin/theme/page.tsx`: Classic Preview Card thay pill "Hôm Nay Giỗ" sang `rounded-control`.
+3. `src/components/admin/ClanDashboard.tsx`: Thống kê thành viên chuyển sang typography phân cấp và `rounded-control`.
+4. `src/app/page.tsx`: Thẻ đếm ngược ngày giỗ chuyển sang nhãn di sản `rounded-control`.
+
+#### 5.7.5. Thanh Lọc Toàn Diện 100% Emoji Trên Toàn Bộ Hệ Thống (`src/`):
+Xóa sạch mọi emoji rác trên 10 tệp giao diện đã kiểm toán:
+1. `src/components/auth/PersonalSettingsModal.tsx`: Xóa `🏛️` tại dòng 176 $\rightarrow$ `Toàn dòng họ (Xem tất cả)`.
+2. `src/app/login-gate/page.tsx`: Xóa `⚡` tại dòng 113 $\rightarrow$ `Đăng nhập nhanh Dev (Bypass Super Admin)`.
+3. `src/app/admin/profile/page.tsx`: Xóa `✨` (dòng 228, 234) và `💡` (dòng 262) $\rightarrow$ Text thuần / nhãn mực thước `Cụ Tổ`.
+4. `src/components/modals/MemberFormModal.tsx`: Xóa sạch `🌸`, `🔗`, `🌱`, `❓`, `♂`, `♀`, `⚪`, `🔒`, `⚠️`, `✕`. Thay bằng text thuần hoặc nhãn `rounded-control`.
+5. `src/components/tree/MemberDetailDrawer.tsx`: Xóa `🔒`, `🌸`, `❓`.
+6. `src/components/modals/ConnectGenealogyModal.tsx`: Xóa `✓`, `⚠️`.
+7. `src/components/tree/UnlinkedMembersDrawer.tsx`: Xóa `✓`, `⚠️`.
+8. `src/app/admin/features/page.tsx`: Xóa `✓` và `✗` $\rightarrow$ `Đang BẬT:` và `Đang TẮT:`.
+9. `src/app/admin/governance/page.tsx`: Xóa `✓` $\rightarrow$ `Đã lưu`.
+10. `src/app/admin/import/page.tsx`: Xóa `⚠` $\rightarrow$ Lucide `AlertTriangle` hoặc text thuần.
+
+#### 5.7.6. Triệt Tiêu Toàn Bộ Vết Tích Pill (`rounded-full`) Ngoại Trừ Whitelist:
+1. **Nút User trên Navbar (`src/components/auth/AuthButton.tsx`):**
+   - Chuyển `rounded-full aspect-square sm:aspect-auto` sang `rounded-control` vuông vắn mực thước, xóa sổ viên thuốc khổng lồ trên Header.
+2. **Khung Skeleton Loading (6 tệp):**
+   - Chuyển toàn bộ các thanh loading `rounded-full` trong `tree/loading.tsx`, `anniversaries/loading.tsx`, `admin/loading.tsx`, `admin/claims/loading.tsx`, `login-gate/loading.tsx`, `prototype/anniversary/page.tsx` sang `rounded-control` / `rounded-sm`.
+3. **Nút đóng và số thứ tự:**
+   - Chuyển các nút đóng và huy hiệu số thứ tự trong `MemberDetailDrawer.tsx`, `ConnectGenealogyModal.tsx`, `ReorderChildrenModal.tsx`, `InstallPwaButton.tsx` sang `rounded-control`.
+
 ---
 
 ## 6. XỬ LÝ LỖI & NGOẠI LỆ (ERROR HANDLING & EDGE CASES)
@@ -442,6 +512,8 @@ Nhằm chấm dứt triệt để căn bệnh "cát cứ ốc đảo, code chắ
   Hàm `resolveThemeConfig` luôn bọc an toàn, trả về fallback `DEFAULT_THEME_CONFIG` (`classic`, scope `all`).
 - **Edge Case 5 (Màn hình siêu nhỏ < 360px):**  
   Số ngày Dương lịch `text-7xl` (72px) không gây tràn chiều ngang nhờ `tracking-tight leading-none`.
+- **Edge Case 6 (Thanh bộ lọc trên màn hình nhỏ):**  
+  Tên các chip được rút gọn tinh tế (`Dâu & Rể`, `Lệch Đời`) và loại bỏ 100% icon giúp thanh filter hiển thị vừa vặn, không bị co kéo hay sinh scrollbar ngang không mong muốn.
 
 ---
 
@@ -471,6 +543,12 @@ Nhằm chấm dứt triệt để căn bệnh "cát cứ ốc đảo, code chắ
 | **TC_ARCH_GUARD_05** | Khóa tỷ lệ bo góc Profile heritage nhỏ hơn classic (Anti-Bubble) | `tests/architecture-ssot.test.ts` | File `src/app/globals.css` | Phân tích CSS block `html[data-theme-profile="heritage"]` | Khai báo `--radius-card: 0.375rem` (6px) và `--radius-control: 0.25rem` (4px), nhỏ hơn rõ rệt so với Classic | Code Guard | - [x] PASS |
 | **TC_ARCH_GUARD_06** | Khóa Hệ Thống Phòng Thủ Toàn Cầu Tailwind Scale Mapping (Triệt tiêu sửa cục bộ) | `tests/architecture-ssot.test.ts` | `globals.css` và `tailwind.config.ts` | Phân tích biến CSS và config Tailwind | `globals.css` định nghĩa đủ `--radius-2xl`, `--radius-xl`, `--radius-lg`, `--radius-md` theo profile; `tailwind.config.ts` map trực tiếp vào các biến này | Code Guard | - [x] PASS |
 | **TC_UT_BLOC_TYPOGRAPHY_02** | Tỷ lệ chữ số và kích thước Mobile Bloc Timeline đạt chuẩn to rõ | `tests/architecture-ssot.test.ts` | `AnniversaryBlocTimeline.tsx` | Phân tích JSX Mobile Bloc | Cột rộng `w-[76px]`, ngày Dương `text-3xl font-black`, tháng `text-xs font-black`, thứ `text-[10px] font-bold` | Typography | - [x] PASS |
+| **TC_UT_ZERO_EMOJI_SYSTEM_WIDE** | Quét Regex AST 100% file `.tsx` và `.ts` trong `src/`, bắt lỗi BẤT KỲ ký tự emoji nào | `tests/anti-pill-integrity.test.ts` | Toàn bộ codebase `src/` | Quét đệ quy toàn bộ các file nguồn | **0 ký tự emoji** trên toàn bộ 71+ files mã nguồn `src/` | Code Guard | - [x] PASS |
+| **TC_UT_ZERO_PILL_SYSTEM_WIDE** | Quét Regex AST 100% file `.tsx` trong `src/`, bắt lỗi `rounded-full` trên mọi button, navbar item, loading skeleton và text badge | `tests/anti-pill-integrity.test.ts` | Toàn bộ codebase `src/` | Quét class `rounded-full` đối chiếu whitelist nghiêm ngặt | Chỉ cho phép đúng 4 ngoại lệ (avatar `img`, micro dot `w-1.5`, switch thumb `translate-x-`, spinner `animate-spin`); 0 vi phạm trên navbar AuthButton và loading skeletons | Code Guard | - [x] PASS |
+| **TC_UT_ADMIN_KINSHIP_ZERO_ICON_FILTER** | Kiểm tra FILTER_CHIPS và tiêu đề nhóm trong `admin/kinship` loại bỏ 100% icon trang trí | `tests/anti-pill-integrity.test.ts` | `src/app/admin/kinship/page.tsx` | Phân tích cấu trúc mảng `FILTER_CHIPS` và JSX | Mảng `FILTER_CHIPS` không chứa thuộc tính `icon`, hiển thị text thuần + count `(n)` | UI Contract | - [x] PASS |
+| **TC_UT_MEMBER_NODE_EDITORIAL_STATUS** | MemberNode.tsx sử dụng Micro Dot `w-1.5 h-1.5 rounded-full` và niên đại di sản thay thế hoàn toàn chữ 'Còn sống'/'Đã mất' | `tests/ui-normalization-and-identity.test.ts` | `MemberNode.tsx` | Quét JSX Header và Subline thẻ Node | Chứa chấm vi mô `w-1.5 h-1.5`, không chứa nhãn text `'Đã mất'` hay `'Còn sống'` ở góc; Cụ Tổ dùng `rounded-control` | UI Contract | - [x] PASS |
+| **TC_UT_ADMIN_KINSHIP_SHELL_AND_SEGMENTED** | AdminKinshipPage xóa `max-w-5xl`, sử dụng Segmented Filter Bar với số lượng `(n)` và 0 emoji | `tests/kinship-ssot.test.ts` | `src/app/admin/kinship/page.tsx` | Phân tích bố cục và bộ lọc | Không chứa `max-w-5xl`, không chứa emoji, filter dùng Segmented button | Invariant | - [x] PASS |
+| **TC_UT_USER_KINSHIP_EDITORIAL_CLEANSE** | KinshipPage loại bỏ toàn bộ pill trang trí, banner kết quả và các node sơ đồ dùng `rounded-control` | `tests/kinship-ssot.test.ts` | `src/app/kinship/page.tsx` | Phân tích các node kết quả và header | Không chứa pill hero, không chứa pill kết quả, các nhãn quan hệ dùng `rounded-control` | UI Contract | - [x] PASS |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 
@@ -497,6 +575,12 @@ Nhằm chấm dứt triệt để căn bệnh "cát cứ ốc đảo, code chắ
 - [ ] **UAT_18 (Nhịp Điệu Bo Góc Ít & Đối Chiếu Phong Cách Rõ Rệt - Mới):** Profile Heritage mang phong cách dứt khoát, góc bo rất ít (card 6px, nút 4px) tạo thần thái tờ lịch bloc cổ kính; đối lập với Profile Classic bo cong hiện đại (card 16px, nút 8px). Toàn bộ nút bấm và khung thẻ trên màn hình chuyển đổi nhịp nhàng, 0% cọc cạch.
 - [ ] **UAT_19 (Nghiệm Thu Kích Thước Cột Lịch Mobile To Rõ - Mới):** Mở `/anniversaries` trên mobile: Cột bloc rộng 76px, số ngày Dương 30px đậm đà (`text-3xl`), tháng 12px (`text-xs`), thứ 10px to rõ, dễ đọc cho mọi lứa tuổi, xóa bỏ hoàn toàn cảm giác chữ li ti.
 - [ ] **UAT_20 (Nghiệm Thu Toàn Hệ Thống Triệt Để - Mới):** Đổi Profile sang `heritage` $\rightarrow$ Mở đồng thời `/kinship`, `/tree`, `/admin/kinship`, `/admin/governance`, `/admin/users`: 100% tất cả các card, popover, khung chọn, input và buttons chuyển sang vuông vắn mực thước 6px/4px; đổi sang `classic` tự động nở mềm 16px/12px/8px, xóa sạch triệt để căn bệnh sửa cục bộ.
+- [ ] **UAT_21 (Nghiệm Thu Thẻ Cây Gia Phả Không Pill):** Mở `/tree` trên trình duyệt → Tất cả các thẻ thành viên sạch bóng nhãn chữ 'Còn sống'/'Đã mất', người sống có chấm xanh nhỏ, người mất có niên đại di sản trang nhã (`1920 – 1985`), thẻ Cụ Tổ và Khuyết danh mang nhãn hình học mực thước.
+- [ ] **UAT_22 (Nghiệm Thu Quản Trị Xưng Hô Fluid & Segmented Bar):** Mở `/admin/kinship` → Giao diện bung tràn toàn màn hình trong AdminShell, không bị thắt eo `max-w-5xl`.
+- [ ] **UAT_23 (Nghiệm Thu Tra Cứu Vai Vế Sang Trọng):** Mở `/kinship` → Hero header và banner kết quả thoát ly hoàn toàn khỏi phong cách bóng bóng viên thuốc; sơ đồ trực hệ và sơ đồ chữ V đĩnh đạc, mực thước.
+- [ ] **UAT_24 (Nghiệm Thu Bộ Lọc Xưng Hô Zero-Icon & Không Scrollbar Ngang):** Mở `/admin/kinship` trên màn hình máy tính $\rightarrow$ Thanh bộ lọc gồm 7 nút dàn phẳng phiu trên một dòng duy nhất, không có icon thừa thãi (`GitBranch`, `Shield`...), và tuyệt đối không xuất hiện thanh cuộn ngang (horizontal scrollbar).
+- [ ] **UAT_25 (Nghiệm Thu Modal Cài Đặt Không Emoji):** Bấm mở `Cài Đặt Của Tôi` (`PersonalSettingsModal`) $\rightarrow$ Tùy chọn nhánh hiển thị text thuần "Toàn dòng họ (Xem tất cả)", sạch bóng emoji `🏛️`.
+- [ ] **UAT_26 (Nghiệm Thu Navbar AuthButton Hình Học Mực Thước):** Quan sát nút người dùng trên Header Navbar $\rightarrow$ Chuyển thành khối hình học mực thước `rounded-control`, xóa bỏ hoàn toàn viên thuốc khổng lồ `rounded-full`.
 
 ---
 
@@ -508,9 +592,14 @@ Nhằm chấm dứt triệt để căn bệnh "cát cứ ốc đảo, code chắ
 - [x] **RG04 (Toàn Vẹn Cài Đặt Dòng Họ):** Các trường khác trong `clan_settings` (`clan_name`, `branches`, `branch_tiers`, `custom_kinship_dictionary`, `feature_flags`) tiếp tục hoạt động trơn tru, không bị ghi đè hay mất mát khi PATCH `theme_config`.
 - [x] **RG05 (Bảo Toàn Contract API Cho PWA & Web Push):** Endpoint `/api/anniversaries` tiếp tục trả về đầy đủ các trường DTO (`success`, `data`, `totalCount`, `timeZone`), không làm gãy bộ quét ngầm của Web Push hay PWA.
 - [x] **RG06 (Bảo Toàn Hiển Thị Cây Phân Chi & Không Tràn Khung):** Trên màn hình di động 360px - 400px và desktop, các chữ và số cỡ lớn không gây tràn dòng hay vỡ layout.
+- [x] **RG07 (Kích Thước Thẻ Node 200x96):** Chiều rộng 200px, chiều cao 96px và neo Y của Avatar / Tên trên `MemberNode` không bị xê dịch dù chỉ 1px.
+- [x] **RG08 (Tính Toán Quan Hệ 0ms Phản Ứng Tức Thì):** Thuật toán LCA và từ điển xưng hô trên `/kinship` và `/admin/kinship` giữ nguyên 100% độ chính xác, không bị ảnh hưởng bởi thay đổi giao diện.
+- [x] **RG09 (Bảo Toàn Chức Năng Lọc Xưng Hô Không Icon):** Bỏ icon trong `FILTER_CHIPS` không làm ảnh hưởng đến tính năng chuyển đổi danh mục, tìm kiếm, sửa tên xưng hô và khôi phục cài đặt gốc theo vùng miền.
+- [x] **RG10 (Bảo Toàn Form Thêm & Sửa Thành Viên):** Dọn sạch emoji trong `MemberFormModal` không làm lỗi luồng submit, thêm vợ/chồng ngoại tộc, gán Ghost Node nội tộc, hay chọn mẹ cho con cái.
 
 ---
 
 ## 9. LỆNH THI CÔNG (Dành cho AI /feature-code)
 
 > "AI ơi, hãy đọc kỹ đặc tả `docs/18_Micro-Spec_Milestone_9_Design_Profiles_And_Anniversary_Bloc.md` này. Dựa CHÍNH XÁC vào các mô tả ranh giới ở trên, hãy thi công toàn bộ mã nguồn hoàn chỉnh kèm file test trong `tests/`. Thực thi Vòng Lặp Kiểm Chứng Bằng Code Thật bằng đúng các lệnh khai báo tại `[VERIFY_COMMANDS]` (Typecheck/Build → Automated Test Suite → Human UAT), và chỉ được tick `[x]` cho Mục 7.1 khi terminal log cho thấy test phủ AC đó đã pass và không có failure mới so với baseline."
+

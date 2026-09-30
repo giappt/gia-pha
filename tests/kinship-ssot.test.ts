@@ -690,5 +690,58 @@ describe('Kinship SSOT & Seniority Engine Test Suite (TC37 - TC42)', () => {
       'Thẻ cây phải sử dụng formatBirthOrder(node.birthOrder) để hiển thị Con cả / Con thứ N'
     );
   });
-});
 
+  // TC_UT_ADMIN_KINSHIP_SHELL_AND_SEGMENTED: Admin Kinship tuân thủ AdminShell fluid và Segmented control
+  it('TC_UT_ADMIN_KINSHIP_SHELL_AND_SEGMENTED: Admin Kinship loại bỏ max-w-5xl, dọn sạch emoji, dùng Segmented Bar', () => {
+    const adminKinshipPath = path.resolve(process.cwd(), 'src/app/admin/kinship/page.tsx');
+    const content = fs.readFileSync(adminKinshipPath, 'utf-8');
+
+    // 1. Không dùng container hạn hẹp max-w-5xl
+    assert.ok(
+      !content.includes('max-w-5xl'),
+      'src/app/admin/kinship/page.tsx không được chứa max-w-5xl (phải tuân thủ AdminShell fluid layout)'
+    );
+
+    // 2. Không chứa emoji rác trong định nghĩa nhóm và filter
+    const emojis = ['🏛️', '👥', '🤝', '🌸', '💍', '🌿', '📋'];
+    for (const em of emojis) {
+      assert.ok(
+        !content.includes(`'${em}'`) && !content.includes(`"${em}"`),
+        `src/app/admin/kinship/page.tsx không được chứa emoji '${em}'`
+      );
+    }
+
+    // 3. Sử dụng Segmented Bar với số lượng đếm dạng ({count})
+    assert.ok(
+      content.includes('({count})'),
+      'Filter bar phải hiển thị số lượng dạng ({count}) thay vì pill counter'
+    );
+    assert.ok(
+      content.includes('rounded-control'),
+      'Filter bar và group title phải dùng semantic token rounded-control'
+    );
+  });
+
+  // TC_UT_USER_KINSHIP_EDITORIAL_CLEANSE: KinshipPage loại bỏ toàn bộ pill trang trí
+  it('TC_UT_USER_KINSHIP_EDITORIAL_CLEANSE: src/app/kinship/page.tsx loại bỏ toàn bộ pill trang trí', () => {
+    const kinshipPagePath = path.resolve(process.cwd(), 'src/app/kinship/page.tsx');
+    const content = fs.readFileSync(kinshipPagePath, 'utf-8');
+
+    // Kiểm tra không có rounded-full bọc text/button trên trang Kinship
+    const matches = content.match(/className="[^"]*rounded-full[^"]*"/g) || [];
+    for (const m of matches) {
+      // Cho phép rounded-full duy nhất cho loader animate-spin hoặc indicator dot
+      const isAllowedIndicatorOrLoader = /animate-spin/.test(m) || /(w-[0-9.]+\s+h-[0-9.]+)/.test(m);
+      assert.ok(
+        isAllowedIndicatorOrLoader,
+        `Phát hiện pill không hợp lệ trên /kinship: ${m}`
+      );
+    }
+
+    // Nút swap và banner kết quả dùng rounded-control
+    assert.ok(
+      content.includes('rounded-control'),
+      'kinship/page.tsx phải dùng semantic class rounded-control cho các thẻ nhãn và controls'
+    );
+  });
+});

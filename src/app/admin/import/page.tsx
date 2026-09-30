@@ -417,7 +417,7 @@ export default function ExcelImportPage() {
                                     key={i}
                                     className="block text-[10px] font-semibold text-amber-600 dark:text-amber-400"
                                   >
-                                    ⚠ {warn}
+                                    {warn}
                                   </span>
                                 ))}
                               </div>

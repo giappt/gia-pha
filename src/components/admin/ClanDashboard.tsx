@@ -139,7 +139,7 @@ export default function ClanDashboard() {
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               Bàn Điều Hành
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+            <span className="px-2 py-0.5 rounded-control text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
               Hệ Thống Trực Tuyến
             </span>
           </div>

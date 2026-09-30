@@ -72,7 +72,7 @@ export const GhostNode = memo(({ data }: NodeProps<GhostNodeType>) => {
           Đời {nodeData.generationLevel}
         </span>
 
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100/90 dark:bg-amber-900/60 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
+        <span className="inline-flex items-center gap-1 rounded-control bg-amber-100/90 dark:bg-amber-900/60 px-1.5 py-0.2 text-[9px] font-bold text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
           <Link2 className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" /> {kinLabel}
         </span>
       </div>
@@ -101,7 +101,7 @@ export const GhostNode = memo(({ data }: NodeProps<GhostNodeType>) => {
       </div>
 
       {/* Footer thẻ: Chi nhánh gốc & Nút lướt camera sang node gốc */}
-      <div className="mt-auto h-[18px] shrink-0 flex items-center justify-between text-[9px] bg-amber-100/60 dark:bg-amber-900/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+      <div className="mt-auto h-[18px] shrink-0 flex items-center justify-between text-[9px] bg-amber-100/60 dark:bg-amber-900/40 px-1.5 py-0.5 rounded-control border border-amber-200 dark:border-amber-800">
         <span className="truncate max-w-[105px] text-amber-800 dark:text-amber-200 font-medium" title={nodeData.originalBranchName}>
           Gốc: {nodeData.originalBranchName || 'Chi khác'}
         </span>

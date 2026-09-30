@@ -251,7 +251,7 @@ export default async function HomePage({
               </h2>
             </div>
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${nearestGroup.days_left === 0
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-control text-xs font-bold ${nearestGroup.days_left === 0
                 ? 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/80 dark:text-rose-200 dark:border-rose-800'
                 : nearestGroup.days_left === 1
                   ? 'bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800'

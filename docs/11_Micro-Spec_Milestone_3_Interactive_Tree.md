@@ -12,12 +12,13 @@ _Tài liệu này là Single Source of Truth của Milestone 3.1. Mọi mã ngu�
   - Nền Canvas: Màu trắng ngọc trai / xám sáng tinh khiết (`bg-slate-50 dark:bg-slate-950`) với hoa văn chấm lưới mịn (`BackgroundVariant.Dots`).
   - Quầng sáng ngọc bích (Jade Emerald `#059669`), đường viền hairline 1px (`border-slate-200/80 dark:border-slate-800`), font chữ **Be Vietnam Pro**.
   - Tuyệt đối loại bỏ cấu trúc bo tròn lồng hộp (box-in-box).
-- **Quy tắc Hiển Thị Trạng Thái Sinh Tử & Tôn Kính (Member Status Badge Policy):**
-  - Góc trên bên phải thẻ `MemberNode` 100% dành cho trạng thái sinh tử và danh xưng tôn kính, tuyệt đối không chèn chữ vai vế họ hàng vào vị trí này.
-  - **Đời 1 (Gốc Gia Tộc):** Hiển thị huy hiệu tôn kính `✨ Cụ Tổ` (cho cả Cụ Ông và Cụ Bà Thủy Tổ).
+- **Quy tắc Hiển Thị Trạng Thái Sinh Tử & Tôn Kính (Chuẩn Editorial & Anti-Pill Toàn Diện):**
+  - Góc trên bên phải thẻ `MemberNode` dành cho nhận diện trạng thái sinh tử và danh xưng tôn kính theo phong cách mực thước, không lạm dụng nhãn viên thuốc (`rounded-full`).
+  - **Đời 1 (Gốc Gia Tộc):** Thẻ Cụ Thủy Tổ mang nhãn tôn kính `Cụ Tổ` chuẩn hình học `rounded-control` (nền `bg-amber-100`, chữ `text-amber-800`).
   - **Từ Đời 2 trở đi:**
-    - `† Đã mất` (`deceased`): Ký hiệu thập trang nghiêm `†`, gam màu xám đá `#475569` (`bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400`).
-    - `Còn sống` (`living`): Tag trạng thái xanh ngọc tươi tắn `#059669` (`bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300`).
+    - Tuyệt đối loại bỏ nhãn chữ "Còn sống" / "Đã mất" dạng viên thuốc (pill badge).
+    - **Người còn sống (`living`):** Chỉ hiển thị 1 chấm trạng thái xanh ngọc vi mô (`w-1.5 h-1.5 rounded-full bg-emerald-500`) tinh tế, thanh nhã.
+    - **Người đã mất (`deceased`):** Hiển thị niên đại di sản tại dòng thông tin phụ (`Sinh 1920 · Mất 1985` hoặc `1920 – 1985`) kèm chấm xám nhạt (`w-1.5 h-1.5 rounded-full bg-slate-400`).
 - **Triệt Tiêu Hoàn Toàn Dấu Chấm Thừa (Invisible Handles Policy):**
   - Toàn bộ các điểm neo `<Handle>` trong `MemberNode` và `GhostNode` chuyển sang trạng thái **tàng hình**:
     `className="!opacity-0 !w-0 !h-0 !border-0 !p-0 !min-w-0 !min-h-0 pointer-events-none"`.
@@ -30,17 +31,17 @@ _Tài liệu này là Single Source of Truth của Milestone 3.1. Mọi mã ngu�
 - **Quy Chuẩn Thẻ Hôn Phối Nội Tộc Đối Xứng 2 Chiều & Ghost Node Rể Nội Tộc:**
   - **Tại nhánh của người chồng (Chi 1 - Gia đình Tuấn):**
     - Tuấn (Nam, huyết tộc chính) đứng bên **Trái**.
-    - Mai (Nữ, phản chiếu `GhostNode`) đứng bên **Phải** (`border-2 border-dashed border-amber-500 bg-amber-50/85`), huy hiệu `🔗 Dâu nội tộc`, nút `Vị trí gốc ↗`.
+    - Mai (Nữ, phản chiếu `GhostNode`) đứng bên **Phải** (`border-2 border-dashed border-amber-500 bg-amber-50/85`), huy hiệu `Dâu nội tộc` (kèm icon `Link2`), nút `Vị trí gốc ↗`.
     - Con cái của cặp đôi sinh ra nằm bên nhánh cha (Chi 1).
   - **Tại nhánh của người vợ (Chi 2 - Nơi Mai sinh ra):**
     - Mai (Nữ, huyết tộc chính) đứng bên **Phải**.
-    - Khi BẬT hiển thị: Người chồng (Tuấn) xuất hiện dưới dạng **GhostNode Rể nội tộc** đứng bên **Trái** của Mai (tuân thủ chuẩn mực "Nam tả Nữ hữu"), mang viền vàng nét đứt `border-dashed border-amber-500 bg-amber-50/85`, huy hiệu `🔗 Rể nội tộc`, avatar xanh nam giới, nút `Vị trí gốc ↗` lướt sang Chi 1.
+    - Khi BẬT hiển thị: Người chồng (Tuấn) xuất hiện dưới dạng **GhostNode Rể nội tộc** đứng bên **Trái** của Mai (tuân thủ chuẩn mực "Nam tả Nữ hữu"), mang viền vàng nét đứt `border-dashed border-amber-500 bg-amber-50/85`, huy hiệu `Rể nội tộc` (kèm icon `Link2`), avatar xanh nam giới, nút `Vị trí gốc ↗` lướt sang Chi 1.
     - Cạnh hôn phối nối ngang màu xanh ngọc bích từ hông phải của Tuấn sang hông trái của Mai.
     - **Không nhân bản số đinh:** Con cái không vẽ bên Chi 2 để bảo toàn số đinh dòng họ.
   - **Cơ Chế Ẩn / Hiện Ghost Node Chồng Nội Tộc (do là con gái):**
     - Tham số layout `showInternalHusbands: boolean` (mặc định: `true`).
-    - Khi tắt (`showInternalHusbands = false`): Ẩn Ghost Node của chồng, thẻ của người con gái đứng độc lập gọn gàng với footer `🔗 Chồng: [Tên Chồng]... Xem gia đình ↗`.
-    - Điều khiển linh hoạt qua 2 tầng: Công tắc `[ 🔗 Hiển thị Rể nội tộc ]` trong Popover Tùy chọn Toolbar và nút toggle mắt nhanh trên footer thẻ con gái.
+    - Khi tắt (`showInternalHusbands = false`): Ẩn Ghost Node của chồng, thẻ của người con gái đứng độc lập gọn gàng với footer `Chồng: [Tên Chồng]... Xem gia đình ↗`.
+    - Điều khiển linh hoạt qua 2 tầng: Công tắc `[Hiển thị Rể nội tộc]` trong Popover Tùy chọn Toolbar và nút toggle mắt nhanh trên footer thẻ con gái.
 - **Cơ Chế Gốc Tùy Biến (Dynamic Focus Root) & Bộ Tìm Kiếm Gốc:**
   - Mặc định: Luôn hiển thị **Toàn họ (Cụ Tổ)**.
   - Dropdown chọn Gốc tích hợp ô tìm kiếm tên tự do (`Tìm tên thành viên làm Gốc...`), cho phép gõ tìm bất kỳ ai trong họ.
@@ -176,33 +177,33 @@ Khi `options.focusRootId` được truyền vào:
 ### 5.1. Thiết Kế Compact Toolbar
 ```text
 ┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ [🏛 Nguyễn Tộc]  [ 🌐 Gốc: Toàn họ ▾ ]         [ 🔍 Tìm thành viên... (Ctrl+K) ]      [ ⛶ ] [ ⚙ Tùy chọn ▾ ] │
+│ [Phạm Tộc]  [ Gốc: Toàn họ ▾ ]         [ Tìm thành viên... (Ctrl+K) ]            [ ⛶ ] [ Tùy chọn ▾ ] │
 └───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 - **Nút Căn giữa:** Icon `Maximize2` `[ ⛶ ]` có tooltip "Căn giữa toàn màn hình".
-- **Menu Popover `[ ⚙ Tùy chọn ▾ ]`:**
-  - Switch: 🟣 **Hiển thị nhánh họ ngoại** (Thay thế nút tím dài cũ).
-  - Switch: 🔗 **Hiển thị Rể nội tộc** (Bật/tắt Ghost Node của chồng bên nhánh người con gái).
-  - Switch: 🔒 **Khóa vị trí phả đồ** (Thay thế nút xanh dài cũ).
-  - Switch: 📅 **Ưu tiên hiển thị ngày Âm lịch**.
+- **Menu Popover `[ Tùy chọn ▾ ]`:**
+  - Switch: **Hiển thị nhánh họ ngoại** (Icon `Users` nét thanh).
+  - Switch: **Hiển thị Rể nội tộc** (Bật/tắt Ghost Node của chồng bên nhánh người con gái, icon `Link2`).
+  - Switch: **Khóa vị trí phả đồ** (Icon `Lock`).
+  - Switch: **Ưu tiên hiển thị ngày Âm lịch** (Icon `Calendar`).
 
 ### 5.2. Thiết Kế Footer Thẻ Thành Viên Phẳng Liền Mạch (Flat Seamless Footer)
 Triệt tiêu triệt để lỗi "hộp vàng nét đứt thò ra ngoài đáy thẻ" và tuân thủ nguyên tắc **Anti Box-in-Box** (Bài học số 8):
 ```text
 ┌───────────────────────────────────────────────────┐
-│ Đời 4                                   Còn sống  │
-│ ┌────┐  Nguyễn Thị Mai                            │
+│ Đời 4                                           ● │ ← chấm xanh vi mô w-1.5 h-1.5
+│ ┌────┐  Phạm Thị Mai                              │
 │ │ TM │  SN: 1992                                  │
 │ └────┘                                            │
 │ ───────────────────────────────────────────────── │ ← hairline border-t siêu mảnh
-│ 🔗 Chồng: Nguyễn Văn Tuấn                 Chi 1 ↗ │ ← nút pill nhỏ gọn không bao giờ rớt dòng
+│ Chồng: Phạm Văn Tuấn                      Chi 1 ↗ │ ← nút điều hướng rounded-control
 └───────────────────────────────────────────────────┘
 ```
 - **Xóa bỏ hoàn toàn "lồng hộp nét đứt":** Không tạo thẻ phụ viền nét đứt bên trong thẻ chính.
 - **Dòng phẳng tích hợp (Single Flat Row):** Ngăn cách bởi `border-t border-slate-100 dark:border-slate-800/80 pt-1 mt-0.5`.
 - **Căn chỉnh nhãn và nút điều hướng:**
   - Bên trái: Icon `Link2` màu hổ phách dịu (`text-amber-600 dark:text-amber-400`) + nhãn `Chồng: [Tên chồng]` (truncate an toàn).
-  - Bên phải: Nút pill nhỏ gọn `Chi 1 ↗` (ngắn gọn 6 ký tự, nền `bg-amber-50 dark:bg-amber-950/60`, hover đổi màu mượt mà, `whitespace-nowrap` tuyệt đối không bị ngắt thành 2 dòng).
+  - Bên phải: Nút điều hướng nhỏ gọn `Chi 1 ↗` chuẩn `rounded-control` (ngắn gọn 6 ký tự, nền `bg-amber-50 dark:bg-amber-950/60`, hover đổi màu mượt mà, `whitespace-nowrap` tuyệt đối không bị ngắt thành 2 dòng).
 - **Khống chế chống tràn (Overflow Containment Guard):** Thẻ `MemberNode` trang bị `overflow-hidden`, đảm bảo 100% không có bất kỳ pixel nào tràn ra ngoài đường bo cong tròn `rounded-xl`.
 
 ### 5.3. Quy Chuẩn Phản Hồi Điều Hướng & Loading Chuyển Màn Toàn Cục (Global Navigation & Route Transitions)
@@ -254,7 +255,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 - **Trường hợp 2 — Khách (Guest) hoặc Thành viên CHƯA liên kết node:**
   - **Gốc mặc định:** Hệ thống tự động chọn **Cụ Thủy Tổ (Đời 1)** làm Gốc, nhưng **chỉ mở rộng 3 đời đầu** (~15 người). Cây hiển thị trang nghiêm nguồn gốc xuất xứ của dòng họ mà không bị ngợp.
   - Các nhánh từ Đời 4 trở đi gập gọn thành nút: `[ + Chi 1: 180 người ]`, `[ + Chi 2: 240 người ]`.
-  - **Banner Gợi Ý Tương Tác:** Chip nhẹ nhàng góc canvas: *"👋 Chưa nhận vị trí của bạn trong cây? [ 🎯 Tìm & Nhận Node ] hoặc gõ tìm tên người thân để xem nhanh 5 đời quanh họ"*.
+  - **Thanh Thông Báo Định Vị:** Thanh thông báo mực thước góc canvas (`rounded-control border border-emerald-500/40 shadow-sm`): *"Chưa nhận vị trí trong cây? [Nhận Node] hoặc gõ tìm tên người thân để xem nhanh 5 đời quanh họ"*.
   - Người dùng có thể click vào bất kỳ ai trên cây hoặc tìm kiếm trên thanh Spotlight để chuyển sang xem **Bán kính 5 đời** quanh người đó.
 
 #### 5.4.4. Cắt Tỉa Khung Nhìn (Viewport Virtualization):
@@ -312,13 +313,13 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 ### 6.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
 *(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI tuyệt đối cấm dùng browser_subagent thay thế theo [R-NO-BROWSER])*
 
-- [ ] **UAT_01 (Trạng Thái Sinh Tử & Tôn Kính Góc Phải):** Cụ Tổ Đời 1 hiển thị `✨ Cụ Tổ` (cả Cụ Ông và Cụ Bà); từ Đời 2 trở đi hiển thị chuẩn `† Đã mất` hoặc `Còn sống`; xóa bỏ hoàn toàn chữ `Con dâu`/`Con rể` khỏi vị trí này.
-- [ ] **UAT_02 (Thẻ Dâu/Rể Nội Tộc Viền Vàng Nét Đứt Đối Xứng):** Thẻ Mai ở Chi 1 có viền vàng nét đứt kèm nút `Vị trí gốc ↗`; ở Chi 2 thẻ Mai cũng có nhận diện hổ phách nét đứt `🔗 Hôn phối nội tộc (Chi 1)` kèm nút `Xem gia đình ↗`.
+- [ ] **UAT_01 (Trạng Thái Sinh Tử & Tôn Kính Góc Phải):** Cụ Tổ Đời 1 hiển thị huy hiệu tôn kính Cụ Tổ; từ Đời 2 trở đi hiển thị trạng thái sinh tử mực thước bằng chấm trạng thái vi mô và niên đại di sản (không dùng nhãn chữ 'Còn sống'/'Đã mất'); xóa bỏ hoàn toàn chữ `Con dâu`/`Con rể` khỏi vị trí này.
+- [ ] **UAT_02 (Thẻ Dâu/Rể Nội Tộc Viền Vàng Nét Đứt Đối Xứng):** Thẻ Mai ở Chi 1 có viền vàng nét đứt kèm nút `Vị trí gốc ↗`; ở Chi 2 thẻ Mai cũng có nhận diện hổ phách nét đứt `Hôn phối nội tộc (Chi 1)` kèm nút `Xem gia đình ↗`.
 - [ ] **UAT_03 (Bộ Tìm Kiếm Gốc & Trải Nghiệm Cô Lập Nhánh):** Mặc định xem Toàn họ; gõ tìm tên bất kỳ ai trong menu Gốc để chỉ vẽ cây con của người đó, ẩn các nhánh khác; nút `(X)` tròn trở về Toàn họ.
 - [ ] **UAT_04 (Layout Toolbar & Không Bị Chồng Chéo Menu Profile):** Dropdown Profile của Navbar có z-index cao (`z-[100]`), mở ra đè mượt mà lên trên không bị ô search của Toolbar cắt ngang hay va chạm.
 - [ ] **UAT_05 (Nhận Diện Con Trưởng):** Con trai lớn nhất trong các con hiển thị nhãn/ký hiệu `(Trưởng)` cạnh tên.
 - [ ] **UAT_06 (Trải Nghiệm Ẩn/Hiện Ghost Node Chồng Nội Tộc):** Bật/tắt công tắc "Hiển thị Rể nội tộc" trên Toolbar hoặc nút mắt trên thẻ Mai; kiểm tra Ghost Node của Tuấn (viền vàng nét đứt) xuất hiện/biến mất mượt mà bên trái của Mai.
-- [ ] **UAT_07 (Footer Hôn Phối Phẳng & Không Bị Tràn Viền):** Khi tắt "Hiển thị Rể nội tộc", thẻ Mai hiển thị footer phẳng phiu, chữ `Chồng: Nguyễn Văn Tuấn` và nút `Chi 1 ↗` nằm trọn vẹn $100\%$ bên trong viền bo cong `rounded-xl`, không còn bất kỳ hộp vàng nét đứt nào bị thò ra ngoài đáy thẻ.
+- [ ] **UAT_07 (Footer Hôn Phối Phẳng & Không Bị Tràn Viền):** Khi tắt "Hiển thị Rể nội tộc", thẻ Mai hiển thị footer phẳng phiu, chữ `Chồng: Phạm Văn Tuấn` và nút điều hướng `Chi 1 ↗` nằm trọn vẹn $100\%$ bên trong viền bo cong `rounded-xl`, không còn bất kỳ hộp vàng nét đứt nào bị thò ra ngoài đáy thẻ.
 - [ ] **UAT_08 (Chuyển Màn Có Top Progress Bar & Skeletons Toàn Diện):** Bấm chuyển giữa các tab trên cả PC và Mobile thấy thanh tiến trình chạy ngay trên mép đỉnh và skeleton xuất hiện tức thì trong 50ms.
 - [ ] **UAT_09 (Màu Progress Bar Đồng Bộ Theme):** Đổi Dark/Light mode hoặc kiểm tra CSS variable, thanh progress bar đổi màu đồng bộ theo chủ đề dòng họ.
 - [ ] **UAT_10 (Trải Nghiệm Khách & Người Chưa Liên Kết Trên Cây):** Vào cây dưới vai trò Guest hoặc tài khoản chưa liên kết, thấy Thủy Tổ + 3 đời đầu gọn gàng kèm banner gợi ý nhận node.

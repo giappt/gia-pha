@@ -18,7 +18,7 @@
      - Scoped Views: Super Admin quản lý toàn họ; Trưởng Chi có Sidebar scoped theo Chi; Bố Mẹ duyệt con cái qua Drawer ngữ cảnh trên Cây.
      - Route cũ `/branch` thiết lập chuyển hướng (redirect 307) về `/admin/claims`.
   4. Tương tác Deep Zoom & Highlight Node Trên Cây:
-     - Nút `[🎯 Xem trên cây]` trỏ tới `/tree?focus={member_id}`.
+     - Nút `[ Xem trên cây]` trỏ tới `/tree?focus={member_id}`.
      - `FamilyTreeCanvas.tsx` đón nhận `focus`: lia camera mượt mà `reactFlowInstance.setCenter(node.x, node.y, { zoom: 1.15, duration: 800 })`, tự động mở Drawer chi tiết và bật hiệu ứng viền phát sáng (Highlight Pulse) 2.5s.
 - Trạng thái tài liệu:
   - File [docs/17_Micro-Spec_Milestone_8_Member_Onboarding_Decentralized_Approval.md](file:///d:/pj/other/fat/docs/17_Micro-Spec_Milestone_8_Member_Onboarding_Decentralized_Approval.md) đã cập nhật xong Section 1.1 (Phase 3), Section 5.4-5.7, Section 7.1 (6 TC mới ở dạng `[ ]`), Section 7.2 (UAT mới ở dạng `[ ]`), Section 8 (Regression Guards ở dạng `[ ]`).

@@ -577,7 +577,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
       {(!effectiveRole || effectiveRole === 'viewer' || effectiveRole === 'guest') && isGuestBannerVisible && (
         <div
           id="unlinked-member-guide-banner"
-          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/95 dark:bg-slate-900/95 border border-emerald-500/40 shadow-lg backdrop-blur-md text-xs text-slate-700 dark:text-slate-200 transition-all animate-fade-in max-w-[92vw]"
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-4 py-2 rounded-control bg-white/95 dark:bg-slate-900/95 border border-emerald-500/40 shadow-sm backdrop-blur-md text-xs text-slate-700 dark:text-slate-200 transition-all animate-fade-in max-w-[92vw]"
         >
           <span className="flex items-center gap-1.5 font-medium">
             <span>Chưa nhận vị trí trong cây?</span>
@@ -594,7 +594,7 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
           </span>
           <button
             onClick={() => setIsGuestBannerVisible(false)}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-1 p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-1 p-0.5 rounded-control hover:bg-slate-100 dark:hover:bg-slate-800"
             aria-label="Đóng gợi ý"
           >
             <X className="w-3.5 h-3.5" />

@@ -15,7 +15,7 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
        - Phụ trách Gia Đình Của Bạn trực hệ của mình (Bản thân, Vợ/Chồng, Con đẻ chưa tự liên kết tài khoản).
        - **Tuyệt đối không dùng nút (+) trôi nổi trên thẻ Canvas:** Giữ Cây Gia Phả 100% sạch sẽ, tôn nghiêm, triệt tiêu nguy cơ bấm nhầm khi pan/zoom hoặc che khuất dây bus huyết thống.
        - **Tập trung 100% vào Drawer Tác Vụ Phải (`MemberDetailDrawer`):**
-         + **Anti-Pill Design:** Triệt tiêu hoàn toàn sự lạm dụng 5-6 pill badges san sát nhau ở Header; thay bằng Typography phân cấp sang trọng (`Đời 6 · Chi 2 - Ngành 1 · Con trưởng`), trạng thái sinh tử thể hiện bằng text tinh tế (`● Còn sống` hoặc `🕯️ Đã mất (Năm - Năm)`).
+         + **Anti-Pill Design:** Triệt tiêu hoàn toàn sự lạm dụng 5-6 pill badges san sát nhau ở Header; thay bằng Typography phân cấp sang trọng (`Đời 6 · Chi 2 - Ngành 1 · Con trưởng`), trạng thái sinh tử thể hiện bằng text tinh tế (`● Còn sống` hoặc `Đã mất (Năm - Năm)`).
          + **Tác vụ theo đúng ngữ cảnh (Contextual Actions):** Nút `[+ Thêm Con]` đặt ngay tiêu đề khối Con Cái; nút `[+ Thêm Vợ/Chồng]` đặt ngay tiêu đề khối Hôn Phối; nút `[Sửa hồ sơ]` đặt tại Action Bar. Nút bấm thiết kế chuẩn mực (`rounded-lg` viền mỏng), tuyệt đối không dùng pill tags làm nút bấm.
          + **Phân quyền hẹp (RBAC Scope):** Chỉ bật các nút Thêm/Sửa khi xem đối tượng thuộc Gia Đình Của Bạn; khi xem họ hàng xa hoặc khách thì toàn bộ nút Thêm/Sửa bị ẩn hoàn toàn (Chỉ xem).
          + **Khóa tuyệt đối quyền Xóa:** `claimed_member` không có quyền xóa bất kỳ thành viên nào (chỉ Super Admin / Branch Editor mới được xóa).
@@ -60,7 +60,7 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
 - [x] **Phase 2.2 (Drawer Redesign & Anti-Pill):** Tinh chỉnh `MemberDetailDrawer.tsx`: Dẹp bỏ rừng pill badges trong Header thay bằng Typography phân cấp cao cấp; bổ sung các nút tác vụ ngữ cảnh `[+ Thêm Con]` ở khối Con cái, `[+ Thêm Vợ/Chồng]` ở khối Hôn phối, và `[Sửa hồ sơ]` ở Action Bar.
 - [x] **Phase 2.3 (Canvas Wiring & Optimistic Update):** Truyền `userProfile` (role & linked node) từ `src/app/tree/page.tsx` xuống `FamilyTreeCanvas.tsx` $\rightarrow$ `MemberDetailDrawer`; kết nối handler mở `MemberFormModal` với cha/mẹ được khóa sẵn; tự động chèn node con vào cây và lia camera mượt mà sau khi lưu.
 - [x] **Phase 2.4 (Test & Verify Phase 2):** Phủ test `TC_UT_CLAIM_AUTO_APPROVE_PARENT_ADD`, các test API guards (`TC_INT_MEMBERS_API_CLAIMED_MEMBER_*`), kiểm tra bảo vệ con đã claim tài khoản. Nghiệm thu thị giác Drawer.
-- [x] **Phase 2.5 (Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc):** Mở rộng RBAC cho ông/bà F0 quản lý cháu F2 chưa claim; thuần Việt hóa Vợ/Chồng theo giới tính mục tiêu; định vị nhãn thân tộc `Con cái (Cháu của bạn)`; bổ sung tooltip cho nút `[🎯 Đặt làm Gốc]`.
+- [x] **Phase 2.5 (Tam Đại Đồng Đường & Thuần Việt Hóa Thân Tộc):** Mở rộng RBAC cho ông/bà F0 quản lý cháu F2 chưa claim; thuần Việt hóa Vợ/Chồng theo giới tính mục tiêu; định vị nhãn thân tộc `Con cái (Cháu của bạn)`; bổ sung tooltip cho nút `[Đặt làm Gốc]`.
 
 ### 🌟 Giai Đoạn 3 (Phase 3): Phê Duyệt Phân Tán (3 Tầng), Đồng Nhất Entry Point & Giao Diện Phẳng Chuẩn Admin Settings
 - [ ] **Phase 3.1 (Core Logic & Review APIs):**
@@ -69,7 +69,7 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
   + Viết API `PATCH /api/claims/[id]/review` xử lý 3 quyết định (`approved`, `rejected`, `assign`) kèm cơ chế Insert & Shift tịnh tiến thứ tự con (`birth_order`).
 - [ ] **Phase 3.2 (Đồng Nhất Entry Point & Tích Hợp AdminSidebar):**
   + Gỡ bỏ hoàn toàn link `[ Quản trị Chi ]` khỏi `src/components/navbar/Navbar.tsx` để giữ thanh điều hướng thanh thoát, tôn nghiêm cho 3 chức năng công cộng (`Cây Gia Phả`, `Lịch Giỗ`, `Xưng hô`).
-  + Bổ sung mục **`[ 📋 Phê Duyệt Hồ Sơ ]`** (kèm badge pending) vào **`AdminSidebar.tsx`** thuộc nhóm `THÀNH VIÊN & TÀI KHOẢN`.
+  + Bổ sung mục **`[Phê Duyệt Hồ Sơ]`** (kèm badge pending) vào **`AdminSidebar.tsx`** thuộc nhóm `THÀNH VIÊN & TÀI KHOẢN`.
   + Dropdown Avatar (`AuthButton.tsx`) bổ sung Quick Shortcut dẫn thẳng tới `/admin/claims`.
   + Route cũ `/branch` thiết lập chuyển hướng (redirect 307) về `/admin/claims`.
 - [ ] **Phase 3.3 (Phê Duyệt Hồ Sơ Chuẩn AdminShell - Fluid Canvas & Zero Layout Shift):**
@@ -429,7 +429,7 @@ sequenceDiagram
   - **Dọn sạch Header (Zero Pill Spams):** Bãi bỏ hoàn toàn việc nhồi nhét 5-6 pill badges bo tròn nhiều màu. Thay thế bằng Typography phân cấp sang trọng, tôn nghiêm:
     + Họ tên lớn, đậm nét (`text-lg font-bold text-slate-900 dark:text-slate-50`).
     + Dòng danh xưng thế hệ & chi nhánh thanh lịch: `Đời {generation_level} · {branch_name || 'Chi phái chưa xếp'}` kèm ký hiệu ` Con trưởng` dạng text trang nhã dùng dấu chấm ngăn cách (`·`).
-    + Trạng thái sinh tử tinh tế: Một dot nhỏ `● Còn sống` (ngọc bích) hoặc biểu tượng ngọn nến `🕯️ Đã mất ({sinh} - {mất})` dạng text mộc mạc, không đóng khung viên thuốc lòe loẹt.
+    + Trạng thái sinh tử tinh tế: Một dot nhỏ `● Còn sống` (ngọc bích) hoặc biểu tượng ngọn nến `Đã mất ({sinh} - {mất})` dạng text mộc mạc, không đóng khung viên thuốc lòe loẹt.
 - **Tác Vụ Ngữ Cảnh Chuẩn Mực (Contextual Action Buttons):**
   - Nút bấm thiết kế chuẩn mực (`rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 px-2.5 py-1.5 text-xs font-semibold shadow-xs transition-colors`), tuyệt đối không dùng pill tags làm nút bấm.
   - **Tại Khối Con Cái (Children Section):**
@@ -443,7 +443,7 @@ sequenceDiagram
 - **Thanh Điều Khiển Chân Drawer (Footer Action Bar):**
   - **Nút `[✏️ Sửa hồ sơ]`:** Hiển thị khi `canUserManageMember(currentUser, target.id, ...)` trả về `true` (Bao gồm Bản thân $F_0$, Vợ/Chồng, Con đẻ $F_1$, và Cháu trực hệ $F_2$ chưa tự liên kết tài khoản, hoặc Admin/Trưởng Chi).
   - **Nút `[↕️ Sắp xếp con]`:** Hiển thị khi người này có con và user có quyền quản lý.
-  - **Nút `[🎯 Đặt làm Gốc]`:** Có Tooltip và thuộc tính `title` giải thích tường minh: *"Lọc cây gia phả lấy người này làm gốc, xem riêng nhánh con cháu của họ và tự động đổi góc nhìn xưng hô thân tộc"*. Mở cho toàn bộ người dùng (kể cả khách / viewer).
+  - **Nút `[Đặt làm Gốc]`:** Có Tooltip và thuộc tính `title` giải thích tường minh: *"Lọc cây gia phả lấy người này làm gốc, xem riêng nhánh con cháu của họ và tự động đổi góc nhìn xưng hô thân tộc"*. Mở cho toàn bộ người dùng (kể cả khách / viewer).
   - **Nút `[🔍 Tra cứu xưng hô]`:** Mở cho toàn bộ người dùng.
   - **Nút `[🗑️ Xóa hồ sơ]`:** Chỉ hiển thị cho `super_admin` và `branch_editor` khi thành viên không có con; ẩn hoàn toàn đối với `claimed_member`.
 - **Dây Nối Trạng Thái Từ Server Tới Canvas:**
@@ -474,22 +474,22 @@ sequenceDiagram
 
 ### 5.5. Tích Hợp AdminSidebar & Lối Tắt Nhanh (Navigation & Entry Point)
 - **Menu Quản Trị Chính Thức:**
-  - Bổ sung mục điều hướng **`[ 📋 Phê Duyệt Hồ Sơ ]`** trực tiếp vào `src/components/admin/AdminSidebar.tsx` thuộc nhóm **`THÀNH VIÊN & TÀI KHOẢN`**.
+  - Bổ sung mục điều hướng **`[Phê Duyệt Hồ Sơ]`** trực tiếp vào `src/components/admin/AdminSidebar.tsx` thuộc nhóm **`THÀNH VIÊN & TÀI KHOẢN`**.
   - Hiển thị Badge số lượng phiếu `pending` (nền hổ phách, chữ đậm) cập nhật realtime.
 - **Lối Tắt Nhanh (Quick Shortcut) Trên Dropdown Avatar:**
-  - Trong Dropdown Avatar người dùng (`src/components/auth/AuthButton.tsx`), duy trì mục `[ 📋 Phê Duyệt Hồ Sơ ]` (kèm badge) đặt ngay dưới *"Cài đặt của tôi"*.
+  - Trong Dropdown Avatar người dùng (`src/components/auth/AuthButton.tsx`), duy trì mục `[Phê Duyệt Hồ Sơ]` (kèm badge) đặt ngay dưới *"Cài đặt của tôi"*.
   - Mục này đóng vai trò 1-click Quick Shortcut dẫn thẳng tới `/admin/claims`.
 - **Chuyển Hướng Route Cũ:**
   - Route `/branch` và `/approvals` tự động thực hiện Redirect 307 về `/admin/claims`.
 - **Phân Định Trải Nghiệm 3 Nhóm Người Dùng (Role-Based Scoping & Sidebar Isolation):**
-  - Cả 3 nhóm người dùng đều truy cập qua menu `[ 📋 Phê Duyệt Hồ Sơ ]` trên Dropdown Avatar và duyệt tại Cổng Phê Duyệt `/admin/claims` trong không gian `AdminShell` chuẩn mực.
+  - Cả 3 nhóm người dùng đều truy cập qua menu `[Phê Duyệt Hồ Sơ]` trên Dropdown Avatar và duyệt tại Cổng Phê Duyệt `/admin/claims` trong không gian `AdminShell` chuẩn mực.
   - Phân quyền cổng Layout (`src/app/admin/layout.tsx`): Cho phép `claimed_member` truy cập nếu đích đến là `/admin/claims`. Nếu họ cố truy cập các route quản trị nhạy cảm (`/admin/users`, `/admin/profile`, `/admin/import`), layout lập tức chuyển hướng unauthorized.
   - Phân quyền Menu Sidebar (`src/components/admin/AdminSidebar.tsx`):
     - *Super Admin:* Toàn quyền trên `/admin/claims` với `AdminSidebar` hiển thị đầy đủ 4 nhóm danh mục quản trị, huy hiệu `Super Admin`.
     - *Trưởng Chi (`branch_editor`):* Truy cập `/admin/claims` với `AdminSidebar` scoped theo Chi (chỉ thấy các chức năng thuộc thẩm quyền của Chi mình), huy hiệu `Ban Biên Tập Chi`.
     - *Bố Mẹ (`claimed_member`):* Truy cập `/admin/claims` với `AdminSidebar` cách ly tối đa (Sidebar Isolation):
       * Ẩn toàn bộ 4 nhóm quản trị hệ thống (`TỔNG QUAN`, `GIA PHẢ & QUY ƯỚC`, `VẬN HÀNH & HỆ THỐNG`, và các mục Quản lý user/role).
-      * Chỉ hiển thị duy nhất nhóm **`Gia Đình Của Bạn`** với mục **`[ 📋 Phê Duyệt Hồ Sơ Con Cháu ]`** (kèm realtime badge) và footer **`[ ⬅️ Về Cây Gia Phả ]`**.
+      * Chỉ hiển thị duy nhất nhóm **`Gia Đình Của Bạn`** với mục **`[Phê Duyệt Hồ Sơ Con Cháu]`** (kèm realtime badge) và footer **`[ ⬅️ Về Cây Gia Phả ]`**.
       * Huy hiệu vai trò hiển thị trang trọng: `Con Cháu` / `Thành Viên`.
       * Bảng hiển thị tiêu đề scoped: `"Phê Duyệt Hồ Sơ Con Cháu"`, chỉ lọc các phiếu liên quan đến con cái/Gia Đình Của Bạn của mình.
 
@@ -576,7 +576,7 @@ sequenceDiagram
 | **TC_UT_DRAWER_SPOUSE_GENDER_TITLES** | Drawer hiển thị nhãn thuần Việt theo giới tính: + Thêm vợ (cho Nam) và + Thêm chồng (cho Nữ) | `tests/decentralized-claim.test.ts` | Target là Nam hoặc Nữ trong MemberDetailDrawer | Kiểm tra mã nguồn JSX và nhãn button | Nam hiển thị `+ Thêm vợ` và `Vợ (N):`, Nữ hiển thị `+ Thêm chồng` và `Chồng (N):` | Culture UX | - [x] PASS |
 | **TC_UT_DRAWER_GRANDCHILD_LABEL** | Khi xem Drawer của con, mục con cái hiển thị nhãn thân tộc Con cái (Cháu của bạn) | `tests/decentralized-claim.test.ts` | User F0 mở Drawer của con đẻ F1 | Kiểm tra nhãn hiển thị tại Children Section | Hiển thị chuỗi `Con cái (Cháu của bạn)` thay vì chỉ `Con cái` | Kinship UX | - [x] PASS |
 | **TC_UT_DRAWER_FOCUS_ROOT_TOOLTIP** | Nút Đặt làm Gốc có tooltip giải thích tường minh ý nghĩa tính năng Focus Root | `tests/decentralized-claim.test.ts` | Nút Đặt làm Gốc trong MemberDetailDrawer | Kiểm tra thuộc tính `title` của button | Có title giải thích lọc cây theo tiền nhân và đổi góc nhìn xưng hô | UX Clarity | - [x] PASS |
-| **TC_UT_ADMIN_SIDEBAR_CLAIMS_LINK** | AdminSidebar có mục Phê Duyệt Hồ Sơ dẫn tới /admin/claims kèm badge realtime | `tests/decentralized-claim.test.ts` | Super Admin hoặc người có quyền quản trị | Kiểm tra menu item trong AdminSidebar | Có link [ 📋 Phê Duyệt Hồ Sơ ] trỏ tới /admin/claims và badge pending | Admin Nav | - [x] PASS |
+| **TC_UT_ADMIN_SIDEBAR_CLAIMS_LINK** | AdminSidebar có mục Phê Duyệt Hồ Sơ dẫn tới /admin/claims kèm badge realtime | `tests/decentralized-claim.test.ts` | Super Admin hoặc người có quyền quản trị | Kiểm tra menu item trong AdminSidebar | Có link [Phê Duyệt Hồ Sơ] trỏ tới /admin/claims và badge pending | Admin Nav | - [x] PASS |
 | **TC_UT_UNIFIED_APPROVAL_SCOPED_VIEW_PARENT** | Giao diện duyệt scoped cho Bố Mẹ hiển thị tiêu đề và danh sách con cháu Gia Đình Của Bạn | `tests/decentralized-claim.test.ts` | User là claimed_member có phiếu con xin nối | Render/kiểm tra Cổng Phê Duyệt | Tiêu đề "Phê Duyệt Hồ Sơ Con Cháu", chỉ hiển thị phiếu thuộc gia đình mình | Scoped View | - [x] PASS |
 | **TC_UT_UNIFIED_APPROVAL_SCOPED_VIEW_BRANCH_EDITOR** | Giao diện duyệt scoped cho Trưởng Chi hiển thị tiêu đề và danh sách Chi nhánh phụ trách | `tests/decentralized-claim.test.ts` | User là branch_editor của Chi 2 | Render/kiểm tra Cổng Phê Duyệt | Tiêu đề "Phê Duyệt Thành Viên Chi 2", hiển thị phiếu và con cháu thuộc Chi 2 | Scoped View | - [x] PASS |
 | **TC_UT_ADMIN_CLAIMS_BRANCH_FILTER** | Super Admin có Branch Selector trên Filter Bar để lọc phiếu theo Chi nhánh | `tests/decentralized-claim.test.ts` | User là super_admin xem /admin/claims | Kiểm tra thành phần điều khiển lọc trên thanh công cụ | Có Branch Selector; chọn Chi nhánh thì lọc danh sách phiếu tương ứng | UX Filter | - [x] PASS |
@@ -600,18 +600,18 @@ sequenceDiagram
 - [ ] **UAT_06 (Gợi Ý Thứ Tự Con Sinh Động & Nguyện Vọng Con Trưởng):** Dưới ô con thứ mấy hiển thị câu giải thích vị trí tức thì (đứng sau ai, đứng trước ai, ai chuyển bậc); khi chọn Nam có checkbox "Tôi là Con Trưởng (Trưởng Nam)".
 - [ ] **UAT_07 (Drawer Tác Vụ Gia Đình Của Bạn - Anti-Pill & Contextual Actions):** Đăng nhập với tài khoản `claimed_member` $\rightarrow$ Mở Drawer của bản thân hoặc vợ/chồng $\rightarrow$ Header đĩnh đạc không bị ngộ độc pill; thấy nút chuẩn mực `[+ Thêm Con]` ở khối Con cái, `[+ Thêm Vợ/Chồng]` ở khối Hôn phối, và `[Sửa hồ sơ]` ở Action Bar; bấm `+ Thêm con` $\rightarrow$ Modal mở với cha/mẹ được khóa sẵn $\rightarrow$ Lưu thành công $\rightarrow$ Cây phả hệ tự động chèn node con và lia camera nhẹ nhàng tới node mới.
 - [ ] **UAT_07_B (Bảo Mật Xem Ngoài Gia Đình Của Bạn):** Đăng nhập với tài khoản `claimed_member` $\rightarrow$ Mở Drawer của họ hàng xa, cụ kỵ $\rightarrow$ Toàn bộ nút Thêm / Sửa tự động ẩn 100%, chỉ có `[Đặt làm Gốc]` và `[Tra cứu xưng hô]`.
-- [ ] **UAT_08 (Tích Hợp AdminSidebar & Lối Tắt Avatar):** Đăng nhập tài khoản Super Admin $\rightarrow$ Thấy mục `[ 📋 Phê Duyệt Hồ Sơ ]` (kèm badge) trực tiếp trong AdminSidebar nhóm Thành Viên & Tài Khoản; mở Dropdown Avatar cũng có lối tắt dẫn thẳng vào `/admin/claims`; trên Navbar chính hoàn toàn sạch sẽ, KHÔNG CÒN nút `Quản Trị Chi Nhánh`.
+- [ ] **UAT_08 (Tích Hợp AdminSidebar & Lối Tắt Avatar):** Đăng nhập tài khoản Super Admin $\rightarrow$ Thấy mục `[Phê Duyệt Hồ Sơ]` (kèm badge) trực tiếp trong AdminSidebar nhóm Thành Viên & Tài Khoản; mở Dropdown Avatar cũng có lối tắt dẫn thẳng vào `/admin/claims`; trên Navbar chính hoàn toàn sạch sẽ, KHÔNG CÒN nút `Quản Trị Chi Nhánh`.
 - [ ] **UAT_09 (Console Sạch):** Mở Developer Console $\rightarrow$ 0 lỗi đỏ, 0 cảnh báo hydration.
 - [ ] **UAT_10 (Zero Double-Scrollbar & Wizard 2-Step):** Mở Tab 2 $\rightarrow$ Bước 1 cực kỳ phẳng phiu, gọn gàng, 0 có thanh cuộn; nhập họ tên $\rightarrow$ bấm nút Tiếp tục sang Bước 2; tại Bước 2 tìm kiếm Bố/Mẹ hiển thị kết quả dạng Thẻ Phẳng ngay dưới ô tìm kiếm, không dùng dropdown lơ lửng, không che khuất checkbox; toàn bộ modal chỉ có đúng 1 luồng cuộn tự nhiên duy nhất (Zero Double-Scrollbar); nút Quay lại Bước 1 hoạt động mượt mà.
 - [ ] **UAT_11 (Trải Nghiệm Thêm & Sửa Cháu Tam Đại F0 -> F1 -> F2):** Đăng nhập tài khoản `claimed_member` F0 $\rightarrow$ Mở Drawer của Con F1 $\rightarrow$ Thấy nhãn `Con cái (Cháu của bạn)` $\rightarrow$ Bấm `[+ Thêm con]` tạo Cháu F2 thành công $\rightarrow$ Click vào Cháu F2 trên cây $\rightarrow$ Thấy nút `[✏️ Sửa hồ sơ]` mở khóa và sửa thông tin nhân khẩu bình thường.
 - [ ] **UAT_12 (Nhãn Phối Ngẫu Thuần Việt Theo Giới Tính):** Mở Drawer thành viên Nam $\rightarrow$ Thấy tiêu đề `Vợ (N):` và nút `[+ Thêm vợ]`; Mở Drawer thành viên Nữ $\rightarrow$ Thấy tiêu đề `Chồng (N):` và nút `[+ Thêm chồng]`; Modal mở ra hiển thị `Thêm thông tin Vợ/Chồng`.
-- [ ] **UAT_13 (Tooltip Trực Quan Nút Đặt Làm Gốc):** Rê chuột vào nút `[🎯 Đặt làm Gốc]` ở chân Drawer $\rightarrow$ Thấy tooltip giải thích rõ ràng ý nghĩa lọc cây và đổi góc nhìn xưng hô thân tộc.
+- [ ] **UAT_13 (Tooltip Trực Quan Nút Đặt Làm Gốc):** Rê chuột vào nút `[Đặt làm Gốc]` ở chân Drawer $\rightarrow$ Thấy tooltip giải thích rõ ràng ý nghĩa lọc cây và đổi góc nhìn xưng hô thân tộc.
 - [ ] **UAT_14 (Giao Diện /admin/claims Chuẩn AdminShell):** Vào `/admin/claims` $\rightarrow$ Giao diện nằm trọn vẹn trong AdminShell, Sidebar cố định 256px bên trái, Fluid Canvas mở rộng 100% bên phải, không dùng container max-w-5xl, không tab gạch chân làm nhảy giật lề trang.
 - [ ] **UAT_15 (Thao Tác Duyệt Hồ Sơ):** Bấm `[ Chấp Thuận ]` hoặc `[ Từ Chối ]` $\rightarrow$ Cập nhật tức thì, hiển thị thông báo thành công phẳng chuẩn mực.
 - [ ] **UAT_16 (Super Admin Lọc Chi Nhánh Trên Filter Bar):** Super Admin đăng nhập $\rightarrow$ Mặc định xem toàn bộ phiếu cần duyệt; khi chọn Chi 1 hoặc Chi 2 từ Dropdown trên thanh công cụ lọc thì bảng lọc tức thì; không bị xáo trộn hay giật layout.
-- [ ] **UAT_17 (Deep Zoom Camera & Highlight Node Trên Cây):** Từ Cổng Phê Duyệt bấm `[🎯 Xem trên cây]` $\rightarrow$ Chuyển sang `/tree?focus=...` $\rightarrow$ Camera lia mượt mà và zoom vào đúng node người đó, Drawer chi tiết tự động mở lên, viền node phát sáng nhẹ trong 2.5s.
+- [ ] **UAT_17 (Deep Zoom Camera & Highlight Node Trên Cây):** Từ Cổng Phê Duyệt bấm `[Xem trên cây]` $\rightarrow$ Chuyển sang `/tree?focus=...` $\rightarrow$ Camera lia mượt mà và zoom vào đúng node người đó, Drawer chi tiết tự động mở lên, viền node phát sáng nhẹ trong 2.5s.
 - [ ] **UAT_18 (Thêm Vợ/Chồng Cho Bản Thân - Thành Công & Chuẩn Thế Hệ):** Đăng nhập tài khoản `claimed_member` (Phạm Tiến Giáp - Đời 13) $\rightarrow$ Mở Drawer của bản thân $\rightarrow$ Bấm `[+ Thêm vợ]` $\rightarrow$ Điền họ tên vợ $\rightarrow$ Bấm Lưu $\rightarrow$ Hệ thống lưu thành công, không báo lỗi 403, vợ hiển thị đúng Đời 13 trên Cây và Drawer.
-- [ ] **UAT_19 (Bố Mẹ Vào Cổng Duyệt Hồ Sơ Con Cháu - Sidebar Cách Ly):** Đăng nhập tài khoản `claimed_member` $\rightarrow$ Mở menu Avatar bấm `[ 📋 Phê Duyệt Hồ Sơ ]` $\rightarrow$ Vào thẳng `/admin/claims`, không bị văng ra trang chủ hay báo lỗi Super Admin; Sidebar bên trái tinh gọn sạch sẽ, ẩn toàn bộ các mục quản trị tối cao, chỉ hiện mục Duyệt Con Cháu và Về Cây; bảng hiển thị đúng tiêu đề "Phê Duyệt Hồ Sơ Con Cháu".
+- [ ] **UAT_19 (Bố Mẹ Vào Cổng Duyệt Hồ Sơ Con Cháu - Sidebar Cách Ly):** Đăng nhập tài khoản `claimed_member` $\rightarrow$ Mở menu Avatar bấm `[Phê Duyệt Hồ Sơ]` $\rightarrow$ Vào thẳng `/admin/claims`, không bị văng ra trang chủ hay báo lỗi Super Admin; Sidebar bên trái tinh gọn sạch sẽ, ẩn toàn bộ các mục quản trị tối cao, chỉ hiện mục Duyệt Con Cháu và Về Cây; bảng hiển thị đúng tiêu đề "Phê Duyệt Hồ Sơ Con Cháu".
 - [ ] **UAT_20 (Ma Trận Phân Quyền Đồng Bộ Tại /admin/roles):** Mở `/admin/roles` $\rightarrow$ Cột "Con Cháu Gắn Node" hiển thị rõ ràng quyền `[Được phép]` ở mục "Tự Quản Thông Tin Gia Đình Của Bạn" và mục "Phê Duyệt Hồ Sơ Con Cháu (Gia Đình Của Bạn)"; các mục quản trị toàn tộc bị khóa đúng phân cấp; bảng cân đối, không co giật layout.
 - [ ] **UAT_21 (Kill Switch Quản Trị Rủi Ro Tại /admin/features):** Mở `/admin/features` $\rightarrow$ Thấy thẻ "Cho Phép Con Cháu Tự Sửa Thông Tin Gia Đình" với nút gạt On/Off và mô tả rõ ràng; gạt Tắt và bấm Lưu $\rightarrow$ Mở Drawer của mình trên `/tree` $\rightarrow$ Các nút `+ Thêm con`, `+ Thêm vợ` và `Sửa hồ sơ` tự động biến mất, có dòng thông báo Ban Quản Trị đang tạm khóa để bảo toàn dữ liệu $\rightarrow$ Gạt Bật lại $\rightarrow$ Các nút phục hồi bình thường.
 - [ ] **UAT_22 (Chuẩn Hóa Danh Xưng Gia Đình Của Bạn):** Đăng nhập `claimed_member` vào `/admin/claims` $\rightarrow$ Thấy tiêu đề nhóm menu Sidebar là `GIA ĐÌNH CỦA BẠN`, badge chi nhánh là `Gia Đình Của Bạn`, subtitle là *"Xét duyệt và kết nối hồ sơ con cháu trong gia đình của bạn"*.

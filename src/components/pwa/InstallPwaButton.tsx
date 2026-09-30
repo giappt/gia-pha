@@ -211,7 +211,7 @@ export default function InstallPwaButton({
 
         <div className="space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
           <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+            <span className="w-5 h-5 rounded-control bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
               1
             </span>
             <div>
@@ -225,7 +225,7 @@ export default function InstallPwaButton({
           </div>
 
           <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+            <span className="w-5 h-5 rounded-control bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
               2
             </span>
             <div>
@@ -239,7 +239,7 @@ export default function InstallPwaButton({
           </div>
 
           <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+            <span className="w-5 h-5 rounded-control bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
               3
             </span>
             <div>

@@ -155,7 +155,7 @@ export default function AdminRolesPage() {
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <span>Đặc Quyền Tối Thượng Super Admin & Bảo Đảm Không Bị Khóa Quyền</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
+              <span className="px-2 py-0.5 rounded-control text-[10px] font-extrabold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
                 GOD MODE
               </span>
             </h3>
@@ -204,7 +204,7 @@ export default function AdminRolesPage() {
                 >
                   <div className="flex flex-col items-center">
                     <span
-                      className={`inline-block px-2 py-0.5 text-[10px] font-extrabold rounded-full border mb-1.5 ${role.badgeColor}`}
+                      className={`inline-block px-2 py-0.5 text-[10px] font-extrabold rounded-control border mb-1.5 ${role.badgeColor}`}
                     >
                       {role.badge}
                     </span>

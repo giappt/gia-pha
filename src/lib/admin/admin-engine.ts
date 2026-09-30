@@ -562,7 +562,7 @@ export function resolveEffectiveCellState(
   // 2. Kiểm tra thẩm quyền quy định theo vai vế chuẩn mực
   const hasRoleEntitlement = (item.roles as any)[roleId] ?? false;
   if (!hasRoleEntitlement) {
-    return 'LOCKED'; // ⚪ Bị khóa theo vai vế
+    return 'LOCKED'; // Bị khóa theo vai vế
   }
 
   // 3. Nếu dòng họ đang bật chế độ bảo trì toàn tộc (maintenance_mode) -> Khóa 100% role thường
@@ -579,7 +579,7 @@ export function resolveEffectiveCellState(
   }
 
   // 5. Thỏa mãn cả vai trò và Cầu Dao Tổng đang mở
-  return 'ACTIVE'; // 🟢 Được phép
+  return 'ACTIVE'; // Được phép
 }
 
 /**

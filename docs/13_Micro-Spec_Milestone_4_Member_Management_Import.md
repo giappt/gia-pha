@@ -523,7 +523,7 @@ sequenceDiagram
 - `src/components/tree/MemberDetailDrawer.tsx`:
   - Thêm nút `[✏️ Sửa hồ sơ]` ở Header/Footer action bar.
   - Thêm nút `[➕ Thêm con]` ở tab "Vợ Chồng & Con Cái".
-  - Thêm nút `[💍 Thêm Vợ/Chồng]` ở tab "Vợ Chồng & Con Cái".
+  - Thêm nút `[Thêm Vợ/Chồng]` ở tab "Vợ Chồng & Con Cái".
   - **Bổ sung Nút `[🗑️ Xóa hồ sơ]` Trên Action Bar:**
     - Tích hợp kiểm tra an toàn qua hàm `canDeleteMember(member.id, allMembers)` từ `graph-validation.ts`.
     - Nếu `childrenCount > 0`: Nút `[🗑️ Xóa hồ sơ]` bị vô hiệu hóa (disabled) kèm tooltip giải thích: *"Không thể xóa thành viên đang có con cháu (Chính sách Safe Delete RESTRICT). Cần chuyển giao hoặc gỡ bỏ con cháu trước."*
@@ -605,7 +605,7 @@ sequenceDiagram
 ### 5.8. Chuyên Biệt Hóa Form Theo Ngữ Cảnh (Contextual Form Specialization):
 - **Ngữ cảnh Thêm Phối Ngẫu (`defaultRole === 'spouse'`, `targetPartner = currentSpouse`)**:
   - **Cố định Đối tác Hôn phối**: Khóa cứng người phối ngẫu (Ví dụ: `Nguyễn Văn Tuấn [🔒]`), cấm chọn lại chồng khác, ẩn tab độc thân và tab tạo phối ngẫu cho phối ngẫu.
-  - **Thứ bậc Hôn phối (`marriage_order`)**: Hệ thống đếm số vợ hiện có của đối tác và tự động gợi ý thứ bậc tiếp theo (`Vợ hai #2` nếu đã có 1 vợ); cung cấp selector trực quan: `[ 🌸 Vợ cả (#1) ]`, `[ 🌸 Vợ hai (#2) ]`, `[ 🌸 Vợ ba (#3) ]`.
+  - **Thứ bậc Hôn phối (`marriage_order`)**: Hệ thống đếm số vợ hiện có của đối tác và tự động gợi ý thứ bậc tiếp theo (`Vợ hai #2` nếu đã có 1 vợ); cung cấp selector trực quan: `[ Vợ cả (#1) ]`, `[ Vợ hai (#2) ]`, `[ Vợ ba (#3) ]`.
   - **Ẩn Khối Thân tộc khi là Dâu/Rể Ngoại tộc**: Khi chọn "Ngoại tộc" (mặc định), ẩn hoàn toàn Khối 2: Bố mẹ & Thứ bậc gia đình (không hỏi Cha ruột, Mẹ ruột, Thứ tự sinh, Con trưởng). Đồng thời ẩn Khối Con cái để giữ form tinh gọn ~350px.
   - **Chỉ hiện thân tộc khi chọn "Nội tộc"**: Chọn người đã có trong dòng họ và tự động kiểm tra cận huyết qua LCA.
 - **Ngữ cảnh Thêm Con Cái (`defaultRole === 'child'`)**:
@@ -619,7 +619,7 @@ sequenceDiagram
 ### 5.9. Tối Ưu Hóa Khối Hôn Phối, Chọn Mẹ Khi Thêm Con & Modal Sắp Xếp các con Kéo Thả:
 - **Khối 3: Hôn phối (`MemberFormModal.tsx`):**
   - Khi mở form chỉnh sửa một thành viên, truy vấn tất cả các mối quan hệ phối ngẫu từ `allSpouses`.
-  - **Nếu đã có vợ/chồng:** Render khu vực "Phối ngẫu hiện tại" dạng thẻ phẳng trang trọng (`🌸 Bà Cả: [Tên]`, `🌸 Bà Hai: [Tên]`) kèm nút `[Gỡ/Xóa]`. Không tự ý kích hoạt tab ghép người nội tộc.
+  - **Nếu đã có vợ/chồng:** Render khu vực "Phối ngẫu hiện tại" dạng thẻ phẳng trang trọng (`Bà Cả: [Tên]`, `Bà Hai: [Tên]`) kèm nút `[Gỡ/Xóa]`. Không tự ý kích hoạt tab ghép người nội tộc.
   - **Nút `[+ Thêm Vợ]` / `[+ Thêm Chồng]`:** Đặt nút rõ ràng, bấm vào mới mở ra 2 tùy chọn: *Thêm vợ ngoài tộc* hoặc *Ghép người trong tộc*.
   - **Nếu chưa có phối ngẫu:** Hiển thị nhãn *Chưa có thông tin phối ngẫu (Độc thân)* kèm nút `[+ Thêm Vợ/Chồng]`.
 - **Khối 4: Chọn Mẹ khi thêm con nhanh (`MemberFormModal.tsx`):**
@@ -657,7 +657,7 @@ sequenceDiagram
   - Nhận prop `canManageTree?: boolean` (mặc định `false`).
   - **Nút "Sửa hồ sơ" (`Edit3`):** Ẩn 100% khi `!canManageTree`.
   - **Nút "Xóa hồ sơ" (`Trash2`):** Ẩn 100% khi `!canManageTree`.
-  - **Chế độ Read-Only cho Viewer:** Drawer chỉ hiển thị các chức năng tra cứu thuần túy: `[ 🧭 Đặt làm Gốc ]`, `[ 👥 Tra cứu xưng hô ]`, `[ ✕ Đóng ]`.
+  - **Chế độ Read-Only cho Viewer:** Drawer chỉ hiển thị các chức năng tra cứu thuần túy: `[Đặt làm Gốc]`, `[Tra cứu xưng hô]`, `[Đóng]`.
 - **Thẻ Thành Viên Trên Cây (`src/components/tree/MemberNode.tsx`):**
   - Badge `{childCount} người con`: Khi click, chỉ kích hoạt sự kiện mở modal sắp xếp thứ tự nếu người dùng có quyền quản trị cây; đối với Viewer, nhấp chuột không mở modal chỉnh sửa.
 
@@ -918,12 +918,12 @@ sequenceDiagram
 - [ ] **UAT_07 (Khắc Phục Rớt Dòng "Thứ Tự Sinh"):** Ô input thứ tự sinh `[ 1 ]` và dòng chú thích `(Con thứ mấy trong gia đình cha mẹ)` nằm trên 1 hàng thông thoáng, rộng rãi, tuyệt đối không bị rớt dòng chữ. Hàng dưới là các tag chọn `[ Con trưởng ]` `[ Con nuôi ]`.
 - [ ] **UAT_08 (Ẩn Tuyệt Đối Checkbox Cụ Tổ Khỏi Form Thông Thường):** Giao diện thêm/sửa con cháu không xuất hiện checkbox "Cụ Tổ (Gốc)", ngăn chặn hoàn toàn rủi ro người dùng vô tình tạo ra Cụ Tổ thứ hai trong cây.
 - [ ] **UAT_09 (Đồng Nhất Component Toàn Diện):**
-  - Giới tính dùng chung chuẩn Pill Button `[ ♂ Nam ] [ ♀ Nữ ] [ ⚪ Khác ]` cho cả thông tin thành viên chính lẫn khi thêm con nhanh (không dùng radio button tròn cổ điển).
+  - Giới tính dùng chung chuẩn nút chọn `[Nam] [Nữ] [Khác]` chuẩn `rounded-control` cho cả thông tin thành viên chính lẫn khi thêm con nhanh (không dùng radio button tròn cổ điển).
   - Phối ngẫu dùng thanh trượt Segmented Control 3 phân đoạn: `[ Độc thân ] [ + Thêm Vợ/Chồng ngoài họ ] [ Ghép nội tộc ]`.
   - Phân khu con cái mang tên chuẩn thuần Việt: "4. Con cái".
 - [ ] **UAT_10 (Dynamic Disclosure Giỗ Chạp):** Mặc định chọn `Còn sống`, khối ngày mất Âm lịch ẩn gọn (chiều cao form ~450px, không cần cuộn trên màn hình phổ thông); khi chọn `Đã mất †`, khối Âm lịch mở ra mượt mà.
 - [ ] **UAT_11 (Tạo Vợ/Chồng Ngoài Họ Tại Chỗ):** Chọn tab Segmented "+ Thêm Vợ/Chồng ngoài họ", điền tên và năm sinh, lưu thành công và tự động tạo node phối ngẫu bên cạnh trên Canvas.
-- [ ] **UAT_12 (Xem & Thêm Nhanh Con Cái):** Danh sách con hiện có hiển thị rõ ràng; form thêm con nhanh dạng inline phẳng, nhập họ tên + năm sinh + pill giới tính và lưu kèm hồ sơ.
+- [ ] **UAT_12 (Xem & Thêm Nhanh Con Cái):** Danh sách con hiện có hiển thị rõ ràng; form thêm con nhanh dạng inline phẳng, nhập họ tên + năm sinh + giới tính chuẩn `rounded-control` và lưu kèm hồ sơ.
 - [ ] **UAT_13 (Hiển Thị Cây Gia Phả Tức Thì - Zero Black Screen):** Truy cập `http://localhost:3000/tree` $\rightarrow$ Toàn bộ 28 node Gia Phả xuất hiện rõ nét, căn giữa màn hình, các đường kết nối con cái và phối ngẫu hiển thị đầy đủ, không còn hiện tượng màn hình đen rỗng.
 - [ ] **UAT_14 (Thẩm Mỹ Refined Modern Heritage - Góc Bo Hình Học):** Mở `MemberFormModal` $\rightarrow$ Form có các góc bo sắc sảo `rounded-lg` (8px), không còn cảm giác bồng bềnh/bubbly bo tròn quá mức; các tiêu đề phân khu là nhãn Editorial thanh mảnh, không icon màu mè lộn xộn.
 - [ ] **UAT_15 (Giới Tính Con Đầy Đủ 3 Tùy Chọn):** Nhấp `[+ Thêm nhanh con mới]` $\rightarrow$ Xuất hiện đủ 3 nút chọn giới tính: `[ ♂ Nam ]`, `[ ♀ Nữ ]`, `[ ⚪ Khác ]`.
@@ -948,7 +948,7 @@ sequenceDiagram
 - [ ] **UAT_34 (Thẩm Mỹ Hình Học Trang Import):** Truy cập `/admin/import` $\rightarrow$ Toàn bộ thẻ card thống kê, vùng Dropzone kéo thả, bảng preview dữ liệu và alert hướng dẫn đều có bo góc thanh lịch `rounded-lg` (8px), triệt tiêu hoàn toàn góc bo tròn bong bóng `rounded-2xl`.
 - [ ] **UAT_35 (Form Thiết Lập Phẳng & Tự Đổi Nhãn Theo Giới Tính):** Mở `MemberFormModal`, chọn Nam $\rightarrow$ hiện nút `Đã lấy vợ`, chọn Nữ $\rightarrow$ hiện nút `Tái giá`; bấm vào hiện ô `Năm: [    ]` ngay trên hàng phẳng, không lồng box.
 - [ ] **UAT_36 (Thẻ Node Trên Cây Sạch Sẽ & Không Có Huyết Tộc/Dâu Họ):** Xem thẻ cây của người tái giá/lấy vợ $\rightarrow$ Footer bên trái hiện `Tái giá` / `Đã lấy vợ`; người bình thường chưa phân chi để trống hoàn toàn; thẻ dâu/rể không có chữ "Huyết tộc" hay "Thành viên"; số con chỉ hiện bên người chồng.
-- [ ] **UAT_37 (Drawer Chi Tiết Phẳng & Đúng Ngữ Cảnh Hôn Phối):** Mở Drawer của người có vợ tái giá $\rightarrow$ Danh sách Hôn phối hiển thị `• 🌸 Bà cả: Nguyễn Thị Kim — Tái giá (2024)` phẳng, thoáng mắt, không lồng box; mở Drawer của người tái giá hiển thị dòng thông tin gia đạo.
+- [ ] **UAT_37 (Drawer Chi Tiết Phẳng & Đúng Ngữ Cảnh Hôn Phối):** Mở Drawer của người có vợ tái giá $\rightarrow$ Danh sách Hôn phối hiển thị `• Bà cả: Nguyễn Thị Kim — Tái giá (2024)` phẳng, thoáng mắt, không lồng box; mở Drawer của người tái giá hiển thị dòng thông tin gia đạo.
 - [ ] **UAT_38 (Cố Định Tọa Độ Y Tên Trên Thẻ Node):** So sánh trực quan thẻ `Nguyễn Thị Kim` (không có năm sinh/mất) và `Phạm Văn Cường` $\rightarrow$ Vị trí dòng Tên thẳng hàng tắp theo phương ngang, không bị lệch hay thụt dòng.
 - [ ] **UAT_39 (Màu Viền Giới Tính Người Đã Mất & Không Có Ký Tự †):** Kiểm tra thẻ Cụ Phạm Văn Cường (Đã mất, Nam) mang viền xanh nam tính, thẻ nữ đã mất mang viền hồng. Avatar icon bên trong mang màu xám trang trọng. Badge hiển thị chữ `Đã mất` sạch sẽ, không có dấu thập `†`.
 - [ ] **UAT_40 (Avatar Cụ Uyên Hiển Thị Đúng VU):** Trên cây Gia Phả và trên Drawer, thẻ của Cụ Phạm Văn Uyên hiển thị avatar chữ cái đại diện là **VU** (thay vì `U(` trước đây).
@@ -956,7 +956,7 @@ sequenceDiagram
 - [ ] **UAT_42 (Form Tự Động Bóc Tách Họ Tên và Tên Húy):** Bấm sửa Cụ Phạm Văn Uyên $\rightarrow$ Ô `Họ và Tên (*)` hiển thị `Phạm Văn Uyên`, ô `Tên húy / Tên tự / Bí danh` hiển thị `Nuôi`. Nhãn trạng thái sinh tử hiển thị `Đã mất` (không có dấu thập `†`).
 - [ ] **UAT_43 (Nút Sắp Xếp các con Trên Thẻ Node & Khởi Động Modal):** Bấm vào badge `{childCount} người con` trên thẻ node ngoài Canvas $\rightarrow$ Mở ngay `ReorderChildrenModal` hiển thị đủ danh sách các con kèm avatar, năm sinh và số thứ tự.
 - [ ] **UAT_44 (Kéo Thả Sắp Xếp & Cây Đảo Nhánh Tức Thì):** Trong `ReorderChildrenModal`, kéo thả con út lên đầu danh sách (hoặc bấm nút `▲`) $\rightarrow$ Bấm Lưu $\rightarrow$ Cây Gia Phả tự động bố trí lại, nhánh con vừa đổi xuất hiện ở vị trí đầu tiên bên trái.
-- [ ] **UAT_45 (Khối Hôn Phối Hiển Thị Vợ Hiện Tại & Nút Thêm Vợ):** Mở form sửa Cụ Phạm Văn Uyên $\rightarrow$ Khối Hôn phối hiển thị rõ thẻ `🌸 Bà Cả: Nguyễn Thị Chăm` kèm nút `+ Thêm Vợ`, không còn bị ép vào tab chọn người nội tộc.
+- [ ] **UAT_45 (Khối Hôn Phối Hiển Thị Vợ Hiện Tại & Nút Thêm Vợ):** Mở form sửa Cụ Phạm Văn Uyên $\rightarrow$ Khối Hôn phối hiển thị rõ thẻ `Bà Cả: Nguyễn Thị Chăm` kèm nút `+ Thêm Vợ`, không còn bị ép vào tab chọn người nội tộc.
 - [ ] **UAT_46 (Thêm Con Chọn Mẹ Thông Minh):** Trong form sửa người cha có 1 vợ, bấm "+ Thêm nhanh con mới" $\rightarrow$ Mẹ tự động được chọn là vợ đó; trong form sửa người cha có 2 vợ $\rightarrow$ xuất hiện dropdown cho phép chọn con là của Bà cả hay Bà hai.
 - [ ] **UAT_47 (Mở Modal Thêm/Sửa Không Còn Màn Hình Đỏ Rules of Hooks):** Bấm sửa bất kỳ thành viên nào trên Canvas hoặc bấm "Thêm con" từ Drawer khi đang ở trang `/tree` $\rightarrow$ Modal mở ra ngay lập tức, console sạch sẽ 0 lỗi đỏ, không còn crash "Rendered more hooks than during the previous render".
 - [ ] **UAT_48 (Danh Xưng Vợ Chuẩn Gia Đạo Khi Có 1 Vợ):** Mở form sửa hoặc Drawer của Cụ Phạm Văn Uyên (người có 1 vợ Nguyễn Thị Chăm) $\rightarrow$ Danh xưng hiển thị trang trọng là "Vợ" (không có chữ "Vợ cả" hay "Bà cả"). Mở người có 2 vợ (như Cụ Chiến hoặc Cụ Lim) $\rightarrow$ Mới hiển thị "Vợ cả (Bà cả)" và "Vợ hai (Bà hai)".

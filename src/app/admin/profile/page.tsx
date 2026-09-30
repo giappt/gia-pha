@@ -225,13 +225,12 @@ export default function ClanProfilePage() {
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs space-y-4">
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="flex items-center gap-2">
-              <span className="text-amber-500 text-base">✨</span>
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 Cụ Tổ Của Dòng Họ (Gốc Gia Phả Toàn Cục)
               </h2>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Chỉ định vị Cụ Tổ duy nhất của toàn bộ dòng họ. Người được chọn sẽ mang huy hiệu <strong>✨ Cụ Tổ</strong> trên cây Gia Phả, và toàn bộ thế hệ con cháu cũng như dâu/rể sẽ tự động suy diễn bậc đời dựa theo Cụ.
+              Chỉ định vị Cụ Tổ duy nhất của toàn bộ dòng họ. Người được chọn sẽ mang huy hiệu <strong>Cụ Tổ</strong> trên cây Gia Phả, và toàn bộ thế hệ con cháu cũng như dâu/rể sẽ tự động suy diễn bậc đời dựa theo Cụ.
             </p>
           </div>
 
@@ -259,7 +258,6 @@ export default function ClanProfilePage() {
 
             <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-amber-800 dark:text-amber-200 text-xs space-y-1">
               <p className="font-semibold flex items-center gap-1.5">
-                <span>💡</span>
                 <span>Quy tắc suy diễn thế hệ tự động:</span>
               </p>
               <p className="text-[11px] text-amber-700/90 dark:text-amber-300/80 pl-5">

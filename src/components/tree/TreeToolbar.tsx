@@ -156,7 +156,7 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
                 onSelectFocusRoot(null);
               }}
               title="Quay lại xem Toàn tộc"
-              className="absolute -right-2 -top-1.5 w-4 h-4 rounded-full bg-slate-700 text-white flex items-center justify-center text-[10px] hover:bg-slate-900 shadow"
+              className="absolute -right-2 -top-1.5 w-4 h-4 rounded-control bg-slate-700 text-white flex items-center justify-center text-[10px] hover:bg-slate-900 shadow"
             >
               <X className="w-2.5 h-2.5" />
             </button>
@@ -289,7 +289,7 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
             <Maximize2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
           </button>
 
-          {/* Nút Popover Menu Tùy Chọn [ ⚙ Tùy chọn ▾ ] */}
+          {/* Nút Popover Menu Tùy Chọn [ Tùy chọn ▾ ] */}
           <div className="relative" ref={optionsRef}>
             <button
               type="button"

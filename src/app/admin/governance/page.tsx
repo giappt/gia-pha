@@ -528,7 +528,7 @@ export default function AdminGovernancePage() {
 
                             {isSavedThis && (
                               <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 animate-in fade-in">
-                                ✓ Đã lưu
+                                Đã lưu
                               </span>
                             )}
                           </div>

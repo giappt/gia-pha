@@ -316,7 +316,7 @@ export default function AdminFeaturesPage() {
 
                       <div className="pt-1.5 flex items-center gap-1.5 text-xs">
                         <span className={`font-semibold ${isChecked ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          {isChecked ? '✓ Đang BẬT:' : '✗ Đang TẮT:'}
+                          {isChecked ? 'Đang BẬT:' : 'Đang TẮT:'}
                         </span>
                         <span className="text-slate-600 dark:text-slate-300">
                           {isChecked ? cfg.onDesc : cfg.offDesc}

@@ -57,13 +57,13 @@ flowchart TD
     S06 --> S10["S-10: Quản Lý & Phân Quyền User"]
 ```
 
-- **Luồng A — Khám phá Cây & Nhảy Ghost Node:** `S-01` $\rightarrow$ Click Node Chị A mở `S-02` $\rightarrow$ Thấy Ghost Node Anh B (🔗) $\rightarrow$ Click "Xem nhánh gốc" $\rightarrow$ Camera trên `S-01` tự động lướt mượt mà sang vị trí gốc của Anh B ở Chi 2.
-- **Luồng B — Xác định quan hệ:** `S-01` $\rightarrow$ Chọn menu "Hỏi xưng hô" $\rightarrow$ Chuyển `S-03` $\rightarrow$ Chọn Người 1 (Tôi), Chọn Người 2 (Ông C) $\rightarrow$ Bấm "Xác định quan hệ" $\rightarrow$ Hiển thị kết quả 2 chiều kèm chuỗi breadcrumbs huyết thống $\rightarrow$ Bấm "Xem trên cây" nhảy về `S-01`.
-- **Luồng C — Đăng ký Nhận Node & Duyệt:** `S-01` $\rightarrow$ Bấm "Tôi là ai trên cây?" $\rightarrow$ Chuyển `S-05` $\rightarrow$ Đăng nhập Google $\rightarrow$ Chọn Node mình $\rightarrow$ Nhập ghi chú xác thực $\rightarrow$ Gửi $\rightarrow$ Super Admin nhận thông báo trên `S-06` $\rightarrow$ Bấm Duyệt (Approve) $\rightarrow$ Tài khoản của User kích hoạt quyền `claimed_member`.
+- **Luồng A — Khám phá Cây & Nhảy Ghost Node:** `S-01` $\rightarrow$ Click Node Chị A mở `S-02` $\rightarrow$ Thấy Ghost Node Anh B (liên kết phối ngẫu) $\rightarrow$ Click "Xem nhánh gốc" $\rightarrow$ Camera trên `S-01` tự động lướt mượt mà sang vị trí gốc của Anh B ở Chi 2.
+- **Luồng B — Xác định quan hệ:** `S-01` $\rightarrow$ Chọn menu "Tra Cứu Vai Vế" $\rightarrow$ Chuyển `S-03` $\rightarrow$ Chọn Người 1 (Tôi), Chọn Người 2 (Ông C) $\rightarrow$ Bấm "Xác định quan hệ" $\rightarrow$ Hiển thị kết quả 2 chiều kèm chuỗi breadcrumbs huyết thống $\rightarrow$ Bấm "Xem trên cây" nhảy về `S-01`.
+- **Luồng C — Đăng ký Nhận Node & Duyệt:** `S-01` $\rightarrow$ Bấm "Nhận diện vị trí gia phả" $\rightarrow$ Chuyển `S-05` $\rightarrow$ Đăng nhập Google $\rightarrow$ Chọn Node của mình $\rightarrow$ Nhập thông tin xác thực $\rightarrow$ Gửi yêu cầu $\rightarrow$ Super Admin nhận thông báo trên `S-06` $\rightarrow$ Bấm Duyệt (Approve) $\rightarrow$ Tài khoản của User kích hoạt quyền `claimed_member`.
 - **Luồng D — Nhập liệu Excel Nhanh:** Admin vào `S-07` $\rightarrow$ Chuyển sang `S-08` $\rightarrow$ Tải template Excel $\rightarrow$ Kéo thả file đã điền lên $\rightarrow$ Xem bảng preview phát hiện lỗi $\rightarrow$ Bấm "Xác nhận Nhập dữ liệu" $\rightarrow$ Hệ thống sinh 1.000 node $\rightarrow$ Chuyển về `S-01` xem kết quả toàn cảnh.
 - **Luồng E — Quản lý Node Độc lập & Nối cây tự nhiên:**
   - *Tạo độc lập:* Người nhập thêm thành viên mới nhưng để trống Bố/Mẹ. Thành viên được lưu an toàn vào DB mà không bắt buộc có liên kết.
-  - *Lọc chống rối mắt:* Mặc định cây chính `S-01` chỉ hiển thị các nhánh nối từ Cụ Tổ. Ở thanh công cụ có nút filter: `[📦 Chưa nối phả (X)]`. Bấm vào sẽ mở `S-09` để xem danh sách riêng.
+  - *Lọc chống rối mắt:* Mặc định cây chính `S-01` chỉ hiển thị các nhánh nối từ Cụ Tổ. Ở thanh công cụ có nút filter: `[Chưa nối phả (X)]`. Bấm vào sẽ mở `S-09` để xem danh sách riêng.
   - *Nối cây tự nhiên:* Người dùng click vào người chưa nối phả $\rightarrow$ Mở Modal `S-02` $\rightarrow$ Chỉ cần chọn trường **Bố** hoặc **Mẹ** (hoặc chọn Vợ/Chồng) $\rightarrow$ Bấm **Lưu** $\rightarrow$ Hệ thống tự động gắn vào cây Gia Phả chính và biến mất khỏi danh sách chưa nối mà không cần thao tác phức tạp!
 
 ---
@@ -80,21 +80,21 @@ flowchart TD
 - **Spotlight Active:** Khi gõ tìm tên người $\rightarrow$ Màn hình tự làm mờ các node xung quanh, làm sáng (highlight) node được chọn và camera zoom cận cảnh vào người đó.
 
 ### 3.2. Màn hình S-03: Tra Cứu Vai Vế (Kinship Resolver)
-- **Empty:** Hai ô nhập người trống kèm hình minh họa ấm cúng: *"Chọn 2 thành viên bất kỳ để biết cách xưng hô chuẩn mực theo phong tục dòng họ"*.
+- **Empty:** Hai ô nhập người trống kèm hướng dẫn trang trọng: *"Chọn 2 thành viên bất kỳ để xác định cách xưng hô chuẩn mực theo phong tục dòng tộc"*.
 - **Calculating:** Hiệu ứng vẽ đường đi huyết thống kết nối giữa 2 người (100ms).
 - **Success:**
   - Khối kết quả nổi bật 2 chiều: 
-    - Chiều đi: **`A gọi B là: Bác họ (Xưng Cháu)`**
-    - Chiều về: **`B gọi A là: Cháu họ (Xưng Bác)`**
+    - Chiều đi: **`A gọi B là: Bác Họ (Xưng Cháu)`**
+    - Chiều về: **`B gọi A là: Cháu Họ (Xưng Bác)`**
   - **Sơ Đồ Cây Gia Phả Trực Quan (Mini Cây Chữ V Ngược):** 
     - Đỉnh chóp là Gốc Gần Nhất, rẽ xuống 2 cột nhánh (Nhánh Trưởng vs Nhánh Thứ).
-    - Có cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời (nén các đời giữa thành nút bấm `[🔽 Nén N thế hệ - Bấm mở rộng]`).
-    - Nút liên kết: `[🔍 Xem trên Cây Gia Phả Lớn]` lướt camera trên `S-01` focus vào 2 node.
+    - Có cơ chế **Nén Tầng Trung Gian (Smart Folding)** khi khoảng cách $\ge 4$ đời (nén các đời giữa thành nút bấm `[Nén N thế hệ - Bấm mở rộng]`).
+    - Nút liên kết: `[Xem trên Cây Gia Phả Lớn]` lướt camera trên `S-01` focus vào 2 node.
   - **Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa:**
-    - Huy hiệu nguyên tắc dòng họ (`Phong tục Miền Bắc: Tôn vai Nhánh Trưởng`).
-    - Câu đối / tục ngữ cổ phong (`"Bé bằng củ khoai, cứ vai Bác là gọi Anh"`).
+    - Nguyên tắc dòng họ: `Phong tục Miền Bắc: Tôn vai Nhánh Trưởng`.
+    - Tục ngữ cổ phong ghi nhận: `"Bé bằng củ khoai, cứ vai Bác là gọi Anh"`.
     - Bảng đối sánh tương quan trực diện giữa 2 người.
-- **No Relation (Không chung gốc):** Thông báo lịch sự: *"Hai người này không cùng huyết thống nội tộc trong cây gia phả (Dâu/Rể ngoại tộc hoặc thành viên chưa nối phả)"*.
+- **No Relation (Không chung gốc):** Thông báo chuẩn mực: *"Hai người này không cùng huyết thống nội tộc trong cây gia phả (Dâu/Rể ngoại tộc hoặc thành viên chưa nối phả)"*.
 
 ### 3.3. Màn hình S-04: Lịch Giỗ 30 Ngày
 - **Empty:** *"Trong 30 ngày tới không có ngày giỗ nào của dòng họ"*.
@@ -150,38 +150,38 @@ flowchart TD
 ### 5.1. Màn hình S-01: Giao diện Cây Gia Phả (Trang Chủ)
 ```
 +-----------------------------------------------------------------------------------+
-|  [FAT LOGO] DÒNG HỌ NGUYỄN VĂN    [🔍 Tìm tên thành viên...]    [Lịch Giỗ]  [Tôi là ai?]  |
+|  [FAT LOGO] DÒNG HỌ PHẠM VĂN      [Tìm tên thành viên...]   [Lịch Giỗ] [Tôi là ai?]  |
 +-----------------------------------------------------------------------------------+
 |  [Bộ lọc Chi: Tất cả Chi ▼]  [Toggle: Nhánh Nội | Nội-Ngoại]      [+] [-] [Reset View]   |
 +-----------------------------------------------------------------------------------+
 |                                                                                   |
 |                               +-------------------------+                         |
-|                               |  👨 Cụ Tổ Nguyễn Văn A  |                         |
-|                               |  † 1890 - 1965 (75T)    |                         |
+|                               |  Cụ Tổ Phạm Văn A       |                         |
+|                               |  1890 – 1965 (75T)      |                         |
 |                               |  [Chi: Ngành Cả]    [+] |                         |
 |                               +------------+------------+                         |
 |                                            |                                      |
 |                     +----------------------+----------------------+               |
 |                     |                                             |               |
 |         +-----------+-----------+                     +-----------+-----------+   |
-|         |  👨 Ông Nguyễn Văn B1 |                     |  👨 Ông Nguyễn Văn B2 |   |
+|         |  Ông Phạm Văn B1      |                     |  Ông Phạm Văn B2      |   |
 |         |  Chi Trưởng           |                     |  Chi Hai              |   |
-|         |  [+] [Bung con 3]     |                     |  [+] [Bung con 2]     |   |
+|         |  [+] [Mở rộng con 3]  |                     |  [+] [Mở rộng con 2]  |   |
 |         +-----------+-----------+                     +-----------+-----------+   |
 |                     |                                             |               |
 |            (Nhánh con cháu...)                           (Nhánh con cháu...)      |
 |                                                                                   |
 +-----------------------------------------------------------------------------------+
-| 💡 Mẹo: Bấm giữ và kéo để di chuyển cây, lăn chuột để phóng to/thu nhỏ.            |
+| Hướng dẫn: Bấm giữ và kéo để di chuyển canvas, lăn chuột để phóng to/thu nhỏ.     |
 +-----------------------------------------------------------------------------------+
 ```
 
 ### 5.2. Modal S-02: Form Nhập Liệu Thành Viên 1 Cấp (Không lồng Popup)
 ```
 +--------------------------------------------------------------+
-| THÊM THÀNH VIÊN MỚI (Con của Ông Nguyễn Văn B1)           [X] |
+| THÊM THÀNH VIÊN MỚI (Con của Ông Phạm Văn B1)             [X] |
 +--------------------------------------------------------------+
-| Họ và tên (*):       [ Nguyễn Văn C                      ]   |
+| Họ và tên (*):       [ Phạm Văn C                        ]   |
 | Tên húy / Tự:        [ Trọng                             ]   |
 | Giới tính:           (•) Nam     ( ) Nữ     ( ) Khác         |
 | Trạng thái:          ( ) Còn sống     (•) Đã mất             |
@@ -206,30 +206,30 @@ flowchart TD
 |  ← Quay lại Cây Gia Phả           CÔNG CỤ TRA CỨU VAI VẾ XƯNG HÔ                   |
 +-----------------------------------------------------------------------------------+
 |  Chọn Người thứ nhất (A):                 Chọn Người thứ hai (B):                 |
-|  [ 🔍 Tôi: Nguyễn Văn Nam (Đời 6)  ▼ ]    [ 🔍 Bác: Nguyễn Văn Dực (Đời 5)   ▼ ]  |
+|  [ Tôi: Phạm Văn Nam (Đời 6)       ▼ ]    [ Bác: Phạm Văn Dực (Đời 5)        ▼ ]  |
 |                                                                                   |
 |                               [ ⇄ ĐỔI VAI XƯNG HÔ ]                               |
 |                               [ XÁC ĐỊNH QUAN HỆ ]                                |
 +-----------------------------------------------------------------------------------+
 |  KẾT QUẢ XƯNG HÔ 2 CHIỀU:                                                         |
-|    👉 Bạn gọi Bác Dực là: BÁC HỌ (Xưng Cháu)                                  |
-|    👈 Bác Dực gọi bạn là:  🌱 CHÁU HỌ (Xưng Bác)                                  |
+|    Chiều A gọi B: Bác Họ (Xưng Cháu)                                              |
+|    Chiều B gọi A: Cháu Họ (Xưng Bác)                                              |
 +-----------------------------------------------------------------------------------+
-|  SƠ ĐỒ CÂY Gia Phả TRỰC QUAN (XUẤT PHÁT TỪ Gốc Gần Nhất):                |
+|  SƠ ĐỒ CÂY GIA PHẢ TRỰC QUAN (XUẤT PHÁT TỪ GỐC GẦN NHẤT):                         |
 |                                                                                   |
-|                       [TỔ TIÊN CHUNG: CỤ AN (ĐỜI 4) ]                         |
+|                       [TỔ TIÊN CHUNG: CỤ AN (ĐỜI 4) ]                             |
 |                                 /             \                                   |
 |                   (Nhánh Trưởng)               (Nhánh Thứ)                        |
 |                               /                 \                                 |
-|            [ Bác: Nguyễn Văn Dực (Đời 5) ]    [ Bố: Nguyễn Văn Bình (Đời 5) ]     |
+|            [ Bác: Phạm Văn Dực (Đời 5) ]      [ Bố: Phạm Văn Bình (Đời 5) ]       |
 |                         │                                │                        |
-|                         │                     [ Bạn: Nguyễn Văn Nam (Đời 6) ]     |
+|                         │                     [ Bạn: Phạm Văn Nam (Đời 6) ]       |
 |                         │                                │                        |
 |                         └═══════[ CẦU NỐI XƯNG HÔ ]══════┘                        |
 |                                                                                   |
-|             [🔍 Xem vị trí 2 người trên Cây Gia Phả Tổng Thể]                      |
+|             [Xem vị trí 2 người trên Cây Gia Phả Tổng Thể]                        |
 +-----------------------------------------------------------------------------------+
-|  📜 CĂN CỨ PHONG TỤC & ĐỐI SÁNH TƯƠNG QUAN:                                       |
+|  CĂN CỨ PHONG TỤC & ĐỐI SÁNH TƯƠNG QUAN:                                          |
 |  • Nguyên tắc: Phong tục Miền Bắc (Tôn vai Nhánh Trưởng)                          |
 |  • Tục ngữ: "Bé bằng củ khoai, cứ vai Bác là gọi Anh"                             |
 |  • Đối sánh: Bác Dực thuộc con Cụ Cả (Nhánh Trưởng); Bố bạn thuộc con Cụ Ba.      |
@@ -241,17 +241,17 @@ flowchart TD
 +---------------------------------------------------------------------------------------+
 |  ← Bảng Điều Khiển Admin           QUẢN LÝ TÀI KHOẢN & PHÂN QUYỀN                     |
 +---------------------------------------------------------------------------------------+
-|  [🔍 Tìm theo email, họ tên...]                 [Bộ lọc Quyền: Tất cả vai trò ▼]     |
+|  [Tìm theo email, họ tên...]                     [Bộ lọc Quyền: Tất cả vai trò ▼]     |
 +---------------------------------------------------------------------------------------+
 |  Họ và tên       Email                  Node Đã Nhận     Vai Trò (Phân Quyền)         |
 +---------------------------------------------------------------------------------------+
-|  👨 Giáp Phạm     giap.pt.90@gmail.com   (Chưa gắn node)  [Super Admin        ▼ ]  |
-|  👨 Nguyễn Tuấn   tuan.nguyen@gmail.com  Ông Tuấn (Đời 4) [ 📝 Trưởng Chi (Chi 2) ▼ ]  |
-|  👩 Trần Mai      mai.tran@gmail.com     Bà Mai (Đời 5)   [ 👤 Con Cháu        ▼ ]  |
-|  👤 Khách Xem     viewer.abc@gmail.com   (Chưa gắn node)  [  Khách xem (Viewer) ▼ ]  |
+|  Giáp Phạm       giap.pt.90@gmail.com   (Chưa gắn node)  [Super Admin        ▼ ]      |
+|  Nguyễn Tuấn     tuan.nguyen@gmail.com  Ông Tuấn (Đời 4) [ Trưởng Chi (Chi 2) ▼ ]     |
+|  Trần Mai        mai.tran@gmail.com     Bà Mai (Đời 5)   [ Con Cháu          ▼ ]      |
+|  Khách Xem       viewer.abc@gmail.com   (Chưa gắn node)  [ Khách xem (Viewer)▼ ]      |
 +---------------------------------------------------------------------------------------+
-|  💡 Hướng dẫn: Super Admin chỉ cần bấm vào Dropdown Vai Trò để nâng quyền hoặc hạ     |
-|  quyền tức thì cho bất kỳ thành viên nào trong dòng họ.                                |
+|  Hướng dẫn: Super Admin chỉ cần bấm vào Dropdown Vai Trò để nâng quyền hoặc hạ         |
+|  quyền tức thì cho bất kỳ thành viên nào trong dòng họ.                               |
 +---------------------------------------------------------------------------------------+
 ```
 
@@ -264,8 +264,34 @@ flowchart TD
 
 #### B. Trải Nghiệm Cây Gia Phả 1.500 Người:
 - **Phân Tầng Theo Chi/Nhánh & Breadcrumbs:** Lọc nhanh từng Chi (Chi Trưởng, Chi 2...) và breadcrumb điều hướng `Gia tộc Phạm Văn > Chi 1 > Nhánh Cụ Chiến`.
-- **Chế Độ Bán Kính Gia Đình 5 Đời:** Xem tập trung 5 đời quanh người được chọn ($\text{Ông bà} \rightarrow \text{Cha mẹ} \rightarrow \text{Bản thân} \rightarrow \text{Con} \rightarrow \text{Cháu}$). Các nhánh xa hơn gập gọn thành nút `[ + 18 con cháu ]` bấm đến đâu bung đến đó.
-- **Trải Nghiệm Khách & Người Chưa Liên Kết:** Mặc định hiển thị Cụ Thủy Tổ + 3 đời đầu trang nghiêm (~15 người), các Chi đời sau gập gọn thành nút `[ + Chi 1 ]`. Banner gợi ý: *"👋 Chưa nhận vị trí của bạn trong cây? [ 🎯 Tìm & Nhận Node ] hoặc gõ tìm tên người thân để xem nhanh 5 đời quanh họ"*.
+- **Chế Độ Bán Kính Gia Đình 5 Đời:** Xem tập trung 5 đời quanh người được chọn ($\text{Ông bà} \rightarrow \text{Cha mẹ} \rightarrow \text{Bản thân} \rightarrow \text{Con} \rightarrow \text{Cháu}$). Các nhánh xa hơn gập gọn thành nút `[ Mở rộng 18 con cháu ]` bấm đến đâu bung đến đó.
+- **Trải Nghiệm Khách & Người Chưa Liên Kết:** Mặc định hiển thị Cụ Thủy Tổ và các thế hệ khởi nguồn trang nghiêm (~15 người), các Chi đời sau gập gọn thành nút `[ Mở rộng Chi 1 ]`. Khung thông báo định danh: *"Chưa liên kết tài khoản với vị trí trong gia phả? [ Nhận Hồ Sơ Gia Tộc ] hoặc tra cứu theo danh tính người thân để định vị phả hệ 5 đời"*.
 - **Cắt Tỉa Viewport (Virtualization) & LOD:** Bật `onlyRenderVisibleElements={true}` trong React Flow để DOM chỉ gánh các thẻ trong màn hình nhìn thấy, tiết kiệm 95% RAM; zoom out xa co thành thẻ mini (LOD).
+
+### 5.6. Quy Chuẩn Thiết Kế Biên Tập Di Sản & Chống Pill Toàn Diện (Anti-Pill Editorial Standard)
+
+Nhằm xóa bỏ hoàn toàn phong cách thiết kế nghiệp dư, đại trà kiểu "vibe coding" (bội thực viên thuốc, nhãn kẹo ngọt, emoji lộn xộn) và tôn vinh tinh thần tôn nghiêm, học thuật của một hệ thống Gia Phả Dòng Họ Việt Nam:
+
+1. **Lệnh Cấm Lạm Dụng Viên Thuốc (`rounded-full`):**
+   - **Danh sách Ngoại lệ Duy nhất (Whitelist):**
+     * Avatar hình tròn: `w-X h-X rounded-full object-cover` hoặc avatar chữ cái viết tắt.
+     * Đèn báo vi mô (Micro Dot Indicators): `w-1.5 h-1.5 rounded-full` (chấm xanh báo còn sống, chấm xám báo đã mất, chấm đỏ/vàng cảnh báo).
+     * Nút gạt tròn (Toggle Switch Thumb) của công tắc switch bật/tắt vật lý.
+   - **Cấm Tuyệt Đối:** CẤM bọc bất kỳ văn bản, nhãn phân loại (badges/tags/chips) hoặc nút bấm (buttons) nào trong class `rounded-full`.
+2. **Chuẩn Phân Cấp Typography & Dấu Chấm Giữa `·`:**
+   - Thay thế việc dán nhãn viên thuốc bằng việc phân cấp cỡ chữ, độ đậm (`font-bold`, `font-semibold`), màu mực (`text-slate-900`, `text-slate-500`) và dấu chấm giữa `·`.
+   - Ví dụ: `Đời 11 · Ngành 1 · Chi 2` thay vì 3 viên thuốc dính chùm.
+   - Số lượng đếm trong các tiêu đề/bộ lọc hiển thị thanh thoát dạng `(n)` hoặc `text-slate-400 font-mono text-xs`.
+3. **Chuẩn Đèn Báo Vi Mô Trên Thẻ Cây (`MemberNode`):**
+   - Xóa bỏ hoàn toàn nhãn chữ `Còn sống` / `Đã mất` ở góc trên thẻ.
+   - Người còn sống: Chấm xanh lục bảo vi mô `w-1.5 h-1.5 rounded-full bg-emerald-500` (hoặc ẩn nếu đã mặc định).
+   - Người đã mất: Hiển thị khoảng niên đại sinh - mất trang trọng `1920 – 1985` (hoặc `Sinh 1920 · Mất 1985`) kèm chấm xám nhạt `w-1.5 h-1.5 rounded-full bg-slate-400`.
+4. **Chuẩn Nhãn Hình Học Mực Thước (`rounded-control`):**
+   - Các danh vị bắt buộc (như `Cụ Tổ`, `Khuyết Danh`, `Trưởng Nam`, `Con Nuôi`, `Hôn Phối`, `GOD MODE`) sử dụng thẻ hình chữ nhật bo nhẹ 2px-4px (`rounded-control` / `rounded-sm`), viền mảnh mờ tinh tế `border border-slate-200/80 dark:border-slate-800`, font chữ `text-[10px] font-bold uppercase tracking-wider`.
+5. **Chuẩn Bộ Lọc Phân Đoạn Không Icon & Xóa Sạch 100% Emoji Trên Toàn Hệ Thống:**
+   - Trong các màn hình quản trị (`/admin/kinship`) và tra cứu (`/kinship`): **XÓA BỎ 100% ICON KHỎI BỘ LỌC VÀ TIÊU ĐỀ NHÓM**. Không thay thế emoji bằng các icon Lucide vô nghĩa gây hiểu sai lệch ngữ nghĩa họ hàng. Bộ lọc dùng văn bản thuần túy và số lượng `(n)` tinh gọn: `Tất Cả (36)`, `Trực Hệ (8)`, `Bên Nội (8)`... dàn phẳng phiu 1 hàng, triệt tiêu hoàn toàn thanh cuộn ngang (horizontal scrollbar).
+   - Quét sạch 100% emoji rác trên toàn bộ hệ thống (`PersonalSettingsModal`, `MemberFormModal`, `ConnectGenealogyModal`, `MemberDetailDrawer`, `admin/profile`, `login-gate`...).
+   - Chuyển đổi nút người dùng trên Navbar (`AuthButton`) và các thanh skeleton loading sang `rounded-control`, xóa sạch hoàn toàn các vết tích viên thuốc bọc text.
+
 
 

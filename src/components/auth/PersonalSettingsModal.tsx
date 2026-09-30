@@ -173,7 +173,7 @@ export default function PersonalSettingsModal({
                     onChange={() => setSelectedBranchId(null)}
                     className="text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span>🏛️ Toàn dòng họ (Xem tất cả)</span>
+                  <span>Toàn dòng họ (Xem tất cả)</span>
                 </div>
                 {selectedBranchId === null && <Check className="w-3.5 h-3.5 text-emerald-600" />}
               </label>

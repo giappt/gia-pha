@@ -319,7 +319,7 @@ export default function KinshipPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Header Hero Section */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-control bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold tracking-wide">
             <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>ĐỒ THỊ Gia Phả VIỆT NAM</span>
             {isLoading && (
@@ -349,7 +349,7 @@ export default function KinshipPage() {
                 <div className="h-10 w-full bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
               </div>
               <div className="md:col-span-1 flex justify-center py-2 md:py-0">
-                <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800"></div>
+                <div className="w-10 h-10 rounded-control bg-slate-200 dark:bg-slate-800"></div>
               </div>
               <div className="md:col-span-4 space-y-2">
                 <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded"></div>
@@ -455,7 +455,7 @@ export default function KinshipPage() {
                   id="swap-roles-btn"
                   onClick={handleSwapRoles}
                   title="Đảo vai xưng hô (A ↔ B)"
-                  className="w-10 h-10 rounded-full border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 flex items-center justify-center transition-all shadow-sm hover:scale-105 active:scale-95"
+                  className="w-10 h-10 rounded-control border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 flex items-center justify-center transition-all shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <ArrowRightLeft className="w-4 h-4" />
                 </button>
@@ -634,7 +634,7 @@ export default function KinshipPage() {
             {/* Top Result Banner: 2-Way Callouts */}
             <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 p-6 sm:p-8 text-white">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-xs font-semibold">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-control bg-white/15 backdrop-blur-sm border border-white/20 text-xs font-semibold">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" />
                   <span id="result-relationship-badge">
                     {result.relationshipType === 'sibling'
@@ -736,7 +736,7 @@ export default function KinshipPage() {
                           {selectedPersonA?.gender === 'male' ? 'Nam' : 'Nữ'}
                           {selectedPersonA?.birth_year ? ` · Sinh ${selectedPersonA.birth_year}` : ''}
                         </div>
-                        <div className="mt-2 inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
+                        <div className="mt-2 inline-block px-2.5 py-1 rounded-control bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">
                           {result.termBtoA}
                         </div>
                       </div>
@@ -758,7 +758,7 @@ export default function KinshipPage() {
                           {selectedPersonB?.gender === 'male' ? 'Nam' : 'Nữ'}
                           {selectedPersonB?.birth_year ? ` · Sinh ${selectedPersonB.birth_year}` : ''}
                         </div>
-                        <div className="mt-2 inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
+                        <div className="mt-2 inline-block px-2.5 py-1 rounded-control bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">
                           {result.termAtoB}
                         </div>
                       </div>
@@ -807,12 +807,12 @@ export default function KinshipPage() {
 
                               return isSpousePair ? (
                                 <div className="flex flex-col items-center my-1.5">
-                                  <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-pink-50 dark:bg-pink-950/60 border border-pink-200 dark:border-pink-800 text-[10px] font-bold text-pink-700 dark:text-pink-300 shadow-2xs">
+                                  <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-control bg-pink-50 dark:bg-pink-950/60 border border-pink-200 dark:border-pink-800 text-[10px] font-bold text-pink-700 dark:text-pink-300 shadow-2xs">
                                     <span>═(Hôn phối)═</span>
                                   </div>
                                 </div>
                               ) : (
-                                <div className="w-0.5 h-7 bg-emerald-600 dark:bg-emerald-500 my-1 rounded-full" />
+                                <div className="w-0.5 h-7 bg-emerald-600 dark:bg-emerald-500 my-1 rounded-xs" />
                               );
                             })()}
 
@@ -834,12 +834,12 @@ export default function KinshipPage() {
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                   {node.isSpouse && (
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300">
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-control bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300">
                                       Hôn phối
                                     </span>
                                   )}
                                   <span
-                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isTop
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-control ${isTop
                                       ? 'bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
                                       : isBottom
                                         ? 'bg-emerald-700/90 text-white'
@@ -900,7 +900,7 @@ export default function KinshipPage() {
                         id="lca-apex-node"
                         className="px-5 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300/80 dark:border-amber-700 shadow-sm text-center max-w-md w-full relative z-10"
                       >
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-bold uppercase tracking-wider mb-1">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-control bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-bold uppercase tracking-wider mb-1">
                           <Crown className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
                           <span>Gốc Gần Nhất</span>
                         </div>
@@ -975,7 +975,7 @@ export default function KinshipPage() {
                           type="button"
                           id="toggle-fold-generations-btn"
                           onClick={() => setIsExpandedMiddle(!isExpandedMiddle)}
-                          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-800 transition-all shadow-xs"
+                          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-control bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-800 transition-all shadow-xs cursor-pointer"
                         >
                           {isExpandedMiddle ? (
                             <>
@@ -1021,7 +1021,7 @@ export default function KinshipPage() {
         {/* Empty State / Instructional Guide */}
         {!result && !errorMessage && (
           <div className="bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
               <Users className="w-6 h-6" />
             </div>
             <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">
@@ -1089,13 +1089,13 @@ function renderNodeItem(node: KinshipPathNode, isTarget: boolean) {
         <span className="text-xs font-bold tracking-tight">{node.name}</span>
         <div className="flex items-center gap-1">
           {node.isSpouse && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300 font-bold">
+            <span className="text-[10px] px-2 py-0.5 rounded-control bg-pink-100 dark:bg-pink-950 text-pink-700 dark:text-pink-300 font-bold">
               Hôn phối
             </span>
           )}
           {node.relation && node.relation !== 'Bản thân' && (
             <span
-              className={`text-[10px] px-2 py-0.5 rounded-full ${isTarget
+              className={`text-[10px] px-2 py-0.5 rounded-control ${isTarget
                 ? 'bg-emerald-700/80 text-white'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                 }`}

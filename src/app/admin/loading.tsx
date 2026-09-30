@@ -47,7 +47,7 @@ export default function AdminLoading() {
             >
               <div className="h-4 w-36 bg-slate-200 dark:bg-slate-800 rounded" />
               <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800/60 rounded" />
-              <div className="h-6 w-20 bg-slate-100 dark:bg-slate-800/60 rounded-full" />
+              <div className="h-6 w-20 bg-slate-100 dark:bg-slate-800/60 rounded-control" />
             </div>
           ))}
         </div>

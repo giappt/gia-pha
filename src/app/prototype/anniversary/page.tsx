@@ -720,7 +720,7 @@ export default function PrototypeAnniversaryPage() {
 
             <div className="w-[375px] min-h-[580px] max-h-[760px] bg-slate-50 dark:bg-slate-950 rounded-[44px] border-[9px] border-slate-900 dark:border-slate-800 shadow-2xl p-3 overflow-y-auto relative">
               {/* Dynamic Island của điện thoại */}
-              <div className="w-24 h-4 bg-slate-900 dark:bg-slate-800 rounded-full mx-auto mb-4" />
+              <div className="w-24 h-4 bg-slate-900 dark:bg-slate-800 rounded-control mx-auto mb-4" />
 
               {currentTab === 'home' ? (
                 <HomeMobileVerticalWidget day={currentGroup} />

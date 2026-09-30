@@ -11,7 +11,7 @@ export default function TreeLoading() {
       <div className="h-14 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
           <div className="h-5 w-48 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
-          <div className="h-5 w-20 bg-slate-100 dark:bg-slate-800/60 rounded-full animate-pulse" />
+          <div className="h-5 w-20 bg-slate-100 dark:bg-slate-800/60 rounded-control animate-pulse" />
         </div>
         <div className="flex items-center gap-2">
           <div className="h-8 w-28 bg-slate-100 dark:bg-slate-800/80 rounded-lg animate-pulse" />

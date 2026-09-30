@@ -57,7 +57,16 @@ describe('UI Normalization & Identity Consistency Suite (Milestone 4 Polish)', (
 
     // Kiểm tra không còn ký tự † trong MemberNode.tsx
     assert.ok(!content.includes('†'), 'MemberNode.tsx không được chứa ký tự dấu thập †');
-    assert.ok(content.includes("'Đã mất'"), "MemberNode.tsx phải hiển thị nhãn 'Đã mất'");
+    // Chuẩn Editorial: Bỏ nhãn chữ 'Còn sống' / 'Đã mất' dạng viên thuốc, thay bằng micro dot indicators
+    assert.ok(
+      !content.includes("isDeceased ? 'Đã mất' : 'Còn sống'"),
+      "MemberNode.tsx không được dùng nhãn chữ 'Còn sống' / 'Đã mất' dạng viên thuốc"
+    );
+    assert.ok(
+      content.includes('w-1.5 h-1.5 rounded-full bg-slate-400') &&
+      content.includes('w-1.5 h-1.5 rounded-full bg-emerald-500'),
+      'MemberNode.tsx phải dùng micro dot indicator trang nhã (xanh cho còn sống, xám cho đã mất)'
+    );
   });
 
   // TC_UT_ALIAS_NAME_SEPARATION_CLEANSE: Tự động làm sạch tên chính và bóc tách Tên húy/Bí danh

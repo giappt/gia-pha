@@ -479,7 +479,7 @@ export default function AdminThemePage() {
                       Ngày Giỗ Gần Nhất
                     </span>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200 flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-control text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     Hôm Nay Giỗ
                   </span>

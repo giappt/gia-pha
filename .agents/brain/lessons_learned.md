@@ -1,5 +1,25 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
+- **Thanh Lọc Triệt Để 100% Emoji, Pill & Chuẩn Zero-Icon Cho Thanh Phân Loại (Exhaustive System-wide Cleansing & Zero-Icon Standard):**
+  1. *Căn nguyên Sai lầm Thay thế Đối phó (Superficial Icon Swap Trap):*
+     - Khi loại bỏ pill và emoji, việc tự tiện gán các icon Lucide trang trí rác (`GitBranch`, `Shield`, `Heart`, `Compass`, `Landmark`, `Users`) vào các chip phân loại xưng hô (`/admin/kinship`) vừa làm méo mó ngữ nghĩa thân tộc Việt Nam, vừa làm phình to chiều ngang khiến thanh tab bị vỡ và sinh ra thanh cuộn ngang (horizontal scrollbar) xộc xệch trên máy tính.
+     - Bài học: Thanh phân loại danh mục gia phả cần sự tinh giản, đĩnh đạc của con chữ và số liệu (`[ Tên Nhóm (n) ]`). Thanh Segmented Filter Bar phải đạt chuẩn Zero-Icon, sử dụng `flex-wrap` để dàn hàng ngang phẳng phiu, tuyệt đối không được sinh thanh cuộn ngang.
+  2. *Căn nguyên Sai lầm Sửa Cục Bộ & Regex Kiểm Thử Hời Hợt (Siloed Fixes & Loose Test Scope):*
+     - Chỉ sửa ở 1-2 file được nhắc tên thay vì quét đệ quy toàn bộ `src/`.
+     - Viết test kiểm tra emoji nhưng chỉ gói gọn trong 2 file `kinship`, bỏ lọt 9 file khác dùng emoji (`MemberFormModal`, `ConnectGenealogyModal`, `MemberDetailDrawer`, `admin/profile`, `login-gate`, `admin/features`, `admin/governance`, `admin/import`...).
+     - Viết test kiểm tra `rounded-full` nhưng regex lỏng lẻo để lọt `rounded-full` trên nút người dùng (`AuthButton.tsx`) và các thanh loading skeleton (`tree/loading.tsx`, `anniversaries/loading.tsx`, `admin/loading.tsx`, `admin/claims/loading.tsx`, `login-gate/loading.tsx`...).
+  3. *Giải pháp Rào Chắn Tự Động Toàn Diện (System-wide Automated Guard):*
+     - Viết test `TC_UT_ZERO_EMOJI_SYSTEM_WIDE` quét 100% file `.ts` và `.tsx` trong `src/` bằng Unicode Regex `[\u{1F300}-\u{1FAD6}\u{1F600}-\u{1F64F}...]` và danh sách ký tự đối phó (`✓`, `✗`, `✕`, `⚠`, `ℹ`, `♂`, `♀`, `⚪`, `🌸`, `🔗`, `🌱`, `❓`, `⚡`, `✨`, `💡`, `🔒`). Đảm bảo 0 vi phạm trên toàn hệ thống.
+     - Viết test `TC_UT_ZERO_PILL_SYSTEM_WIDE` khóa cứng chỉ cho phép đúng 4 trường hợp whitelist: (1) Avatar tròn tỷ lệ 1:1, (2) Chấm vi mô (`w-1.5`, `w-2`, `w-2.5`), (3) Công tắc vật lý (`translate-x-`), (4) Spinner (`animate-spin`). Toàn bộ nút bấm, thanh điều hướng Navbar và skeleton loading bắt buộc dùng `rounded-control` hoặc `rounded-sm`.
+
+- **Quy Chuẩn Biên Tập Di Sản & Thanh Lọc Triệt Để Pill 'Vibe Code' Cả Trong Source Code Lẫn Hệ Thống Tài Liệu (Anti-Pill & SSOT Documentation Cleansing):**
+  1. *Căn nguyên Phân mảnh giữa Code và Tài Liệu (SSOT Drift & Vibe Code Clutter):*
+     - Khi nâng cấp giao diện thoát khỏi hội chứng "bội thực viên thuốc" (`rounded-full`) và emoji tạp nham, nếu chỉ sửa mã nguồn mà bỏ sót hệ thống tài liệu trong `docs/` (vẫn để tồn tại các câu chữ cợt nhả kiểu marketing giá rẻ như *"👋 Chưa nhận vị trí của bạn trong cây? [  Tìm & Nhận Node ]..."*, các icon `🌸`, `💍`, `🏛️`, `👥`, và các thuật ngữ "nút pill nhỏ gọn", "pill buttons"), dự án sẽ rơi vào tình trạng phân mảnh tài liệu nghiêm trọng vi phạm quy tắc `[R-SPEC]` và `[R-SPEC.INVARIANT]`.
+  2. *Giải pháp Thanh Lọc Đồng Bộ Toàn Diện:*
+     - Rà soát và thanh lọc toàn bộ 10 file tài liệu (`docs/04`, `docs/10` ~ `docs/18`): Xóa sạch mọi emoji rác trong ASCII wireframes, kịch bản UAT và bảng test matrices.
+     - Thay thế toàn bộ mô tả "pill badge" / "pill button" bằng các chuẩn mực hình học: `rounded-control`, typography phân cấp với dấu chấm giữa `·`, số đếm mực thước `(n)`, và đèn báo vi mô (`w-1.5 h-1.5 rounded-full`).
+     - Chuẩn hóa văn phong hướng dẫn người dùng: Chuyển banner tương tác góc canvas từ *"👋 Chưa nhận vị trí của bạn trong cây? [  Tìm & Nhận Node ]..."* sang thông báo mực thước: *"Chưa nhận vị trí trong cây? [Nhận Node] hoặc gõ tìm tên người thân để xem nhanh 5 đời quanh họ"*. Tài liệu luôn là tấm gương phản chiếu trung thực, tôn nghiêm và chuẩn mực của hệ thống.
+
 - **Kiến Trúc Rào Chắn 4 Tầng, SSOT Domain Service & Semantic Design Tokens Động (Chấm Dứt Cát Cứ Dữ Liệu & Mockup Chắp Vá):**
   1. *Căn nguyên Cát Cứ Dữ Liệu (Siloed Data Fetching Trap):*
      - Khi mỗi Server Component (`src/app/page.tsx`) và Route API (`/api/anniversaries`) tự viết code query Supabase và tính toán ngày giỗ riêng lẻ, dẫn tới trang `/anniversaries` bị mất Ngành & Chi trong khi Home có.
@@ -238,7 +258,7 @@
   1. *Triệt tiêu nhiễu thị giác do lặp lại ngày giỗ:* Trong danh sách gom nhóm theo mốc thời gian, toàn bộ thông tin ngày tháng chung bắt buộc phải đưa lên Header khối ngày (Âm lịch làm tiêu điểm chính, Dương lịch đối chiếu kế bên, loại bỏ từ cổ "Nhằm ngày"). Dòng từng cá nhân bên dưới tuyệt đối không in lại chuỗi ngày âm này, mà dành diện tích hiển thị năm sinh - mất và tuổi thọ (`Sinh 1935 — Mất 2005 (Hưởng thọ 71 tuổi)`), giúp giao diện thoáng đãng, tôn nghiêm.
   2. *Quy chuẩn Avatar Initials cho gia tộc:* Trong một dòng họ, đại đa số thành viên đều mang chung một Họ. Thuật toán trích xuất Avatar chữ cái bắt buộc phải lấy 2 chữ cái đầu của 2 từ cuối (`Tên đệm + Tên chính`), thay vì lấy chữ cái đầu của Họ, bảo đảm tính nhận diện thị giác cao và đồng nhất 100% giữa Sơ đồ Cây, Drawer và Lịch Giỗ.
 - **Phân Định Hai Không Gian & Kế Thừa Gia Phả Đa Tầng (Two-Hats Architecture & Multi-Tier Branch Taxonomy):**
-  1. *Giải quyết triệt để bài toán "Hai Chiếc Áo" (Admin vs Member):* Tách bạch rạch ròi giữa Cài đặt Cá Nhân (`Personal Settings`) và Quản Trị Dòng Họ (`Admin Portal`). Cài đặt Cá Nhân nằm gọn trong Dropdown Avatar (`AuthButton.tsx > [ Cài đặt của tôi]`) cho phép bất kỳ ai (kể cả Super Admin với tư cách thành viên) chọn nhánh theo dõi riêng và bật/tắt chuông thiết bị mà không ảnh hưởng người khác. Quản Trị Dòng Họ có nút riêng trực tiếp trên Navbar (`[🛡️ Quản Trị Dòng Họ]`) chỉ hiển thị cho Super Admin.
+  1. *Giải quyết triệt để bài toán "Hai Chiếc Áo" (Admin vs Member):* Tách bạch rạch ròi giữa Cài đặt Cá Nhân (`Personal Settings`) và Quản Trị Dòng Họ (`Admin Portal`). Cài đặt Cá Nhân nằm gọn trong Dropdown Avatar (`AuthButton.tsx > [ Cài đặt của tôi]`) cho phép bất kỳ ai (kể cả Super Admin với tư cách thành viên) chọn nhánh theo dõi riêng và bật/tắt chuông thiết bị mà không ảnh hưởng người khác. Quản Trị Dòng Họ có nút riêng trực tiếp trên Navbar (`[ Quản Trị Dòng Họ]`) chỉ hiển thị cho Super Admin.
   2. *Triệt tiêu Box-in-Box bằng Flat Segmented Tabs:* Phân hệ quản trị `/admin` quy tụ về thanh Tab phẳng liền mạch (`[Cấu Trúc Ngành/Chi]`, `[🏛️ Thông Tin & Xưng Hô]`, `[📥 Nhập File Excel]`), chuyển đổi 0ms không lồng hộp hay phân mảnh đường dẫn.
   3. *Lõi Kế Thừa Gia Phả Tự Động (Branch Inheritance Pure Engine):* Thay vì bắt người nhập liệu gõ tay từng chữ "Ngành X, Chi Y", hệ thống chỉ cần gán Cụ Khởi Nguồn (`rootMemberId`) cho mỗi nhánh trong cây phân cấp. Thuật toán pure function `resolveMemberBranchHierarchy` tự động duyệt ngược chuỗi phụ hệ và gán danh xưng chuẩn (`Đời N · Ngành X · Chi Y`) cho toàn bộ con cháu các đời sau trên toàn hệ thống.
 - **Khắc Phục Lỗi Bố Cục Modal & Tinh Gọn Phân Tầng Điều Hướng (Modal Viewport Resilience & Clean Navigation):**
@@ -736,7 +756,7 @@
   3. *Định vị Thân tộc Tự nhiên & Thuần Việt hóa Giao diện Drawer:*
      - Khi $F_0$ xem Drawer con đẻ ($F_1$), khối con cái hiển thị rõ nhãn thân tộc: `Con cái (Cháu của bạn) (N):`, giúp người dùng nhận thức vai vế ngay trong ngữ cảnh.
      - Triệt tiêu thuật ngữ kỹ thuật "phối ngẫu": Căn cứ vào giới tính thành viên mục tiêu để hiển thị nhãn và nút bấm chuẩn mực văn hóa: Nam $\rightarrow$ `Vợ` và `[+ Thêm vợ]`; Nữ $\rightarrow$ `Chồng` và `[+ Thêm chồng]`; tiêu đề Modal hiển thị trang trọng `Thêm Vợ Cho: ...` / `Thêm Chồng Cho: ...`.
-     - Tooltip nút `[🎯 Đặt làm Gốc]`: Bổ sung tooltip tường minh giải thích ý nghĩa tính năng Focus Root (lọc nhánh con cháu và đổi góc nhìn xưng hô thân tộc), xua tan lo ngại của người dùng về việc làm xáo trộn gốc rễ phả hệ.
+     - Tooltip nút `[ Đặt làm Gốc]`: Bổ sung tooltip tường minh giải thích ý nghĩa tính năng Focus Root (lọc nhánh con cháu và đổi góc nhìn xưng hô thân tộc), xua tan lo ngại của người dùng về việc làm xáo trộn gốc rễ phả hệ.
 
 - **Phê Duyệt Phân Tán 3 Tầng, Kỷ Luật Anti-Pill & Cơ Chế Insert & Shift (Milestone 8 - Phase 3):**
   1. *Phân quyền Phê duyệt 3 Tầng theo Huyết Thống (`canUserReviewClaim`):*
@@ -772,7 +792,7 @@
      - Mặc định: Chỉ hiển thị danh sách các phiếu CẦN DUYỆT.
      - Khi muốn tra cứu nhân khẩu theo Chi: Super Admin chủ động chọn Chi từ Dropdown (`super-admin-branch-selector`) để hiển thị con cháu thuộc Chi đó kèm bộ lọc theo đời và ô tìm kiếm tức thì.
   4. *Tương tác Deep Zoom Camera & Highlight Node Trên Cây Phả Hệ (`/tree?focus=...`):*
-     - Nhấp nút `[🎯 Cây]` từ Cổng Phê Duyệt dẫn tới `/tree?focus={member_id}`.
+     - Nhấp nút `[ Cây]` từ Cổng Phê Duyệt dẫn tới `/tree?focus={member_id}`.
      - Next.js PageProps type constraint: Khi nhận `searchParams` trong Next.js App Router Page, kiểu bắt buộc phải là `{ [key: string]: string | string[] | undefined }` (không gán giá trị mặc định `= {}` vì Next.js type check coi `undefined` là vi phạm `PageProps`).
      - `FamilyTreeCanvas` lắng nghe `initialFocusMemberId`: tự động bỏ qua `fitView` toàn phả đồ, lia camera mượt mà vào đúng tâm node `setCenter(node.x + 100, node.y + 48, { zoom: 1.15, duration: 800 })`, mở `MemberDetailDrawer`, và kích hoạt hiệu ứng viền phát sáng `animate-pulse shadow-emerald-500/50 shadow-lg` trong 2.5s rồi tự tắt.
 

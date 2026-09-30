@@ -9,7 +9,7 @@ export default function LoginGateLoading() {
         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center" />
 
         {/* Badge & Title Skeleton */}
-        <div className="h-5 w-40 bg-emerald-100/80 dark:bg-emerald-950/40 rounded-full" />
+        <div className="h-5 w-40 bg-emerald-100/80 dark:bg-emerald-950/40 rounded-control" />
         <div className="h-7 w-56 bg-slate-200 dark:bg-slate-800 rounded-lg" />
         <div className="h-4 w-72 max-w-full bg-slate-100 dark:bg-slate-800/60 rounded" />
 

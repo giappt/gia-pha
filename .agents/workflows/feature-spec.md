@@ -31,9 +31,9 @@ description: "[Bước 10/12] Tạo hoặc Cập nhật Đặc tả Vi mô (Micr
 
 5. **[BẢN TRÌNH DUYỆT TÓM TẮT 10 GIÂY (10-SECOND EXECUTIVE DIFF)]:**
    - **🛑 DỪNG LẠI (STOP ACTION):** Gửi bản tóm tắt súc tích cho User Review:
-     - 🎯 **Nội dung thay đổi:** (2 câu tóm tắt cốt lõi).
-     - 🛡️ **Kết quả Kiểm tra Bất biến (Invariant Audit):** Xác nhận 5 Invariants đều PASS.
-     - 🧪 **Kịch bản Test Cases mới:** (Liệt kê các `[ ] AC` vừa sinh).
-     - 🛡️ **Regression Guards:** (Các vùng lân cận sẽ được kiểm tra chéo).
+     -  **Nội dung thay đổi:** (2 câu tóm tắt cốt lõi).
+     -  **Kết quả Kiểm tra Bất biến (Invariant Audit):** Xác nhận 5 Invariants đều PASS.
+     -  **Kịch bản Test Cases mới:** (Liệt kê các `[ ] AC` vừa sinh).
+     -  **Regression Guards:** (Các vùng lân cận sẽ được kiểm tra chéo).
      - *(Kèm link trỏ đến file Micro-Spec)*.
    - **Thông báo:** *"Bản Đặc tả (Micro-Spec) và Kịch bản Test đã sẵn sàng. Xin hãy Review. Nếu đồng ý, hãy gõ lệnh `/feature-code` để tôi bắt đầu thi công. CẤM TỰ Ý VIẾT CODE Ở BƯỚC NÀY."*

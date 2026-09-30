@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import { Handle, Position, type Node, type NodeProps, useReactFlow } from '@xyflow/react';
-import { User, Sparkles, ArrowUpRight, Link2, ArrowUpDown } from 'lucide-react';
+import { User, ArrowUpRight, Link2, ArrowUpDown } from 'lucide-react';
 import { TreeNodeData } from '@/types/tree';
 import { getMemberInitials } from '@/lib/tree-layout/avatar-utils';
 
@@ -50,9 +50,12 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
   const cleanFullName = fullName.replace(/[\(\[][^\)\]]*[\)\]]/g, '').trim() || fullName;
   const aliasDisplay = nodeData.aliasName || (fullName.match(/[\(\[](.*?)[\)\]]/)?.[1]?.trim());
 
-  const birthDeathText = nodeData.birthYear || nodeData.deathYear
-    ? `${nodeData.birthYear ? `SN: ${nodeData.birthYear}` : ''}${nodeData.deathYear ? ` - Mất: ${nodeData.deathYear}` : ''
-      }`.trim()
+    const birthDeathText = nodeData.birthYear || nodeData.deathYear
+    ? isDeceased && nodeData.birthYear && nodeData.deathYear
+      ? `${nodeData.birthYear} – ${nodeData.deathYear}`
+      : `${nodeData.birthYear ? `SN: ${nodeData.birthYear}` : ''}${
+          nodeData.deathYear ? ` · Mất: ${nodeData.deathYear}` : ''
+        }`.trim()
     : nodeData.branchName || '';
 
   const isHighlighted = !!nodeData?.isHighlighted;
@@ -92,37 +95,36 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
         <div className="flex items-center gap-1 font-semibold text-slate-500 dark:text-slate-400">
           <span>Đời {nodeData.generationLevel}</span>
           {nodeData.isSenior && (
-            <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1 py-0.2 rounded border border-blue-200/60 dark:border-blue-800/60">
+            <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1 py-0.2 rounded-control border border-blue-200/60 dark:border-blue-800/60">
               (Trưởng)
             </span>
           )}
           {nodeData.spouseOrderTitle && (
             <span
-              className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded-full border border-amber-200/80 dark:border-amber-800/60"
+              className="inline-flex items-center gap-0.5 text-[9px] font-medium text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 px-1 py-0.2 rounded-control border border-amber-200/80 dark:border-amber-800/60"
               title={`Phối ngẫu: ${nodeData.spouseOrderTitle}`}
             >
-              🌸 {nodeData.spouseOrderTitle}
+              {nodeData.spouseOrderTitle}
             </span>
           )}
         </div>
 
         {isAnonymous ? (
-          <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+          <span className="rounded-control px-1.5 py-0.2 text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
             Khuyết danh
           </span>
         ) : nodeData.isRoot ? (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
-            <Sparkles className="w-2.5 h-2.5" /> Cụ Tổ
+          <span className="px-1.5 py-0.5 rounded-control text-[9px] font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300">
+            Cụ Tổ
           </span>
+        ) : isDeceased ? (
+          <div className="flex items-center gap-1" title="Đã mất">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+          </div>
         ) : (
-          <span
-            className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${isDeceased
-                ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-              }`}
-          >
-            {isDeceased ? 'Đã mất' : 'Còn sống'}
-          </span>
+          <div className="flex items-center gap-1" title="Còn sống">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+          </div>
         )}
       </div>
 
@@ -164,7 +166,7 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
             type="button"
             onClick={handleNavigateToSpouse}
             title={`Xem gia đình tại ${nodeData.internalSpouse.branchName || 'chi đối tác'}`}
-            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 hover:bg-amber-100/80 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-800 hover:text-amber-950 dark:text-amber-300 dark:hover:text-amber-100 font-bold transition-colors whitespace-nowrap text-[9px]"
+            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-control bg-amber-50 hover:bg-amber-100/80 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-800 hover:text-amber-950 dark:text-amber-300 dark:hover:text-amber-100 font-bold transition-colors whitespace-nowrap text-[9px]"
           >
             {nodeData.internalSpouse.branchName
               ? nodeData.internalSpouse.branchName.split(' - ')[0]
@@ -195,7 +197,7 @@ export const MemberNode = memo(({ data }: NodeProps<MemberNodeType>) => {
                   );
                 }
               }}
-              className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group/reorder"
+              className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-control hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group/reorder"
               title="Nhấp để kéo thả sắp xếp thứ tự các con"
             >
               <span>{nodeData.childCount} người con</span>

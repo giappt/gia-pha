@@ -261,7 +261,7 @@ export function detectConsanguinity(
         commonAncestorId: lcaResult.lcaNodeId,
         commonAncestorName: lcaResult.lcaNodeName,
         generationDelta: lcaResult.generationDelta,
-        message: `Phát hiện hôn nhân nội tộc: Hai người có chung Tổ tiên là ${lcaResult.lcaNodeName} (Độ lệch thế hệ: ${lcaResult.generationDelta}). Hệ thống sẽ kích hoạt Ghost Node 🔗 trên cây.`,
+        message: `Phát hiện hôn nhân nội tộc: Hai người có chung Tổ tiên là ${lcaResult.lcaNodeName} (Độ lệch thế hệ: ${lcaResult.generationDelta}). Hệ thống sẽ kích hoạt Node phản chiếu (Ghost Node) trên cây.`,
       };
     }
   } catch (err) {

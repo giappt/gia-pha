@@ -22,7 +22,7 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
 - **Ràng buộc Thẩm Mỹ & UX (Modern Vietnamese Heritage Design System):**
   - **Triết Lý Kiến Trúc Mở (Open Architecture):** Loại bỏ hộp lồng hộp (anti box-in-box). Phân định các ngày giỗ theo dòng thời gian Timeline với đường kẻ hairline 1px `border-slate-200/60` (dark: `border-slate-800/60`).
   - **Bảng Màu Chủ Đạo:** Ngọc Bích Khởi Sắc (`#059669` / `#10B981`) kết hợp Ánh Kim Rạng Rỡ (`#D97706` / `#F59E0B`) cho các huy hiệu đếm ngược ("Hôm nay", "Ngày mai", "Còn N ngày").
-  - **Hình Học Kỷ Luật:** Khung card, badge và pill button dùng bo góc `rounded-lg` (8px) hoặc `rounded-md` (6px). Không dùng góc bong bóng hoạt hình `rounded-2xl`, `rounded-3xl`.
+  - **Hình Học Kỷ Luật:** Khung card, badge và nút bấm dùng bo góc `rounded-control` / `rounded-lg` (8px) hoặc `rounded-md` (6px). Không dùng góc bong bóng hoạt hình `rounded-2xl`, `rounded-3xl`.
   - **PWA & Hướng Dẫn Thân Thiện:** Hỗ trợ Web App Manifest (`manifest.json`) cho phép cài đặt ứng dụng vào màn hình chính; hiển thị Banner kích hoạt nhận thông báo đẩy kèm trạng thái và thông báo thân thiện cho iOS Safari (yêu cầu Add to Home Screen).
 
 ---
@@ -391,7 +391,7 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - Tiêu đề trang trọng: `"LỊCH GIỖ GIA TỘC"` kèm phụ đề `"Tưởng nhớ cội nguồn · Hiếu nghĩa truyền gia"`.
   - Thẻ hiển thị Ngày hôm nay: Dương lịch (DD/MM/YYYY) sóng đôi cùng Âm lịch (Ngày ... Tháng ... Năm Bính Ngọ).
 - **Control Bar:**
-  - Bộ lọc phạm vi: Pill buttons `"Tất cả dòng họ"` vs `"Nhánh của tôi"` (chỉ kích hoạt khi user đã liên kết node).
+  - Bộ lọc phạm vi: Nút chuyển bộ lọc `"Tất cả dòng họ"` vs `"Nhánh của tôi"` chuẩn `rounded-control` (chỉ kích hoạt khi user đã liên kết node).
   - Quick Filter: `"7 ngày tới"` | `"15 ngày tới"` | `"30 ngày tới"`.
 - **Push Notification Banner (`PushNotificationBanner.tsx`):**
   - Đặt trang nhã ngay dưới Hero section.
@@ -587,7 +587,7 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
 ### 5.11. Đồng Bộ Trục Bố Cục Trang Chủ (`max-w-3xl`), Vị Trí Banner Tiện Ích PWA Dưới Thẻ Ngày Giỗ & Tách Biệt Chân Card Login Gate
 - **1. Xóa Bỏ Hoàn Toàn Khối Quản Trị Viên Cuối Trang Chủ (`src/app/page.tsx`):**
   - Khối thẻ xanh `Khu vực Quản Trị Viên (Super Admin)` ở cuối trang chủ là vết tích dư thừa, làm hẹp và lệch lề (`max-w-xl` 576px so với `max-w-3xl` 768px của Khối Ngày Giỗ).
-  - Super Admin đã có toàn quyền truy cập Cài Đặt Quản Trị qua Menu Avatar trên Header Navbar (`AuthButton.tsx > [🛡️ Quản Trị Dòng Họ]` hoặc `/admin`). Việc xóa bỏ khối này giúp Trang Chủ tôn nghiêm, tinh gọn, tập trung 100% vào giá trị cội nguồn dòng tộc.
+  - Super Admin đã có toàn quyền truy cập Cài Đặt Quản Trị qua Menu Avatar trên Header Navbar (`AuthButton.tsx > [ Quản Trị Dòng Họ]` hoặc `/admin`). Việc xóa bỏ khối này giúp Trang Chủ tôn nghiêm, tinh gọn, tập trung 100% vào giá trị cội nguồn dòng tộc.
 - **2. Định Vị Banner Tiện Ích Cài Đặt PWA Ngay Dưới Thẻ Ngày Giỗ Gần Nhất:**
   - Thay vì đặt nút Cài đặt lơ lửng lẻ loi giữa Hero và Lời chào mừng, Banner Tiện Ích PWA được đặt **ngay bên dưới Thẻ Ngày Giỗ Gần Nhất**.
   - **Đồng bộ chuẩn hình học `max-w-3xl w-full` (768px):** Cả Thẻ Ngày Giỗ và Banner Tiện Ích đều có chiều rộng 768px, gióng lề trái và phải thẳng tắp 100%.
@@ -831,7 +831,7 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
   - Nhãn nấc 2 hiển thị linh hoạt theo CSDL: `[ Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành` đối với họ Phạm Văn; `Từ Gốc Phái` đối với họ dùng Phái).
 - **3. Segmented Toggle 2 Nấc Cho 'Nhánh Của Tôi' (`src/app/anniversaries/page.tsx`):**
   - Chuyển đổi nút bấm đơn thành **Segmented Toggle 2 nấc** ngọc bích chuẩn di sản:
-    - **Nấc 1 (`from_root` - Mặc định):** `[ 👥 Từ Đời 1]` — Trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền (Đời 4) $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bác/Chú $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
+    - **Nấc 1 (`from_root` - Mặc định):** `[Từ Đời 1]` — Trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền (Đời 4) $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bác/Chú $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
     - **Nấc 2 (`from_branch_root` / `from_branch`):** `[ Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ `Từ Gốc Ngành`) — Bắt đầu từ Cụ Khởi của Nhánh Cấp Gốc (Cụ Khởi Ngành) trở xuống:
       - Ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4).
       - **BẢO TOÀN 100%** toàn bộ thành viên trong nhánh gia đình có $G \ge G_{root}$: Cụ Khởi Ngành $\rightarrow$ ... $\rightarrow$ **Ông Bà Nội (như Bà nội Nguyễn Thị Chăm)** $\rightarrow$ **Bác/Chú/Cô** $\rightarrow$ **Bố Mẹ** $\rightarrow$ **Bản thân**.
@@ -985,7 +985,7 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt - AI 
 - [ ] **UAT_57 (Segmented Toggle 2 Nấc 'Nhánh Của Tôi' & Bảo Toàn Ông Bà Nội):**
   - Đăng nhập tài khoản đã liên kết, truy cập `/anniversaries`.
   - Quan sát nhãn nấc 2 hiển thị động theo cấp gốc của dòng họ: `[ Từ Gốc Ngành ]` (nếu cấp gốc là Ngành).
-  - Nhấp nấc `[ 👥 Từ Đời 1]` $\rightarrow$ Nấc sáng ngọc bích, danh sách ngày giỗ hiển thị toàn bộ trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
+  - Nhấp nấc `[Từ Đời 1]` $\rightarrow$ Nấc sáng ngọc bích, danh sách ngày giỗ hiển thị toàn bộ trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
   - Nhấp nấc `[ Từ Gốc Ngành ]` $\rightarrow$ Chuyển chế độ: ẩn các Cụ Tổ chung thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Hiền Đời 4); nhưng **BẢO TOÀN 100% ngày giỗ của Ông Bà Nội (Bà nội Nguyễn Thị Chăm)**, Bác, Chú, Bố Mẹ và Bản thân.
   - Bấm lại vào nấc đang chọn $\rightarrow$ Hủy lọc nhánh, hiển thị lại toàn bộ dòng họ.
 

@@ -332,7 +332,7 @@ sequenceDiagram
       - Khi A là Dâu/Rể (`in_law` qua A): `nodeA` (người phối ngẫu ngoài họ) được gán `isSpouse: true`. Người có huyết thống trong họ (`bridgeMember` / `nodeSA`) bắt buộc giữ `isSpouse: false`, bổ sung cờ `isSpouseBridge: true`.
     - Trong `src/app/kinship/page.tsx`:
       - Logic nhịp nối trong `directLineageNodes`: Cạnh nối dọc chỉ hiển thị `═(Hôn phối)═` khi nối trực tiếp giữa thành viên trong họ (`isSpouse: false`) và người phối ngẫu của họ (`isSpouse: true`). Cạnh nối giữa Cha/Mẹ và Con luôn luôn là trục huyết thống thẳng đứng nét liền màu xanh ngọc bích `w-0.5 h-7 bg-emerald-600`.
-      - Huy hiệu `💍 Hôn phối` chỉ hiển thị duy nhất trên thẻ của người phối ngẫu ngoài họ (`isSpouse: true`), tuyệt đối không hiển thị trên thẻ của con cháu mang họ nội.
+      - Huy hiệu `Hôn phối` (nhãn mực thước `rounded-control`) chỉ hiển thị duy nhất trên thẻ của người phối ngẫu ngoài họ (`isSpouse: true`), tuyệt đối không hiển thị trên thẻ của con cháu mang họ nội.
 
 - **5.7. Chuẩn Hóa Thứ Bậc Sinh (Birth Order) & Loại Bỏ Nhãn Chi Thứ Thừa Thãi Trên Sơ Đồ Cây:**
   - **5.7.1. Bổ sung trường `birthOrder` vào `KinshipPathNode`:**
@@ -347,7 +347,7 @@ sequenceDiagram
       - `birth_order === 3`: `"Con thứ 3"`.
       - `birth_order === n` ($n > 1$): `"Con thứ " + n`.
       - `birth_order === null | undefined | 0`: Không hiển thị.
-    - **Loại trừ Dâu / Rể ngoại tộc:** Người phối ngẫu ngoài họ (`isSpouse: true`) kết hôn vào dòng họ tuyệt đối KHÔNG hiển thị thứ tự sinh của nhánh gia đình đối tác (chỉ giữ nguyên badge `💍 Hôn phối`).
+    - **Loại trừ Dâu / Rể ngoại tộc:** Người phối ngẫu ngoài họ (`isSpouse: true`) kết hôn vào dòng họ tuyệt đối KHÔNG hiển thị thứ tự sinh của nhánh gia đình đối tác (chỉ giữ nguyên nhãn `Hôn phối`).
   - **5.7.3. Loại bỏ hoàn toàn nhãn `Chi Trưởng` / `Chi Thứ` trên thẻ sơ đồ cây:**
     - Xóa bỏ triệt để đoạn text `· {node.isSeniorBranch ? 'Chi Trưởng' : 'Chi Thứ'}` trên cả Sơ đồ Dòng Trực Hệ Dọc (`#direct-lineage-tree`) và Sơ đồ Cây Chữ V (`LineageNodeCard` - `#inverted-v-tree`).
     - Thay thế bằng thông tin thứ bậc sinh:
@@ -405,7 +405,7 @@ sequenceDiagram
 | **TC06** | Ngoại Lệ: Thành Viên Không Nối Phả | Unit / API | Chọn 1 người cô lập (không cha mẹ, không con) | Chạy thuật toán LCA | Trả về `lca = null`, `relationshipType = 'unrelated'` | Error Handling |
 | **TC07** | Đảo Vai (A ↔ B) | UI / E2E | Đang hiển thị kết quả A gọi B | Bấm nút [Đổi vai] | Đảo ngược kết quả B gọi A lên đầu ngay lập tức | Happy Path |
 | **TC08** | Cây Chữ V Ngược Xuất Phát Từ LCA | UI / E2E | Chọn 2 người cùng ông nội (Đời 3) trong cây 7 đời | Bấm [Xác định quan hệ] | Đỉnh cây hiển thị đúng Ông nội (LCA), KHÔNG hiển thị thừa các đời 2, 1 (Root) | Happy Path |
-| **TC09** | Nén Tầng Trung Gian (Smart Folding) | UI / E2E | Chọn 2 người cách nhau $\ge 4$ đời (Đời 1 và Đời 6) | Bấm [Xác định quan hệ] $\rightarrow$ Bấm nút [🔽 Nén N thế hệ] | Ban đầu nén gọn các tầng giữa; bấm vào bung mở rộng mượt mà | Happy Path |
+| **TC09** | Nén Tầng Trung Gian (Smart Folding) | UI / E2E | Chọn 2 người cách nhau $\ge 4$ đời (Đời 1 và Đời 6) | Bấm [Xác định quan hệ] $\rightarrow$ Bấm nút [Nén N thế hệ] | Ban đầu nén gọn các tầng giữa; bấm vào bung mở rộng mượt mà | Happy Path |
 | **TC10** | Thẻ Diễn Giải Phong Tục Cấu Trúc Hóa | UI / E2E | Tra cứu Dũng (Chi Trưởng) và Hùng (Chi Thứ) | Quan sát khối Diễn giải phong tục | Hiển thị đủ 3 khối: Huy hiệu vùng miền, Tục ngữ cổ phong, Bảng đối sánh trực diện | UI / Visual |
 | **TC11** | Gia Phả Đa Thê & Con Nuôi | Unit Test | Dữ liệu mẫu mở rộng 25–30 người có vợ cả/hai, con nuôi | Chạy `findLowestCommonAncestor` & `resolveKinshipTerms` | Xác định đúng quan hệ con cùng cha khác mẹ và xưng hô cho con nuôi | Happy Path |
 | **TC12** | Live Reactivity Khi Đổi Dropdown | UI / E2E | Đang ở trang `/kinship` | Chọn thành viên khác trên dropdown A hoặc B | Cây Chữ V và thẻ xưng hô cập nhật tức thì 0ms không cần bấm nút phụ | Happy Path |
@@ -441,7 +441,7 @@ sequenceDiagram
 | **TC42** | Hợp Nhất Màn Hình Cài Đặt & Chuyển Hướng /admin/settings | Integration / UI | Kiểm tra liên kết nút `(Cài đặt ⚙)` tại `/kinship` và điều hướng `/admin/settings` | Bấm nút hoặc truy cập URL | Nút mở đúng `/admin/kinship`; route `/admin/settings` tự động redirect sang `/admin/kinship` | Happy Path |
 | **TC43** | Sửa Cờ isSpouse Cho Người Phối Ngẫu Ngoài Dòng Họ Trong LCA | Unit Test | Tra cứu cặp Uyên (A) & Liễu (B - Vợ Chiến) hoặc Chiến (A) & Hiến (B - Vợ Tường) | Chạy `findLowestCommonAncestor` | `nodeB` (Hiến/Liễu) có `isSpouse: true`; người mang huyết thống trong họ (`bridgeMember` Tường/Chiến) có `isSpouse: false` | Happy Path |
 | **TC44** | Sơ Đồ Trực Hệ Dọc Không Chèn Hôn Phối Giữa Cha Và Con Ruột | UI / E2E | Tra cứu Chiến (Đời 1) và Hiến (Đời 4 - Vợ Tường) | Quan sát trục dọc `#direct-lineage-tree` | Nhịp nối giữa Chức (Đời 3) và Tường (Đời 4) là trục huyết thống màu xanh ngọc bích; chỉ có nhịp giữa Tường và Hiến là `═(Hôn phối)═` | Happy Path |
-| **TC45** | Badge Hôn Phối Chỉ Hiển Thị Trên Người Phối Ngẫu Ngoài Họ | UI / E2E | Tra cứu Chiến và Hiến | Quan sát thẻ thành viên trên sơ đồ | Chỉ thẻ Nguyễn Thị Hiến có badge `💍 Hôn phối`; thẻ Phạm Khắc Tường không có badge này | Happy Path |
+| **TC45** | Badge Hôn Phối Chỉ Hiển Thị Trên Người Phối Ngẫu Ngoài Họ | UI / E2E | Tra cứu Chiến và Hiến | Quan sát thẻ thành viên trên sơ đồ | Chỉ thẻ Nguyễn Thị Hiến có nhãn `Hôn phối`; thẻ Phạm Khắc Tường không có nhãn này | Happy Path |
 | **TC46** | Lịch Giỗ Đồng Bộ Vùng Miền & Custom Dictionary Từ Clan Settings | Unit / Integration | Cấu hình `clan_settings` là Miền Trung và tùy biến danh xưng `uncle_junior = { termSenior: 'Chú quý' }` | Chạy `getUpcomingAnniversaries` với user đã liên kết | Hiển thị đúng danh xưng theo vùng miền và phản ánh tức thì `Chú quý của bạn` | Happy Path |
 | **TC47** | KinshipPathNode Chứa Thuộc Tính birthOrder Từ Member | Unit Test | Tạo 2 thành viên A (`birth_order: 1`) và B (`birth_order: 3`) dưới LCA | Chạy `findLowestCommonAncestor(A, B)` | Các node trong `pathA` và `pathB` mang đúng `birthOrder: 1` và `birthOrder: 3` | Happy Path |
 | **TC48** | Định Dạng Thứ Bậc Sinh Chuẩn Văn Hóa Việt Nam | Unit Test | Kiểm tra hàm format thứ bậc sinh với các giá trị 1, 2, 3, 5, null/0 | Gọi hàm format | Trả về `"Con cả"` (cho 1), `"Con thứ 2"` (cho 2), `"Con thứ 3"` (cho 3), `"Con thứ 5"` (cho 5), `null` (cho null/0) | Happy Path |
@@ -492,12 +492,12 @@ sequenceDiagram
 - [x] **AC42:** Màn hình `/admin/settings` được chuyển hướng hoàn toàn về `/admin/kinship`, nút `(Cài đặt ⚙)` tại `/kinship` liên kết chính xác tới `/admin/kinship`.
 - [x] **AC43:** Thuật toán `findLowestCommonAncestor` gán đúng cờ `isSpouse: true` cho người phối ngẫu ngoài họ (`nodeB` hoặc `nodeA`), bảo toàn `isSpouse: false` cho thành viên huyết thống trong họ (`bridgeMember`).
 - [x] **AC44:** Sơ đồ Dòng Trực Hệ Dọc `#direct-lineage-tree` chỉ vẽ nhịp `═(Hôn phối)═` giữa người trong họ và người phối ngẫu của họ; cạnh nối giữa Cha/Mẹ và Con luôn là trục đứng nét liền huyết thống màu xanh ngọc bích.
-- [x] **AC45:** Badge `💍 Hôn phối` chỉ hiển thị trên thẻ của người phối ngẫu ngoài họ (`isSpouse: true`), không hiển thị trên thẻ của con cháu mang họ nội.
+- [x] **AC45:** Nhãn `Hôn phối` chỉ hiển thị trên thẻ của người phối ngẫu ngoài họ (`isSpouse: true`), không hiển thị trên thẻ của con cháu mang họ nội.
 - [x] **AC46:** Lịch Giỗ `/anniversaries` nạp và áp dụng đúng 100% `region` và `customDictionary` từ cấu hình dòng họ (`clan_settings`), phản ánh chuẩn xác danh xưng tùy biến SSOT khi user đã liên kết.
 - [x] **AC47:** Interface `KinshipPathNode` được bổ sung thuộc tính `birthOrder?: number | null;` và được `buildPathNodes` / LCA nạp đầy đủ từ dữ liệu thành viên.
 - [x] **AC48:** Thẻ thành viên trên cả Sơ đồ Dòng Trực Hệ Dọc (`#direct-lineage-tree`) và Sơ đồ Cây Chữ V (`LineageNodeCard`) hiển thị chuẩn xác `Con cả`, `Con thứ 2`, `Con thứ 3`... dựa trên thứ tự sinh `birth_order`.
 - [x] **AC49:** Loại bỏ hoàn toàn nhãn `· Chi Thứ` và `· Chi Trưởng` trên tất cả các thẻ node của sơ đồ cây trực quan, trả lại giao diện thanh thoát và sạch sẽ.
-- [x] **AC50:** Thẻ người phối ngẫu ngoài tộc (`isSpouse: true`, mang badge `💍 Hôn phối`) không hiển thị nhãn "Con cả / Con thứ N" của nhánh gia đình đối tác.
+- [x] **AC50:** Thẻ người phối ngẫu ngoài tộc (`isSpouse: true`, mang nhãn `Hôn phối`) không hiển thị nhãn "Con cả / Con thứ N" của nhánh gia đình đối tác.
 - [x] **AC51 (Kinship Zero Mock Initial State):** `src/app/kinship/page.tsx` không import `MOCK_CLAN_MEMBERS` / `MOCK_SPOUSE_RELATIONS` và không khởi tạo state với dữ liệu họ Nguyễn Văn. Ban đầu `members = []`, `personAId = ''`, `personBId = ''`, `result = null`.
 - [x] **AC52 (Kinship Skeleton Loading & Empty State):** Khi `isLoading === true`, trang `/kinship` hiển thị Skeleton loading mờ (animated pulse) cho các bộ chọn và kết quả, tuyệt đối không hiển thị tên người giả định. Khi `!isLoading && members.length === 0`, hiển thị Empty State sạch sẽ, không crash.
 - [x] **AC53 (Kinship Purge Hardcoded Nguyen Scenarios):** Loại bỏ hoàn toàn 8 nút chip kịch bản mẫu gán cứng tên họ Nguyễn Văn (`Khởi & Bình`, `Hải & Minh`, `Hùng & Hải`, `Nam & Tâm`, `Huệ & Cường`...) khỏi giao diện `/kinship`. Thay bằng cơ chế gợi ý động theo dữ liệu họ Phạm thật hoặc ẩn đi khi chưa đủ điều kiện.
@@ -517,9 +517,12 @@ sequenceDiagram
 | **UAT_SSOT_02** | Nghiệm thu Tùy biến từ `/admin/kinship` | Vào `/admin/kinship`, sửa quan hệ Bác rể thành "Bác rể quý" $\rightarrow$ Lưu | Mở lại `/kinship`, tra cứu Hưng & Giáp $\rightarrow$ Thẻ hiển thị ngay lập tức "Bác rể quý". |
 | **UAT_SSOT_03** | Nghiệm thu Nút Cài Đặt trên `/kinship` | Bấm nút `(Cài đặt ⚙)` cạnh tab vùng miền | Trình duyệt chuyển hướng thẳng tới `http://localhost:3000/admin/kinship`. |
 | **UAT_SSOT_04** | Nghiệm thu Chuyển hướng `/admin/settings` | Gõ trực tiếp `/admin/settings` vào thanh địa chỉ | Tự động chuyển hướng ngay sang `/admin/kinship`, không còn 2 màn hình cài đặt song song. |
-| **UAT_SSOT_05** | Nghiệm thu Sơ đồ Trực hệ dọc Chiến $\leftrightarrow$ Hiến | Chọn `Phạm Văn Chiến` & `Nguyễn Thị Hiến` | Trục nối giữa Chức (Đời 3) và Tường (Đời 4) là đường xanh ngọc bích nét liền. Chỉ có trục giữa Tường và Hiến là `═(Hôn phối)═`. Thẻ của Tường không có badge `💍 Hôn phối`, chỉ thẻ của Hiến có badge. |
+| **UAT_SSOT_05** | Nghiệm thu Sơ đồ Trực hệ dọc Chiến $\leftrightarrow$ Hiến | Chọn `Phạm Văn Chiến` & `Nguyễn Thị Hiến` | Trục nối giữa Chức (Đời 3) và Tường (Đời 4) là đường xanh ngọc bích nét liền. Chỉ có trục giữa Tường và Hiến là `═(Hôn phối)═`. Thẻ của Tường không có nhãn `Hôn phối`, chỉ thẻ của Hiến có nhãn. |
 | **UAT_SSOT_06** | Nghiệm thu Lịch Giỗ SSOT Vùng miền & Tùy biến | Đổi vùng miền sang Miền Trung hoặc sửa tùy biến xưng hô tại `/admin/kinship` | Mở `/anniversaries` khi đã liên kết tài khoản $\rightarrow$ Danh xưng người mất phản ánh chuẩn xác danh xưng vùng miền/tùy biến. |
-| **UAT_SSOT_07** | Nghiệm thu Thứ bậc sinh "Con cả / Con thứ N" trên Cây Chữ V | Chọn `Bùi Trường Minh` & `Phạm Tiến Giáp` | Thẻ Khương và Cường hiển thị rõ thứ bậc sinh (`Con thứ ...`); thẻ Dung và Giáp hiển thị `Con cả`; thẻ Minh chỉ có badge `💍 Hôn phối` và năm sinh, KHÔNG CÒN chữ "Chi Thứ" hay "Chi Trưởng" nào. |
+| **UAT_SSOT_07** | Nghiệm thu Thứ bậc sinh "Con cả / Con thứ N" trên Cây Chữ V | Chọn `Bùi Trường Minh` & `Phạm Tiến Giáp` | Thẻ Khương và Cường hiển thị rõ thứ bậc sinh (`Con thứ ...`); thẻ Dung và Giáp hiển thị `Con cả`; thẻ Minh chỉ có nhãn `Hôn phối` và năm sinh, KHÔNG CÒN chữ "Chi Thứ" hay "Chi Trưởng" nào. |
+| **UAT_ZERO_MOCK_01** | Nghiệm thu Màn hình Loading trên `/kinship` | Mở `/kinship` và quan sát trong khi mạng đang tải | Hiển thị Skeleton loading mờ trang nhã; tuyệt đối không thấy tên "Nguyễn Văn Hải" hay "Nguyễn Văn Hùng". |
+| **UAT_ZERO_MOCK_02** | Nghiệm thu Loại bỏ kịch bản mẫu giả | Quan sát khu vực kịch bản mẫu trên `/kinship` | Hoàn toàn biến mất các nút chip chứa tên họ Nguyễn Văn (Khởi & Bình, Cụ Bà Huệ & Cụ Cường...). |
+| **UAT_ZERO_MOCK_03** | Nghiệm thu Tên thương hiệu chuẩn | Kiểm tra Trang Chủ, Cây Gia Phả, Admin Portal khi DB chưa tải | Tên dòng họ hiển thị mặc định là "GIA PHẢ PHẠM VĂN", tuyệt đối không bao giờ xuất hiện chữ "NGUYỄN VĂN". |
 | **UAT_ZERO_MOCK_01** | Nghiệm thu Màn hình Loading trên `/kinship` | Mở `/kinship` và quan sát trong khi mạng đang tải | Hiển thị Skeleton loading mờ trang nhã; tuyệt đối không thấy tên "Nguyễn Văn Hải" hay "Nguyễn Văn Hùng". |
 | **UAT_ZERO_MOCK_02** | Nghiệm thu Loại bỏ kịch bản mẫu giả | Quan sát khu vực kịch bản mẫu trên `/kinship` | Hoàn toàn biến mất các nút chip chứa tên họ Nguyễn Văn (Khởi & Bình, Cụ Bà Huệ & Cụ Cường...). |
 | **UAT_ZERO_MOCK_03** | Nghiệm thu Tên thương hiệu chuẩn | Kiểm tra Trang Chủ, Cây Gia Phả, Admin Portal khi DB chưa tải | Tên dòng họ hiển thị mặc định là "GIA PHẢ PHẠM VĂN", tuyệt đối không bao giờ xuất hiện chữ "NGUYỄN VĂN". |

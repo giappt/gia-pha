@@ -24,7 +24,7 @@ export default function AdminClaimsLoading() {
             <div key={idx} className="h-16 px-6 flex items-center justify-between">
               <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded" />
               <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded" />
-              <div className="h-6 w-20 bg-slate-100 dark:bg-slate-800 rounded-full" />
+              <div className="h-6 w-20 bg-slate-100 dark:bg-slate-800 rounded-control" />
               <div className="h-8 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg" />
             </div>
           ))}

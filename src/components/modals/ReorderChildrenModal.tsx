@@ -187,7 +187,7 @@ export const ReorderChildrenModal: React.FC<ReorderChildrenModalProps> = ({
                     </div>
 
                     {/* Số thứ tự sinh mới */}
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center justify-center">
+                    <span className="w-6 h-6 rounded-control bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center justify-center">
                       {idx + 1}
                     </span>
 

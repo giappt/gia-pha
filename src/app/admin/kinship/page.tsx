@@ -17,58 +17,47 @@ import {
 import { getRegionalPresetDictionary } from '@/lib/kinship-engine/regional-dictionaries';
 import type { KinshipTermRule, CustomKinshipDictionary, KinshipRegion } from '@/types/kinship';
 
-const CATEGORY_GROUPS: {
-  key: KinshipTermRule['category'];
-  title: string;
-  desc: string;
-  icon: string;
-}[] = [
+const CATEGORY_GROUPS = [
   {
-    key: 'direct',
+    key: 'direct' as const,
     title: 'I. QUAN HỆ TRỰC HỆ (NỘI & NGOẠI)',
     desc: 'Quan hệ huyết thống trực hệ (Cha, Mẹ, Ông, Bà nội/ngoại, Cụ, Kỵ)',
-    icon: '🏛️',
   },
   {
-    key: 'same_gen',
+    key: 'same_gen' as const,
     title: 'II. CÙNG THẾ HỆ & DÂU / RỂ NGANG HÀNG',
     desc: 'Anh chị em ruột, con chú con bác, chị dâu, anh rể, em dâu, em rể',
-    icon: '👥',
   },
   {
-    key: 'paternal_uncle_aunt',
+    key: 'paternal_uncle_aunt' as const,
     title: 'III. BẬC BÁC / CHÚ / CÔ & PHU THÊ (BÊN NỘI)',
     desc: 'Bác trai, Bác dâu, Bác gái, Bác rể, Chú, Thím, Cô, Dượng bên nội',
-    icon: '🤝',
   },
   {
-    key: 'maternal_uncle_aunt',
+    key: 'maternal_uncle_aunt' as const,
     title: 'IV. BẬC BÁC / CẬU / DÌ & PHU THÊ (BÊN NGOẠI)',
     desc: 'Bác ngoại, Bác dâu ngoại, Cậu, Mợ, Dì, Dượng bên ngoại',
-    icon: '🌸',
   },
   {
-    key: 'in_law_descendant',
+    key: 'in_law_descendant' as const,
     title: 'V. DÂU / RỂ THẾ HỆ CON & CHÁU',
     desc: 'Con dâu, Con rể, Cháu dâu, Cháu rể trong gia tộc',
-    icon: '💍',
   },
   {
-    key: 'grand_collateral',
+    key: 'grand_collateral' as const,
     title: 'VI. HỌ HÀNG LỆCH ĐỜI (ÔNG HỌ, BÀ HỌ)',
     desc: 'Quan hệ họ hàng cách 2 thế hệ trong cùng dòng tộc',
-    icon: '🌿',
   },
 ];
 
 const FILTER_CHIPS = [
-  { id: 'all', label: 'Tất Cả', icon: '📋' },
-  { id: 'direct', label: 'Trực Hệ', icon: '🏛️' },
-  { id: 'same_gen', label: 'Cùng Đời & Dâu Rể', icon: '👥' },
-  { id: 'paternal_uncle_aunt', label: 'Bên Nội (Bác/Chú/Cô)', icon: '🤝' },
-  { id: 'maternal_uncle_aunt', label: 'Bên Ngoại (Cậu/Dì)', icon: '🌸' },
-  { id: 'in_law_descendant', label: 'Dâu / Rể Con Cháu', icon: '💍' },
-  { id: 'grand_collateral', label: 'Họ Hàng Lệch Đời', icon: '🌿' },
+  { id: 'all', label: 'Tất Cả' },
+  { id: 'direct', label: 'Trực Hệ' },
+  { id: 'same_gen', label: 'Cùng Đời & Dâu Rể' },
+  { id: 'paternal_uncle_aunt', label: 'Bên Nội' },
+  { id: 'maternal_uncle_aunt', label: 'Bên Ngoại' },
+  { id: 'in_law_descendant', label: 'Dâu & Rể' },
+  { id: 'grand_collateral', label: 'Lệch Đời' },
 ];
 
 export default function AdminKinshipPage() {
@@ -213,7 +202,7 @@ export default function AdminKinshipPage() {
     region === 'north' ? 'Miền Bắc' : region === 'central' ? 'Miền Trung' : 'Miền Nam';
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
       <div className="border-b border-slate-200/80 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-2.5">
@@ -397,12 +386,8 @@ export default function AdminKinshipPage() {
               </div>
             </div>
 
-            {/* Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1 mr-1 flex-shrink-0">
-                <Filter className="w-3 h-3" />
-                Nhóm:
-              </span>
+            {/* Segmented Filter Bar */}
+            <div className="flex items-center gap-1 flex-wrap p-1 bg-slate-100 dark:bg-slate-900/60 rounded-control border border-slate-200/80 dark:border-slate-800">
               {FILTER_CHIPS.map((chip) => {
                 const isActive = activeCategoryFilter === chip.id;
                 const count =
@@ -415,22 +400,15 @@ export default function AdminKinshipPage() {
                     key={chip.id}
                     type="button"
                     onClick={() => setActiveCategoryFilter(chip.id)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-control text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
+                        ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 shadow-xs border border-slate-200/80 dark:border-slate-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-800/40'
                     }`}
                   >
-                    <span>{chip.icon}</span>
                     <span>{chip.label}</span>
-                    <span
-                      className={`text-[10px] px-1 rounded-full ${
-                        isActive
-                          ? 'bg-emerald-700 text-emerald-100'
-                          : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                      }`}
-                    >
-                      {count}
+                    <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500 font-normal">
+                      ({count})
                     </span>
                   </button>
                 );
@@ -468,12 +446,11 @@ export default function AdminKinshipPage() {
                   >
                     <div className="px-4 py-2.5 bg-slate-100/80 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm">{group.icon}</span>
                         <span className="text-xs font-black tracking-wide text-slate-800 dark:text-slate-200 uppercase">
                           {group.title}
                         </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                          {groupRules.length}
+                        <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                          — {groupRules.length} quy ước
                         </span>
                       </div>
                       <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">

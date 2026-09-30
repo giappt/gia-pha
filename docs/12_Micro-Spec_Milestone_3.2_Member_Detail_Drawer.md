@@ -226,9 +226,9 @@ sequenceDiagram
      - **Khối Hậu Duệ (Con cái):**
        - Nếu chỉ có 1 mẹ: Hiển thị danh sách con thông thường.
        - Nếu người cha có nhiều vợ hoặc có con riêng: Tự động phân chia thành các tiểu mục trang trọng:
-         - 🌸 *Con với bà [Họ Tên] (Vợ cả - N người)*
-         - 🌸 *Con với bà [Họ Tên] (Vợ hai - M người)*
-         - ❓ *Con chưa rõ thông tin mẹ (K người)*
+         - • *Con với bà [Họ Tên] (Vợ cả - N người)*
+         - • *Con với bà [Họ Tên] (Vợ hai - M người)*
+         - • *Con chưa rõ thông tin mẹ (K người)*
      - Mỗi người thân được biểu diễn bằng một thẻ nhỏ (MiniCard). Click vào thẻ $\rightarrow$ gọi `onSelectMember(relativeId)` để đổi dữ liệu Drawer và lia camera Canvas!
   6. **Action Bar chân trang:**
      - Nút "Đặt làm Gốc phả đồ" (`onSetFocusRoot`).
@@ -242,7 +242,7 @@ sequenceDiagram
 - **Tinh giản thẻ con cái (Loại bỏ badge con bà cả / con bà hai):**
   - Tuyệt đối KHÔNG hiển thị badge `motherOrderTitle` (`[Con bà cả]`, `[Con bà hai]`, `[Chưa rõ mẹ]`) trên thẻ con cái, vì sơ đồ phân nhánh thước thợ đã thể hiện trực quan $100\%$. Thẻ con chỉ hiển thị huy hiệu `(Trưởng)` (nếu có) và trạng thái sinh tử (`Còn sống` / `† Đã mất`).
 - **Danh vị phối ngẫu trên thẻ người vợ (`spouseOrderTitle`):**
-  - Đối với các thẻ người vợ có `spouseOrderTitle` (dựa trên `marriage_order`: 1 $\to$ *"Bà cả"*, 2 $\to$ *"Bà hai"*, $k \to$ *"Bà thứ k"*): Hiển thị badge danh vị nhỏ trang nhã màu tím/hổ phách: `🌸 Bà cả`, `🌸 Bà hai` để người xem nhận diện tức thì danh phận của từng cụ bà.
+  - Đối với các thẻ người vợ có `spouseOrderTitle` (dựa trên `marriage_order`: 1 $\to$ *"Bà cả"*, 2 $\to$ *"Bà hai"*, $k \to$ *"Bà thứ k"*): Hiển thị badge danh vị nhỏ trang nhã màu tím/hổ phách: `Bà cả`, `Bà hai` chuẩn `rounded-control` để người xem nhận diện tức thì danh phận của từng cụ bà.
 - **Hỗ trợ đa Handles con cái:** Bổ sung các source handles tương ứng khi người cha có nhiều cụm con (`children-spouse-1` tại $X = 540\text{px}$, `children-spouse-2` tại $X = 760\text{px}$...).
 
 ### 5.3. File: `src/components/tree/FamilyTreeCanvas.tsx` (Cập nhật)
@@ -315,7 +315,7 @@ _(Dành riêng cho User tự kiểm tra trực tiếp trên trình duyệt `http
 - [ ] **UAT_09 (Điểm hạ nhánh con Vợ Hai):** Nhánh con Vợ Hai không còn xuất phát từ khe giữa Vợ Cả và Vợ Hai, thể hiện rõ ràng liên kết huyết thống với Cụ Chiến.
 - [ ] **UAT_10 (Con riêng của vợ):** Con riêng của người mẹ hạ thẳng từ đáy thẻ mẹ, không dính líu vào thanh Bus của người cha.
 - [ ] **UAT_11 (Xóa badge con bà cả/hai trên thẻ con):** Trên Canvas, thẻ con (Khuyết, Minh, Lan, Đức, Mai) không còn badge tím `[Con bà cả]`, `[Con bà hai]`, `[Chưa rõ mẹ]`, chỉ hiển thị `(Trưởng)` và `Còn sống`.
-- [ ] **UAT_12 (Badge danh vị Bà cả / Bà hai trên thẻ cụ bà):** Thẻ Cụ bà Hoàng Thị Mơ hiển thị nhãn `🌸 Bà cả`, Thẻ Cụ bà Đào Thị Liễu hiển thị nhãn `🌸 Bà hai`.
+- [ ] **UAT_12 (Badge danh vị Bà cả / Bà hai trên thẻ cụ bà):** Thẻ Cụ bà Hoàng Thị Mơ hiển thị nhãn `Bà cả`, Thẻ Cụ bà Đào Thị Liễu hiển thị nhãn `Bà hai`.
 
 ---
 

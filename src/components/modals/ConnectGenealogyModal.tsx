@@ -434,7 +434,7 @@ export default function ConnectGenealogyModal({
                                 : 'text-slate-400 hover:text-emerald-600'
                                 }`}
                             >
-                              {isSelected ? '✓ Đã chọn' : 'Chọn →'}
+                              {isSelected ? 'Đã chọn' : 'Chọn →'}
                             </span>
                           </div>
                         </div>
@@ -494,7 +494,7 @@ export default function ConnectGenealogyModal({
                   {/* Header Chỉ Báo Tiến Trình Bước 1 */}
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 text-xs">
                     <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-[11px] font-bold">
+                      <span className="w-5 h-5 rounded-control bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-[11px] font-bold">
                         1
                       </span>
                       Thông tin cá nhân của bạn
@@ -584,8 +584,8 @@ export default function ConnectGenealogyModal({
                   {/* Badge Tóm Tắt Bước 1 kèm nút Sửa */}
                   <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
-                        ✓
+                      <span className="w-5 h-5 rounded-control bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </span>
                       <div>
                         <span className="font-bold text-slate-800 dark:text-slate-200">{fullName}</span>
@@ -727,7 +727,7 @@ export default function ConnectGenealogyModal({
                                         </div>
                                         {isSelected && (
                                           <p className="text-[10.5px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-normal">
-                                            ✓ Con chung của {selectedParent.full_name} & {spouse.fullName}.
+                                            Con chung của {selectedParent.full_name} & {spouse.fullName}.
                                           </p>
                                         )}
                                       </div>
@@ -758,7 +758,7 @@ export default function ConnectGenealogyModal({
                                     </div>
                                     {isStepchild && (
                                       <p className="text-[10.5px] text-amber-600 dark:text-amber-400 mt-0.5 font-normal">
-                                        ⚠️ Lưu làm con riêng (hạ nhánh trực tiếp từ {selectedParent.gender === 'male' ? 'Bố' : 'Mẹ'}).
+                                        Lưu làm con riêng (hạ nhánh trực tiếp từ {selectedParent.gender === 'male' ? 'Bố' : 'Mẹ'}).
                                       </p>
                                     )}
                                   </div>
@@ -766,7 +766,7 @@ export default function ConnectGenealogyModal({
                               </div>
                             ) : (
                               <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
-                                ℹ Người này chưa có bạn đời trên cây → Sẽ lưu làm con riêng của {selectedParent.full_name}.
+                                Người này chưa có bạn đời trên cây → Sẽ lưu làm con riêng của {selectedParent.full_name}.
                               </p>
                             )}
 
@@ -811,7 +811,7 @@ export default function ConnectGenealogyModal({
                             {/* Dòng giải thích ngữ cảnh vị trí trực quan */}
                             {birthOrderExplanation && (
                               <div className="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start gap-1.5">
-                                <span className="font-semibold shrink-0">ℹ️ Vị trí:</span>
+                                <span className="font-semibold shrink-0">Vị trí:</span>
                                 <span>{birthOrderExplanation}</span>
                               </div>
                             )}

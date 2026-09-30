@@ -12,10 +12,10 @@ _Tài liệu này là Hợp Đồng Kỹ Thuật (Single Source of Truth) cho Mi
   - Áp dụng cấu trúc **Sidebar cố định bên trái (256px)** kết hợp **Content Canvas mở rộng linh hoạt (Fluid Canvas)**.
   - Trên mobile / màn hình nhỏ (< 1024px): Sidebar tự động chuyển thành **Slide-over Drawer** với nút Hamburger và Backdrop làm mờ.
 - **Nguyên tắc Phân Nhóm Sidebar (4 Nhóm Thuần Việt Tự Nhiên):**
-  1. `❖ TỔNG QUAN`: 📊 Bàn Điều Hành (`/admin`).
-  2. `❖ Gia Phả & QUY ƯỚC`: 🏛️ Căn Cước Dòng Họ (`/admin/profile`), Cấu Trúc Ngành & Chi (`/admin/branches`), 🗣️ Quy Ước Xưng Hô (`/admin/kinship`).
-  3. `❖ THÀNH VIÊN & TÀI KHOẢN`: 👥 Quản Lý Tài Khoản (`/admin/users`).
-  4. `❖ VẬN HÀNH & HỆ THỐNG`: Bật/Tắt Tính Năng (`/admin/features`), 📥 Nạp & Sao Lưu (`/admin/import`).
+  1. `❖ TỔNG QUAN`: Bàn Điều Hành (`/admin`).
+  2. `❖ Gia Phả & QUY ƯỚC`: Căn Cước Dòng Họ (`/admin/profile`), Cấu Trúc Ngành & Chi (`/admin/branches`), Quy Ước Xưng Hô (`/admin/kinship`).
+  3. `❖ THÀNH VIÊN & TÀI KHOẢN`: Quản Lý Tài Khoản (`/admin/users`).
+  4. `❖ VẬN HÀNH & HỆ THỐNG`: Bật/Tắt Tính Năng (`/admin/features`), Nạp & Sao Lưu (`/admin/import`).
 - **Nguyên tắc "Không Giữ Chỗ / Không Placeholder":**
   - Mọi trang trong menu đều là **tính năng hoạt động thật 100%**. Không tạo trang rỗng có nhãn "Sắp ra mắt".
 - **Kiểm chứng thực nghiệm:** Tuân thủ `[R-VERIFY.TIERS]` trong `.agents/AGENTS.md`: Typecheck 0 lỗi, Build 0 lỗi, Test tự động PASS 100%, User tự nghiệm thu thị giác (Human UAT).
@@ -71,7 +71,7 @@ sequenceDiagram
     API-->>Dash: Dữ liệu tính toán
     Dash-->>Admin: Hiển thị 4 Khối: Sức Khỏe Dữ Liệu, Việc Khẩn, Quick Actions, Audit Log
 
-    Admin->>Shell: Bấm chuyển sang "👥 Quản Lý Tài Khoản" (/admin/users)
+    Admin->>Shell: Bấm chuyển sang "Quản Lý Tài Khoản" (/admin/users)
     Shell->>UsersPage: Render trang Users
     UsersPage->>API: GET /api/users
     API->>DB: SELECT * FROM users LEFT JOIN members
@@ -142,13 +142,13 @@ sequenceDiagram
 - **Props:** `currentPath: string`, `clanName: string`.
 - **Cấu trúc 4 Nhóm điều hướng:**
   - `❖ TỔNG QUAN`:
-    - `📊 Bàn Điều Hành` trỏ tới `/admin`.
+    - `Bàn Điều Hành` trỏ tới `/admin`.
   - `❖ Gia Phả & QUY ƯỚC`:
-    - `🏛️ Căn Cước Dòng Họ` trỏ tới `/admin/profile`.
+    - `Căn Cước Dòng Họ` trỏ tới `/admin/profile`.
     - `Cấu Trúc Ngành & Chi` trỏ tới `/admin/branches`.
-    - `🗣️ Quy Ước Xưng Hô` trỏ tới `/admin/kinship`.
+    - `Quy Ước Xưng Hô` trỏ tới `/admin/kinship`.
   - `❖ THÀNH VIÊN & TÀI KHOẢN`:
-    - `👥 Quản Lý Tài Khoản` trỏ tới `/admin/users`.
+    - `Quản Lý Tài Khoản` trỏ tới `/admin/users`.
   - `❖ VẬN HÀNH & HỆ THỐNG`:
     - ` Bật/Tắt Tính Năng` trỏ tới `/admin/features`.
     - `📥 Nạp Dữ Liệu Excel` trỏ tới `/admin/import`.
@@ -179,7 +179,7 @@ sequenceDiagram
     - Cho phép quản trị viên xem chi tiết danh sách người chưa nối, tìm kiếm tên, thực hiện **Nối vào Cha/Mẹ** (chọn cha mẹ, tự động kiểm tra chu trình `validateNoCycle`) hoặc xóa node rác an toàn. Sau khi thao tác, hệ thống tự động làm tươi số liệu trên Dashboard.
     - Cảnh báo tài khoản mới chưa gán node kèm nút điều hướng nhanh tới `/admin/users`.
   - **Khối 3: Phím Tắt Tác Vụ Thường Nhật (Quick Actions):**
-    - Phím tắt dạng card `rounded-md` viền phẳng: `[Ngành & Chi]`, `[👥 Tài Khoản]`, `[ Bật/Tắt Cờ]`, `[📥 Nạp Excel]`.
+    - Phím tắt dạng card `rounded-md` viền phẳng: `[Ngành & Chi]`, `[Tài Khoản]`, `[ Bật/Tắt Cờ]`, `[Nạp Excel]`.
   - **Khối 4: Nhật Ký Biến Động Gần Đây (Activity Audit):**
     - Danh sách các thao tác gần đây trong khung `rounded-lg`.
 
@@ -213,7 +213,7 @@ sequenceDiagram
     2. `enable_kinship_lookup` (🗣️ Tra Cứu Vai Vế)
     3. `enable_anniversaries` (🗓️ Lịch Giỗ & Web Push)
     4. `allow_member_claims` (📬 Tiếp Nhận Đơn Nhận Node)
-    5. `mask_living_member_privacy` (🛡️ Bảo Vệ Thông Tin Người Còn Sống)
+    5. `mask_living_member_privacy` (Bảo Vệ Thông Tin Người Còn Sống)
     6. `maintenance_mode` (🚧 Chế Độ Đóng Cửa Bảo Trì)
   - Mỗi thẻ hiển thị: Tên thuần Việt, Mô tả cụ thể khi BẬT / khi TẮT, Công tắc gạt Toggle.
   - Modal xác nhận an toàn khi bật `maintenance_mode` hoặc tắt `mask_living_member_privacy`.
@@ -283,7 +283,7 @@ sequenceDiagram
   - **Mô tả:** Thuật toán duyệt cây phân tầng từ `root_ancestor_id` (Đời 1), duyệt BFS cha-con: con = cha + 1, duyệt phối ngẫu: vợ/chồng kế thừa cùng thế hệ với người bạn đời (Vợ Đời 1 = Đời 1, Vợ Đời 2 = Đời 2).
   - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
 - [x] **TC_UT_MEMBER_NODE_ROOT_BADGE_EXCLUSIVE (Kiểm chứng Huy hiệu Cụ Tổ CHỈ hiển thị duy nhất trên Root Node):**
-  - **Mô tả:** Kiểm tra điều kiện render trong `MemberNode.tsx`: Chỉ node có `nodeData.isRoot === true` (khớp với `root_ancestor_id`) mới nhận huy hiệu `✨ Cụ Tổ`. Các node khác (kể cả vợ Đời 1, dâu các đời) tuyệt đối không có badge `✨ Cụ Tổ`, mà hiển thị danh xưng phối ngẫu và trạng thái sinh tử.
+  - **Mô tả:** Kiểm tra điều kiện render trong `MemberNode.tsx`: Chỉ node có `nodeData.isRoot === true` (khớp với `root_ancestor_id`) mới nhận huy hiệu `Cụ Tổ`. Các node khác (kể cả vợ Đời 1, dâu các đời) tuyệt đối không có badge `Cụ Tổ`, mà hiển thị danh xưng phối ngẫu và trạng thái sinh tử.
   - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
 - [x] **TC_UT_IMPORT_AUTO_SYNC_ROOT (Kiểm chứng Import Clean Mode tự động cập nhật root_ancestor_id cho Cụ Thủy Tổ):**
   - **Mô tả:** Khi gọi `POST /api/admin/import` với `mode: 'clean'`, dòng nào có `isRoot: true` sẽ tự động kích hoạt cập nhật `clan_settings.root_ancestor_id = memberId` của Cụ Thủy Tổ.
@@ -304,7 +304,7 @@ sequenceDiagram
   - **Mô tả:** Thành viên có quê quán hoặc nơi ở là `ở Phú Thọ` hay `Phú Thọ – Hà Nội` thuộc thế hệ 11+ không bị nhận nhầm chữ "thọ" thành từ khóa qua đời, giữ nguyên trạng thái `Còn sống`.
   - **Trạng thái:** PASS (verified qua tests/root-setting-and-generation.test.ts).
 - [x] **TC_UT_MULTI_SPOUSE_ORDER_TITLES (Kiểm chứng phân định Bà cả và Bà hai cho gia đình đa thê):**
-  - **Mô tả:** Cụ Tổ Phạm Văn Chiến có 2 vợ: Bà Hoàng Thị Mơ nhận danh xưng `🌸 Bà cả` (order 1) và Bà Đào Thị Liễu nhận danh xưng `🌸 Bà hai` (order 2), triệt tiêu lỗi cả 2 cùng mang danh xưng Bà cả.
+  - **Mô tả:** Cụ Tổ Phạm Văn Chiến có 2 vợ: Bà Hoàng Thị Mơ nhận danh xưng `Bà cả` (order 1) và Bà Đào Thị Liễu nhận danh xưng `Bà hai` (order 2), triệt tiêu lỗi cả 2 cùng mang danh xưng Bà cả.
   - **Trạng thái:** PASS (verified qua tests/root-setting-and-generation.test.ts).
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
@@ -324,8 +324,8 @@ sequenceDiagram
 - [ ] **UAT_13 (Cây Gia Phả Hiển Thị Dữ Liệu Thật):** Mở `/tree`, hiển thị đúng tên dòng họ thật và danh sách con cháu thật từ Supabase DB, 28 người mẫu cũ biến mất hoàn toàn khỏi màn hình.
 - [ ] **UAT_14 (Chỉ Định Cụ Tổ Trong Admin Settings):** Mở `/admin/settings` hoặc `/admin/profile`: Dropdown "Cụ Tổ Của Dòng Họ" chỉ hiển thị các thành viên nội tộc, chọn Cụ Phạm Văn Chiến và bấm Lưu $\rightarrow$ Hệ thống lưu `root_ancestor_id` vào `clan_settings`.
 - [ ] **UAT_15 (Kiểm Chứng Huy Hiệu Cụ Tổ Duy Nhất & Đời của Phối Ngẫu):** Mở `/tree`:
-  - Thẻ của Cụ Tổ Phạm Văn Chiến hiển thị đúng huy hiệu `✨ Cụ Tổ`.
-  - Thẻ của Bà cả Hoàng Thị Mơ và Bà hai Đào Thị Liễu chỉ hiển thị `🌸 Bà cả` / `🌸 Bà hai` và `† Đã mất`, **hoàn toàn không có huy hiệu Cụ Tổ**.
+  - Thẻ của Cụ Tổ Phạm Văn Chiến hiển thị đúng huy hiệu `Cụ Tổ`.
+  - Thẻ của Bà cả Hoàng Thị Mơ và Bà hai Đào Thị Liễu chỉ hiển thị `Bà cả` / `Bà hai` và `† Đã mất`, **hoàn toàn không có huy hiệu Cụ Tổ**.
   - Thẻ của Bà Vũ Thị Thìn mang đúng `Đời 2`, Bà Hoàng Thị Dĩnh mang đúng `Đời 3`, Bà Nguyễn Thị Hiến mang đúng `Đời 4`, Bà Lê Thị Nhân mang đúng `Đời 5`...
 - [ ] **UAT_16 (Re-import Ghi Đè Thành Công Với 60 Thành Viên Liền Mạch):** Nạp lại file `gia_pha_ho_pham_van_lite.xlsx` với tùy chọn "Xóa sạch dữ liệu cũ và nhập mới (Clean Mode)": Cây Gia Phả dựng lên mượt mà, đầy đủ các tầng từ Đời 1 đến Đời 13 không đứt gãy.
 
@@ -397,7 +397,7 @@ sequenceDiagram
 - **Lợi ích:** Khi đổi Cụ Tổ sang Cụ Thân Phụ đời cao hơn, toàn bộ cây tự động tịnh tiến thế hệ (+1) trong tích tắc mà không cần sửa bất kỳ bản ghi con cháu nào trong CSDL!
 
 ### 12.3. Sửa Hiển Thị Thẻ Node (`src/components/tree/MemberNode.tsx`)
-- **Điều kiện hiển thị `✨ Cụ Tổ`:**
+- **Điều kiện hiển thị `Cụ Tổ`:**
   ```tsx
   nodeData.isRoot ? (
     <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
@@ -406,7 +406,7 @@ sequenceDiagram
   ) : ...
   ```
   - Xóa bỏ vĩnh viễn điều kiện `|| nodeData.generationLevel === 1`.
-  - Phối ngẫu của Cụ Tổ (Bà cả Hoàng Thị Mơ, Bà hai Đào Thị Liễu): Hiển thị danh xưng `🌸 Bà cả / Bà hai` và trạng thái `† Đã mất`.
+  - Phối ngẫu của Cụ Tổ (Bà cả Hoàng Thị Mơ, Bà hai Đào Thị Liễu): Hiển thị danh xưng `Bà cả / Bà hai` và trạng thái `† Đã mất`.
   - Vợ của các đời sau: Mang đúng thế hệ của chồng (`Đời 2`, `Đời 3`, `Đời 4`, `Đời 5`...).
 
 ### 12.4. Chuẩn Hóa File Dữ Liệu `docs/data/gia_pha_ho_pham_van_lite.xlsx` (52 Thành Viên Tinh Gọn 13 Đời)
@@ -438,9 +438,9 @@ sequenceDiagram
 3. **Chuẩn Hóa Trạng Thái Sinh Tử (Lấy Vợ, Tái Giá, Phú Thọ):**
    - Các trường hợp Cột 4 ghi `Lấy vợ` (Tạ Duy Hưng) và `Tái giá năm 2024` (Nguyễn Thị Kim) được đưa vào ghi chú hôn nhân, không trích xuất ngày mất, mang trạng thái `Còn sống`.
    - Các trường hợp địa danh có chữ "thọ" (như `ở Phú Thọ`, `Phú Thọ – Hà Nội`) không bị match nhầm từ khóa qua đời, mang trạng thái `Còn sống`.
-4. **Phân Định Danh Xưng Đa Thê (`🌸 Bà cả` / `🌸 Bà hai`):**
+4. **Phân Định Danh Xưng Đa Thê (`Bà cả` / `Bà hai`):**
    - API Import tự động phát hiện từ khóa `"Vợ cả"` $\rightarrow marriage\_order = 1$ và `"Vợ hai"` $\rightarrow marriage\_order = 2$.
-   - `genealogy-layout.ts` phân định rõ ràng `🌸 Bà cả` cho vợ 1 và `🌸 Bà hai` cho vợ 2.
+   - `genealogy-layout.ts` phân định rõ ràng `Bà cả` cho vợ 1 và `Bà hai` cho vợ 2.
 
 ---
 

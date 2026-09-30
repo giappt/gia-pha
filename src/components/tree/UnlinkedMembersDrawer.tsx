@@ -459,7 +459,7 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                                           </div>
                                           {isSelected && (
                                             <p className="text-[10.5px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-normal">
-                                              ✓ Con chung của cả hai người (hạ nhánh chính giữa cặp vợ chồng).
+                                              Con chung của cả hai người (hạ nhánh chính giữa cặp vợ chồng).
                                             </p>
                                           )}
                                         </div>
@@ -490,7 +490,7 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                                       </div>
                                       {(isSpouseOptedOut || !selectedSpouseId) && (
                                         <p className="text-[10.5px] text-amber-600 dark:text-amber-400 mt-0.5 font-normal">
-                                          ⚠️ Lưu làm con riêng (hạ nhánh trực tiếp từ {selectedParent.gender === 'male' ? 'Bố' : 'Mẹ'}).
+                                          Lưu làm con riêng (hạ nhánh trực tiếp từ {selectedParent.gender === 'male' ? 'Bố' : 'Mẹ'}).
                                         </p>
                                       )}
                                     </div>
@@ -499,7 +499,7 @@ export const UnlinkedMembersDrawer: React.FC<UnlinkedMembersDrawerProps> = ({
                               </div>
                             ) : (
                               <p className="text-[11px] text-slate-500 dark:text-slate-400 italic py-1">
-                                ℹ Người này chưa có bạn đời trong Gia Phả → Con sẽ được lưu làm con riêng.
+                                Người này chưa có bạn đời trong Gia Phả → Con sẽ được lưu làm con riêng.
                               </p>
                             )}
                           </div>

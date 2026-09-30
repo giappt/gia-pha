@@ -938,7 +938,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                   <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
                   <div>
                     <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 block">
-                      Người phối ngẫu [🔒 Cố định]:
+                      Người phối ngẫu [Cố định]:
                     </span>
                     <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                       {currentSpouse.full_name} ({currentSpouse.gender === 'male' ? KINSHIP_TERMS.HUSBAND_DEFAULT : KINSHIP_TERMS.WIFE_DEFAULT}, Đời {currentSpouse.generation_level})
@@ -969,7 +969,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                     : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
-                  🌸 {currentSpouse.gender === 'male' ? KINSHIP_TERMS.CLAN_EXTERNAL_BRIDE : KINSHIP_TERMS.CLAN_EXTERNAL_GROOM}
+                  {currentSpouse.gender === 'male' ? KINSHIP_TERMS.CLAN_EXTERNAL_BRIDE : KINSHIP_TERMS.CLAN_EXTERNAL_GROOM}
                 </button>
                 <button
                   type="button"
@@ -979,7 +979,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                     : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
-                  🔗 {currentSpouse.gender === 'male' ? KINSHIP_TERMS.CLAN_INTERNAL_BRIDE : KINSHIP_TERMS.CLAN_INTERNAL_GROOM}
+                  {currentSpouse.gender === 'male' ? KINSHIP_TERMS.CLAN_INTERNAL_BRIDE : KINSHIP_TERMS.CLAN_INTERNAL_GROOM}
                 </button>
               </div>
 
@@ -1076,7 +1076,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                 <span>Chế độ Hôn nhân nội tộc (Single Record Policy)</span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Thành viên được chọn đã tồn tại trong CSDL gia phả. Khi lưu, hệ thống chỉ tạo liên kết hôn phối (Spouse Relation) và hiển thị Ghost Node 🔗 trên phả đồ mà không nhân bản bản ghi thành viên.
+                Thành viên được chọn đã tồn tại trong CSDL gia phả. Khi lưu, hệ thống chỉ tạo liên kết hôn phối (Spouse Relation) và hiển thị Node phản chiếu (Ghost Node) trên phả đồ mà không nhân bản bản ghi thành viên.
               </p>
               {spouseId ? (
                 <div className="text-xs space-y-1 bg-white dark:bg-slate-900 p-3 rounded-lg border border-purple-200/70 dark:border-purple-800/60 text-slate-700 dark:text-slate-300">
@@ -1087,7 +1087,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                 </div>
               ) : (
                 <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                  ⚠️ Vui lòng chọn một thành viên từ danh sách ở trên để tiếp tục.
+                  Vui lòng chọn một thành viên từ danh sách ở trên để tiếp tục.
                 </p>
               )}
             </div>
@@ -1100,7 +1100,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                     <Lock className="w-4 h-4 text-blue-600 shrink-0" />
                     <div>
                       <span className="text-[10px] font-semibold text-blue-800 dark:text-blue-300 block">
-                        {parentMember.gender === 'male' ? KINSHIP_TERMS.FATHER_FULL : KINSHIP_TERMS.MOTHER_FULL} [🔒 Cố định]:
+                        {parentMember.gender === 'male' ? KINSHIP_TERMS.FATHER_FULL : KINSHIP_TERMS.MOTHER_FULL} [Cố định]:
                       </span>
                       <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                         {parentMember.full_name} (Đời {parentMember.generation_level})
@@ -1115,7 +1115,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                         <Lock className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                         <div>
                           <span className="text-[10px] font-semibold text-purple-800 dark:text-purple-300 block">
-                            {KINSHIP_TERMS.MOTHER_FULL} [🔒 Cố định theo nhánh]:
+                            {KINSHIP_TERMS.MOTHER_FULL} [Cố định theo nhánh]:
                           </span>
                           <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                             {allMembers.find((m) => m.id === fixedMotherId)?.full_name || 'Đã chọn'}
@@ -1213,7 +1213,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
-                      <span className="text-sm">♂</span> Nam
+                      Nam
                     </button>
                     <button
                       type="button"
@@ -1223,7 +1223,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
-                      <span className="text-sm">♀</span> Nữ
+                      Nữ
                     </button>
                     <button
                       type="button"
@@ -1233,7 +1233,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
-                      <span>⚪</span> Khác
+                      Khác
                     </button>
                   </div>
                 </div>
@@ -1299,7 +1299,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                                 className="text-[10px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline"
                                 title="Bỏ chọn bố nếu đây là con riêng của mẹ"
                               >
-                                ✕ Bỏ chọn Bố (Con riêng)
+                                Bỏ chọn Bố (Con riêng)
                               </button>
                             )}
                           </div>
@@ -1331,7 +1331,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                                 className="text-[10px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline"
                                 title="Bỏ chọn mẹ nếu đây là con riêng của bố"
                               >
-                                ✕ Bỏ chọn Mẹ (Con riêng)
+                                Bỏ chọn Mẹ (Con riêng)
                               </button>
                             )}
                           </div>
@@ -1463,7 +1463,6 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                               className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40"
                             >
                               <div className="flex items-center gap-2">
-                                <span className="text-sm">🌸</span>
                                 <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
                                   {sp.partner?.full_name || 'Phối ngẫu'}
                                 </span>
@@ -1726,7 +1725,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   <span
-                                    className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${isStagedUnlink
+                                    className={`w-5 h-5 rounded-control text-[10px] font-bold flex items-center justify-center shrink-0 ${isStagedUnlink
                                       ? 'bg-rose-100 text-rose-600 dark:bg-rose-900 dark:text-rose-300'
                                       : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
                                       }`}
@@ -1851,7 +1850,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                           {availableWivesForChildren.length === 1 ? (
                             <div className="flex items-center justify-between p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
                               <span className="text-slate-700 dark:text-slate-300">
-                                Mẹ của con: <strong className="text-emerald-700 dark:text-emerald-400">🌸 {availableWivesForChildren[0].partner.full_name} ({KINSHIP_TERMS.WIFE_FIRST})</strong>
+                                Mẹ của con: <strong className="text-emerald-700 dark:text-emerald-400">{availableWivesForChildren[0].partner.full_name} ({KINSHIP_TERMS.WIFE_FIRST})</strong>
                               </span>
                               {quickChildMotherId === availableWivesForChildren[0].partner.id ? (
                                 <button
@@ -1884,10 +1883,10 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                                 <option value="">-- Chọn mẹ ruột của con --</option>
                                 {availableWivesForChildren.map((w) => (
                                   <option key={w.partner.id} value={w.partner.id}>
-                                    🌸 {w.partner.full_name} ({w.marriageOrder === 1 ? KINSHIP_TERMS.WIFE_FIRST : w.marriageOrder === 2 ? KINSHIP_TERMS.WIFE_SECOND : `Bà ${w.marriageOrder}`})
+                                    {w.partner.full_name} ({w.marriageOrder === 1 ? KINSHIP_TERMS.WIFE_FIRST : w.marriageOrder === 2 ? KINSHIP_TERMS.WIFE_SECOND : `Bà ${w.marriageOrder}`})
                                   </option>
                                 ))}
-                                <option value="">❓ Chưa rõ thông tin mẹ</option>
+                                <option value="">Chưa rõ thông tin mẹ</option>
                               </select>
                             </div>
                           ) : (
@@ -1910,7 +1909,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                                 : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                                 }`}
                             >
-                              ♂ Nam
+                              Nam
                             </button>
                             <button
                               type="button"
@@ -1920,7 +1919,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                                 : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                                 }`}
                             >
-                              ♀ Nữ
+                              Nữ
                             </button>
                             <button
                               type="button"
@@ -1930,7 +1929,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                                 : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50'
                                 }`}
                             >
-                              ⚪ Khác
+                              Khác
                             </button>
                           </div>
                         </div>
@@ -1959,7 +1958,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                   {unlinkedCandidates.length > 0 && (
                     <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                       <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
-                        🔗 Hoặc nhận con từ danh sách thành viên chưa nối phả:
+                        Hoặc nhận con từ danh sách thành viên chưa nối phả:
                       </p>
                       <div className="max-h-28 overflow-y-auto space-y-1 p-2 rounded-lg bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/60 scrollbar-thin">
                         {unlinkedCandidates.map((cand) => {
@@ -2008,7 +2007,7 @@ export const MemberFormModal: React.FC<MemberFormModalProps> = ({
                         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
-                      <span>🌱</span> Còn sống
+                      Còn sống
                     </button>
                     <button
                       type="button"
