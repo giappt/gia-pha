@@ -1391,7 +1391,7 @@ describe('Decentralized Approval & Branch Portal (Milestone 8 - Phase 3)', () =>
 
     // Tiêu đề & phụ đề cho Bố Mẹ (claimed_member)
     assert.ok(
-      clientCode.includes("isParent\n    ? 'Phê Duyệt Hồ Sơ Con Cháu'"),
+      clientCode.replace(/\r\n/g, '\n').includes("isParent\n    ? 'Phê Duyệt Hồ Sơ Con Cháu'"),
       'BranchPortalClient phải hiển thị tiêu đề Phê Duyệt Hồ Sơ Con Cháu cho Bố Mẹ'
     );
     assert.ok(

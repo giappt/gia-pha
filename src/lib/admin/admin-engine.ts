@@ -78,6 +78,7 @@ export const DEFAULT_FEATURE_FLAGS: ClanFeatureFlags = {
   enable_push_notifications: true,
   allow_member_claims: true,
   allow_member_self_edit: true,
+  allow_family_claim_approval: true,
   mask_living_member_privacy: true,
   maintenance_mode: false,
 };
@@ -122,6 +123,10 @@ export function resolveFeatureFlags(flags?: Partial<ClanFeatureFlags> | null): C
       typeof flags.allow_member_self_edit === 'boolean'
         ? flags.allow_member_self_edit
         : DEFAULT_FEATURE_FLAGS.allow_member_self_edit,
+    allow_family_claim_approval:
+      typeof flags.allow_family_claim_approval === 'boolean'
+        ? flags.allow_family_claim_approval
+        : DEFAULT_FEATURE_FLAGS.allow_family_claim_approval,
     mask_living_member_privacy:
       typeof flags.mask_living_member_privacy === 'boolean'
         ? flags.mask_living_member_privacy
@@ -399,6 +404,7 @@ export interface PermissionMatrixItem {
   name: string;
   description: string;
   category: 'visibility' | 'interaction' | 'editing' | 'administration';
+  masterFlagKey?: keyof ClanFeatureFlags;
   roles: {
     guest: boolean;
     viewer: boolean;
@@ -415,6 +421,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     name: 'Xem Cây Gia Phả Trực Quan',
     description: 'Truy cập và điều hướng trên canvas cây Gia Phả dòng họ (/tree)',
     category: 'visibility',
+    masterFlagKey: 'enable_public_tree',
     roles: { guest: true, viewer: true, claimed_member: true, branch_editor: true, super_admin: true },
   },
   {
@@ -422,6 +429,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     name: 'Xem SĐT & Địa Chỉ Người Còn Sống',
     description: 'Hiển thị số điện thoại, địa chỉ rõ ràng không bị che mờ dạng ***',
     category: 'visibility',
+    masterFlagKey: 'mask_living_member_privacy',
     roles: { guest: false, viewer: false, claimed_member: true, branch_editor: true, super_admin: true },
   },
   {
@@ -429,6 +437,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     name: 'Tra Cứu Vai Vế Xưng Hô 3 Miền',
     description: 'Sử dụng công cụ tính toán xưng hô 2 chiều tự động (/kinship)',
     category: 'visibility',
+    masterFlagKey: 'enable_kinship_lookup',
     roles: { guest: true, viewer: true, claimed_member: true, branch_editor: true, super_admin: true },
   },
   {
@@ -436,6 +445,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     name: 'Xem Lịch Giỗ Gia Tộc 30 Ngày',
     description: 'Tra cứu danh sách ngày giỗ Âm - Dương trong tháng (/anniversaries)',
     category: 'visibility',
+    masterFlagKey: 'enable_anniversaries',
     roles: { guest: true, viewer: true, claimed_member: true, branch_editor: true, super_admin: true },
   },
 
@@ -445,6 +455,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     name: 'Gửi Yêu Cầu Nhận Node Gia Phả',
     description: 'Bấm nút "Tôi là người này" để gửi yêu cầu liên kết tài khoản Google',
     category: 'interaction',
+    masterFlagKey: 'allow_member_claims',
     roles: { guest: false, viewer: true, claimed_member: false, branch_editor: false, super_admin: true },
   },
   {
@@ -452,6 +463,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     name: 'Nhận Web Push Nhắc Giỗ Tự Động',
     description: 'Nhận thông báo đẩy trên trình duyệt/điện thoại trước ngày giỗ người thân',
     category: 'interaction',
+    masterFlagKey: 'enable_push_notifications',
     roles: { guest: false, viewer: false, claimed_member: true, branch_editor: true, super_admin: true },
   },
 
@@ -461,6 +473,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     name: 'Tự Quản Thông Tin Gia Đình Của Bạn',
     description: 'Thêm vợ/chồng, thêm con và cập nhật thông tin cá nhân trong gia đình của mình (Có thể tắt/bật qua Cờ Tính Năng)',
     category: 'editing',
+    masterFlagKey: 'allow_member_self_edit',
     roles: { guest: false, viewer: false, claimed_member: true, branch_editor: true, super_admin: true },
   },
   {
@@ -491,6 +504,7 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     name: 'Phê Duyệt Hồ Sơ Con Cháu (Gia Đình Của Bạn)',
     description: 'Truy cập Cổng Phê Duyệt (/admin/claims) với giao diện cách ly để xét duyệt hồ sơ con cái xin nối vào gia đình mình',
     category: 'administration',
+    masterFlagKey: 'allow_family_claim_approval',
     roles: { guest: false, viewer: false, claimed_member: true, branch_editor: true, super_admin: true },
   },
   {
@@ -529,6 +543,44 @@ export const PERMISSION_MATRIX_DEFINITIONS: PermissionMatrixItem[] = [
     roles: { guest: false, viewer: false, claimed_member: false, branch_editor: false, super_admin: true },
   },
 ];
+
+export type EffectiveCellState = 'ACTIVE' | 'SUSPENDED' | 'LOCKED' | 'GOD_MODE';
+
+/**
+ * Phân giải trạng thái ô hiệu lực trong Ma Trận Điều Hành dựa trên nguyên lý Cầu Dao Tổng (Master-Aware Circuit Breaker)
+ */
+export function resolveEffectiveCellState(
+  item: PermissionMatrixItem,
+  roleId: UserRole | 'guest',
+  featureFlags: ClanFeatureFlags
+): EffectiveCellState {
+  // 1. Super Admin luôn luôn giữ God Mode bất kể cờ nào
+  if (roleId === 'super_admin') {
+    return 'GOD_MODE';
+  }
+
+  // 2. Kiểm tra thẩm quyền quy định theo vai vế chuẩn mực
+  const hasRoleEntitlement = (item.roles as any)[roleId] ?? false;
+  if (!hasRoleEntitlement) {
+    return 'LOCKED'; // ⚪ Bị khóa theo vai vế
+  }
+
+  // 3. Nếu dòng họ đang bật chế độ bảo trì toàn tộc (maintenance_mode) -> Khóa 100% role thường
+  if (featureFlags.maintenance_mode) {
+    return 'SUSPENDED'; // Bị đóng băng do chế độ bảo trì toàn tộc
+  }
+
+  // 4. Nếu dòng này có gắn Cầu Dao Tổng (Master Switch)
+  if (item.masterFlagKey) {
+    const isMasterOn = !!featureFlags[item.masterFlagKey];
+    if (!isMasterOn) {
+      return 'SUSPENDED'; // Bị đóng băng do Cầu Dao Tổng đang ngắt
+    }
+  }
+
+  // 5. Thỏa mãn cả vai trò và Cầu Dao Tổng đang mở
+  return 'ACTIVE'; // 🟢 Được phép
+}
 
 /**
  * Kiểm tra xem một vai trò có quyền xem số điện thoại của người còn sống hay không

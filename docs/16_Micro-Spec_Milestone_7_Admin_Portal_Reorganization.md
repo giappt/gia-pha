@@ -1577,7 +1577,7 @@ sequenceDiagram
 
 #### 4. File Mới: `src/components/admin/RoleImpersonationBanner.tsx` [NEW]
 - Component Client nổi trên đầu trang (Sticky Top Banner), chỉ xuất hiện khi `impersonatedRole !== null` và người dùng thật là Super Admin:
-  - Hiển thị nhãn: `🎭 Bạn đang xem với vai trò: [TÊN ROLE]`.
+  - Hiển thị nhãn: ` Bạn đang xem với vai trò: [TÊN ROLE]`.
   - Nút chuyển nhanh sang role khác qua Select/Dropdown.
   - Nút `[⚙️ Vào Quản Trị]` trỏ về `/admin/roles` để không bao giờ bị kẹt.
   - Nút `[✕ Thoát Đóng Vai]` để hủy cookie/state và trở về Super Admin gốc.
@@ -1592,7 +1592,7 @@ sequenceDiagram
     - *Nhóm 3: Biên tập gia phả:* Thêm thành viên, Sửa thông tin, Đổi thứ tự các con, Xóa node lá.
     - *Nhóm 4: Bàn điều hành:* Quản lý tài khoản, Nạp Excel & Smart Re-map.
   - Cột `Super Admin` hiển thị dấu tích xanh cố định (God Mode).
-  - Chân mỗi cột có nút hành động: **`[ 🎭 Thử Đóng Vai Role Này ]`**.
+  - Chân mỗi cột có nút hành động: **`[  Thử Đóng Vai Role Này ]`**.
 
 ### 19.9.3. Tiêu Chuẩn Kiểm Thử Tự Động (Mục 7.1 — Automated Test Suite)
 
@@ -1621,8 +1621,8 @@ sequenceDiagram
   - Truy cập `http://localhost:3000/admin/roles`.
   - Bảng 5 cột hiển thị cân đối, sắc nét theo phong cách Modern Heritage, các nhóm quyền phân cách bằng hairline rõ ràng.
 - [ ] **UAT_44 (Trải Nghiệm Thử Đóng Vai Role Khách):**
-  - Tại cột "Khách vãng lai", bấm `[🎭 Thử đóng vai role này]`.
-  - Banner nổi xuất hiện trên đỉnh màn hình: `🎭 Bạn đang xem với vai trò: KHÁCH VÃNG LAI`.
+  - Tại cột "Khách vãng lai", bấm `[ Thử đóng vai role này]`.
+  - Banner nổi xuất hiện trên đỉnh màn hình: ` Bạn đang xem với vai trò: KHÁCH VÃNG LAI`.
   - Lướt ra `/tree` $\rightarrow$ Thấy thông tin SĐT người sống bị che `***`, không thấy nút Sửa/Claim.
 - [ ] **UAT_45 (Bảo Đảm Không Bị Khóa Quyền Quản Trị):**
   - Trong lúc đang đóng vai Khách vãng lai, click nút `[⚙️ Vào Quản Trị]` trên Banner nổi $\rightarrow$ Truy cập lại thẳng vào trang Admin mà không bị chặn 403.
@@ -1722,7 +1722,7 @@ Khi Super Admin chọn đóng vai tại `/admin/roles`, cookie `fat_impersonated
 #### 4. Bổ Sung Ma Trận Nghiệm Thu Thị Giác (Mục 7.2 — Human Visual UAT Matrix)
 
 - [ ] **UAT_47 (Đóng Vai Khách Vãng Lai — Hiệu Lực Toàn Diện):**
-  - Vào `/admin/roles` $\rightarrow$ Bấm `[🎭 Thử đóng vai]` tại cột "Khách vãng lai".
+  - Vào `/admin/roles` $\rightarrow$ Bấm `[ Thử đóng vai]` tại cột "Khách vãng lai".
   - Navbar: Nút AuthButton biến thành nút *"Đăng nhập Google"*.
   - Vào `/tree`: Bấm vào một thành viên còn sống $\rightarrow$ SĐT bị che dạng `0912 *** ***`, không thấy bất kỳ nút Sửa/Thêm/Xóa nào.
 - [ ] **UAT_48 (Đóng Vai Viewer — Hiển Thị Nút Claim Node):**
@@ -1878,7 +1878,7 @@ graph TD
 
 - [ ] **UAT_51 (Cờ Public Tree TẮT $\rightarrow$ Đóng vai Guest bị chặn sang Login Gate):**
   - Vào `/admin/features`, gạt TẮT "Công Khai Cây Gia Phả Cho Khách Vãng Lai".
-  - Sang `/admin/roles`, bấm `[🎭 Thử đóng vai]` tại cột "Khách vãng lai".
+  - Sang `/admin/roles`, bấm `[ Thử đóng vai]` tại cột "Khách vãng lai".
   - Bấm vào link `/tree` $\rightarrow$ Lập tức bị chuyển hướng sang `/login-gate?returnTo=%2Ftree`.
   - Màn hình Login Gate hiển thị ổn định, không bị văng ngược lại. Banner nổi ở đỉnh màn hình vẫn có nút `[⚙️ Vào Quản Trị]`.
 - [ ] **UAT_52 (Cờ Che Mờ SĐT TẮT $\rightarrow$ Đóng vai Guest/Viewer thấy SĐT đầy đủ):**

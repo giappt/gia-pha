@@ -428,7 +428,7 @@ sequenceDiagram
 - **Triết lý Anti-Pill & Nghệ Thuật Kiểu Chữ (Typography Hierarchy):**
   - **Dọn sạch Header (Zero Pill Spams):** Bãi bỏ hoàn toàn việc nhồi nhét 5-6 pill badges bo tròn nhiều màu. Thay thế bằng Typography phân cấp sang trọng, tôn nghiêm:
     + Họ tên lớn, đậm nét (`text-lg font-bold text-slate-900 dark:text-slate-50`).
-    + Dòng danh xưng thế hệ & chi nhánh thanh lịch: `Đời {generation_level} · {branch_name || 'Chi phái chưa xếp'}` kèm ký hiệu `👑 Con trưởng` dạng text trang nhã dùng dấu chấm ngăn cách (`·`).
+    + Dòng danh xưng thế hệ & chi nhánh thanh lịch: `Đời {generation_level} · {branch_name || 'Chi phái chưa xếp'}` kèm ký hiệu ` Con trưởng` dạng text trang nhã dùng dấu chấm ngăn cách (`·`).
     + Trạng thái sinh tử tinh tế: Một dot nhỏ `● Còn sống` (ngọc bích) hoặc biểu tượng ngọn nến `🕯️ Đã mất ({sinh} - {mất})` dạng text mộc mạc, không đóng khung viên thuốc lòe loẹt.
 - **Tác Vụ Ngữ Cảnh Chuẩn Mực (Contextual Action Buttons):**
   - Nút bấm thiết kế chuẩn mực (`rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 px-2.5 py-1.5 text-xs font-semibold shadow-xs transition-colors`), tuyệt đối không dùng pill tags làm nút bấm.

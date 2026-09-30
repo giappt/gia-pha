@@ -101,7 +101,7 @@ sequenceDiagram
 - **Trạng thái đang tải (Loading):** Skeleton mờ hoặc spinner nhỏ xoay nhẹ.
 - **Trạng thái đã đăng nhập:**
   - Hiển thị Avatar tròn từ Google, Tên người dùng.
-  - Badge quyền hạn: `[👑 Super Admin]` (màu vàng kim) hoặc `[ Khách xem]` (màu xám xanh).
+  - Badge quyền hạn: `[ Super Admin]` (màu vàng kim) hoặc `[ Khách xem]` (màu xám xanh).
   - Dropdown Menu khi bấm vào Avatar:
     - Hiển thị email đầy đủ.
     - Nút `[Đăng xuất]` $\rightarrow$ Gọi `supabase.auth.signOut()` $\rightarrow$ Reload trang về trạng thái Guest.
@@ -128,7 +128,7 @@ sequenceDiagram
 | **TC04** | Kích hoạt luồng Google OAuth | E2E / Browser | Chưa đăng nhập tại trang chủ | Click nút [Đăng nhập Google] | Trình duyệt chuyển hướng đến URL `accounts.google.com/o/oauth2/...` | Happy Path |
 | **TC05** | Nhận diện Tài khoản & Hiển thị Avatar | Integration / UI | Đăng nhập thành công qua OAuth callback | Trình duyệt quay về trang chủ `/` | Header hiển thị Avatar, Tên người dùng và nút Đăng xuất | Happy Path |
 | **TC06** | Đăng xuất An toàn | UI / State | Người dùng đang đăng nhập | Bấm nút [Đăng xuất] | Cookie phiên bị xóa sạch, Header quay về nút [Đăng nhập Google] | Happy Path |
-| **TC07** | Bootstrap Quyền Super Admin | Logic / DB | Đăng nhập với email `giap.pt.90@gmail.com` | Callback route xử lý xong | Bảng `users` ghi nhận `user_role = 'super_admin'`, UI hiển thị badge `👑 Super Admin` | Edge Case |
+| **TC07** | Bootstrap Quyền Super Admin | Logic / DB | Đăng nhập với email `giap.pt.90@gmail.com` | Callback route xử lý xong | Bảng `users` ghi nhận `user_role = 'super_admin'`, UI hiển thị badge ` Super Admin` | Edge Case |
 | **TC08** | Xử lý Từ chối Đăng nhập | Error Handling | Người dùng bấm "Cancel" trên màn hình Google | Callback nhận query `?error=access_denied` | Không xảy ra lỗi 500, redirect về trang chủ kèm thông báo thân thiện | Error Handling |
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu (Acceptance Criteria)

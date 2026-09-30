@@ -92,6 +92,16 @@ const FEATURE_CONFIGS: FeatureFlagConfig[] = [
     tagColor: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
   },
   {
+    key: 'allow_family_claim_approval',
+    title: 'Cho Phép Bố Mẹ Tự Duyệt Hồ Sơ Con Cháu',
+    icon: CheckCircle2,
+    description: 'Cho phép thành viên đã gắn node (Bố Mẹ) tự xét duyệt hồ sơ khi con cháu nộp yêu cầu nối vào gia đình.',
+    onDesc: 'Đang mở: Bố Mẹ được tự bấm duyệt hồ sơ nhận diện của con cái để con nối trực tiếp vào cây.',
+    offDesc: 'Đang khóa: Đóng băng quyền tự duyệt của gia đình; mọi hồ sơ con cháu bắt buộc chuyển lên Trưởng Chi hoặc Admin xét duyệt.',
+    safetyTag: 'An Toàn',
+    tagColor: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
+  },
+  {
     key: 'mask_living_member_privacy',
     title: 'Lá Chắn Bảo Vệ Thông Tin Người Còn Sống',
     icon: Shield,

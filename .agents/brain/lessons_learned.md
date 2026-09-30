@@ -1,5 +1,15 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
+- **Chuẩn Hóa Ma Trận Bật/Tắt Tính Năng & Phân Quyền Hợp Nhất (Unified Governance Matrix & Zero-Clutter UI Standardization):**
+  1. *Khắc phục lỗi "Cái có cái không" (Strict System Feature Scoping):*
+     - Căn nguyên: Khi gộp bảng cờ tính năng và ma trận phân quyền, việc để lẫn các quyền hạn nội bộ cố định (nạp Excel, sửa toàn chi, xóa node lá) khiến bảng bị phân mảnh thành dòng có công tắc, dòng mang nhãn `Cố định theo chức trách` gây cảm giác thiếu quy tắc và thiếu nhất quán.
+     - Giải pháp: Bảng hợp nhất tại `/admin/governance` giới hạn nghiêm ngặt chỉ quản lý đúng **8 Tính Năng Của Dòng Họ** có cờ Bật/Tắt. Đảm bảo 100% các dòng đều có công tắc bật/tắt rõ ràng, loại bỏ toàn bộ các dòng cố định.
+  2. *Đồng bộ Header chuẩn mực theo mẫu `/admin/users`:*
+     - Tuyệt đối không tự ý thêm breadcrumbs phân mảnh (`Bàn Điều Hành / ...`) hay các nút link điều hướng phụ (`Cài đặt cũ`, `Ma trận cũ`). Header chuẩn mực gồm: Khung icon 40x40 `rounded-xl`, H1 đậm, mô tả 1 dòng, và duy nhất 1 nút hành động bên phải `[ Làm Mới ]`.
+  3. *Loại bỏ rác chữ trong từng ô (Zero-Clutter Cells):*
+     - Cấm hiển thị các mã code thô (`view_tree`, `enable_public_tree`) và các ghi chú ngoặc đơn dài dòng (`(Do Cầu Dao ngắt)`, `(Theo vai vế)`, `(God Mode)`).
+     - Mỗi ô chỉ hiển thị duy nhất 1 icon và 1 cụm từ ngắn gọn: `Được phép` (xanh ngọc), `Đang tắt` (vàng hổ phách), `Khóa` (xám), `Toàn quyền` (tím).
+
 - **Chuẩn Hóa Nhận Diện Lịch Giỗ Phương Án A (Clean Lunar Red), Bố Cục 2 Tầng Âm Lịch & Phân Giải Ngành/Chi Tự Động:**
   1. *Chuẩn hóa Màu sắc Lịch Giỗ (Clean Lunar Red & Brand Synergy Headers):*
      - Căn nguyên phân mảnh: Sử dụng nền vàng kem ngà (`bg-amber-100`) ở chân thẻ PC tạo cảm giác cắt khúc và phân mảnh thị giác. Đỉnh tháng tương lai màu xám than u ám thiếu sinh khí dòng họ.
@@ -202,7 +212,7 @@
   3. *DownlevelIteration & ArrayBuffer Base64 Conversion:* Trong TypeScript với target ES2020 / ES5, việc dùng cú pháp spread `...new Uint8Array(buffer)` bên trong `String.fromCharCode` sẽ gặp lỗi TS2802 nếu chưa bật cờ `--downlevelIteration`. Giải pháp an toàn, hiệu năng cao và tương thích 100% là dùng vòng lặp `for` tuần tự nối ký tự rồi gọi `window.btoa`.
   4. *Dọn Dẹp Dead Web Push Endpoints (HTTP 404/410 Clean Up):* Khi Vercel Cron gửi thông báo đẩy qua Web Push Protocol mà Push Service (FCM/Apple/Mozilla) phản hồi mã lỗi `404 Not Found` hoặc `410 Gone` (người dùng đã gỡ cài đặt PWA hoặc hủy quyền trình duyệt), hệ thống tự động xóa bản ghi đó khỏi bảng `push_subscriptions` trong CSDL, giúp bảng luôn tinh gọn và tránh lãng phí tài nguyên serverless.
 - **Tôn Nghiêm Lịch Giỗ & Đăng Ký Push Phân Nhánh Tự Nhiên (Anniversary Dignity & Frictionless Branch Push):**
-  1. *Triệt tiêu nhãn mác xưng hô khiên cưỡng và huy hiệu màu mè:* Trong giao diện Lịch giỗ gia tộc, tuyệt đối không ghép thô danh xưng vào trước tên tiền nhân (`Giỗ Chú A...`) hoặc gắn huy hiệu màu mè vô nghĩa (`[👑 Chú ruột của bạn]`). Giữ gìn sự trang trọng, tôn nghiêm: hiển thị đầy đủ Họ tên, Đời thứ, Chi phái, Năm sinh/mất, Ngày Âm lịch và nút điều hướng sang Cây gia phả.
+  1. *Triệt tiêu nhãn mác xưng hô khiên cưỡng và huy hiệu màu mè:* Trong giao diện Lịch giỗ gia tộc, tuyệt đối không ghép thô danh xưng vào trước tên tiền nhân (`Giỗ Chú A...`) hoặc gắn huy hiệu màu mè vô nghĩa (`[ Chú ruột của bạn]`). Giữ gìn sự trang trọng, tôn nghiêm: hiển thị đầy đủ Họ tên, Đời thứ, Chi phái, Năm sinh/mất, Ngày Âm lịch và nút điều hướng sang Cây gia phả.
   2. *Cá nhân hóa Push thông minh không rào cản:* Thay vì ép buộc người dùng phải đăng nhập Google và chờ duyệt gán node mới được lọc thông báo, hướng tiếp cận tối ưu là hỏi nhẹ nhàng ngay khi bấm [Bật thông báo]: *Nhận cho Toàn dòng họ hay Riêng Chi nhánh đang chọn*. Điều này triệt tiêu hoàn toàn nỗi sợ bị spam thông báo từ các nhánh xa lạ mà vẫn giữ trải nghiệm người dùng tinh gọn, không rào cản.
 - **Phân Cấp Thông Tin Ngày Giỗ & Avatar 2 Chữ Cái Gia Phả (Information Hierarchy & Surname Collision Guard):**
   1. *Triệt tiêu nhiễu thị giác do lặp lại ngày giỗ:* Trong danh sách gom nhóm theo mốc thời gian, toàn bộ thông tin ngày tháng chung bắt buộc phải đưa lên Header khối ngày (Âm lịch làm tiêu điểm chính, Dương lịch đối chiếu kế bên, loại bỏ từ cổ "Nhằm ngày"). Dòng từng cá nhân bên dưới tuyệt đối không in lại chuỗi ngày âm này, mà dành diện tích hiển thị năm sinh - mất và tuổi thọ (`Sinh 1935 — Mất 2005 (Hưởng thọ 71 tuổi)`), giúp giao diện thoáng đãng, tôn nghiêm.
@@ -760,3 +770,18 @@
        - Trong `AdminLayout`: Cho phép `claimed_member` truy cập nếu đường dẫn bắt đầu bằng `/admin/claims`. Nếu họ cố truy cập các trang quản trị khác ngoài khu vực này, lập tức chuyển hướng về trang chủ.
        - Truyền `userRole` từ Server Component layout xuống `AdminShell` và `AdminSidebar`.
        - Trong `AdminSidebar`: Khi `userRole === 'claimed_member'`, kích hoạt chế độ cô lập Sidebar (Sidebar Isolation): ẩn sạch 4 nhóm quản trị hệ thống, chỉ hiển thị duy nhất nhóm **`Gia Đình Của Bạn`** với mục **`[ 📋 Phê Duyệt Hồ Sơ Con Cháu ]`** (kèm badge số lượng chờ duyệt) và chân sidebar **`[ ⬅️ Về Cây Gia Phả ]`**, huy hiệu hiển thị trang trọng `Con Cháu`.
+
+- **Kiến Trúc Cầu Dao Tổng & Ma Trận Phân Quyền Hợp Nhất (Master-Slave Circuit Breaker Architecture - Milestone 10):**
+  1. *Giải quyết xung đột nhận thức giữa Cờ Tính Năng và Ma Trận Phân Quyền:*
+     - Trước đây, trang /admin/features cho phép Admin tắt tính năng tự sửa thông tin gia đình (`allow_member_self_edit: false`), nhưng bên /admin/roles bảng phân quyền vẫn hiển thị `[🟢 Được phép]` cho con cháu, gây hoang mang nhận thức trầm trọng.
+     - Thiết lập nguyên lý Cầu Dao Tổng (Master-Slave Hierarchy): Cờ tính năng hệ thống là Cầu Dao Tổng (Master Circuit Switch), quyền hạn của vai trò là cấp thừa hành (Slave).
+     - Định lý Bất Biến Cầu Dao (Circuit Breaker Invariant): Khi Cầu Dao Tổng của một dòng quyền ở trạng thái TẮT (OFF), 100% các vai trò thường (`guest`, `viewer`, `claimed_member`, `branch_editor`) trên dòng đó BẮT BUỘC PHẢI CHUYỂN SANG TRẠNG THÁI ` BỊ ĐÓNG BĂNG` (SUSPENDED). Tuyệt đối không thể có chuyện Cầu Dao đang tắt mà vai trò thường lại hiển thị `🟢 Được phép`. Duy nhất Super Admin giữ nhãn ` Toàn quyền` (God Mode) phục vụ cứu hộ và nghiệm thu.
+  2. *Bịt kín lỗ hổng tự phê duyệt hồ sơ con cái qua cờ allow_family_claim_approval:*
+     - Khi Admin tắt cờ `allow_member_self_edit`, nếu con cháu không thể sửa cây trực tiếp nhưng lại có thể gửi yêu cầu kết nối (claim request) cho con mình rồi tự bấm duyệt (claim review) thì vẫn lách luật chèn thêm node mới vào cây.
+     - Giải pháp: Bổ sung cờ `allow_family_claim_approval` trong `ClanFeatureFlags` và rào chắn kiểm soát tại `src/app/api/claims/[id]/review/route.ts`. Khi người duyệt mang vai trò `claimed_member`, nếu một trong hai cờ `allow_family_claim_approval` hoặc `allow_member_self_edit` đang TẮT, API lập tức từ chối với HTTP 403 Forbidden kèm thông điệp hướng dẫn chuyển phiếu cho Trưởng Chi hoặc Ban Quản Trị.
+  3. *Bảo toàn Nguyên Tắc Không Thoái Lui (Zero Regression via Independent Route):*
+     - Thay vì gộp hai trang cũ bằng tab ngang (`activeTab`) gây co giật layout và tiềm ẩn nguy cơ phá vỡ test hồi quy, hệ thống giữ nguyên vẹn 100% hai trang cũ (/admin/features và /admin/roles), đồng thời bổ sung route mới /admin/governance ("Chính Sách & Phân Quyền (Mới)").
+     - Cả hai màn hình cũ và trung tâm mới đều tiêu thụ chung một nguồn chân lý duy nhất (Single Source of Truth) từ `clan_settings.feature_flags` trong CSDL Supabase, đảm bảo khi gạt công tắc ở bất kỳ màn hình nào thì các màn hình còn lại đều tự động phản ánh chính xác 100%.
+  4. *Chuẩn mực Bảng Ma Trận Fluid Full-Width & Anti-Pill Geometry:*
+     - Bảng ma trận 7 cột tích hợp trực tiếp cột Cầu Dao Tổng với công tắc gạt trực tiếp `[🟢 BẬT]` / `[🔴 TẮT]` tự động lưu (Instant Auto-Save) kèm loading spinner và rollback an toàn khi mất mạng.
+     - Tuân thủ thiết kế Anti-Pill: dùng `rounded-xl` (12px) cho khung bảng, `rounded-md` (6px) cho badge và switch, dấu chấm giữa `·` phân cấp typography, và chân bảng tích hợp Xem chứ năng với vai trò giúp Admin kiểm nghiệm trực quan trải nghiệm người dùng ngay tức thì.

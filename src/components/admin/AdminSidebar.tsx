@@ -85,6 +85,11 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'VẬN HÀNH & HỆ THỐNG',
     items: [
       {
+        href: '/admin/governance',
+        label: 'Bật/Tắt & Phân Quyền',
+        icon: ShieldCheck,
+      },
+      {
         href: '/admin/theme',
         label: 'Giao Diện & Profile',
         icon: Palette,

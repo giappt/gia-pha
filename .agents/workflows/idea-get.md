@@ -15,5 +15,5 @@ description: "Lôi một ý tưởng khỏi Kho ra để thảo luận (brainsto
 3. 🔴 **[THẢO LUẬN QUA BRAINSTORM]:** Nạp nội dung ý tưởng làm đầu vào cho `/feature-brainstorm` và thảo luận/làm mới thiết kế (ngữ cảnh có thể đã đổi kể từ lúc gác). Kết quả nằm trên `implementation_plan.md` như luồng brainstorm chuẩn.
 4. 🔴 **[NGÃ RẼ — HỎI "CHỐT CHƯA?"]:** Cuối phiên, hỏi rõ User:
    - **✅ CHỐT (làm luôn):** gợi ý chạy `/feature-spec` → `/feature-code`. Giữ `status: active`. Ghi mỗi Micro-Spec sinh ra vào trường `spawned_specs` của draft (để `/idea-done` đối chiếu sau).
-   - **⏸️ CHƯA (chưa làm):** chạy `/idea-park` để **cất lại** (lưu cả `implementation_plan` vừa bàn vào draft), đưa `status` về `parked`. Không mất công thảo luận đã làm.
+   - ** CHƯA (chưa làm):** chạy `/idea-park` để **cất lại** (lưu cả `implementation_plan` vừa bàn vào draft), đưa `status` về `parked`. Không mất công thảo luận đã làm.
 5. Nhắc: sau khi build xong, chạy `/idea-done [id]` (thủ công) để archive hoặc re-draft phần còn lại.

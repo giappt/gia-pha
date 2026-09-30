@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { canUserReviewClaim } from '@/lib/claims/claim-engine';
-import type { BranchNode, ClaimRequestRow, UserProfile } from '@/types/database';
+import { resolveFeatureFlags } from '@/lib/admin/admin-engine';
+import type { BranchNode, ClaimRequestRow, UserProfile, ClanFeatureFlags } from '@/types/database';
 import type { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 
 export const dynamic = 'force-dynamic';
@@ -143,7 +144,7 @@ export async function PATCH(
     // 2. Tải ngữ cảnh phân quyền
     const [membersRes, clanRes, spouseRes] = await Promise.all([
       db.from('members').select('*'),
-      db.from('clan_settings').select('branches').limit(1).maybeSingle(),
+      db.from('clan_settings').select('branches, feature_flags').limit(1).maybeSingle(),
       db.from('spouse_relations').select('*'),
     ]);
 
@@ -207,6 +208,36 @@ export async function PATCH(
         { error: 'Bạn không có quyền hạn phê duyệt hoặc từ chối phiếu này' },
         { status: 403 }
       );
+    }
+
+    // Rào chắn Cầu Dao Tổng (Circuit Breaker Gate):
+    // Khi allow_family_claim_approval hoặc allow_member_self_edit bị tắt, đóng băng quyền tự duyệt của claimed_member
+    if (userProfile.user_role === 'claimed_member') {
+      let featureFlags: ClanFeatureFlags = resolveFeatureFlags(clanRes?.data?.feature_flags);
+      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+        const cookieStore = cookies();
+        const devFeatureFlagsStr = cookieStore.get('fat_dev_feature_flags')?.value;
+        if (devFeatureFlagsStr) {
+          try {
+            featureFlags = resolveFeatureFlags(JSON.parse(devFeatureFlagsStr));
+          } catch {
+            // ignore
+          }
+        }
+      }
+
+      if (
+        featureFlags.allow_family_claim_approval === false ||
+        featureFlags.allow_member_self_edit === false
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'Chức năng tự duyệt hồ sơ con cháu trong gia đình đang tạm đóng băng theo chính sách tông tộc. Vui lòng chuyển phiếu cho Trưởng Chi hoặc Ban Quản Trị.',
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // 5. Xử lý 'rejected'

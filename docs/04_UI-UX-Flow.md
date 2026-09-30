@@ -212,12 +212,12 @@ flowchart TD
 |                               [ XÁC ĐỊNH QUAN HỆ ]                                |
 +-----------------------------------------------------------------------------------+
 |  KẾT QUẢ XƯNG HÔ 2 CHIỀU:                                                         |
-|    👉 Bạn gọi Bác Dực là:  👑 BÁC HỌ (Xưng Cháu)                                  |
+|    👉 Bạn gọi Bác Dực là: BÁC HỌ (Xưng Cháu)                                  |
 |    👈 Bác Dực gọi bạn là:  🌱 CHÁU HỌ (Xưng Bác)                                  |
 +-----------------------------------------------------------------------------------+
 |  SƠ ĐỒ CÂY Gia Phả TRỰC QUAN (XUẤT PHÁT TỪ Gốc Gần Nhất):                |
 |                                                                                   |
-|                       [ 👑 TỔ TIÊN CHUNG: CỤ AN (ĐỜI 4) ]                         |
+|                       [TỔ TIÊN CHUNG: CỤ AN (ĐỜI 4) ]                         |
 |                                 /             \                                   |
 |                   (Nhánh Trưởng)               (Nhánh Thứ)                        |
 |                               /                 \                                 |
@@ -245,7 +245,7 @@ flowchart TD
 +---------------------------------------------------------------------------------------+
 |  Họ và tên       Email                  Node Đã Nhận     Vai Trò (Phân Quyền)         |
 +---------------------------------------------------------------------------------------+
-|  👨 Giáp Phạm     giap.pt.90@gmail.com   (Chưa gắn node)  [ 👑 Super Admin        ▼ ]  |
+|  👨 Giáp Phạm     giap.pt.90@gmail.com   (Chưa gắn node)  [Super Admin        ▼ ]  |
 |  👨 Nguyễn Tuấn   tuan.nguyen@gmail.com  Ông Tuấn (Đời 4) [ 📝 Trưởng Chi (Chi 2) ▼ ]  |
 |  👩 Trần Mai      mai.tran@gmail.com     Bà Mai (Đời 5)   [ 👤 Con Cháu        ▼ ]  |
 |  👤 Khách Xem     viewer.abc@gmail.com   (Chưa gắn node)  [  Khách xem (Viewer) ▼ ]  |

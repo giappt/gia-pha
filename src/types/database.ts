@@ -35,6 +35,7 @@ export interface ClanFeatureFlags {
   enable_push_notifications: boolean;
   allow_member_claims: boolean;
   allow_member_self_edit: boolean;
+  allow_family_claim_approval: boolean;
   mask_living_member_privacy: boolean;
   maintenance_mode: boolean;
 }
