@@ -120,7 +120,23 @@ Luật "phải có test pass" tạo áp lực khiến agent dễ ép test xanh t
 - **Chống giao tiếp máy móc:** Không lạm dụng các giới hạn định lượng (như "chỉ hỏi 2-3 câu"). Hãy dùng tư duy Phân cấp ưu tiên và Chia chặng (Phased Discussion) để dẫn dắt User đối với các tính năng khổng lồ.
 - **Chống dạy đời (Anti-Socratic):** Đóng vai trò Tư vấn viên (Consultant). Đưa ra lựa chọn và phân tích đánh đổi (Trade-off). Cấm hỏi vặn User. Cấm tự ý chốt phương án thay User.
 
-## 13. [R-SYNC] QUY TẮC ĐỒNG BỘ TOÀN CỤC (GLOBAL SYNC POLICY)
+## 13. [R-DISCOVERY] PRE-FLIGHT ASSET DISCOVERY & ZERO-SHADOW POLICY (DÒ TÌM TÀI SẢN SẴN CÓ & CẤM TẠO BẢN SAO NHÁI)
+- **Tư duy Kiến trúc sư trước khi gõ code:** Trước khi tạo mới bất kỳ UI Component, API endpoint, kiểu dữ liệu hay hàm logic nào, AI **BẮT BUỘC PHẢI DÙNG `grep_search`** để rà soát toàn bộ dự án:
+  1. *Đã có component nào tương tự trong `src/components/` chưa?* (Nếu có $\rightarrow$ BẮT BUỘC tái sử dụng hoặc mở rộng props; TUYỆT ĐỐI CẤM tạo bản sao nhái Shadow Copy).
+  2. *Đã có hàm/engine/service nào giải quyết bài toán này trong `src/lib/` hoặc `src/services/` chưa?* (Tuyệt đối cấm tự viết lại logic tính toán/biến đổi dữ liệu đã có sẵn).
+  3. *Đã có Design Token nào trong CSS/Tailwind cho việc này chưa?* (Cấm tự bịa class màu sắc, khoảng cách, bo góc).
+- **Anti-Silo Rule (Chống Cát Cứ Ốc Đảo):** Tuyệt đối cấm coi màn hình/file mình đang code là một ốc đảo cô lập. Mọi tính năng mới phải là một mắt xích gắn kết hữu cơ với hệ sinh thái mã nguồn hiện hữu. Bắt buộc kiểm tra toàn bộ các nơi đang tiêu thụ (Consumers) và vùng ảnh hưởng (Blast Radius) trước khi sửa.
+
+## 14. [R-UI.SSOT_PREVIEW] SINGLE SOURCE OF TRUTH FOR PREVIEWS & DEMOS (CẤM MOCKUP CHẮP VÁ TRONG XEM TRƯỚC)
+- **Quy tắc Nguồn Chân Lý Duy Nhất:** Mọi khu vực Xem Trước Giao Diện (Live Preview, Demo Widget, Theme Switcher, Prototype) **BẮT BUỘC PHẢI IMPORT VÀ TÁI SỬ DỤNG TRỰC TIẾP COMPONENT SẢN XUẤT (Production Component)**.
+- **Tuyệt đối cấm:** Viết mã HTML/CSS inline mô phỏng "cho có". Bất kỳ sự phân mảnh nào giữa màn hình Preview và Component thật đều bị coi là lỗi kiến trúc vi phạm Integrity nghiêm trọng.
+- **Fixture Contract:** Mọi component hỗ trợ xem trước phải đi kèm dữ liệu mẫu chuẩn hóa (`.previewFixture` hoặc từ `@/fixtures`), đảm bảo khi component thay đổi thì Preview tự động cập nhật 100% theo.
+
+## 15. [R-DESIGN.TOKENS] SEMANTIC DESIGN TOKENS FIRST (CẤM HARDCODE CLASS HÌNH HỌC TÙY TIỆN)
+- **Đồng bộ nhịp điệu hình học (Geometric Rhythm):** Cấm hardcode các class hình học tùy tiện (`rounded-2xl`, `rounded-xl`, `rounded-3xl`, `p-6`) rải rác trên các khung card và surface chính.
+- **Bắt buộc dùng Semantic Tokens:** Mọi container/card chính trên hệ thống bắt buộc dùng semantic class `rounded-card` (hoặc token CSS tương đương). Mọi nút bấm/control dùng `rounded-control`. Khi thay đổi Theme Profile, toàn bộ hệ sinh thái giao diện phải tự động chuyển mình đồng loạt thông qua biến CSS.
+
+## 16. [R-SYNC] QUY TẮC ĐỒNG BỘ TOÀN CỤC (GLOBAL SYNC POLICY)
 ```yaml
 [SYNC_POLICY]
 Mode: STATIC_COPY
@@ -129,3 +145,4 @@ Local_Cache_Dir: docs/templates/
 Naming_Convention: Identical
 ```
 > Ghi chú: Với `STATIC_COPY`, `Local_Cache_Dir` trùng `Local_Template_Dir` (không có tầng cache riêng vì template được copy nguyên bản, không cần merge).
+
