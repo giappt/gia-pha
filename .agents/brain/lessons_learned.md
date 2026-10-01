@@ -1,6 +1,23 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
-- **Triệt Tiêu Hoàn Toàn Hội Chứng "Đóng Hộp Triển Lãm Cục Bộ" & Giữ Vững Trải Nghiệm Full-Page Toàn Cảnh Gắn Kết Liền Mạch Với Header Bar (Eliminating the Boxed Exhibition Anti-Pattern & Enforcing Holistic Full-Page Realism):**
+- **Quy Chuẩn Thiết Kế Di Sản Toàn Diện Làm Nguồn Chân Lý Duy Nhất (Exhaustive Heritage Design Tokens SSOT vs Ad-Hoc Styling Guesswork):**
+  1. *Căn nguyên của Nỗi Lo "Lệch Phong Cách / Tự Bịa Giao Diện" (The Ad-Hoc Guesswork Trap):*
+     - Khi xây dựng hệ thống giao diện gia phả hoặc bất kỳ phân hệ nào, nếu tài liệu hoặc màn hình đặc tả Design Tokens chỉ liệt kê vài mã màu nền chung chung (như `--bg-canvas`, `--bg-surface`) mà thiếu quy chuẩn cho các hạt nhân thị giác khác (nút bấm tương tác, ô nhập liệu form, huy hiệu trạng thái, màu sắc phả hệ theo giới tính, bóng đổ than chì, tem lịch bloc, và các lớp khung modal/shell), lập trình viên hoặc AI tiếp theo sẽ buộc phải "tự chế cháo" hoặc lấy lại các class mặc định của Tailwind (như `border-slate-200`, `bg-blue-600`, `rounded-full`).
+     - Hậu quả: Giao diện nhanh chóng bị phân mảnh, xuất hiện các khối viền xám công nghiệp sắc lạnh trên nền giấy ngà ấm, các nút hình viên thuốc lệch lạc, hoặc bóng đổ đen tuyền làm mất đi hoàn toàn linh hồn di sản.
+  2. *Quy Chuẩn 10 Trụ Cột Thiết Kế Bắt Buộc (The 10 Invariant Visual Pillars):*
+     - **(1) Bậc phân tầng nền (6 tầng lớp):** Canvas Base (`#FAF8F2`), Surface Card (`#FFFFFF`), Sub-Surface Inset (`#F5F2EA`), Control Track (`#EFECE4`), Headerbar Brand (`#0F382C`), Command Dark (`#1C1917`).
+     - **(2) Hệ thống viền hairline 1px:** Border Card (`#EAE5D9`), Border Divider (`#F0EBE1`), Border Control (`#DCD5C6`), Border Brand (`#164E3D`), Border Dashed (`#D6D3D1`). Cấm hoàn toàn viền xám `border-slate-200`.
+     - **(3) Bóng đổ sắc nâu than chì:** 100% sử dụng kênh màu nâu chì `rgba(28, 25, 23, ...)`, cấm bóng đen `rgba(0, 0, 0, ...)`. Bao gồm Card Soft, Elevated Hover, Floating Modal.
+     - **(4) Cấp bậc màu chữ & Typography:** Headline (`#1C1917`), Body Primary (`#292524`), Body Secondary (`#57534E`), Caption (`#78716C`), Lunar (`#BE123C`), Brand (`#0F382C`), Gold (`#B45309`). Bắt buộc 100% `font-sans` cho Form/Admin/Table để chống lỗi vỡ dấu kerning tiếng Việt trên Windows.
+     - **(5) Bộ nút bấm & trạng thái:** Nút chính (`#0F382C`), Nút thứ cấp (`#FFFFFF` viền `#DCD5C6`), Nút ghost, Nút danger, Nút ấn triện. 100% bo góc `rounded-lg (8px)`.
+     - **(6) Form Controls:** Ô nhập liệu bình thường (viền `#DCD5C6`), khi focus (viền `#0F382C` kèm ring 10%), vô hiệu hóa (nền `#F5F2EA`).
+     - **(7) Huy hiệu trạng thái & Micro-Dots:** 100% bo góc thẻ `rounded-md (6px)` (CẤM `rounded-full`), chấm vi mô chuẩn `w-1.5 h-1.5 rounded-full` cho Còn sống (`#10B981`), Đã mất (`#78716C`), Chờ duyệt (`#F59E0B`), Từ chối (`#EF4444`).
+     - **(8) Màu sắc thân tộc:** PA 1 Trong Trẻo (Nam `#38BDF8`, Nữ `#FB7185`), PA 2 Chàm Cổ & Sen Trầm (Nam `#234E70`, Nữ `#8C4A5A`). Khóa thẻ Node `200x96px`, Ghost Node viền nét đứt.
+     - **(9) Tem lịch bloc:** Khóa cứng `90x108px` (desktop), `76x96px` (mobile), gáy đỏ `#B91C1C`, đường xé răng cưa, số âm lệch góc trái.
+     - **(10) Khung Modal & Shell:** Backdrop `bg-stone-950/60 backdrop-blur-xs`, khung `rounded-2xl` bóng `shadow-2xl`.
+  3. *Tích Hợp Sẵn Sàng (Code-Ready Manifests):*
+     - Bắt buộc cung cấp cả 2 khối code đầy đủ: Khối CSS Custom Properties (`:root`) cho `globals.css` và khối mở rộng cấu hình (`tailwind.config.ts`), cho phép áp dụng giao diện ngay lập tức mà không phải phán đoán bất kỳ thông số nào.
+**
   1. *Căn nguyên Lỗi "Đóng Hộp" & Làm Việc Cục Bộ (The "Boxed Museum Exhibition" Trap):*
      - Khi xây dựng màn hình Prototype/Preview để User nghiệm thu thiết kế, AI thường rơi vào bẫy tư duy "triển lãm linh kiện" (Component Exhibition Booth): tự tiện bọc các phân khu tự nhiên của trang (như Hero tiêu đề dòng họ trên Trang Chủ, hoặc Timeline trên trang Lịch Giỗ) vào trong các khối thẻ hộp nhân tạo (`<div className="rounded-2xl border bg-white p-8">`) kèm các tiêu đề siêu văn bản chú thích như `Thẻ Lịch Giỗ Bloc Trang Chủ (Production Component)` hay `Fit Khít 100% 3 Mép...`.
      - Hậu quả: Tiêu đề dòng họ thiêng liêng bị nhốt vào một chiếc hộp quảng cáo chật hẹp, giao diện bị băm nhỏ thành từng ô rời rạc, tách rời hoàn toàn khỏi Header Bar thực tế của ứng dụng. User nhìn vào không thể hình dung nổi trang web thật sẽ chạy như thế nào, đồng thời dấy lên nỗi lo sợ tột cùng rằng AI sẽ "chế cháo", bịa thêm các container kỳ quặc vào mã nguồn sản xuất (`src/app/page.tsx`).
