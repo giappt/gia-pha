@@ -41,7 +41,7 @@ export function generateLargeClan(targetSize: number = 1500): {
   members.push(
     {
       id: rootId,
-      full_name: 'Phạm Văn Chiến (Thủy Tổ)',
+      full_name: 'Phạm Văn Chiến (Cụ Tổ)',
       gender: 'male',
       life_status: 'deceased',
       birth_year: 1680,

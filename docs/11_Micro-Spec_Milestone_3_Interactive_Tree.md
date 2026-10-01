@@ -14,7 +14,7 @@ _Tài liệu này là Single Source of Truth của Milestone 3.1. Mọi mã ngu�
   - Tuyệt đối loại bỏ cấu trúc bo tròn lồng hộp (box-in-box).
 - **Quy tắc Hiển Thị Trạng Thái Sinh Tử & Tôn Kính (Chuẩn Editorial & Anti-Pill Toàn Diện):**
   - Góc trên bên phải thẻ `MemberNode` dành cho nhận diện trạng thái sinh tử và danh xưng tôn kính theo phong cách mực thước, không lạm dụng nhãn viên thuốc (`rounded-full`).
-  - **Đời 1 (Gốc Gia Tộc):** Thẻ Cụ Thủy Tổ mang nhãn tôn kính `Cụ Tổ` chuẩn hình học `rounded-control` (nền `bg-amber-100`, chữ `text-amber-800`).
+  - **Đời 1 (Gốc Gia Tộc):** Thẻ Cụ Tổ mang nhãn tôn kính `Cụ Tổ` chuẩn hình học `rounded-control` (nền `bg-amber-100`, chữ `text-amber-800`).
   - **Từ Đời 2 trở đi:**
     - Tuyệt đối loại bỏ nhãn chữ "Còn sống" / "Đã mất" dạng viên thuốc (pill badge).
     - **Người còn sống (`living`):** Chỉ hiển thị 1 chấm trạng thái xanh ngọc vi mô (`w-1.5 h-1.5 rounded-full bg-emerald-500`) tinh tế, thanh nhã.
@@ -253,7 +253,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 #### 5.4.3. Quy Chuẩn Hiển Thị Cho Người Chưa Liên Kết Node (Khách / Unlinked User):
 - **Trường hợp 1 — Thành viên ĐÃ liên kết tài khoản (`linked_member_id`):** Cây tự động lấy node của họ làm tâm điểm bán kính 5 đời với quầng sáng (halo highlight).
 - **Trường hợp 2 — Khách (Guest) hoặc Thành viên CHƯA liên kết node:**
-  - **Gốc mặc định:** Hệ thống tự động chọn **Cụ Thủy Tổ (Đời 1)** làm Gốc, nhưng **chỉ mở rộng 3 đời đầu** (~15 người). Cây hiển thị trang nghiêm nguồn gốc xuất xứ của dòng họ mà không bị ngợp.
+  - **Gốc mặc định:** Hệ thống tự động chọn **Cụ Tổ (Đời 1)** làm Gốc, nhưng **chỉ mở rộng 3 đời đầu** (~15 người). Cây hiển thị trang nghiêm nguồn gốc xuất xứ của dòng họ mà không bị ngợp.
   - Các nhánh từ Đời 4 trở đi gập gọn thành nút: `[ + Chi 1: 180 người ]`, `[ + Chi 2: 240 người ]`.
   - **Thanh Thông Báo Định Vị:** Thanh thông báo mực thước góc canvas (`rounded-control border border-emerald-500/40 shadow-sm`): *"Chưa nhận vị trí trong cây? [Nhận Node] hoặc gõ tìm tên người thân để xem nhanh 5 đời quanh họ"*.
   - Người dùng có thể click vào bất kỳ ai trên cây hoặc tìm kiếm trên thanh Spotlight để chuyển sang xem **Bán kính 5 đời** quanh người đó.
@@ -322,7 +322,7 @@ Giải pháp toàn diện giải quyết triệt để quá tải nhận thức 
 - [ ] **UAT_07 (Footer Hôn Phối Phẳng & Không Bị Tràn Viền):** Khi tắt "Hiển thị Rể nội tộc", thẻ Mai hiển thị footer phẳng phiu, chữ `Chồng: Phạm Văn Tuấn` và nút điều hướng `Chi 1 ↗` nằm trọn vẹn $100\%$ bên trong viền bo cong `rounded-xl`, không còn bất kỳ hộp vàng nét đứt nào bị thò ra ngoài đáy thẻ.
 - [ ] **UAT_08 (Chuyển Màn Có Top Progress Bar & Skeletons Toàn Diện):** Bấm chuyển giữa các tab trên cả PC và Mobile thấy thanh tiến trình chạy ngay trên mép đỉnh và skeleton xuất hiện tức thì trong 50ms.
 - [ ] **UAT_09 (Màu Progress Bar Đồng Bộ Theme):** Đổi Dark/Light mode hoặc kiểm tra CSS variable, thanh progress bar đổi màu đồng bộ theo chủ đề dòng họ.
-- [ ] **UAT_10 (Trải Nghiệm Khách & Người Chưa Liên Kết Trên Cây):** Vào cây dưới vai trò Guest hoặc tài khoản chưa liên kết, thấy Thủy Tổ + 3 đời đầu gọn gàng kèm banner gợi ý nhận node.
+- [ ] **UAT_10 (Trải Nghiệm Khách & Người Chưa Liên Kết Trên Cây):** Vào cây dưới vai trò Guest hoặc tài khoản chưa liên kết, thấy Cụ Tổ + 3 đời đầu gọn gàng kèm banner gợi ý nhận node.
 - [ ] **UAT_11 (Hiệu Năng Cây Lớn & Virtualization):** Thử nghiệm kéo/zoom cây lớn (dataset 1.500 người), canvas mượt mà 60fps, không bị giật lag trên mobile.
 
 ---

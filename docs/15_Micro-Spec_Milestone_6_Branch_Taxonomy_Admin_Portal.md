@@ -19,7 +19,7 @@ _Tài liệu này dùng để giới hạn Context Window. AI chỉ được ph�
       - Bỏ giới hạn cứng `tiers.length > 1`. Cho phép xóa đến cấp cuối cùng (về mảng rỗng `[]`) để người dùng có thể thiết lập từ đầu theo danh xưng riêng của dòng họ.
       - **Chặn xóa tuyệt đối khi cấp đang được dùng:** Kiểm tra đệ quy trong cây `branches`. Nếu cấp bậc đang gán cho bất kỳ nhánh nào trong cây $\rightarrow$ Hệ thống từ chối xóa 100% và hiện cảnh báo đỏ nêu danh sách các nhánh vi phạm cần được xử lý trước.
     - Mỗi node trong cây phân chi (`BranchNode`) gồm: `id`, `tierName` (tên cấp lấy từ danh mục dòng họ), `name` (tên nhánh: "Ngành Trưởng", "Chi 2"), và `rootMemberId` (ID của Cụ Tiền nhân khởi nguồn nhánh đó).
-    - **Thuật toán Kế thừa Gia Phả Tự động (`branch-engine.ts`):** Sử dụng hàm thuần túy (pure function) duyệt ngược chuỗi phụ hệ (father chain) từ một thành viên bất kỳ lên Cụ Thủy Tổ. Khớp các thế hệ cha/ông với `rootMemberId` để tự động suy luận danh xưng tôn ti: `Đời ${generation} · ${nganh} · ${chi}` (ví dụ: `Đời 7 · Ngành 3 · Chi 6`) mà không bắt người nhập liệu gõ thủ công.
+    - **Thuật toán Kế thừa Gia Phả Tự động (`branch-engine.ts`):** Sử dụng hàm thuần túy (pure function) duyệt ngược chuỗi phụ hệ (father chain) từ một thành viên bất kỳ lên Cụ Tổ. Khớp các thế hệ cha/ông với `rootMemberId` để tự động suy luận danh xưng tôn ti: `Đời ${generation} · ${nganh} · ${chi}` (ví dụ: `Đời 7 · Ngành 3 · Chi 6`) mà không bắt người nhập liệu gõ thủ công.
   - **Bộ Lọc Đa Tầng Chuẩn Mực:** Thay thế cơ chế nhặt mót chuỗi text tự do trên trang Lịch Giỗ (`/anniversaries`) và Cây Gia Phả (`/tree`) bằng danh mục Ngành & Chi chính thức từ `clan_settings.branches`. Tự động áp dụng bộ lọc cá nhân nếu người dùng đã ghim.
 - **Ràng buộc Thẩm Mỹ & UX (Modern Vietnamese Heritage Design System):**
   - **Tách Bạch Rõ Ràng Hai Cụm Nội Dung (Two Distinct Clusters):**
@@ -205,7 +205,7 @@ Mô-đun thuần túy (pure functions) xử lý Gia Phả phân chi:
 - **Cơ Chế Phân Cấp Lọc Lineage Depth V2 Cho 'Nhánh Của Tôi':**
   - Cơ sở lọc luôn dựa trên tập hợp gia đình mở rộng của Viewer: `getExtendedFamilyMemberIds(viewerMemberId, allMembers, spouseRelations)` kết hợp chuỗi tổ tiên trực hệ.
   - **Nấc 1 (`from_root` - Mặc định):** `[Từ Đời 1]`
-    - Trục dọc gia đình từ Cụ Thủy Tổ Đời 1 $\rightarrow$ Cụ Hiền (Đời 4) $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bác/Chú $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
+    - Trục dọc gia đình từ Cụ Tổ Đời 1 $\rightarrow$ Cụ Hiền (Đời 4) $\rightarrow$ Cụ Khởi Ngành $\rightarrow$ Ông Bà Nội $\rightarrow$ Bác/Chú $\rightarrow$ Bố Mẹ $\rightarrow$ Bản thân.
     - Hiển thị đầy đủ cả các Cụ Tổ chung thời kỳ đầu trước khi phân nhánh.
   - **Nấc 2 (`from_branch_root` / `from_branch`):** `[ Nhánh của tôi (Từ Gốc ${rootTierName}) ]` (ví dụ: `Từ Gốc Ngành`)
     - Bắt đầu từ Cụ Khởi của Nhánh Cấp Gốc (Cụ Khởi Ngành) mà Viewer trực thuộc: xác định thế hệ khởi điểm $G_{root}$ của Cụ Khởi Ngành.

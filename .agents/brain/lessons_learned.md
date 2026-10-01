@@ -1,5 +1,94 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
+- **Triệt Tiêu Hoàn Toàn Hội Chứng "Đóng Hộp Triển Lãm Cục Bộ" & Giữ Vững Trải Nghiệm Full-Page Toàn Cảnh Gắn Kết Liền Mạch Với Header Bar (Eliminating the Boxed Exhibition Anti-Pattern & Enforcing Holistic Full-Page Realism):**
+  1. *Căn nguyên Lỗi "Đóng Hộp" & Làm Việc Cục Bộ (The "Boxed Museum Exhibition" Trap):*
+     - Khi xây dựng màn hình Prototype/Preview để User nghiệm thu thiết kế, AI thường rơi vào bẫy tư duy "triển lãm linh kiện" (Component Exhibition Booth): tự tiện bọc các phân khu tự nhiên của trang (như Hero tiêu đề dòng họ trên Trang Chủ, hoặc Timeline trên trang Lịch Giỗ) vào trong các khối thẻ hộp nhân tạo (`<div className="rounded-2xl border bg-white p-8">`) kèm các tiêu đề siêu văn bản chú thích như `Thẻ Lịch Giỗ Bloc Trang Chủ (Production Component)` hay `Fit Khít 100% 3 Mép...`.
+     - Hậu quả: Tiêu đề dòng họ thiêng liêng bị nhốt vào một chiếc hộp quảng cáo chật hẹp, giao diện bị băm nhỏ thành từng ô rời rạc, tách rời hoàn toàn khỏi Header Bar thực tế của ứng dụng. User nhìn vào không thể hình dung nổi trang web thật sẽ chạy như thế nào, đồng thời dấy lên nỗi lo sợ tột cùng rằng AI sẽ "chế cháo", bịa thêm các container kỳ quặc vào mã nguồn sản xuất (`src/app/page.tsx`).
+  2. *Quy Chuẩn Bất Biến Về Trải Nghiệm Toàn Cảnh (Holistic Full-Page Realism Standards):*
+     - **Không đóng hộp vô cớ (Zero Artificial Outer Boxes):** Hero Section trên Trang Chủ và Timeline trên Lịch Giỗ là các khối nội dung thở tự nhiên trên nền canvas của trang web (`pt-8 pb-4 text-center max-w-3xl mx-auto`), tuyệt đối KHÔNG ĐƯỢC bọc trong bất kỳ card, viền border hay bóng đổ nào.
+     - **Header Bar là Trung Tâm Điều Hướng Thực Sự (Unified Production Header Navigation):** Prototype phải đặt Header Bar chính thức (`sticky top-0`) làm trục dẫn dắt: logo ấn triện `范 GIA PHẢ HỌ PHẠM`, các tab điều hướng (`Trang Chủ`, `Cây Gia Phả`, `Lịch Giỗ`, `Xưng Hô`, `Quản Trị`) có trạng thái active rõ ràng và chuyển màn hình mượt mà ngay trên Header.
+     - **Tách Biệt Bảng Điều Khiển Dev (Discreet Studio Inspector Ribbon):** Mọi công cụ phụ trợ kiểm thử (chuyển Desktop / Mobile 375px, kịch bản giỗ, chế độ mở rộng) BẮT BUỘC chỉ được đặt trong một dải băng tối màu siêu mỏng (32-36px) ở đỉnh cao nhất, tuyệt đối KHÔNG ĐƯỢC xâm lấn hay để các nút bấm kiểm thử rơi rớt vào canvas nội dung của trang web.
+
+- **Quy Tắc Cách Ly Ranh Giới Tuyệt Đối Của Prototype & Chống Rò Rỉ Sửa Trực Tiếp Vào Production Components (Strict Prototype Sandbox Boundary vs Production Component Leakage):**
+  1. *Căn nguyên của Lỗi Rò Rỉ Làm Hỏng Giao Diện Thực Tế:*
+     - Khi User yêu cầu thử nghiệm / thiết kế lại (redesign) hoặc tinh chỉnh bố cục trong giai đoạn Brainstorm / Prototype, sai lầm chết người là **sửa trực tiếp vào component sản xuất (Production Components)** như `src/components/anniversaries/AnniversaryBlocTimeline.tsx`.
+     - Vì các route chính thức (`src/app/anniversaries/page.tsx` trên `localhost:3000`) import và dùng trực tiếp các component này, nên mọi thử nghiệm chưa chín muồi (như ép cứng `h-[108px]`, thay đổi padding) ngay lập tức **làm vỡ vụn giao diện thật** (chữ chồng chữ, số đè lên ngày âm lịch) trong khi bản deploy Vercel vẫn đang chạy bản chuẩn.
+  2. *Quy Chuẩn Ranh Giới Bất Biến (Invariant Sandbox Law):*
+     - Mọi thử nghiệm, mockup, hay biến thể giao diện ĐANG TRONG GIAI ĐOẠN BRAINSTORM **BẮT BUỘC CHỈ ĐƯỢC PHÉP NẰM TRONG THƯ MỤC `src/app/prototype/`**.
+     - TUYỆT ĐỐI CẤM chạm vào bất kỳ file nào trong `src/components/` hoặc các route chính thức `src/app/(tree|anniversaries|kinship|admin)/` khi chưa có Spec được duyệt và chưa có lệnh thực thi `/feature-code`.
+     - Nếu một thử nghiệm trong prototype cần thay đổi bố cục của component, hãy tạo component con độc lập trong prototype hoặc kế thừa qua props an toàn, tuyệt đối không chỉnh sửa đè lên code sản xuất.
+
+- **Chuẩn Hóa Semantic Design Tokens: Đồng Bộ Hệ Màu Giữa Cây Phả Hệ, Form Nhập Liệu, Modal & Drawer (System-Wide Dynamic Palette Synchronization vs Hardcoded Siloed Controls):**
+  1. *Căn nguyên Lỗi "Cây Đổi Nhưng Form Vẫn Cũ":*
+     - Khi cho phép người dùng hoặc dòng họ tùy biến hệ màu nhận diện (như PA 1: Sáng & Trong Trẻo / PA 2: Chàm Cổ & Sen Trầm / PA 3: Thổ Mộc & Đất Nung), sai lầm phổ biến là chỉ gắn logic đổi màu vào Canvas Cây Phả Hệ (`TreeNodes`), trong khi bỏ quên Form Nhập Liệu (`MemberFormModal`), Ngăn kéo chi tiết (`Drawer`) và các nút chuyển trạng thái (`Giới tính Nam/Nữ`, `Sinh tử Còn sống/Đã mất`).
+     - Hậu quả: Trên cây thì màu sắc dịu sáng hoặc cổ kính mực thước, nhưng khi bấm nút "Thêm nhân khẩu" hoặc xem Form nhập liệu thì đập vào mắt nút Nữ màu hồng neon chói gắt (`bg-pink-600`), nút Nam màu xanh web mặc định (`bg-blue-600`), gây cảm giác phân mảnh thị giác ("lạc quẻ") sâu sắc.
+  2. *Giải Pháp Semantic Token Engine Tập Trung:*
+     - Khai báo hàm phân giải token ngữ nghĩa `getPaletteTokens(palette)` trả về trọn bộ style (active/inactive/badge/avatar/dot) cho cả 4 trạng thái cốt lõi: `male`, `female`, `living`, `deceased`.
+     - 100% các nút chuyển (Segmented Switches) trên Form in-place và Live Modal, cùng với toàn bộ huy hiệu trên Drawer đều tiêu thụ chung token này.
+     - Khi người dùng chuyển sang bất kỳ phương án nào (PA 1, PA 2, PA 3, PA 4), toàn bộ Cây, Drawer, Form bản thảo và Modal thực tế đều chuyển màu đồng bộ trong 1 frame duy nhất, đảm bảo tính nhất quán tối thượng (Single Source of Truth) của Design System.
+  3. *Triệt Tiêu Lỗi Kerning Font Trên Windows:*
+     - Chuyển toàn bộ tiêu đề Drawer và Form từ `font-serif` sang `font-sans font-bold / font-black`, khắc phục triệt để lỗi tách rời ký tự tiếng Việt (`Phạm Văn Chiế n`, `Thiế t Kế`).
+
+- **Chuẩn Hóa Kiến Trúc Bàn Quản Trị Độc Lập & Triệt Tiêu Lỗi Bố Cục "Lạc Quẻ" Chắp Vá Cùng Lỗi Vỡ Dấu Font Chữ (Coherent SaaS Admin Shell vs Crammed Hodgepodge & Typography Glitch):**
+  1. *Căn nguyên của lỗi "Lạc Quẻ" (The Crammed Admin Anti-Pattern):*
+     - **Nhồi nhét 3 bài toán nghiệp vụ cọc cạch vào một màn hình 2 cột**: Bảng danh bạ nhân khẩu (cột trái) bị ép đứng chung với Hàng đợi kiểm duyệt Claim và 3 checkbox Cấu hình bảo mật (cột phải). Về mặt Kiến trúc thông tin (IA), ba bài toán này thuộc các phân hệ riêng biệt (Master Data, User Verification, System Governance). Việc nhét các checkbox cấu hình lùn tịt vào góc phải dưới một bảng dữ liệu tạo cảm giác "chắp vá", "tiện đâu nhét đấy", rất thiếu chuyên nghiệp.
+     - **Lỗi Typography & Vỡ ký tự tiếng Việt (`Cấ u Hình`):** Sử dụng `font-serif` (Playfair/Times New Roman) cho tiêu đề khối quản trị vừa gây lỗi tách rời nguyên âm (`Cấ u Hình` bị tách chữ `Cấ` và `u` do lỗi kerning/unicode font trên Windows), vừa tạo sự xung đột thẩm mỹ nghiêm trọng giữa giao diện quản trị dữ liệu SaaS với chất hoài cổ của gia phả.
+     - **Mất cân xứng hình học (Geometric Imbalance):** Bảng dữ liệu dài nhiều hàng bên trái đối chọi với 2 thẻ con ngắn ngủn bên phải tạo ra một khoảng trống hoang hoác bên dưới cột phải, phá vỡ nhịp điệu dàn trang.
+  2. *Giải Pháp Chuẩn Hóa Theo Kiến Trúc Thực Tế (`AdminShell`):*
+     - **Sidebar 4 nhóm - 11 phân hệ chuyên biệt**: Bàn Điều Hành (`/admin`), Cấu Trúc Ngành/Chi (`/admin/branches`), Phê Duyệt Hồ Sơ (`/admin/claims`), Quản Lý Tài Khoản (`/admin/users`), Bật/Tắt & Phân Quyền (`/admin/governance`). Mỗi phân hệ là một không gian làm việc chuyên biệt (Dedicated Workspace), độc lập và tập trung.
+     - **100% `font-sans` cho Bàn Quản Trị**: Dùng chuẩn `font-sans font-bold` / `font-black text-stone-900 tracking-tight` cho toàn bộ giao diện quản trị, triệt tiêu hoàn toàn lỗi vỡ dấu tiếng Việt và đảm bảo sự mạch lạc, hiện đại, dứt khoát của một công cụ quản trị dữ liệu.
+
+- **Chuẩn Hóa Màu Sắc Nhận Diện Di Sản Trên Cây Gia Phả: Thoát Khỏi Bẫy Màu Lam & Hồng Web Neon Mặc Định Bằng Hệ Màu Chàm Cổ & Cánh Sen Trầm (Heritage Palette vs Neon Web Default Trap):**
+  1. *Căn nguyên Lỗi Lệch Tông Màu (The Candy Neon Web Default Trap):*
+     - Việc sử dụng viền lam (`#3B82F6` / `blue-500`) và viền hồng neon (`#EC4899` / `pink-500`) là thói quen rập khuôn từ các mẫu web SaaS phương Tây hiện đại.
+     - Khi đặt vào không gian văn hóa cội nguồn của Gia Phả Việt Nam trên nền giấy Dó ngà ấm (`#FAF8F2`), màu chủ đạo Xanh Rừng Già (`#0F382C`) và Vàng Hoàng Kim (`#B8860B`), sắc lam và hồng neon này tạo cảm giác chói gắt, như "màu nhựa / đồ chơi trẻ em", hoàn toàn lệch pha với sự tôn nghiêm, đĩnh đạc và trầm mặc của không gian thờ tự tổ tiên.
+  2. *Giải Pháp Hệ Màu Di Sản (Vietnamese Heritage Palette Standards):*
+     - **Phương Án 1 (Khuyên Dùng - Chàm Cổ & Cánh Sen Trầm):**
+       * Nam giới: **Xanh Chàm Cổ / Lam Mực** (`#234E70` / `#1B3B54`). Màu sắc của vải chàm thủ công truyền thống và mực tàu viết trên giấy bản, vững chãi và đĩnh đạc.
+       * Nữ giới: **Cánh Sen Trầm / Tím Mận Cổ** (`#8C4A5A` / `#702A3C`). Sắc màu tía sen nền nã của áo tứ thân truyền thống, thể hiện sự bao dung, trang nhã của người mẹ, người bà.
+       * Đường Family Bus & Hôn phối: **Xanh Rừng Già (`#0F382C`)** kết nối hữu cơ 100% với màu sắc nhận diện thương hiệu dòng họ thay vì dùng màu xanh lá cây công nghiệp `emerald-700`.
+     - **Phương Án 2 (Thổ Mộc & Đất Nung):** Xanh Rêu Phong Cổ Am (`#1E4E45`) và Cam Đất Nung Gạch Cổ (`#A0522D`). Đậm chất kiến trúc đình làng Bắc Bộ.
+     - **Phương Án 3 (Thủy Mặc Tối Giản):** Toàn bộ thẻ dùng Mực Than Chì Ấm (`#292524`), phân biệt Nam/Nữ qua sắc thái Avatar và danh xưng thư pháp.
+     - **Bộ Chuyển Đổi Trực Quan Trực Tiếp (Live Palette Switcher):** Tích hợp công tắc chuyển đổi trực tiếp trên thanh công cụ Cây Phả Hệ (`prototype/redesign` Tab 3) để người dùng có thể bấm xem và so sánh trực quan hiệu ứng giữa 3 phương án di sản với bản cũ ngay trong thời gian thực.
+
+- **Khóa Cố Định Kích Thước Tem Lịch Bloc & Chuẩn Hóa Chiều Cao Thẻ Giỗ Đồng Nhất (Fixed-Height Calendar Stamp & Standardized Cards vs Elongated Stretch Anti-Pattern):**
+  1. *Căn nguyên Lỗi "Kéo Dài Ngoằng" (The Elongated Stamp & Flex-Stretch Trap):*
+     - Khi một ngày có nhiều hơn 1 người giỗ (ví dụ Day 18 có 2 cụ: Cụ Khởi & Cụ Hiến), việc nhồi nhét danh sách nhiều người vào một thẻ dọc và đặt trong container `items-stretch` khiến cột tem lịch bên trái bị kéo dãn từ 108px lên 195px.
+     - Với `flex flex-col justify-between`, header tháng bị đẩy lên đỉnh, ngày âm lịch bị đạp xuống đáy, và khoảng giữa (`flex-1`) tạo ra một khoảng trống trắng mênh mông tới 80px giữa số ngày và ngày âm lịch. Tờ lịch bloc bị biến dạng thành một cột mã vạch dài ngoằng, phá nát tỷ lệ vàng của tờ lịch và gây ức chế thị giác nghiêm trọng cho người dùng.
+  2. *Giải pháp Chuẩn Hóa Mực Thước:*
+     - **Tem lịch bloc là vật thể bất biến (Strict 90 × 108px):** Cột lịch bloc bên trái bắt buộc phải KHÓA CỐ ĐỊNH kích thước (`w-[90px] h-[108px]`). Tuyệt đối không để `flex-1` kéo dãn khoảng cách giữa con số và dòng thứ trong tuần.
+     - **Chuẩn hóa mỗi hương linh một thẻ cố định độc lập (Per-Member Standardized Card):** Trong văn hóa thờ phụng gia tiên Việt Nam, mỗi người đã khuất là một hương linh độc lập tôn nghiêm. Khi trùng ngày giỗ, hệ thống tách bạch mỗi người thành một thẻ chuẩn mực có cùng **chiều cao cố định chính xác 108px** (với tag nhận diện `Trùng ngày giỗ (1/2)` và `(2/2)`). Nhờ đó, 100% các thẻ trên dòng thời gian đều có cùng một nhịp điệu hình học đồng nhất, không một thẻ nào bị "dài ngoằng" hay lệch lạc.
+
+- **Nguyên Tắc Thiết Kế Phả Hệ Toàn Diện: Tránh Sa Vào Tiểu Tiết & Xây Dựng Đầy Đủ Ngôn Ngữ Trực Quan Cây Gia Phả Cùng Form Nhập Liệu Chuẩn Mực (Comprehensive Tree Semantics & Management Form Wizard vs Superficial Micro-Detail Drift):**
+  1. *Căn nguyên Sai lầm "Sa Vào Tiểu Tiết & Lãng Quên Cấu Trúc Cốt Lõi":*
+     - Khi thiết kế Cây Gia Phả, sai lầm nghiêm trọng là chỉ chăm chăm vào "hiệu ứng phụ khi bấm ngày giỗ" mà không dựng ra một CÂY GIA PHẢ THẬT SỰ với đầy đủ các đường nối cấu trúc: Đường nối hôn phối nằm ngang (Spouse bridge), đường trục phân nhánh con cái vuông góc 90° (Family Bus), và phân loại thị giác rõ ràng giữa các nhóm thành viên.
+     - Người dùng vào cây gia phả cần nhìn thấy toàn cảnh dòng họ, phân biệt ngay lập tức Nam giới (viền lam, avatar lam), Nữ giới (viền hồng, avatar hồng), người Còn sống (chấm xanh lá, năm sinh/tuổi), người Đã mất (chấm xám, năm mất/tuổi thọ), và Ghost Node hôn phối nội tộc (đường nét đứt, biểu tượng mắt xích).
+     - Thiếu vắng Form Nhập Liệu (Member Form Modal) khiến thiết kế bị què quặt: Người dùng không biết làm sao để thêm một thành viên, nối cha mẹ, thêm vợ/chồng, hay cập nhật lịch giỗ âm lịch.
+  2. *Giải pháp Thiết Kế Phả Hệ Mực Thước & Đẳng Cấp:*
+     - **Cây Gia Phả Thường Nhật là Nền Tảng (Default Normal State First):** Chế độ xem mặc định phải thể hiện trọn vẹn màu sắc giới tính, sinh tử và đường bus liên kết của 3 thế hệ. Chế độ Tiêu Điểm Lễ Giỗ chỉ là một tùy chọn phụ (toggle filter) chứ không được lấy làm giao diện chính duy nhất.
+     - **Bảng Chú Giải Nhận Diện (Visual Legend Bar):** Bắt buộc đặt ngay trên đầu Canvas để bất kỳ ai mở trang cũng hiểu ngay ngôn ngữ hình học và màu sắc của hệ thống.
+     - **Chuẩn Hóa Form Nhập Liệu 5 Phân Khu (Member Form Wizard):** Tách bạch rõ ràng: (1) Định danh cá nhân & sinh tử; (2) Thân tộc trực hệ & thẩm định cặp phụ mẫu tự động; (3) Hôn phối ngoại tộc vs nội tộc đa thê; (4) Lịch giỗ âm lịch & mộ phần; (5) Hậu duệ con cái & phả ký công đức. Cung cấp cả bản thảo trực quan trên trang lẫn Live Modal để người dùng trải nghiệm nhập liệu thực tế.
+
+- **Nguyên Tắc Bất Biến Về Giữ Gìn Thiết Kế Cốt Lõi Đã Duyệt (Preserving Core SSOT Components vs Loose Mockup Drift):**
+  1. *Căn nguyên Sai lầm "Đại Khái & Sai Lệch Thiết Kế":*
+     - Khi User yêu cầu cải thiện thẩm mỹ hoặc bố cục, việc tự ý vứt bỏ các Component cốt lõi đã được kiểm chứng và duyệt kỹ lưỡng (như Tờ Lịch Bloc `AnniversaryBlocCard` và `AnniversaryBlocTimeline`) rồi thay bằng danh sách text thô sơ là một sự thoái lui thiết kế (design regression) nghiêm trọng.
+     - Sai lầm này khiến thành quả thiết kế của User bị xóa sổ, tạo cảm giác làm việc đại khái, thiếu trách nhiệm và thiếu tôn trọng công sức xây dựng hệ thống.
+  2. *Quy Trình Thiết Kế Chỉn Chu Của Chuyên Gia (Professional Screen-by-Screen & Component-by-Component):*
+     - Mọi bước tái thiết kế BẮT BUỘC phải kế thừa nguyên bản các component sản xuất (`[R-UI.SSOT_PREVIEW]`), đặt chúng vào không gian bố cục mới với tỷ lệ chính xác.
+     - Thiết kế phải được phân tách rạch ròi theo từng màn (Trang Chủ, Lịch Giỗ, Cây Gia Phả), từng component, và hỗ trợ đầy đủ 2 chế độ hiển thị: Màn hình Máy tính (Desktop) và Màn hình Điện thoại (Mobile 375px) để User nghiệm thu đa chiều.
+
+- **Hiểu Đúng Bản Chất Vẻ Đẹp Trong Tối Giản Di Sản (Aesthetics of Contemporary Heritage Minimalism vs Sterile Wireframe Trap):**
+  1. *Căn nguyên Sai lầm "Đen Trắng Đối Phó" (The Monochrome Wireframe Trap):*
+     - Khi User yêu cầu "tối giản, hiện đại, không màu mè, không dùng màu đỏ", sai lầm chết người của AI là chuyển dịch máy móc sang bảng màu xám xịt, viền đen trắng thô kệch như một bản vẽ phác thảo (wireframe) chưa gắn CSS.
+     - Gia phả là không gian thiêng liêng gắn liền với tổ tiên, cội nguồn và lòng biết ơn. Việc tước đoạt toàn bộ sắc thái cảm xúc biến sản phẩm thành một bảng tính khô khốc, vô cảm, xúc phạm đến cảm xúc thẩm mỹ của người dùng.
+  2. *Định nghĩa Vẻ Đẹp của Tối Giản Di Sản Đương Đại (High-End Heritage Minimalism):*
+     - **Chất cảm vật liệu (Materiality & Texture):** Nền giấy ngà mỹ thuật ấm áp (`#FBF9F5` / `#FAF8F2`), thẻ trắng sứ mềm mại nâng đỡ bởi viền hairline đá ấm (`#EAE5D9`), bóng đổ êm sâu như ánh sương sớm (`shadow-[0_4px_24px_-4px_rgba(28,25,23,0.05)]`).
+     - **Bảng màu đĩnh đạc & tôn nghiêm:** Xanh Lục Rừng Già (`#0F382C` / `#164E3D`) biểu trưng cho cội rễ sum suê vững bền; Hổ Phách & Hoàng Kim Trầm (`#B8860B`, `#8C5D17`, `#FEF6E9`) biểu trưng cho ánh sáng tri ân; Mực Nho Chì Ấm (`#1C1917`) thay thế cho màu đen thô ráp.
+     - **Cơ chế Phản ứng Thẻ Gia Phả khi chọn Ngày Giỗ (Spotlight Memorial Glow):**
+       * Khi chọn một ngày giỗ từ Trang Chủ hoặc Lịch Giỗ, thẻ của Tiền nhân bừng sáng như **"Ngọn Nến Tưởng Niệm"** (viền hào quang hổ phách ấm áp, huy hiệu `Chính Giỗ Hôm Nay`, nền phủ ánh sáng nến).
+       * Toàn bộ các nhánh khác tự động giảm độ đậm (dimming 55%) và thu nhỏ nhẹ để tạo chiều sâu thị giác (visual depth), tôn vinh vị trí của Cụ giữa hàng trăm thành viên trên cây.
+
+
 - **Thanh Lọc Triệt Để 100% Emoji, Pill & Chuẩn Zero-Icon Cho Thanh Phân Loại (Exhaustive System-wide Cleansing & Zero-Icon Standard):**
   1. *Căn nguyên Sai lầm Thay thế Đối phó (Superficial Icon Swap Trap):*
      - Khi loại bỏ pill và emoji, việc tự tiện gán các icon Lucide trang trí rác (`GitBranch`, `Shield`, `Heart`, `Compass`, `Landmark`, `Users`) vào các chip phân loại xưng hô (`/admin/kinship`) vừa làm méo mó ngữ nghĩa thân tộc Việt Nam, vừa làm phình to chiều ngang khiến thanh tab bị vỡ và sinh ra thanh cuộn ngang (horizontal scrollbar) xộc xệch trên máy tính.
@@ -186,7 +275,7 @@
   2. *Gốc Tùy Biến (Focus Root) & Đổi vai thuần túy theo đồ thị:* Tuyệt đối không hard-code thuộc tính "Chi" cứng nhắc trong CSDL. Xem theo chi nhánh thực chất là duyệt cây con từ một Tiền nhân làm Gốc (`focusRootId`). Khi duyệt từ Gốc $X$, thuật toán phân định: nếu đi qua nhánh con gái của Gốc, chồng của cô ấy tự động trở thành Con rể (`inlawRole: 'son_in_law'`), con cái của cô ấy tự động trở thành Cháu ngoại (`childRole: 'maternal_grandchild'`), phục hồi đầy đủ con cháu cho chi nhánh ngoại mà vẫn bảo toàn số đinh khi xem toàn tộc.
   3. *Tôn ti thứ tự sinh (`birth_order`) trước tuổi đời (`birth_year`):* Khi tiền nhân thất truyền năm sinh, `birth_order` là chìa khóa duy nhất để xếp anh em lớn $\rightarrow$ bé từ trái sang phải; khi có năm sinh, hệ thống tự động suy diễn `birth_order` và bật cảnh báo tương tác nếu phát hiện mâu thuẫn năm sinh.
 - **Tôn ti Sinh tử vs Vai vế & Nhận diện Hôn phối nội tộc Đối Xứng 2 Chiều:**
-  1. *Trạng thái sinh tử góc trên bên phải:* Vị trí góc trên bên phải của thẻ `MemberNode` tuyệt đối chỉ dành cho trạng thái sinh tử (`✨ Cụ Tổ` cho Đời 1, `† Đã mất` / `Còn sống` cho Đời $\ge 2$); tuyệt đối không nhồi nhét chữ `Con dâu`/`Con rể` vào đây vì sẽ đè mất thông tin sinh tử của Cụ Bà Thủy Tổ và các dâu/rể.
+  1. *Trạng thái sinh tử góc trên bên phải:* Vị trí góc trên bên phải của thẻ `MemberNode` tuyệt đối chỉ dành cho trạng thái sinh tử (`✨ Cụ Tổ` cho Đời 1, `† Đã mất` / `Còn sống` cho Đời $\ge 2$); tuyệt đối không nhồi nhét chữ `Con dâu`/`Con rể` vào đây vì sẽ đè mất thông tin sinh tử của Cụ Bà Tổ và các dâu/rể.
   2. *Thẻ GhostNode dâu/rể nội tộc viền vàng nét đứt:* Thẻ phản chiếu GhostNode mang viền vàng nét đứt (`border-2 border-dashed border-amber-500 bg-amber-50/85`) là chuẩn mực nhận diện node ảo; ở phía ngược lại (thẻ gốc của người đó trên cây huyết thống), thẻ gốc cũng phải mang nhận diện đối xứng viền/badge hổ phách nét đứt để người xem ở cả 2 chi đều nhận ra ngay mối quan hệ hôn phối nội tộc.
   3. *Quy tắc kép Con Trưởng & Thứ tự sinh:* `birth_order` dàn hàng ngang anh chị em từ trái qua phải; con trai lớn nhất mặc định được suy luận là **Trưởng Nam** (`(Trưởng)`) ngay cả khi sau chị gái, đồng thời hỗ trợ cờ `is_senior` thủ công cho các ca ngoại lệ (anh cả mất sớm).
   4. *Phân tầng Z-Index chống va chạm layout:* Header Navbar `z-50`, User Profile Dropdown `z-[100]`, Canvas Toolbar `z-30`, Dropdown/Search trong Toolbar `z-40` triệt tiêu dứt điểm lỗi các popup/menu đè hoặc cắt ngang nhau.
@@ -564,7 +653,7 @@
   2. *Theme Tokenization Cho Thanh Tiến Trình (CSS Variables vs Hardcoded Hex):* Tuyệt đối không hardcode mã màu hex tĩnh trong style hay CSS của progress bar. Cấu hình biến CSS `--brand-primary` và `--brand-glow` trong `:root` và `.dark` tại `globals.css` (kết nối với Tailwind `colors.clan`). Khi quản trị viên thay đổi màu chủ đề dòng họ trong tương lai, thanh Progress Bar và vệt shimmer tự động đổi màu theo 100%.
   3. *Chiến Lược Cây Gia Phả 1.500 Người & Đón Tiếp Người Chưa Liên Kết:*
      - **Cắt tỉa khung nhìn (Viewport Virtualization):** Kích hoạt `onlyRenderVisibleElements={true}` trong React Flow để DOM chỉ gánh các node trong tầm mắt (< 100 nodes), tiết kiệm 95% RAM, chống sập OOM và giữ vững 60fps trên điện thoại.
-     - **Trải nghiệm Khách / Unlinked:** Người chưa liên kết được đón nhận bằng giao diện Thủy Tổ + 3 đời đầu gọn gàng (~15 người) kèm nút cành thu gọn `[ + Chi 1 ]` và banner gợi ý nhận node / chọn tâm điểm 5 đời.
+     - **Trải nghiệm Khách / Unlinked:** Người chưa liên kết được đón nhận bằng giao diện Cụ Tổ + 3 đời đầu gọn gàng (~15 người) kèm nút cành thu gọn `[ + Chi 1 ]` và banner gợi ý nhận node / chọn tâm điểm 5 đời.
 
 
 - **Chuẩn Hóa Trạng Thái Tải Dữ Liệu `[R-UI.LOADING]` & Đồng Bộ Phản Hồi Cài Đặt PWA Đón Bắt Sớm (Loading Standardization & PWA Early Capture Parity):**
@@ -714,7 +803,7 @@
   1. *Căn nguyên nghiệp vụ:* Tiền nhân đời trên (như *Cụ Nguyễn Thị Hiền* - Đời 4) thuộc các đời sơ khai trước khi dòng họ phân lập các Ngành/Chi (Ngành/Chi bắt đầu từ Đời 5 hoặc Đời 7 do con cháu lập ra). Cụ là Tổ Tiên chung của toàn bộ dòng họ nên chỉ mang huy hiệu `Cụ tổ của bạn` · `Đời thứ 4` mà không mang nhãn Chi riêng lẻ.
   2. *Lỗi hổng lọc sót giỗ:* Trước đây khi con cháu Chi 1 lọc Lịch Giỗ theo Chi 1, Cụ Hiền (Đời 4) đứng trên Cụ Khởi Chi 1 nên bị loại trừ. Về đạo hiếu và thực tế phụng dưỡng, con cháu Chi 1 vẫn có nghĩa vụ phụng dưỡng ngày giỗ các bậc Cụ Tổ trực hệ đời trên.
   3. *Giải pháp kiến trúc:*
-     - Xây dựng hàm `getBranchAncestorIds(branchId, branches, members, spouseRelations)`: Dò từ `rootMemberId` của nhánh ngược lên chuỗi phụ hệ `father_id` đến Cụ Thủy Tổ Đời 1, kèm theo phối ngẫu của từng đời để bảo toàn cả Cụ Ông và Cụ Bà.
+     - Xây dựng hàm `getBranchAncestorIds(branchId, branches, members, spouseRelations)`: Dò từ `rootMemberId` của nhánh ngược lên chuỗi phụ hệ `father_id` đến Cụ Tổ Đời 1, kèm theo phối ngẫu của từng đời để bảo toàn cả Cụ Ông và Cụ Bà.
      - Hàm `filterMembersByBranch` và bộ lọc trang `/anniversaries` hỗ trợ tham số `lineageDepth`:
        - `from_root` (mặc định của giao diện): Một thành viên được giữ lại nếu là Hậu duệ của nhánh (`matchedBranchIds.includes(branchId)`) HOẶC là Tiền nhân trực hệ (`branchAncestorIds.has(m.id)`). Nhờ đó, ngày giỗ Cụ Hiền Đời 4 luôn hiển thị trang trọng khi con cháu Chi 1 lọc lịch giỗ!
        - `from_branch` (mặc định tương thích ngược của hàm filterMembersByBranch): Chỉ lấy từ Cụ Khởi Chi trở xuống con cháu.
@@ -800,7 +889,7 @@
   1. *Căn nguyên lỗi thêm vợ/chồng 403 & Lệch đời:*
      - Khi thành viên đã gắn node (`claimed_member`, ví dụ Đời 13) bấm `+ Thêm vợ` trên Drawer, frontend gửi `spouse_id = A`.
      - Tuy nhiên backend trước đó chỉ kiểm tra `parentId`, khiến `targetManageId` bị `undefined`, dẫn đến lỗi HTTP 403 *"Thành viên chỉ có quyền thêm con hoặc vợ/chồng cho Gia Đình Của Bạn của mình"*.
-     - Đồng thời, khi không có `parentId`, nếu không kiểm tra `spouse_id`, thế hệ của người mới bị rơi vào fallback `generation_level = 1`, làm người vợ Đời 13 biến thành Đời 1 (bậc Cụ Thủy Tổ).
+     - Đồng thời, khi không có `parentId`, nếu không kiểm tra `spouse_id`, thế hệ của người mới bị rơi vào fallback `generation_level = 1`, làm người vợ Đời 13 biến thành Đời 1 (bậc Cụ Tổ).
      - *Giải pháp:* Nhận diện `const targetManageId = parentId || body.spouse_id || (body as any).current_spouse_id;` và gán thế hệ kế thừa chính xác theo bạn đời: `generationLevel = spouse.generation_level || 1;` (Generation Parity).
   2. *Căn nguyên lỗi kẹt cửa Cổng Phê Duyệt & Cô Lập Sidebar (Sidebar Isolation):*
      - Khi `claimed_member` bấm lối tắt `[ 📋 Phê Duyệt Hồ Sơ ]` từ Dropdown Avatar trỏ tới `/admin/claims`, họ bị `AdminLayout` chặn cửa và đá về trang chủ với thông báo *"Bạn không có quyền Super Admin"*.

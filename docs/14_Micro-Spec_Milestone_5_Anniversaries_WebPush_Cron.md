@@ -841,7 +841,7 @@ Trang Lịch Giỗ 30 Ngày Sắp Tới:
     - Khi bấm vào nấc chưa chọn $\rightarrow$ Kích hoạt lọc theo nấc đó.
 - **4. Bộ Lọc Ngành / Chi Đa Tầng (`selectedBranch`):**
   - Áp dụng nguyên lý `lineageDepth` vào dropdown chọn Ngành/Chi bên phải:
-    - Khi ở chế độ mặc định `from_root`: Bảo toàn toàn bộ các vị Cụ Tổ trực hệ đời trên (từ Cụ Thủy Tổ Đời 1 đến Cụ Khởi Chi, kèm phối ngẫu) thông qua hàm `getBranchAncestorIds(selectedBranch, ...)`. Thành viên hiển thị nếu là Hậu duệ của nhánh **HOẶC** là Tiền nhân trực hệ của nhánh $\rightarrow$ Ngày giỗ Cụ Hiền Đời 4 luôn hiển thị khi con cháu lọc Chi 1!
+    - Khi ở chế độ mặc định `from_root`: Bảo toàn toàn bộ các vị Cụ Tổ trực hệ đời trên (từ Cụ Tổ Đời 1 đến Cụ Khởi Chi, kèm phối ngẫu) thông qua hàm `getBranchAncestorIds(selectedBranch, ...)`. Thành viên hiển thị nếu là Hậu duệ của nhánh **HOẶC** là Tiền nhân trực hệ của nhánh $\rightarrow$ Ngày giỗ Cụ Hiền Đời 4 luôn hiển thị khi con cháu lọc Chi 1!
     - Khi ở chế độ `from_branch`: Chỉ hiển thị các thành viên hậu duệ từ Cụ Khởi Nhánh được chọn trở xuống.
 
 

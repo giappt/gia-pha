@@ -9,9 +9,10 @@ import { MOCK_ANNIVERSARY_GROUP_TODAY, MOCK_ANNIVERSARY_GROUP_UPCOMING } from '@
 
 interface AnniversaryBlocCardProps {
   group: AnniversaryDayGroup;
+  forceLayout?: 'desktop' | 'mobile';
 }
 
-export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps) {
+export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryBlocCardProps) {
   const isToday = group.days_left === 0;
   const isTomorrow = group.days_left === 1;
 
@@ -42,10 +43,22 @@ export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps)
   ];
   const monthWord = monthNames[group.solar_month] || `${group.solar_month}`;
 
+  const desktopClass = forceLayout === 'desktop'
+    ? 'flex flex-row items-stretch'
+    : forceLayout === 'mobile'
+      ? 'hidden'
+      : 'hidden md:flex flex-row items-stretch';
+
+  const mobileClass = forceLayout === 'mobile'
+    ? 'flex flex-col w-full'
+    : forceLayout === 'desktop'
+      ? 'hidden'
+      : 'md:hidden flex flex-col w-full';
+
   return (
     <div className="w-full max-w-3xl mx-auto rounded-card border border-slate-300/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden">
       {/* 1. Phiên bản Desktop (md+): Dàn ngang 2 nửa liền mạch */}
-      <div className="hidden md:flex flex-row items-stretch">
+      <div className={desktopClass}>
         {/* Nửa trái: Cột Lịch Bloc 185px fit khít 3 mép */}
         <div className="w-[185px] shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col select-none">
           {/* Header Tháng / Năm */}
@@ -139,7 +152,7 @@ export default function AnniversaryBlocCard({ group }: AnniversaryBlocCardProps)
       </div>
 
       {/* 2. Phiên bản Mobile (< md): Thẻ dọc cuốn lịch bloc nguyên bản */}
-      <div className="md:hidden flex flex-col w-full">
+      <div className={mobileClass}>
         {/* Header Cuốn Lịch */}
         <div className={`px-4 py-2.5 flex items-center justify-between text-xs tracking-wide ${headerBg}`}>
           <span>Tháng {monthWord}</span>

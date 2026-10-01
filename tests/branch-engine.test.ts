@@ -21,7 +21,7 @@ import type { MemberRecord, SpouseRelationRecord } from '../src/types/tree';
 
 describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
   // Mock dữ liệu dòng họ 4 thế hệ:
-  // Đời 1: Cụ Khởi Thủy Tổ (id: m_root)
+  // Đời 1: Cụ Khởi Cụ Tổ (id: m_root)
   // Đời 2: Cụ Ngành 1 (id: m_nganh1, con m_root) & Cụ Ngành 2 (id: m_nganh2, con m_root)
   // Đời 3: Cụ Chi 1 (id: m_chi1, con m_nganh1) & Cụ Chi 2 (id: m_chi2, con m_nganh1)
   // Đời 4: Cháu Tuấn (id: m_tuan, con m_chi2) & Cháu Lan (id: m_lan, con m_chi1) & Cháu Hùng (id: m_hung, con m_nganh2)
@@ -155,7 +155,7 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
     assert.deepStrictEqual(resHung.matchedBranchIds, ['branch_nganh2']);
     assert.strictEqual(resHung.primaryBranchName, 'Ngành 2');
 
-    // 4. Cụ Khởi (Thủy Tổ) đứng trên tất cả các Ngành -> Không thuộc riêng Ngành nào
+    // 4. Cụ Khởi (Cụ Tổ) đứng trên tất cả các Ngành -> Không thuộc riêng Ngành nào
     const resRoot = resolveMemberBranchHierarchy('m_root', mockMembers, mockBranches);
     assert.strictEqual(resRoot.branchPath, '');
     assert.deepStrictEqual(resRoot.matchedBranchIds, []);
@@ -605,7 +605,7 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
       spouseRelations
     );
 
-    assert.ok(ancestorIds.has('m_root'), 'Phải chứa Cụ Thủy Tổ Đời 1');
+    assert.ok(ancestorIds.has('m_root'), 'Phải chứa Cụ Tổ Đời 1');
     assert.ok(ancestorIds.has('m_nganh1'), 'Phải chứa Cụ Ngành 1 Đời 2');
     assert.ok(ancestorIds.has('m_ba_nganh1'), 'Phải chứa Cụ Bà Ngành 1 (phối ngẫu của Cụ Ngành 1)');
     assert.ok(ancestorIds.has('m_chi1'), 'Phải chứa Cụ Khởi Chi 1');
@@ -632,7 +632,7 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
     );
     const fromRootIds = new Set(membersFromRoot.map((m) => m.id));
 
-    assert.ok(fromRootIds.has('m_root'), 'from_root phải bảo toàn Cụ Thủy Tổ Đời 1');
+    assert.ok(fromRootIds.has('m_root'), 'from_root phải bảo toàn Cụ Tổ Đời 1');
     assert.ok(fromRootIds.has('m_nganh1'), 'from_root phải bảo toàn Cụ Ngành 1');
     assert.ok(fromRootIds.has('m_chi1'), 'from_root phải chứa Cụ Khởi Chi 1');
     assert.ok(fromRootIds.has('m_lan'), 'from_root phải chứa con cháu Chi 1 (Cháu Lan)');
@@ -655,7 +655,7 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
 
     assert.ok(fromBranchIds.has('m_chi1'), 'from_branch phải chứa Cụ Khởi Chi 1');
     assert.ok(fromBranchIds.has('m_lan'), 'from_branch phải chứa con cháu Chi 1 (Cháu Lan)');
-    assert.ok(!fromBranchIds.has('m_root'), 'from_branch CẤM chứa Cụ Thủy Tổ Đời 1');
+    assert.ok(!fromBranchIds.has('m_root'), 'from_branch CẤM chứa Cụ Tổ Đời 1');
     assert.ok(!fromBranchIds.has('m_nganh1'), 'from_branch CẤM chứa Cụ Ngành 1');
     assert.ok(!fromBranchIds.has('m_chi2'), 'from_branch không chứa Chi 2');
   });
@@ -686,7 +686,7 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
 
   it('TC_UT_MY_LINEAGE_PRESERVES_GRANDPARENTS: Lọc Nhánh của tôi ở nấc 2 (from_branch) BẮT BUỘC bảo toàn 100% Ông Bà Nội (như Bà nội Nguyễn Thị Chăm) và Bác/Chú', () => {
     // Cây gia phả mẫu:
-    // Đời 1: Cụ Thủy Tổ (m_root)
+    // Đời 1: Cụ Tổ (m_root)
     // Đời 4: Cụ Hiền (m_hien) - con cháu Đời 1
     // Đời 7: Cụ Khởi Ngành 1 (m_nganh1) - con cháu Cụ Hiền
     // Đời 11: Ông nội (m_ong_noi) - con cháu Cụ Khởi Ngành 1
@@ -695,7 +695,7 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
     // Đời 12: Bố (m_bo) - con của Ông nội
     // Đời 13: Cháu Giáp (m_giap) - con của Bố
     const testMembers: MemberRecord[] = [
-      { id: 'm_root', full_name: 'Cụ Thủy Tổ', gender: 'male', life_status: 'deceased', father_id: null, generation_level: 1, is_root: true },
+      { id: 'm_root', full_name: 'Cụ Tổ', gender: 'male', life_status: 'deceased', father_id: null, generation_level: 1, is_root: true },
       { id: 'm_hien', full_name: 'Cụ Nguyễn Thị Hiền', gender: 'female', life_status: 'deceased', father_id: 'm_root', generation_level: 4, is_root: false },
       { id: 'm_nganh1', full_name: 'Cụ Khởi Ngành 1', gender: 'male', life_status: 'deceased', father_id: 'm_hien', generation_level: 7, is_root: false },
       { id: 'm_ong_noi', full_name: 'Ông nội Phạm Văn A', gender: 'male', life_status: 'deceased', father_id: 'm_nganh1', generation_level: 11, is_root: false },
@@ -734,9 +734,9 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
     ];
 
     // 1. Kiểm tra hàm getRootBranchPredecessorIds:
-    // Tiền nhân của Ngành 1 chỉ gồm các Cụ trước Cụ Khởi Ngành 1: Cụ Thủy Tổ và Cụ Hiền
+    // Tiền nhân của Ngành 1 chỉ gồm các Cụ trước Cụ Khởi Ngành 1: Cụ Tổ và Cụ Hiền
     const predecessors = getRootBranchPredecessorIds('branch_nganh1', testBranches, testMembers, testSpouses);
-    assert.ok(predecessors.has('m_root'), 'Predecessors phải chứa Cụ Thủy Tổ Đời 1');
+    assert.ok(predecessors.has('m_root'), 'Predecessors phải chứa Cụ Tổ Đời 1');
     assert.ok(predecessors.has('m_hien'), 'Predecessors phải chứa Cụ Hiền Đời 4');
     assert.ok(!predecessors.has('m_nganh1'), 'Predecessors KHÔNG được chứa Cụ Khởi Ngành 1');
     assert.ok(!predecessors.has('m_ong_noi'), 'Predecessors KHÔNG được chứa Ông nội');
@@ -748,7 +748,7 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
     const branchIds = new Set(filteredFromBranch.map((m) => m.id));
 
     // Ẩn các Cụ thời kỳ đầu trước phân ngành
-    assert.ok(!branchIds.has('m_root'), 'Nấc 2 phải ẩn Cụ Thủy Tổ Đời 1');
+    assert.ok(!branchIds.has('m_root'), 'Nấc 2 phải ẩn Cụ Tổ Đời 1');
     assert.ok(!branchIds.has('m_hien'), 'Nấc 2 phải ẩn Cụ Hiền Đời 4');
 
     // BẢO TOÀN 100% Cụ Khởi Ngành, Ông Bà Nội (kể cả con dâu), Bác/Chú, Bố Mẹ, Bản thân
@@ -762,7 +762,7 @@ describe('Multi-tier Branch Taxonomy & Hierarchy Engine (Milestone 6)', () => {
     // 3. Kiểm tra ở nấc 1 'from_root': Giữ toàn bộ từ Đời 1
     const filteredFromRoot = filterMembersByMyLineage(testMembers, 'm_giap', testBranches, testSpouses, 'from_root');
     const rootIds = new Set(filteredFromRoot.map((m) => m.id));
-    assert.ok(rootIds.has('m_root'), 'Nấc 1 phải giữ Cụ Thủy Tổ Đời 1');
+    assert.ok(rootIds.has('m_root'), 'Nấc 1 phải giữ Cụ Tổ Đời 1');
     assert.ok(rootIds.has('m_hien'), 'Nấc 1 phải giữ Cụ Hiền Đời 4');
     assert.ok(rootIds.has('m_ba_cham'), 'Nấc 1 phải giữ Bà nội Nguyễn Thị Chăm');
   });

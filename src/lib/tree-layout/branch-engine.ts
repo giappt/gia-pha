@@ -229,7 +229,7 @@ export function resolveMemberBranchHierarchy(
   const target = memberMap.get(memberId);
   if (!target) return emptyResult;
 
-  // Xây dựng chuỗi phụ hệ (father chain) từ thành viên lên tới Cụ Thủy Tổ
+  // Xây dựng chuỗi phụ hệ (father chain) từ thành viên lên tới Cụ Tổ
   const ancestorIdSet = new Set<string>();
   let curr: MemberRecord | undefined = target;
   const visited = new Set<string>();
@@ -299,7 +299,7 @@ export function resolveMemberBranchHierarchy(
 
 /**
  * Trích xuất toàn bộ ID các vị Cụ Tổ tiền nhân trực hệ (kèm phối ngẫu) từ Cụ Khởi Nhánh (rootMemberId)
- * ngược lên tới Cụ Thủy Tổ Đời 1.
+ * ngược lên tới Cụ Tổ Đời 1.
  * Dùng để bảo toàn các Cụ Tổ đời trên (như Cụ Nguyễn Thị Hiền Đời 4) khi con cháu lọc xem Lịch Giỗ theo Chi/Ngành.
  */
 export function getBranchAncestorIds(
@@ -334,7 +334,7 @@ export function getBranchAncestorIds(
     }
   }
 
-  // Dò ngược chuỗi phụ hệ từ rootMemberId lên Cụ Thủy Tổ Đời 1
+  // Dò ngược chuỗi phụ hệ từ rootMemberId lên Cụ Tổ Đời 1
   let curr = memberMap.get(targetNode.rootMemberId);
   const visited = new Set<string>();
 
@@ -363,7 +363,7 @@ export function getBranchAncestorIds(
 /**
  * Lọc danh sách thành viên thuộc về một nhánh cụ thể (bao gồm con cháu của toàn bộ nhánh con)
  * Hỗ trợ tham số lineageDepth:
- * - 'from_root': Bảo toàn các vị Cụ Tổ tiền nhân trực hệ từ Cụ Thủy Tổ Đời 1 đến Cụ Khởi Chi.
+ * - 'from_root': Bảo toàn các vị Cụ Tổ tiền nhân trực hệ từ Cụ Tổ Đời 1 đến Cụ Khởi Chi.
  * - 'from_branch' (Mặc định): Chỉ lấy từ Cụ Khởi Chi trở xuống con cháu.
  */
 export function filterMembersByBranch(
@@ -535,7 +535,7 @@ export function getRootBranchPredecessorIds(
 /**
  * Lọc danh sách thành viên cho chế độ 'Nhánh của tôi'
  * Hỗ trợ 2 nấc:
- * - 'from_root': Giữ toàn bộ trục dọc từ Cụ Thủy Tổ Đời 1, Cụ Hiền Đời 4, Cụ Khởi Ngành, Ông Bà Nội, Bác/Chú, Bố Mẹ, Bản thân
+ * - 'from_root': Giữ toàn bộ trục dọc từ Cụ Tổ Đời 1, Cụ Hiền Đời 4, Cụ Khởi Ngành, Ông Bà Nội, Bác/Chú, Bố Mẹ, Bản thân
  * - 'from_branch': Chỉ ẩn các Cụ Tổ thời kỳ đầu trước khi phân ngành (Cụ Đời 1, Cụ Đời 4);
  *                  BẢO TOÀN 100% từ Cụ Khởi Ngành trở xuống: Ông Bà Nội (như Bà nội Nguyễn Thị Chăm), Bác/Chú, Bố Mẹ, Bản thân
  */

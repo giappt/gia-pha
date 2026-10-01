@@ -357,7 +357,7 @@ describe('Anniversary Calculation & Kinship Integration Test Suite (Milestone 5)
     const mockTree: MemberRecord[] = [
       {
         id: 'ancestor',
-        full_name: 'Cụ Thủy Tổ',
+        full_name: 'Cụ Tổ',
         gender: 'male',
         life_status: 'deceased',
         death_lunar_day: 21,

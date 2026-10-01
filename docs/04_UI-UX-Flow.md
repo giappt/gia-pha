@@ -265,7 +265,7 @@ flowchart TD
 #### B. Trải Nghiệm Cây Gia Phả 1.500 Người:
 - **Phân Tầng Theo Chi/Nhánh & Breadcrumbs:** Lọc nhanh từng Chi (Chi Trưởng, Chi 2...) và breadcrumb điều hướng `Gia tộc Phạm Văn > Chi 1 > Nhánh Cụ Chiến`.
 - **Chế Độ Bán Kính Gia Đình 5 Đời:** Xem tập trung 5 đời quanh người được chọn ($\text{Ông bà} \rightarrow \text{Cha mẹ} \rightarrow \text{Bản thân} \rightarrow \text{Con} \rightarrow \text{Cháu}$). Các nhánh xa hơn gập gọn thành nút `[ Mở rộng 18 con cháu ]` bấm đến đâu bung đến đó.
-- **Trải Nghiệm Khách & Người Chưa Liên Kết:** Mặc định hiển thị Cụ Thủy Tổ và các thế hệ khởi nguồn trang nghiêm (~15 người), các Chi đời sau gập gọn thành nút `[ Mở rộng Chi 1 ]`. Khung thông báo định danh: *"Chưa liên kết tài khoản với vị trí trong gia phả? [ Nhận Hồ Sơ Gia Tộc ] hoặc tra cứu theo danh tính người thân để định vị phả hệ 5 đời"*.
+- **Trải Nghiệm Khách & Người Chưa Liên Kết:** Mặc định hiển thị Cụ Tổ và các thế hệ khởi nguồn trang nghiêm (~15 người), các Chi đời sau gập gọn thành nút `[ Mở rộng Chi 1 ]`. Khung thông báo định danh: *"Chưa liên kết tài khoản với vị trí trong gia phả? [ Nhận Hồ Sơ Gia Tộc ] hoặc tra cứu theo danh tính người thân để định vị phả hệ 5 đời"*.
 - **Cắt Tỉa Viewport (Virtualization) & LOD:** Bật `onlyRenderVisibleElements={true}` trong React Flow để DOM chỉ gánh các thẻ trong màn hình nhìn thấy, tiết kiệm 95% RAM; zoom out xa co thành thẻ mini (LOD).
 
 ### 5.6. Quy Chuẩn Thiết Kế Biên Tập Di Sản & Chống Pill Toàn Diện (Anti-Pill Editorial Standard)

@@ -285,8 +285,8 @@ sequenceDiagram
 - [x] **TC_UT_MEMBER_NODE_ROOT_BADGE_EXCLUSIVE (Kiểm chứng Huy hiệu Cụ Tổ CHỈ hiển thị duy nhất trên Root Node):**
   - **Mô tả:** Kiểm tra điều kiện render trong `MemberNode.tsx`: Chỉ node có `nodeData.isRoot === true` (khớp với `root_ancestor_id`) mới nhận huy hiệu `Cụ Tổ`. Các node khác (kể cả vợ Đời 1, dâu các đời) tuyệt đối không có badge `Cụ Tổ`, mà hiển thị danh xưng phối ngẫu và trạng thái sinh tử.
   - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
-- [x] **TC_UT_IMPORT_AUTO_SYNC_ROOT (Kiểm chứng Import Clean Mode tự động cập nhật root_ancestor_id cho Cụ Thủy Tổ):**
-  - **Mô tả:** Khi gọi `POST /api/admin/import` với `mode: 'clean'`, dòng nào có `isRoot: true` sẽ tự động kích hoạt cập nhật `clan_settings.root_ancestor_id = memberId` của Cụ Thủy Tổ.
+- [x] **TC_UT_IMPORT_AUTO_SYNC_ROOT (Kiểm chứng Import Clean Mode tự động cập nhật root_ancestor_id cho Cụ Tổ):**
+  - **Mô tả:** Khi gọi `POST /api/admin/import` với `mode: 'clean'`, dòng nào có `isRoot: true` sẽ tự động kích hoạt cập nhật `clan_settings.root_ancestor_id = memberId` của Cụ Tổ.
   - **Trạng thái:** PASS (verified via tests/root-setting-and-generation.test.ts).
 - [x] **TC_UT_EXCEL_LITE_TOPOLOGY_INTEGRITY (Kiểm chứng file gia_pha_ho_pham_van_lite.xlsx liên kết liền mạch từ Đời 1 đến Đời 13):**
   - **Mô tả:** File Excel sau khi bổ sung STT cha mẹ (STT 4 con STT 1&2, STT 6 con STT 4&5, STT 69 con STT 38&39, STT 122 con STT 69&70...) không có chu trình (cycle) và kết nối trọn vẹn 100% các nhánh về Cụ Tổ.
@@ -374,7 +374,7 @@ sequenceDiagram
 ### 12.1. Kiến Trúc Cụ Tổ Duy Nhất Trong Cài Đặt Dòng Họ (`clan_settings.root_ancestor_id`)
 - **Single Source of Truth:**
   - Bảng `clan_settings` sở hữu cột `root_ancestor_id UUID REFERENCES public.members(id) ON DELETE SET NULL`.
-  - Toàn bộ họ tộc chỉ có **DUY NHẤT 1 Cụ Thủy Tổ** được lưu tại đây.
+  - Toàn bộ họ tộc chỉ có **DUY NHẤT 1 Cụ Tổ** được lưu tại đây.
   - Loại bỏ hoàn toàn sự phụ thuộc vào cờ tĩnh `is_root` trên từng dòng bảng `members`.
 - **API `/api/clan-settings`:**
   - `GET`: Trả về `root_ancestor_id` cùng các thông tin dòng họ.

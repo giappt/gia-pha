@@ -12,7 +12,7 @@ Tài liệu này hướng dẫn chi tiết cách sử dụng file [`gia_pha_ho_p
   - ✅ **Đã ghép cặp Vợ/Chồng:** Cột `STT Vợ/Chồng` đã được tự động điền liên kết hai chiều.
   - ✅ **Đã bóc tách Ngày Giỗ Âm Lịch:** Cột `Ngày mất (Âm)` và `Tháng mất (Âm)` đã được trích xuất từ văn bản cổ.
   - ✅ **Đã liên kết Trục Khởi Nguyên 4 Đời Đầu:**
-    - Cụ Thủy Tổ: **Phạm Văn Chiến** (`STT = 1`, `Cụ Tổ = 'Đ'`).
+    - Cụ Tổ: **Phạm Văn Chiến** (`STT = 1`, `Cụ Tổ = 'Đ'`).
     - Cụ Đời 2: **Phạm Văn Đồng** (`STT = 4`, `STT Bố = 1`).
     - Cụ Đời 3: **Phạm Kim Chức** (`STT = 6`, `STT Bố = 4`).
     - Cụ Đời 4: **Phạm Khắc Tường** (`STT = 8`, `STT Bố = 6`).

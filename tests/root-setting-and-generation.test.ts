@@ -23,7 +23,7 @@ describe('Root Ancestor Setting & Graph-Derived Generation Test Suite (Milestone
     // PATCH handler
     assert.ok(
       content.includes('root_ancestor_id !== undefined') || content.includes('root_ancestor_id'),
-      'PATCH handler phải tiếp nhận trường root_ancestor_id để cập nhật Cụ Thủy Tổ'
+      'PATCH handler phải tiếp nhận trường root_ancestor_id để cập nhật Cụ Tổ'
     );
   });
 
@@ -192,7 +192,7 @@ describe('Root Ancestor Setting & Graph-Derived Generation Test Suite (Milestone
     );
   });
 
-  // TC_UT_IMPORT_AUTO_SYNC_ROOT: Kiểm chứng Import Clean Mode tự động cập nhật root_ancestor_id cho Cụ Thủy Tổ
+  // TC_UT_IMPORT_AUTO_SYNC_ROOT: Kiểm chứng Import Clean Mode tự động cập nhật root_ancestor_id cho Cụ Tổ
   it('TC_UT_IMPORT_AUTO_SYNC_ROOT: Import logic tự động đồng bộ root_ancestor_id và tính đời cho phối ngẫu', () => {
     const importRoutePath = path.resolve(process.cwd(), 'src/app/api/admin/import/route.ts');
     assert.ok(fs.existsSync(importRoutePath), 'File src/app/api/admin/import/route.ts phải tồn tại');

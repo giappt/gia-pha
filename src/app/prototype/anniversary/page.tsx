@@ -55,7 +55,7 @@ const MOCK_DATA: Record<string, MockAnnivDay> = {
         honorific: 'Cụ',
         generation: 4,
         branchName: 'Chi 1',
-        relativeKinship: 'Cụ Bà Thủy Tổ',
+        relativeKinship: 'Cụ Bà',
       },
     ],
   },
@@ -611,17 +611,15 @@ export default function PrototypeAnniversaryPage() {
           <div className="inline-flex p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold">
             <button
               onClick={() => setCurrentTab('home')}
-              className={`px-3 py-1 rounded-md transition-all ${
-                currentTab === 'home' ? 'bg-white dark:bg-slate-700 text-slate-950 dark:text-white shadow-xs' : 'text-slate-500'
-              }`}
+              className={`px-3 py-1 rounded-md transition-all ${currentTab === 'home' ? 'bg-white dark:bg-slate-700 text-slate-950 dark:text-white shadow-xs' : 'text-slate-500'
+                }`}
             >
               1. Trang Chủ
             </button>
             <button
               onClick={() => setCurrentTab('list')}
-              className={`px-3 py-1 rounded-md transition-all ${
-                currentTab === 'list' ? 'bg-white dark:bg-slate-700 text-slate-950 dark:text-white shadow-xs' : 'text-slate-500'
-              }`}
+              className={`px-3 py-1 rounded-md transition-all ${currentTab === 'list' ? 'bg-white dark:bg-slate-700 text-slate-950 dark:text-white shadow-xs' : 'text-slate-500'
+                }`}
             >
               2. Danh Sách Lịch Giỗ
             </button>
@@ -643,18 +641,16 @@ export default function PrototypeAnniversaryPage() {
         <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 rounded-lg text-xs font-bold">
           <button
             onClick={() => setDeviceView('pc')}
-            className={`inline-flex items-center gap-1 px-3 py-1 rounded-md transition-all ${
-              deviceView === 'pc' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950' : 'text-slate-500'
-            }`}
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-md transition-all ${deviceView === 'pc' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950' : 'text-slate-500'
+              }`}
           >
             <Monitor className="w-3.5 h-3.5" />
             <span>Màn hình PC (Thẻ Ngang)</span>
           </button>
           <button
             onClick={() => setDeviceView('mobile')}
-            className={`inline-flex items-center gap-1 px-3 py-1 rounded-md transition-all ${
-              deviceView === 'mobile' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950' : 'text-slate-500'
-            }`}
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-md transition-all ${deviceView === 'mobile' ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950' : 'text-slate-500'
+              }`}
           >
             <Smartphone className="w-3.5 h-3.5" />
             <span>Màn hình Mobile</span>
@@ -667,31 +663,28 @@ export default function PrototypeAnniversaryPage() {
             <span className="text-slate-400 font-medium">Kịch bản:</span>
             <button
               onClick={() => setScenarioKey('single_today')}
-              className={`px-2 py-1 rounded font-bold border transition-colors ${
-                scenarioKey === 'single_today'
+              className={`px-2 py-1 rounded font-bold border transition-colors ${scenarioKey === 'single_today'
                   ? 'bg-red-100 text-red-600 border-red-300 dark:bg-red-950/60'
                   : 'bg-white dark:bg-slate-900 text-slate-600 border-slate-200 dark:border-slate-800'
-              }`}
+                }`}
             >
               1 Người (Hôm nay)
             </button>
             <button
               onClick={() => setScenarioKey('dual_tomorrow')}
-              className={`px-2 py-1 rounded font-bold border transition-colors ${
-                scenarioKey === 'dual_tomorrow'
+              className={`px-2 py-1 rounded font-bold border transition-colors ${scenarioKey === 'dual_tomorrow'
                   ? 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/60'
                   : 'bg-white dark:bg-slate-900 text-slate-600 border-slate-200 dark:border-slate-800'
-              }`}
+                }`}
             >
               2 Người (Trùng ngày)
             </button>
             <button
               onClick={() => setScenarioKey('triple_upcoming')}
-              className={`px-2 py-1 rounded font-bold border transition-colors ${
-                scenarioKey === 'triple_upcoming'
+              className={`px-2 py-1 rounded font-bold border transition-colors ${scenarioKey === 'triple_upcoming'
                   ? 'bg-slate-200 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-white'
                   : 'bg-white dark:bg-slate-900 text-slate-600 border-slate-200 dark:border-slate-800'
-              }`}
+                }`}
             >
               3 Người (7 ngày tới)
             </button>

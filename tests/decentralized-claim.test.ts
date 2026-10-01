@@ -26,14 +26,14 @@ import {
 
 describe('Decentralized Claim, Onboarding & Subtree Governance (Milestone 8 - Phase 1)', () => {
   // Mock dữ liệu dòng họ 4 thế hệ:
-  // Đời 1: Cụ Thủy Tổ (id: m1)
+  // Đời 1: Cụ Tổ (id: m1)
   // Đời 2: Cụ Ngành 1 (id: m2, con m1) & Cụ Ngành 2 (id: m3, con m1)
   // Đời 3: Bác Bình (id: m4, con m2) & Chú Hùng (id: m5, con m3)
   // Đời 4: Tuấn Chi 1 (id: m6, con m4, Chi 1) & Tuấn Chi 2 (id: m7, con m5, Chi 2)
   const mockMembers: MemberRecord[] = [
     {
       id: 'm1',
-      full_name: 'Phạm Thủy Tổ',
+      full_name: 'Phạm Cụ Tổ',
       gender: 'male',
       life_status: 'deceased',
       father_id: null,
@@ -182,9 +182,9 @@ describe('Decentralized Claim, Onboarding & Subtree Governance (Milestone 8 - Ph
     const deducedBranch2 = deduceUserBranchFocus('m7', mockMembers, mockBranches, mockSpouseRelations);
     assert.strictEqual(deducedBranch2, 'b_chi2', 'm7 phải được auto-deduce về b_chi2');
 
-    // Member Cụ Thủy Tổ (chưa vào nhánh nào)
+    // Member Cụ Tổ (chưa vào nhánh nào)
     const deducedBranchRoot = deduceUserBranchFocus('m1', mockMembers, mockBranches, mockSpouseRelations);
-    assert.strictEqual(deducedBranchRoot, null, 'Cụ Thủy Tổ không thuộc nhánh con nào nên trả về null');
+    assert.strictEqual(deducedBranchRoot, null, 'Cụ Tổ không thuộc nhánh con nào nên trả về null');
   });
 
   it('TC_UT_CLAIM_PROPOSE_CHILD_VALIDATION: Kiểm tra tính hợp lệ của phiếu đề xuất con mới', () => {
@@ -903,7 +903,7 @@ describe('Decentralized Approval & Branch Portal (Milestone 8 - Phase 3)', () =>
   const phase3Members: MemberRecord[] = [
     {
       id: 'm1',
-      full_name: 'Phạm Thủy Tổ',
+      full_name: 'Phạm Cụ Tổ',
       gender: 'male',
       life_status: 'deceased',
       father_id: null,

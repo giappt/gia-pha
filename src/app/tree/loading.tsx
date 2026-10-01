@@ -36,7 +36,7 @@ export default function TreeLoading() {
 
         {/* Cấu trúc cây Gia Phả mẫu dạng Skeleton (3 thế hệ thu nhỏ) */}
         <div className="flex flex-col items-center gap-8 opacity-75 dark:opacity-60 scale-90 sm:scale-100">
-          {/* Cụ Thủy Tổ Đời 1 */}
+          {/* Cụ Tổ Đời 1 */}
           <div className="w-52 h-24 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 p-3 flex flex-col justify-between shadow-sm animate-pulse">
             <div className="flex items-center justify-between">
               <div className="h-3.5 w-12 bg-emerald-100 dark:bg-emerald-950/80 rounded" />

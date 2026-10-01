@@ -219,7 +219,7 @@ export function computeClanVitalityMetrics(
 export function findUnlinkedMembers(members: any[] = []): any[] {
   return members.filter((m) => {
     const gen = Number(m.generation_level || m.generation_number || 1);
-    // Cụ đời 1 là Thủy Tổ nên không có cha mẹ là bình thường
+    // Cụ đời 1 là Cụ Tổ nên không có cha mẹ là bình thường
     if (gen <= 1) return false;
     return !m.father_id && !m.mother_id;
   });
