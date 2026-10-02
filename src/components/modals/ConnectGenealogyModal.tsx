@@ -293,6 +293,7 @@ export default function ConnectGenealogyModal({
       onClick={onClose}
     >
       <div
+        id="connect-genealogy-modal-dialog"
         className="relative w-full max-w-lg h-[620px] max-h-[90vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >

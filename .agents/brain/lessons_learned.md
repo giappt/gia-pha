@@ -1,5 +1,76 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
+- **Tôn Trọng Tuyệt Đối Phạm Vi Yêu Cầu Của Người Dùng & Chuẩn Xác Mã Màu Thống Nhất (Strict Scope Respect & Exact Color Fidelity):**
+  1. *Căn nguyên của Sự Bức Xúc & Mất Lòng Tin Từ Người Dùng:*
+     - Khi người dùng phản hồi về một chi tiết cụ thể (như màu bìa lịch ngày thường), việc AI tự ý mở rộng phạm vi sang các trang khác (như tự chế mockup màu sắc cho màn kinship, tự đổi màu logo sang đỏ hoặc tự đưa vào các màu vàng đục không ai yêu cầu) gây ra sự ức chế tột độ và cảm giác làm ẩu, đối phó.
+     - Sai lệch mã màu: Dùng nhầm mã màu xanh đen than `#0F382C` cho tem lịch thay vì mã xanh ngọc phỉ thúy chuẩn `#065F46` (Tailwind `emerald-800`) đã được người dùng chỉ định từ prototype trước đó.
+  2. *Giải Pháp & Kỷ Luật Nghiêm Ngặt:*
+     - **Tuân thủ đúng ranh giới yêu cầu:** Khi người dùng yêu cầu chỉ sửa màu bìa lịch và cấm đụng đến `http://localhost:3000/kinship`, phải lập tức dừng ngay mọi ý tưởng can thiệp vào kinship, bảo toàn nguyên trạng 100%.
+     - **Khóa cứng chuẩn mã màu gáy lịch ngày thường:** `#065F46` (`bg-[#065F46] text-white font-bold`) cho ngày thường trên cả Trang Chủ và Màn Lịch Giỗ. Hôm nay: `bg-red-600`, Ngày mai: `bg-amber-400`.
+     - Tuyệt đối không tự ý "chế cháo" hay thử nghiệm màu sắc tùy tiện khi chưa có sự đồng thuận rõ ràng của người dùng.
+
+- **Đồng Bộ Bản Sắc Lịch Bloc Giữa Trang Chủ Và Màn Lịch Giỗ: Khóa Cứng Ruột Lịch Trắng Sứ 100% & Chuẩn Hóa Ma Trận 3 Trạng Thái Màu Gáy Lịch (Pure White Bloc Core & 3-State Stamp Header Matrix):**
+  1. *Căn nguyên của Lỗi "Mất Màu Trắng Sứ & Bất Đồng Bộ Màu Gáy Lịch" (The Dirty Paper & Inconsistent Header Trap):*
+     - Khi xây dựng thẻ Lịch Giỗ Bloc (`AnniversaryBlocCard` trên Trang Chủ và `AnniversaryBlocTimeline` trên Màn Lịch Giỗ), lập trình viên dễ nhầm lẫn giữa **màu nền Canvas toàn trang** (`#FAF8F2` - Giấy Dó ngà ấm) với **màu ruột của tờ lịch bloc** (`#FFFFFF` - Trắng sứ).
+     - Hậu quả:
+       * Trong `AnniversaryBlocCard`, cột lịch bloc 185px trên Desktop bị gán nhầm class `bg-[#FAF8F2]`, khiến ruột tờ lịch bị nhuộm một màu vàng ngà đục xỉn như "tờ giấy bẩn", trong khi bản Mobile và màn Lịch Giỗ lại hiển thị nền trắng sứ `#FFFFFF` sáng sủa, tạo ra sự bất đồng bộ trực giác sâu sắc.
+       * Màu gáy tem lịch (Stamp Header) bị gán cứng toàn bộ `isContemporary` thành `#0F382C` cho cả ngày giỗ Hôm Nay, làm mất đi màu Đỏ Son trang trọng của ngày hôm nay giỗ.
+  2. *Giải Pháp Đồng Bộ Triệt Để (SSOT Bloc Core & Header Matrix):*
+     - **Khóa cứng ruột tờ lịch là Trắng Sứ 100% (`bg-white dark:bg-slate-900`):**
+       Dù ở Profile nào (`classic`, `heritage`, `contemporary_heritage`), ruột tờ lịch bloc xé tay (cột 185px desktop, cột 76px/90px timeline và thân lịch mobile) BẮT BUỘC mang nền trắng tinh khiết để làm nổi bật số ngày Dương to đậm (`text-slate-950`) và số ngày Âm đỏ thắm (`text-red-600` / `#BE123C`). Tuyệt đối cấm gán `bg-[#FAF8F2]` vào ruột tờ lịch.
+     - **Chuẩn hóa Ma Trận 3 Trạng Thái Màu Gáy Lịch Bloc:**
+       * **Hôm nay giỗ (`days_left === 0`):** Đỏ son trang trọng (`bg-red-600 text-white font-black`).
+       * **Ngày mai giỗ (`days_left === 1`):** Vàng hổ phách rực rỡ (`bg-amber-400 text-slate-950 font-black`).
+       * **Ngày thường / Tương lai (`days_left > 1`):** Xanh ngọc di sản trầm (`bg-[#0F382C] text-[#FAF8F2] font-bold border-b border-[#164E3D]` — Chuẩn màu Prototype Ảnh 4).
+     - Áp dụng ma trận này đồng bộ 100% trên cả `AnniversaryBlocCard` (Trang Chủ & Live Preview) và `AnniversaryBlocTimeline` (Màn Lịch Giỗ), đảm bảo sự liền mạch thị giác toàn diện.
+
+- **Xóa Bỏ Triệt Để Nợ Kỹ Thuật CSS Đa Profile: Hợp Đồng 12 Design Tokens Chuẩn Hóa, Lớp Chuyển Hóa Di Sản Hệ Thống (Systemic Legacy Proxy Layer) & Khử Sạch Bắt Chuột Chũi ID Cục Bộ (Zero-Debt Multi-Profile Architecture vs Whack-a-Mole ID Patching):**
+  1. *Căn nguyên của Lỗi "Cứ Thêm Profile Lại Sinh Một Đống Vấn Đề" (The Whack-a-Mole Technical Debt Trap):*
+     - Khi phát triển giao diện đa Profile (`classic`, `heritage`, `contemporary_heritage`), thói quen chắp vá là: Mỗi khi phát hiện một modal hoặc component cũ chưa ăn màu theme mới (như `ReorderChildrenModal`, `MemberFormModal`, `PersonalSettingsModal`), dev liền vội vàng gán một selector ID cục bộ (`id="reorder-children-modal-dialog"`) rồi vào `globals.css` viết đè CSS riêng cho ID đó.
+     - Đồng thời, trong các component sản xuất (`AnniversaryBlocCard`, `AnniversaryBlocTimeline`), dev liên tục chèn các biểu thức điều kiện ternary spaghetti (`isContemporary ? '#0F382C' : 'bg-red-600'`).
+     - Hậu quả:
+       * Hệ thống sinh ra hàng chục selector ID chắp vá, phân mảnh và phụ thuộc lẫn nhau.
+       * Mỗi khi thêm một Profile thứ 4, thứ 5 trong tương lai, dev lại phải đi lùng sục 50+ components để viết tiếp ternary `isProfile4 ? ... : isContemporary ? ... : ...` và bổ sung thêm hàng chục ID mới vào CSS. Đây chính là nợ kỹ thuật trầm trọng (Technical Debt).
+  2. *Giải Pháp Chuẩn Hóa Kiến Trúc 3 Trụ Cột (Zero-Debt Systemic Solution):*
+     - **Trụ cột 1: Hợp Đồng 12 Design Tokens Chuẩn Hóa (Strict Token Contract):**
+       Khai báo tập trung 12 biến CSS cốt lõi tại 1 NƠI DUY NHẤT (`globals.css`) cho cả 3 profile (`:root`, `html[data-theme-profile="heritage"]`, `html[data-theme-profile="contemporary_heritage"]`):
+       `--bg-canvas`, `--bg-surface`, `--bg-sub-surface`, `--bg-control`, `--border-card`, `--border-divider`, `--border-control`, `--bg-brand`, `--border-brand`, `--text-brand-accent`, `--text-title`, `--radius-card`, `--radius-control`.
+       Toàn bộ Tailwind config ánh xạ trực tiếp sang các biến này.
+     - **Trụ cột 2: Lớp Chuyển Hóa Di Sản Hệ Thống (Systemic Legacy Proxy Layer):**
+       Thay vì đi sửa từng file JSX cũ, đặt một khối adapter toàn cục trong `globals.css` tự động map các utility class di sản (`.bg-slate-50`, `.border-slate-100/200`, `.text-emerald-600/700`, `button.bg-emerald-600`, `.bg-emerald-50/100`) sang CSS Tokens tương ứng của profile đang kích hoạt.
+       Nhờ đó, 50+ components và 4 modals cũ tự động hưởng trọn vẹn phong cách di sản mà 0% cần sửa JSX, 0% rủi ro regression.
+     - **Trụ cột 3: Khử Sạch Bắt Chuột Chũi ID & Dùng Selector Ngữ Nghĩa ([role="dialog"]):**
+       Xóa bỏ triệt để toàn bộ danh sách selector ID tĩnh (`#*-dialog`, `#*-modal`), thay bằng selector ngữ nghĩa `[role="dialog"]`. Bất kỳ modal hay dialog nào xuất hiện trong tương lai chỉ cần mang thuộc tính chuẩn WAI-ARIA `role="dialog"` là tự động nhận đúng theme 100%.
+     - **Trụ cột 4: Khử Sạch Ternary Spaghetti Trong JSX:**
+       Gán thuộc tính `data-theme-profile={profile}` tại gốc component, dùng CSS token `--bloc-header-*` để điều khiển màu gáy bloc và header. JSX sạch bóng 100% logic rẽ nhánh màu sắc.
+
+
+- **Khắc Phục Lỗi "Theme Không Áp Dụng / Preview Không Đổi": Phân Định Bản Sắc Thị Giác Cốt Lõi Cho Từng Profile (Visual Differentiation Contract vs The Shared Hardcoded Component Trap):**
+  1. *Căn nguyên của Lỗi "Chọn theme mới nhưng không thấy gì thay đổi" (The Ghost Theme Switch):*
+     - Khi thêm một Design Profile mới (như `contemporary_heritage`), việc chỉ thêm các biến CSS Tokens trong `globals.css` (như `--bg-canvas: #FAF8F2`, `--bg-brand: #0F382C`) là **HOÀN TOÀN CHƯA ĐỦ** nếu các Production Components chính (`AnniversaryBlocCard`, `AnniversaryBlocTimeline`) vẫn đang hardcode các class Tailwind tĩnh (`bg-red-600`, `bg-white`, `border-slate-300`, `bg-emerald-600`).
+     - Hơn thế nữa, nếu component không nhận prop `profile` và các trang (`/admin/theme`, `/`, `/anniversaries`) chỉ đơn giản render `<AnniversaryBlocCard group={...} />` hoặc lặp lại `<AnniversaryBlocCardPreview variant="today" />` mà không truyền profile ngữ cảnh, thì dù người dùng có đổi Base Theme hay gạt Canary switch, component vẫn hiển thị y chang 1 giao diện đỏ/trắng cũ rích ("tại sao preview không thay đổi, không có 1 thay đổi nào cả, trang đang không được apply style mới").
+  2. *Giải Pháp Chuẩn Hóa: Visual Differentiation Contract:*
+     - **Bổ sung prop `profile?: DesignProfileId` cho Component:** Cho phép component tự động điều chỉnh toàn bộ bảng màu, chất liệu, viền và nút bấm theo đúng phong thái của Profile:
+       * `contemporary_heritage`: Gáy Xanh Ngọc Di Sản Trầm (`#0F382C` / `text-[#FAF8F2]`), nền Giấy Dó ngà ấm (`#FAF8F2`), viền đá tự nhiên ấm (`#EAE5D9`), bóng than chì `shadow-card`, nút bấm Xanh Ngọc Di Sản (`#0F382C` hover `#164E3D`), số âm lịch đỏ thắm `#BE123C`.
+       * `heritage`: Tờ lịch bloc truyền thống đỏ son tươi (`bg-red-600 text-white font-black`), nền trắng sứ, viền 6px mực thước.
+       * `classic`: Thẻ phẳng xanh lục bảo `emerald-600` bo cong mềm mại 16px.
+     - **Truyền Prop Profile Ở 100% Nơi Tiêu Thụ:**
+       * Tại `/admin/theme`: Tab 1 truyền `profile={themeConfig.active_profile}`; Tab 2 truyền `profile={profileToRender}` (Canary vs Base). Bấm chọn theme nào là Preview lập tức biến hóa ngay tức thì trước mắt người quản trị.
+       * Tại Trang Chủ (`src/app/page.tsx`): Truyền `profile={effectiveThemeProfile}` để thẻ Spotlight giỗ đồng bộ 100% với nền toàn trang.
+       * Tại Trang Lịch Giỗ (`src/app/anniversaries/page.tsx`): Truyền `profile={themeProfile}` vào `AnniversaryBlocTimeline`.
+
+- **Bố Cục Tầng Lớp Bề Thế Cho Live Preview & Chống Bẫy Co Bóp Thẻ Ngang Vào Cột Hẹp (Spacious Tiered Layout vs The Squashed Component-in-Column Anti-Pattern):**
+  1. *Căn nguyên của Lỗi Bóp Nghẹt Component Ngang (The Squashed Column Trap):*
+     - Khi một component sản xuất (như thẻ Lịch Giỗ `AnniversaryBlocCard`) được thiết kế theo tỷ lệ ngang Desktop (`flex-row items-stretch`) với cột bloc cố định 185px, component đòi hỏi chiều rộng tối thiểu từ 550px đến 700px để vùng thông tin người giỗ (họ tên, quan hệ, tuổi thọ, ngày âm/dương) và nút hành động dàn phẳng phiu, đĩnh đạc.
+     - Sai lầm phổ biến là áp dụng bố cục chia 2 cột ngang (`lg:col-span-6`) rồi tiếp tục chia đôi cột preview (`sm:grid-cols-2`) để so sánh 2 bản song song. Lúc này mỗi cột chỉ còn khoảng ~240px, trong khi breakpoint desktop của component vẫn được kích hoạt. Hậu quả là phần nội dung bên phải chỉ còn vỏn vẹn vài chục pixel, gây cắt xén chữ và vỡ giao diện nghiêm trọng ("đặt này xem kiểu gì?").
+  2. *Giải Pháp Chuẩn Hóa: Bố Cục Tầng Lớp Bề Thế (Spacious Tiered Layout):*
+     - **Tách tầng theo trục dọc (Vertical Tiered Hierarchy):** Thay vì chia cột ngang chật hẹp, tổ chức trang thành các tầng rõ ràng:
+       * **Tầng 1 (Điều khiển):** Dàn đều các thẻ phong cách hoặc bộ chọn cấu hình đối tượng theo chiều ngang (`grid-cols-1 md:grid-cols-3` hoặc `md:grid-cols-2`).
+       * **Tầng 2 (Khung Xem Trước Bề Thế):** Căn giữa chuẩn mực `max-w-2xl mx-auto` (~672px), cho phép component hiển thị trọn vẹn 100% kích thước và tỷ lệ vàng tự nhiên.
+       * **Tầng 3 (Hành động):** Nút lưu cấu hình hoặc phổ cập 1-click đặt ngay ngắn bên dưới.
+  3. *Bộ Gạt Đối Chiếu Nhanh (In-Place Toggle Switch for Comparison):*
+     - Đối với màn hình cần đối chiếu 2 trạng thái (ví dụ Tab Canary: xem giao diện thử nghiệm vs giao diện con cháu), TUYỆT ĐỐI KHÔNG chia đôi cột hẹp. Thay vào đó, tích hợp một bộ gạt chuyển đổi nhanh (`[ 🧪 Bản Thử Nghiệm ]` vs `[ 👥 Bản Con Cháu ]`) ngay trên đỉnh khung preview. Người dùng bấm gạt để so sánh tức thì với 100% không gian hiển thị rộng rãi, sắc nét và đĩnh đạc.
+
 - **Quy Chuẩn Thiết Kế Di Sản Toàn Diện Làm Nguồn Chân Lý Duy Nhất (Exhaustive Heritage Design Tokens SSOT vs Ad-Hoc Styling Guesswork):**
   1. *Căn nguyên của Nỗi Lo "Lệch Phong Cách / Tự Bịa Giao Diện" (The Ad-Hoc Guesswork Trap):*
      - Khi xây dựng hệ thống giao diện gia phả hoặc bất kỳ phân hệ nào, nếu tài liệu hoặc màn hình đặc tả Design Tokens chỉ liệt kê vài mã màu nền chung chung (như `--bg-canvas`, `--bg-surface`) mà thiếu quy chuẩn cho các hạt nhân thị giác khác (nút bấm tương tác, ô nhập liệu form, huy hiệu trạng thái, màu sắc phả hệ theo giới tính, bóng đổ than chì, tem lịch bloc, và các lớp khung modal/shell), lập trình viên hoặc AI tiếp theo sẽ buộc phải "tự chế cháo" hoặc lấy lại các class mặc định của Tailwind (như `border-slate-200`, `bg-blue-600`, `rounded-full`).
@@ -13,7 +84,7 @@
      - **(6) Form Controls:** Ô nhập liệu bình thường (viền `#DCD5C6`), khi focus (viền `#0F382C` kèm ring 10%), vô hiệu hóa (nền `#F5F2EA`).
      - **(7) Huy hiệu trạng thái & Micro-Dots:** 100% bo góc thẻ `rounded-md (6px)` (CẤM `rounded-full`), chấm vi mô chuẩn `w-1.5 h-1.5 rounded-full` cho Còn sống (`#10B981`), Đã mất (`#78716C`), Chờ duyệt (`#F59E0B`), Từ chối (`#EF4444`).
      - **(8) Màu sắc thân tộc:** PA 1 Trong Trẻo (Nam `#38BDF8`, Nữ `#FB7185`), PA 2 Chàm Cổ & Sen Trầm (Nam `#234E70`, Nữ `#8C4A5A`). Khóa thẻ Node `200x96px`, Ghost Node viền nét đứt.
-     - **(9) Tem lịch bloc:** Khóa cứng `90x108px` (desktop), `76x96px` (mobile), gáy đỏ `#B91C1C`, đường xé răng cưa, số âm lệch góc trái.
+     - **(9) Tem lịch bloc:** Khóa cứng `90x108px` (desktop), `76x96px` (mobile), 3 trạng thái màu gáy tem (Hôm nay giỗ: Đỏ cờ `#B91C1C` / `bg-red-600`, Ngày mai giỗ: Vàng hổ phách `#FBBF24` / `bg-amber-400`, Tương lai: Xanh ngọc `#065F46` / `bg-emerald-800`) và 3 nhãn tiến độ thời gian (`text-red-600` Flame, `text-amber-600` Star, `text-slate-500` Clock), đường xé nét đứt, số âm lịch lệch góc trái.
      - **(10) Khung Modal & Shell:** Backdrop `bg-stone-950/60 backdrop-blur-xs`, khung `rounded-2xl` bóng `shadow-2xl`.
   3. *Tích Hợp Sẵn Sàng (Code-Ready Manifests):*
      - Bắt buộc cung cấp cả 2 khối code đầy đủ: Khối CSS Custom Properties (`:root`) cho `globals.css` và khối mở rộng cấu hình (`tailwind.config.ts`), cho phép áp dụng giao diện ngay lập tức mà không phải phán đoán bất kỳ thông số nào.
@@ -943,3 +1014,58 @@
   3. *Tỷ lệ Typography Cột Lịch Bloc Mobile:*
      - Trên màn hình nhỏ di động, cột lịch ngày giỗ nếu chỉ để bề ngang 58px và font chữ nhỏ sẽ gây cảm giác li ti, khó đọc cho người lớn tuổi.
      - Mở rộng cột lên 76px, nâng cấp số ngày Dương lên 30px (text-3xl font-black), đỉnh tháng lên 12px (text-xs font-black), thứ trong tuần lên 10px (text-[10px] font-bold tracking-wider) giúp tờ lịch mini trở nên bề thế, đĩnh đạc và chuẩn nhận diện tờ lịch bloc xé tay thật.
+
+- **Kiến Trúc Đa Theme Profile Độc Lập & Cô Lập Tuyệt Đối (Milestone 9 Option B - Contemporary Heritage Profile SSOT):**
+  1. *Căn nguyên của rủi ro xung đột giao diện khi bổ sung Style mới (Multi-Theme Bleed-Over Trap):*
+     - Khi phát triển một bộ nhận diện thương hiệu thứ 3 (`contemporary_heritage` - Di Sản Đương Đại) bên cạnh 2 style sẵn có (`classic` và `heritage`), sai lầm lớn nhất là can thiệp sửa trực tiếp vào các biến `:root` toàn cục hoặc chỉnh sửa các component JSX dùng chung.
+     - Hậu quả: Khi đổi qua lại giữa các theme, mã màu, bo góc hoặc bóng đổ của theme mới bị rò rỉ sang theme cũ, gây ra thoái lui giao diện (UI regression) trên các màn hình đã nghiệm thu.
+  2. *Giải Pháp Cô Lập Hoàn Toàn Bằng CSS Attribute Selector Scope & Semantic Token SSOT:*
+     - **Cô lập 100% bằng CSS Selector:** Toàn bộ 10 trụ cột Design Tokens của `contemporary_heritage` (Nền Dó ấm `#FAF8F2`, viền đá tự nhiên `#EAE5D9`, màu chủ đạo Xanh Rừng Già `#0F382C`, bóng đổ than chì `rgba(28,25,23,...)`, tem lịch bloc 3 màu gáy, và hệ thống bo góc anti-pill `rounded-card 16px`) chỉ được kích hoạt dưới bộ chọn `html[data-theme-profile="contemporary_heritage"]`. Khi profile là `classic` hoặc `heritage`, bộ CSS này hoàn toàn trơ (inert) và không có bất kỳ dòng lệnh nào chạy đè.
+     - **Bảo toàn Cấu Trúc DOM & Layout Invariants:** 100% kích thước thẻ (`200x96px` cho Tree Nodes, `90x108px` cho Desktop Bloc, `76x96px` cho Mobile Bloc) và cấu trúc component sản xuất (`AnniversaryBlocCard`, `MemberNode`, `AdminShell`) được giữ nguyên vẹn 100%. Style chỉ thay đổi qua token, không làm xê dịch dù chỉ 1 pixel vị trí neo đồ thị cây hay dòng thời gian.
+  3. *Tích Hợp Tự Động Vào Cơ Chế Quản Trị & Kiểm Thử Kiến Trúc (Architecture Guard Tests):*
+     - `resolveThemeConfig` và `resolveEffectiveThemeProfile` hỗ trợ đầy đủ 3 cấp độ triển khai (`all`, `admin_only`, `custom_users`) và role impersonation.
+     - Viết bộ test kiến trúc chuyên biệt (`TC_ARCH_GUARD_07..09`) để tự động kiểm chứng việc không có bất kỳ class màu hardcoded nào bị rò rỉ và hai theme `classic`, `heritage` luôn được bảo vệ an toàn 100%.
+
+- **Kiến Trúc Động Cơ Thăng Hạng 2 Tầng (2-Tier Promotion Engine) & Triệt Tiêu Chồng Chéo Triển Khai Giao Diện (Theme Rollout Governance & Strict Anti-Pill - Milestone 9 Phase 2):**
+  1. *Căn nguyên của Lỗi "Mơ Hồ Phạm Vi & Lùi Về Classic Không Mong Muốn" (The Fallback Drift & Rollout Ambiguity Trap):*
+     - Khi cho phép lựa chọn Style thử nghiệm và đặt phạm vi `Chỉ Admin (admin_only)`, hệ thống 1 tầng cũ tự động cho tất cả thành viên khác "fallback" về `classic`. Nếu trước đó cả dòng họ đang dùng `heritage`, việc Admin thử nghiệm một theme mới lại vô tình ép con cháu bị tụt về `classic` thay vì tiếp tục dùng `heritage`.
+     - Hơn nữa, việc chỉ có 1 dropdown chọn profile và 1 radio chọn phạm vi làm Admin không thể biết: profile nào đang là giao diện chính thức của toàn họ, profile nào đang thử nghiệm, và ai đang nhìn thấy cái gì (hiện tượng chồng chéo nhận thức).
+  2. *Giải Pháp Động Cơ Triển Khai 2 Tầng Lấy Cảm Hứng Từ Các Hệ Thống Lớn (Linear, GitHub, LaunchDarkly):*
+     - **Tách bạch 2 phân khu độc lập:**
+       * **Tầng 1 - Base Production Theme (`active_profile`):** Giao diện chính thức đang áp dụng cho toàn thể con cháu và khách vãng lai.
+       * **Tầng 2 - Canary Preview Theme (`canary_profile` + `canary_enabled`):** Giao diện thử nghiệm có kiểm soát. Khi bật, chỉ nhóm được phép (Super Admin hoặc Whitelist con cháu) nhận `canary_profile`. Toàn bộ những người còn lại nhận `active_profile` (Zero Regression: con cháu không bao giờ bị rơi về `classic` một cách vô cớ).
+     - **Ma Trận Phân Bổ Trực Quan (Live Distribution Matrix):** Hiển thị rõ ràng bằng chữ và số: ai đang xem profile nào.
+     - **Nút 1-Click Phổ Cập Toàn Dòng Họ (`promoteCanaryToProduction`):** Chuyển đổi nguyên tử biến Canary Theme thành Production Theme, tắt Canary và thiết lập `apply_scope: 'all'` chỉ với 1 cú nhấp chuột.
+     - **Tương thích ngược 100%:** Hàm `resolveThemeConfig` tự động nhận diện cấu hình cũ (chưa có `canary_profile`) để phân giải an toàn mà không làm gãy dữ liệu đã lưu.
+  3. *Quy Chuẩn Chống Pill Triệt Để (Strict Anti-Pill Enforcement):*
+     - Loại bỏ hoàn toàn `rounded-full` trên toàn bộ nút bấm, badge, thẻ radio indicator, switch container tại `/admin/theme`. Thay thế bằng `rounded-md` (6px) cho badge và radio check indicator, `rounded-control` (8px) cho nút bấm.
+     - Chỉ duy nhất Micro-Dot (`w-1.5 h-1.5 rounded-full`) được phép làm đèn báo trạng thái.
+     - 100% loại bỏ emoji trong JSX, thay bằng Lucide SVG Icons (`Shield`, `Users`, `Rocket`, `Check`).
+     - Viết test AST tự động `TC_ARCH_ANTI_PILL_THEME_01` trong `tests/anti-pill-integrity.test.ts` để vĩnh viễn ngăn chặn vi phạm.
+
+- **Thiết Kế Quản Trị Chuyên Biệt Bằng Segmented Switcher, In-Place Preview & Triệt Tiêu 100% Sparkles (Milestone 9 Polish Phase 3):**
+  1. *Căn nguyên của Lỗi "Dồn Đống Dọc & Preview Chung Lạc Quẻ" (Vertical Congestion & Misplaced Footer Preview):*
+     - Khi nhồi nhét cả 3 phần (Cấu hình chính thức, Cấu hình thử nghiệm Canary, và Khung Preview chung) trên cùng 1 trang dọc dài, người dùng phải cuộn trang liên tục. Khi chọn theme ở trên, họ không thấy được kết quả ngay lập tức vì Preview nằm ở tận đáy trang.
+     - Việc bắt Preview gánh cả 2 vai trò qua nút toggle nhỏ ở chân trang làm đứt gãy tính liên kết thị giác giữa thao tác điều khiển và phản hồi thị giác (Action-Feedback Co-location).
+  2. *Giải Pháp Segmented Mode Switcher & In-Place Co-located Preview:*
+     - Tách trang thành 2 chế độ độc lập qua thanh chuyển đổi hình học mực thước: `[ 🏆 Giao Diện Chính Thức ]` và `[ 🧪 Phòng Thử Nghiệm Canary ]`.
+     - **Tab Chính Thức:** Bố cục 2 cột (Trái: 3 Theme, Phải: Live Preview trực tiếp tương ứng). Nhấp vào bất kỳ thẻ nào, Preview bên phải cập nhật ngay tức thì trước tầm mắt, 0% cuộn trang.
+     - **Tab Thử Nghiệm:** Bố cục 2 cột (Trái: Cấu hình đối tượng, Phải: Khung So Sánh Song Song trực quan giữa Bản con cháu đang thấy vs Bản thử nghiệm, cùng nút 1-click Phổ Cập).
+     - Khử bỏ hoàn toàn 100% khối Preview chung ở chân trang.
+  3. *Triệt Tiêu 100% Icon Sparkles Trang Trí Rác:*
+     - Icon `Sparkles` được chèn tùy tiện vào các tiêu đề là biểu hiện của "vibe-code decoration", làm rẻ tiền hóa và mất đi sự uy nghiêm, đĩnh đạc của một phần mềm gia phả dòng họ thiêng liêng.
+     - Xóa sạch 100% icon Sparkles trên `/admin/theme`, chỉ dùng typography phân cấp chuẩn mực và icon Lucide có ngữ nghĩa thực sự (`Layers`, `FlaskConical`, `ShieldCheck`, `Check`, `Rocket`). Khóa mã nguồn bằng test tự động `TC_ARCH_ZERO_SPARKLES_THEME_01`.
+
+- **Đồng Bộ Toàn Diện Contemporary Heritage & Giải Pháp Scoped CSS Cascade Toàn Hệ Thống (Milestone 9 Phase 4 - Zero-Shadow & Zero-Regression):**
+  1. *Căn bệnh "Sửa Cục Bộ / Cát Cứ Ốc Đảo" (Siloed Component Fix Syndrome):*
+     - Khi thêm một Design Profile mới, nếu chỉ sửa cục bộ một component duy nhất (như `AnniversaryBlocCard`), các thành phần cốt lõi của ứng dụng (Logo Ấn Triện, Navbar Header, Mobile Bottom Nav, SyncLoadingBadge, Hero Eyebrow, Family Tree Canvas & Bus Edge, MemberNode, 4 Modal Forms, và 11 màn hình Admin) vẫn bị hardcode các class Tailwind tĩnh (`emerald-600`, `bg-emerald-50`, `border-blue-500`, `#059669`). Kết quả tạo ra giao diện chắp vá, đập nhau chan chát về màu sắc.
+  2. *Giải Pháp Tầng Scoped CSS Cascade & CSS Variables Binding:*
+     - Thay vì phải sửa đè hàng chục component và đối mặt với rủi ro làm thoái lui hai Profile cũ (`classic`, `heritage`), toàn bộ màu sắc, viền, nền, bóng của Contemporary Heritage được gom về khối Scoped CSS:
+       `html[data-theme-profile="contemporary_heritage"]` và `.dark`.
+     - **Logo Ấn Triện Chữ 范 (`ClanHanLogoNavbar`, `login-gate`):** Giữ nguyên vẹn 100% hình học vector SVG (`viewBox="0 0 100 100"`, path calligraphy), chỉ áp dụng màu nền Xanh ngọc phỉ thúy `#0F382C`, viền `#164E3D`, và chữ 范 màu vàng ngà kim ấn `#E8D49E`.
+     - **Cây Gia Phả & Bus Edge:** Gắn biến CSS `--bg-canvas` vào Canvas, `--tree-bus-stroke: #0F382C` vào `FamilyBusEdge`, và `--tree-dots-color` vào background grid.
+     - **Modal Forms & Admin Shell:** Đồng bộ viền đá tự nhiên `#EAE5D9`, tab rãnh `#EFECE4`, input focus `#0F382C`, và menu active `#0F382C` trên nền `#F5F2EA`.
+     - Toàn bộ được kiểm chứng tự động bằng `tests/heritage-sync-integrity.test.ts` và bảo toàn 100% (468/468 tests PASS).
+
+
+

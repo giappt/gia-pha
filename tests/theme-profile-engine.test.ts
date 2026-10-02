@@ -4,6 +4,7 @@ import {
   DEFAULT_THEME_CONFIG,
   resolveThemeConfig,
   resolveEffectiveThemeProfile,
+  promoteCanaryToProduction,
 } from '../src/lib/admin/admin-engine';
 import type { ClanThemeConfig } from '../src/types/database';
 
@@ -12,18 +13,24 @@ describe('Clan Design Profiles & Theme Engine (Milestone 9)', () => {
   it('TC_UT_THEME_01: should return default classic profile and all scope when input is empty or invalid', () => {
     assert.deepStrictEqual(resolveThemeConfig(undefined), {
       active_profile: 'classic',
+      canary_enabled: false,
+      canary_profile: 'contemporary_heritage',
       apply_scope: 'all',
       allowed_user_ids: [],
     });
 
     assert.deepStrictEqual(resolveThemeConfig(null), {
       active_profile: 'classic',
+      canary_enabled: false,
+      canary_profile: 'contemporary_heritage',
       apply_scope: 'all',
       allowed_user_ids: [],
     });
 
     assert.deepStrictEqual(resolveThemeConfig({}), {
       active_profile: 'classic',
+      canary_enabled: false,
+      canary_profile: 'contemporary_heritage',
       apply_scope: 'all',
       allowed_user_ids: [],
     });
@@ -206,5 +213,223 @@ describe('Clan Design Profiles & Theme Engine (Milestone 9)', () => {
     const parsedCookie = JSON.parse(serializedCookie);
     assert.strictEqual(parsedCookie.active_profile, 'heritage');
     assert.strictEqual(parsedCookie.apply_scope, 'admin_only');
+  });
+
+  // TC_UT_THEME_06: Khởi tạo & phân giải an toàn với profile thứ 3 contemporary_heritage
+  it('TC_UT_THEME_06: should resolve contemporary_heritage correctly and not fallback to classic', () => {
+    const config: ClanThemeConfig = {
+      active_profile: 'contemporary_heritage',
+      apply_scope: 'all',
+      allowed_user_ids: [],
+    };
+    const resolved = resolveThemeConfig(config);
+    assert.strictEqual(resolved.active_profile, 'contemporary_heritage');
+    assert.strictEqual(resolved.apply_scope, 'all');
+    assert.deepStrictEqual(resolved.allowed_user_ids, []);
+  });
+
+  // TC_UT_THEME_07: Phân giải khi active_profile là contemporary_heritage và scope là 'all'
+  it('TC_UT_THEME_07: should resolve to contemporary_heritage for all users and guests when scope is all', () => {
+    const config: ClanThemeConfig = {
+      active_profile: 'contemporary_heritage',
+      apply_scope: 'all',
+      allowed_user_ids: [],
+    };
+
+    assert.strictEqual(resolveEffectiveThemeProfile(config, null), 'contemporary_heritage');
+    assert.strictEqual(resolveEffectiveThemeProfile(config, undefined), 'contemporary_heritage');
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'user-guest', role: 'viewer', isSuperAdmin: false }),
+      'contemporary_heritage'
+    );
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'user-admin', role: 'super_admin', isSuperAdmin: true }),
+      'contemporary_heritage'
+    );
+  });
+
+  // TC_UT_THEME_08: Phân giải khi active_profile là contemporary_heritage và scope là 'admin_only'
+  it('TC_UT_THEME_08: should only grant contemporary_heritage to super_admin when scope is admin_only', () => {
+    const config: ClanThemeConfig = {
+      active_profile: 'contemporary_heritage',
+      apply_scope: 'admin_only',
+      allowed_user_ids: [],
+    };
+
+    // Super Admin nhận contemporary_heritage
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'admin-1', role: 'super_admin', isSuperAdmin: true }),
+      'contemporary_heritage'
+    );
+
+    // Guest và member thường nhận classic
+    assert.strictEqual(resolveEffectiveThemeProfile(config, null), 'classic');
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'user-1', role: 'viewer', isSuperAdmin: false }),
+      'classic'
+    );
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'member-1', role: 'claimed_member', isSuperAdmin: false }),
+      'classic'
+    );
+  });
+
+  // TC_UT_THEME_09: Phân giải khi active_profile là contemporary_heritage và scope là 'custom_users'
+  it('TC_UT_THEME_09: should grant contemporary_heritage to super_admin and whitelisted users only when scope is custom_users', () => {
+    const config: ClanThemeConfig = {
+      active_profile: 'contemporary_heritage',
+      apply_scope: 'custom_users',
+      allowed_user_ids: ['u1', 'u2'],
+    };
+
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'admin-1', role: 'super_admin', isSuperAdmin: true }),
+      'contemporary_heritage'
+    );
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'u1', role: 'viewer', isSuperAdmin: false }),
+      'contemporary_heritage'
+    );
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'u3', role: 'viewer', isSuperAdmin: false }),
+      'classic'
+    );
+    assert.strictEqual(resolveEffectiveThemeProfile(config, null), 'classic');
+  });
+
+  // TC_UT_THEME_10: Tương thích Role Impersonation với contemporary_heritage
+  it('TC_UT_THEME_10: should respect impersonated role when super admin impersonates guest under admin_only scope with contemporary_heritage', () => {
+    const config: ClanThemeConfig = {
+      active_profile: 'contemporary_heritage',
+      apply_scope: 'admin_only',
+      allowed_user_ids: [],
+    };
+
+    // Đóng vai guest -> classic
+    const impersonatingGuest = {
+      id: 'admin-1',
+      role: 'viewer' as const,
+      isSuperAdmin: false,
+    };
+    assert.strictEqual(resolveEffectiveThemeProfile(config, impersonatingGuest), 'classic');
+
+    // Super admin thật -> contemporary_heritage
+    const realAdmin = {
+      id: 'admin-1',
+      role: 'super_admin' as const,
+      isSuperAdmin: true,
+    };
+    assert.strictEqual(resolveEffectiveThemeProfile(config, realAdmin), 'contemporary_heritage');
+  });
+
+  // TC_UT_THEME_2TIER_01: Khi canary_enabled = false (hoặc apply_scope = 'all'), 100% người dùng nhận Base Theme
+  it('TC_UT_THEME_2TIER_01: should grant base active_profile to all users when canary is disabled', () => {
+    const config: ClanThemeConfig = {
+      active_profile: 'heritage',
+      canary_enabled: false,
+      canary_profile: 'contemporary_heritage',
+      apply_scope: 'all',
+      allowed_user_ids: [],
+    };
+
+    assert.strictEqual(resolveEffectiveThemeProfile(config, null), 'heritage');
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'u1', role: 'viewer', isSuperAdmin: false }),
+      'heritage'
+    );
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'u2', role: 'claimed_member', isSuperAdmin: false }),
+      'heritage'
+    );
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'admin-1', role: 'super_admin', isSuperAdmin: true }),
+      'heritage'
+    );
+  });
+
+  // TC_UT_THEME_2TIER_02: Khi canary_enabled = true và scope = 'admin_only': Admin nhận Canary, Con cháu nhận Base Theme (Zero Regression)
+  it('TC_UT_THEME_2TIER_02: should grant canary to admin while preserving base heritage for con chau and guests under admin_only', () => {
+    const config: ClanThemeConfig = {
+      active_profile: 'heritage',
+      canary_enabled: true,
+      canary_profile: 'contemporary_heritage',
+      apply_scope: 'admin_only',
+      allowed_user_ids: [],
+    };
+
+    // Super Admin nhận giao diện thử nghiệm Contemporary Heritage
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'admin-1', role: 'super_admin', isSuperAdmin: true }),
+      'contemporary_heritage'
+    );
+
+    // Con cháu & Khách vãng lai nhận Base Profile Dòng Họ ('heritage'), KHÔNG bị rơi về 'classic'
+    assert.strictEqual(resolveEffectiveThemeProfile(config, null), 'heritage');
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'user-guest', role: 'viewer', isSuperAdmin: false }),
+      'heritage'
+    );
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'user-member', role: 'claimed_member', isSuperAdmin: false }),
+      'heritage'
+    );
+  });
+
+  // TC_UT_THEME_2TIER_03: Khi apply_scope = 'custom_users': Whitelist nhận Canary, người khác nhận Base
+  it('TC_UT_THEME_2TIER_03: should grant canary to whitelisted users and admin, while others get base profile', () => {
+    const config: ClanThemeConfig = {
+      active_profile: 'heritage',
+      canary_enabled: true,
+      canary_profile: 'contemporary_heritage',
+      apply_scope: 'custom_users',
+      allowed_user_ids: ['user-tuan', 'user-nam'],
+    };
+
+    // Super Admin nhận Canary
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'admin-1', role: 'super_admin', isSuperAdmin: true }),
+      'contemporary_heritage'
+    );
+
+    // Người trong Whitelist nhận Canary
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'user-tuan', role: 'claimed_member', isSuperAdmin: false }),
+      'contemporary_heritage'
+    );
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'user-nam', role: 'claimed_member', isSuperAdmin: false }),
+      'contemporary_heritage'
+    );
+
+    // Người ngoài Whitelist nhận Base Heritage (không bị rơi về classic)
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(config, { id: 'user-other', role: 'claimed_member', isSuperAdmin: false }),
+      'heritage'
+    );
+    assert.strictEqual(resolveEffectiveThemeProfile(config, null), 'heritage');
+  });
+
+  // TC_UT_THEME_PROMOTE_01: Hàm promoteCanaryToProduction chuyển đổi nguyên tử 1-Click
+  it('TC_UT_THEME_PROMOTE_01: should promote canary_profile to active_profile and disable canary', () => {
+    const initialConfig: ClanThemeConfig = {
+      active_profile: 'heritage',
+      canary_enabled: true,
+      canary_profile: 'contemporary_heritage',
+      apply_scope: 'admin_only',
+      allowed_user_ids: [],
+    };
+
+    const promoted = promoteCanaryToProduction(initialConfig);
+
+    assert.strictEqual(promoted.active_profile, 'contemporary_heritage');
+    assert.strictEqual(promoted.canary_enabled, false);
+    assert.strictEqual(promoted.apply_scope, 'all');
+
+    // Sau khi promote, 100% mọi người đều nhận profile mới
+    assert.strictEqual(resolveEffectiveThemeProfile(promoted, null), 'contemporary_heritage');
+    assert.strictEqual(
+      resolveEffectiveThemeProfile(promoted, { id: 'user-guest', role: 'viewer', isSuperAdmin: false }),
+      'contemporary_heritage'
+    );
   });
 });

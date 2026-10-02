@@ -203,7 +203,10 @@ export function PushNotificationBanner({ enabled = true }: PushNotificationBanne
   }
 
   return (
-    <div className="rounded-lg border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 via-emerald-500/10 to-amber-500/5 p-4 sm:p-5 text-slate-800 dark:text-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div
+      id="push-notification-banner"
+      className="rounded-lg border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 via-emerald-500/10 to-amber-500/5 p-4 sm:p-5 text-slate-800 dark:text-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+    >
       <div className="flex items-start sm:items-center gap-3.5">
         <div className="w-10 h-10 rounded-lg bg-emerald-600/10 dark:bg-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-600 dark:text-emerald-400">
           <Bell className="w-5 h-5" />

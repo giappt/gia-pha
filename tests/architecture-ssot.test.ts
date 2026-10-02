@@ -203,4 +203,69 @@ describe('Architecture SSOT & Code Guards Test Suite (Milestone 9)', () => {
     // 4. Thứ trong tuần (text-[10px] font-bold)
     assert.ok(timelineContent.includes('text-[10px] font-bold'), 'Thứ trong tuần mobile phải dùng text-[10px] font-bold');
   });
+
+  it('TC_ARCH_GUARD_07: Khóa khối CSS Scoping html[data-theme-profile="contemporary_heritage"] độc lập', () => {
+    const globalsPath = path.join(rootDir, 'src/app/globals.css');
+    const globalsContent = fs.readFileSync(globalsPath, 'utf8');
+
+    // Phải khai báo selector độc lập cho contemporary_heritage
+    assert.ok(
+      globalsContent.includes('html[data-theme-profile="contemporary_heritage"]'),
+      'globals.css phải khai báo html[data-theme-profile="contemporary_heritage"]'
+    );
+    assert.ok(
+      globalsContent.includes('html[data-theme-profile="contemporary_heritage"].dark'),
+      'globals.css phải khai báo selector dark cho contemporary_heritage'
+    );
+
+    // Kiểm tra các biến cốt lõi của Contemporary Heritage
+    const requiredHeritageVars = [
+      '--bg-canvas: #FAF8F2;',
+      '--bg-surface: #FFFFFF;',
+      '--border-card: #EAE5D9;',
+      '--bg-brand: #0F382C;',
+      '--bloc-header-today: #B91C1C;',
+      '--bloc-header-tomorrow: #FBBF24;',
+      '--bloc-header-upcoming: #065F46;',
+    ];
+    for (const v of requiredHeritageVars) {
+      assert.ok(globalsContent.includes(v), `globals.css phải chứa biến ${v}`);
+    }
+  });
+
+  it('TC_ARCH_GUARD_08: Khóa Tailwind Config mở rộng màu sắc ngữ nghĩa không đè biến cũ', () => {
+    const tailwindPath = path.join(rootDir, 'tailwind.config.ts');
+    const tailwindContent = fs.readFileSync(tailwindPath, 'utf8');
+
+    // 1. Bảo toàn các palette cũ
+    assert.ok(tailwindContent.includes('jade:'), 'tailwind.config.ts phải bảo toàn palette jade');
+    assert.ok(tailwindContent.includes('gold:'), 'tailwind.config.ts phải bảo toàn palette gold');
+    assert.ok(tailwindContent.includes('clan:'), 'tailwind.config.ts phải bảo toàn palette clan');
+
+    // 2. Chứa các semantic tokens mới
+    const requiredSemanticColors = [
+      "canvas: 'var(--bg-canvas)'",
+      "surface: 'var(--bg-surface)'",
+      "control: 'var(--bg-control)'",
+      "brand:",
+      "bloc:",
+      "kinship:",
+    ];
+    for (const c of requiredSemanticColors) {
+      assert.ok(tailwindContent.includes(c), `tailwind.config.ts phải chứa semantic color ${c}`);
+    }
+  });
+
+  it('TC_ARCH_GUARD_09: Khóa Zero-Regression cho 2 profile cũ Classic và Heritage', () => {
+    const globalsPath = path.join(rootDir, 'src/app/globals.css');
+    const globalsContent = fs.readFileSync(globalsPath, 'utf8');
+
+    // 1. Classic tokens (:root) nguyên vẹn
+    assert.ok(globalsContent.includes('--brand-primary: #059669;'), 'Classic profile phải giữ nguyên --brand-primary #059669');
+    assert.ok(globalsContent.includes('--radius-card: 1rem;'), 'Classic profile phải giữ nguyên --radius-card 1rem');
+
+    // 2. Heritage tokens nguyên vẹn
+    assert.ok(globalsContent.includes('--heritage-accent-red: #dc2626;'), 'Heritage profile phải giữ nguyên --heritage-accent-red #dc2626');
+    assert.ok(globalsContent.includes('--radius-card: 0.375rem;'), 'Heritage profile phải giữ nguyên --radius-card 0.375rem');
+  });
 });

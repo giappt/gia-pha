@@ -8,6 +8,8 @@ import type {
 
 export const DEFAULT_THEME_CONFIG: ClanThemeConfig = {
   active_profile: 'classic',
+  canary_enabled: false,
+  canary_profile: 'contemporary_heritage',
   apply_scope: 'all',
   allowed_user_ids: [],
 };
@@ -21,12 +23,28 @@ export function resolveThemeConfig(config?: Partial<ClanThemeConfig> | null): Cl
   }
 
   const active_profile: DesignProfileId =
-    config.active_profile === 'heritage' ? 'heritage' : 'classic';
+    config.active_profile === 'heritage'
+      ? 'heritage'
+      : config.active_profile === 'contemporary_heritage'
+        ? 'contemporary_heritage'
+        : 'classic';
+
+  const canary_profile: DesignProfileId | undefined =
+    config.canary_profile === 'heritage' ||
+    config.canary_profile === 'classic' ||
+    config.canary_profile === 'contemporary_heritage'
+      ? config.canary_profile
+      : undefined;
 
   const apply_scope: ThemeApplyScope =
     config.apply_scope === 'admin_only' || config.apply_scope === 'custom_users'
       ? config.apply_scope
       : 'all';
+
+  const canary_enabled: boolean =
+    typeof config.canary_enabled === 'boolean'
+      ? config.canary_enabled
+      : (apply_scope === 'admin_only' || apply_scope === 'custom_users');
 
   const allowed_user_ids: string[] = Array.isArray(config.allowed_user_ids)
     ? config.allowed_user_ids.filter((id): id is string => typeof id === 'string')
@@ -34,41 +52,64 @@ export function resolveThemeConfig(config?: Partial<ClanThemeConfig> | null): Cl
 
   return {
     active_profile,
+    canary_enabled,
+    canary_profile: canary_profile || (active_profile === 'contemporary_heritage' ? 'heritage' : 'contemporary_heritage'),
     apply_scope,
     allowed_user_ids,
   };
 }
 
 /**
- * Tính toán Theme Profile hiệu lực dựa trên cấu hình và người dùng hiện tại
+ * Tính toán Theme Profile hiệu lực dựa trên cấu hình 2 tầng (Base Theme vs Canary Preview)
  */
 export function resolveEffectiveThemeProfile(
   config?: Partial<ClanThemeConfig> | null,
   currentUser?: { id?: string; role?: UserRole; isSuperAdmin?: boolean } | null
 ): DesignProfileId {
   const resolved = resolveThemeConfig(config);
-  if (resolved.active_profile === 'classic') {
-    return 'classic';
+
+  // Nếu Canary không bật hoặc scope là 'all' -> 100% người dùng nhận Giao Diện Chính Thức (active_profile)
+  if (!resolved.canary_enabled || resolved.apply_scope === 'all') {
+    return resolved.active_profile;
   }
 
-  // Nếu active_profile là 'heritage':
-  if (resolved.apply_scope === 'all') {
-    return 'heritage';
-  }
+  // Nhóm thử nghiệm: Super Admin HOẶC tài khoản nằm trong Whitelist
+  const isEligibleForCanary =
+    currentUser?.isSuperAdmin ||
+    (resolved.apply_scope === 'custom_users' &&
+      !!currentUser?.id &&
+      resolved.allowed_user_ids.includes(currentUser.id));
 
-  if (resolved.apply_scope === 'admin_only') {
-    return currentUser?.isSuperAdmin ? 'heritage' : 'classic';
-  }
+  // Kiểm tra xem config đầu vào có chỉ định canary_profile một cách tường minh không
+  const hasExplicitCanary =
+    config?.canary_profile !== undefined && config.canary_profile !== null;
 
-  if (resolved.apply_scope === 'custom_users') {
-    if (currentUser?.isSuperAdmin) return 'heritage';
-    if (currentUser?.id && resolved.allowed_user_ids.includes(currentUser.id)) {
-      return 'heritage';
+  if (hasExplicitCanary) {
+    // Chế độ 2 tầng hiện đại: Nhóm thử nghiệm nhận canary_profile, còn lại nhận active_profile (Base Dòng Họ)
+    if (isEligibleForCanary) {
+      return resolved.canary_profile || resolved.active_profile;
     }
-    return 'classic';
+    return resolved.active_profile;
   }
 
+  // Chế độ tương thích ngược (Legacy 1-Tier): Nhóm thử nghiệm nhận active_profile, còn lại nhận 'classic'
+  if (isEligibleForCanary) {
+    return resolved.active_profile;
+  }
   return 'classic';
+}
+
+/**
+ * Thao tác nguyên tử 1-Click: Phổ cập giao diện thử nghiệm cho toàn bộ dòng họ
+ */
+export function promoteCanaryToProduction(config: ClanThemeConfig): ClanThemeConfig {
+  const target = config.canary_profile || config.active_profile;
+  return {
+    ...config,
+    active_profile: target,
+    canary_enabled: false,
+    apply_scope: 'all',
+  };
 }
 
 export const DEFAULT_FEATURE_FLAGS: ClanFeatureFlags = {

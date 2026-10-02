@@ -648,7 +648,7 @@ export default function KinshipPage() {
                             : result.relationshipType === 'spouse'
                               ? 'Quan Hệ Vợ - Chồng'
                               : result.relationshipType === 'in_law'
-                                ? 'Quan Hệ Dâu Rể (Hôn Nhân)'
+                                ? 'Quan Hệ'
                                 : result.relationshipType === 'co_in_law'
                                   ? 'Quan Hệ Chị Em Dâu / Cọc Chèo'
                                   : 'Quan Hệ Dòng Tộc'}
@@ -702,9 +702,9 @@ export default function KinshipPage() {
                     <FamilyTreeIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>
                       {result.relationshipType === 'spouse'
-                        ? 'Sơ Đồ Hôn Phối Trực Tiếp (Spouse)'
+                        ? 'Sơ Đồ Hôn Phối Trực Tiếp'
                         : isDirectLineage
-                          ? 'Sơ Đồ Dòng Trực Hệ Dọc (Vertical Direct Lineage)'
+                          ? 'Sơ Đồ Dòng Trực Hệ Dọc'
                           : 'Sơ Đồ Cây Gia Phả Trực Quan'}
                     </span>
                   </h2>

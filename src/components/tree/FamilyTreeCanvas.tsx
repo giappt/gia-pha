@@ -546,7 +546,8 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
 
   return (
     <div
-      style={{ width: '100%', height: 'calc(100vh - 4rem)' }}
+      id="family-tree-canvas-container"
+      style={{ width: '100%', height: 'calc(100vh - 4rem)', backgroundColor: 'var(--bg-canvas)' }}
       className={`relative select-none bg-slate-100/70 dark:bg-slate-950 overflow-hidden ${isSpacePressed ? 'cursor-grab active:cursor-grabbing' : ''
         }`}
     >
@@ -622,14 +623,14 @@ const FamilyTreeCanvasInternal: React.FC<FamilyTreeCanvasProps> = ({
         onNodeClick={onNodeClick}
         onlyRenderVisibleElements={true}
         className="touch-none"
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', backgroundColor: 'var(--bg-canvas)' }}
         colorMode={isDark ? 'dark' : 'light'}
       >
         <Background
           variant={BackgroundVariant.Dots}
           gap={24}
           size={1.2}
-          color="#94A3B8"
+          color={isDark ? '#475569' : 'var(--tree-dots-color, #94A3B8)'}
           className="opacity-35 dark:opacity-20"
         />
         <Controls

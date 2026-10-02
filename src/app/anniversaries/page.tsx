@@ -30,7 +30,7 @@ import {
   resolveRootTierLabel,
   getRootBranchPredecessorIds,
 } from '@/lib/tree-layout/branch-engine';
-import type { BranchNode } from '@/types/database';
+import type { BranchNode, DesignProfileId } from '@/types/database';
 import type { MemberRecord, SpouseRelationRecord } from '@/types/tree';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 import AnniversaryBlocTimeline from '@/components/anniversaries/AnniversaryBlocTimeline';
@@ -49,13 +49,13 @@ export default function AnniversariesPage() {
   const [scope, setScope] = useState<string>('all');
   const [lineageDepth, setLineageDepth] = useState<'from_root' | 'from_branch'>('from_root');
   const [viewerMemberId, setViewerMemberId] = useState<string | null>(null);
-  const [themeProfile, setThemeProfile] = useState<'classic' | 'heritage'>('classic');
+  const [themeProfile, setThemeProfile] = useState<DesignProfileId>('classic');
 
   // Khởi tạo theme profile từ attribute data-theme-profile trên thẻ html
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      const profile = document.documentElement.getAttribute('data-theme-profile') as 'classic' | 'heritage';
-      if (profile === 'heritage' || profile === 'classic') {
+      const profile = document.documentElement.getAttribute('data-theme-profile') as DesignProfileId;
+      if (profile === 'heritage' || profile === 'classic' || profile === 'contemporary_heritage') {
         setThemeProfile(profile);
       }
     }
@@ -354,7 +354,6 @@ export default function AnniversariesPage() {
                     }`}
                   title="Từ Đời 1: Trục dọc gia đình từ Cụ Tổ Đời 1 đến bản thân"
                 >
-                  <Users className="w-3.5 h-3.5 shrink-0" />
                   <span>Từ Đời 1</span>
                 </button>
 
@@ -374,7 +373,6 @@ export default function AnniversariesPage() {
                     }`}
                   title={`Nhánh của tôi (${rootTierLabel}): Bắt đầu từ Cụ Khởi Nguồn của cấp gốc trở xuống`}
                 >
-                  <Sprout className="w-3.5 h-3.5 shrink-0" />
                   <span>{rootTierLabel}</span>
                 </button>
               </div>
@@ -465,9 +463,9 @@ export default function AnniversariesPage() {
                 </Link>
               </div>
             </div>
-          ) : themeProfile === 'heritage' ? (
-            /* Modern Vietnamese Heritage Bloc Timeline */
-            <AnniversaryBlocTimeline groups={filteredGroups} />
+          ) : themeProfile === 'heritage' || themeProfile === 'contemporary_heritage' ? (
+            /* Modern Vietnamese Heritage / Contemporary Heritage Bloc Timeline */
+            <AnniversaryBlocTimeline groups={filteredGroups} profile={themeProfile} />
           ) : (
             /* Timeline List */
             <div className="space-y-6">

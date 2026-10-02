@@ -15,6 +15,20 @@ body {
   --surface-bg: #f8fafc;
   --brand-primary: #059669;
   --brand-glow: rgba(16, 185, 129, 0.6);
+
+  /* Classic Profile Tokens: Chuẩn mực tối giản hiện đại */
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-sub-surface: #f1f5f9;
+  --bg-control: #f8fafc;
+  --border-card: #e2e8f0;
+  --border-divider: #f1f5f9;
+  --border-control: #cbd5e1;
+  --bg-brand: #059669;
+  --border-brand: #047857;
+  --text-brand-accent: #059669;
+  --text-title: #0f172a;
+
   /* Classic Profile: Bo cong mềm mại hiện đại */
   --radius-sm: 0.25rem;       /* 4px */
   --radius-md: 0.375rem;      /* 6px */
@@ -31,6 +45,19 @@ body {
   --surface-bg: #090e1a;
   --brand-primary: #10b981;
   --brand-glow: rgba(52, 211, 153, 0.6);
+
+  /* Classic Profile Dark Tokens */
+  --bg-canvas: #090e1a;
+  --bg-surface: #0f172a;
+  --bg-sub-surface: #1e293b;
+  --bg-control: #1e293b;
+  --border-card: #334155;
+  --border-divider: #1e293b;
+  --border-control: #475569;
+  --bg-brand: #10b981;
+  --border-brand: #059669;
+  --text-brand-accent: #34d399;
+  --text-title: #f8fafc;
 }
 
 body {
@@ -56,6 +83,20 @@ html.dark body {
 html[data-theme-profile="heritage"] {
   --heritage-accent-red: #dc2626;
   --heritage-accent-gold: #f59e0b;
+
+  /* Heritage Profile Tokens: Đỏ son & Vàng hoàng kim */
+  --bg-canvas: #fffbeb;
+  --bg-surface: #ffffff;
+  --bg-sub-surface: #fef3c7;
+  --bg-control: #fde68a;
+  --border-card: #f59e0b;
+  --border-divider: #fde68a;
+  --border-control: #d97706;
+  --bg-brand: #dc2626;
+  --border-brand: #b91c1c;
+  --text-brand-accent: #dc2626;
+  --text-title: #78350f;
+
   /* Heritage Profile: Vuông vắn mực thước di sản chuẩn tờ lịch bloc */
   --radius-sm: 0.125rem;      /* 2px */
   --radius-md: 0.25rem;       /* 4px */
@@ -65,5 +106,387 @@ html[data-theme-profile="heritage"] {
   --radius-3xl: 0.5rem;       /* 8px */
   --radius-card: 0.375rem;    /* 6px */
   --radius-control: 0.25rem;  /* 4px */
+}
+
+/* Contemporary Vietnamese Heritage Profile Tokens (SSOT Di Sản Đương Đại) */
+html[data-theme-profile="contemporary_heritage"] {
+  --bg-canvas: #FAF8F2;
+  --bg-surface: #FFFFFF;
+  --bg-sub-surface: #F5F2EA;
+  --bg-control: #EFECE4;
+  --bg-brand: #0F382C;
+  --border-card: #EAE5D9;
+  --border-divider: #F0EBE1;
+  --border-control: #DCD5C6;
+  --border-control-focus: #0F382C;
+  --border-brand: #164E3D;
+  --border-dashed: #D6D3D1;
+  --shadow-card: 0 2px 12px -2px rgba(28, 25, 23, 0.04);
+  --shadow-elevated: 0 4px 20px -4px rgba(28, 25, 23, 0.08);
+  --shadow-floating: 0 12px 32px -4px rgba(28, 25, 23, 0.12);
+  --text-title: #1C1917;
+  --text-body-primary: #292524;
+  --text-body-secondary: #57534E;
+  --text-caption: #78716C;
+  --text-lunar-accent: #BE123C;
+  --text-brand-accent: #0F382C;
+  --bloc-header-today: #B91C1C;
+  --bloc-header-tomorrow: #FBBF24;
+  --bloc-header-upcoming: #065F46;
+  --bloc-status-today: #B91C1C;
+  --bloc-status-tomorrow: #D97706;
+  --bloc-status-upcoming: #64748B;
+  --bloc-lunar-num: #BE123C;
+  --kinship-male-border: #38BDF8;
+  --kinship-male-avatar: #E0F2FE;
+  --kinship-female-border: #FB7185;
+  --kinship-female-avatar: #FFE4E6;
+  /* Hình học: Vuông vắn đĩnh đạc Anti-Pill */
+  --radius-sm: 0.125rem;      /* 2px */
+  --radius-md: 0.25rem;       /* 4px */
+  --radius-lg: 0.375rem;      /* 6px */
+  --radius-xl: 0.5rem;        /* 8px */
+  --radius-2xl: 0.75rem;      /* 12px */
+  --radius-3xl: 1rem;         /* 16px */
+  --tree-bus-stroke: #0F382C;
+  --tree-dots-color: #DDD8CD;
+  --clan-logo-bg: #0F382C;
+  --clan-logo-border: #164E3D;
+  --clan-logo-text: #E8D49E;
+  --radius-card: 0.75rem;     /* 12px */
+  --radius-control: 0.375rem; /* 6px */
+}
+
+html[data-theme-profile="contemporary_heritage"] body {
+  background-color: var(--bg-canvas);
+  color: var(--text-body-primary);
+  background-image: none;
+}
+
+html[data-theme-profile="contemporary_heritage"].dark,
+html[data-theme-profile="contemporary_heritage"] .dark {
+  --bg-canvas: #1C1917;
+  --bg-surface: #292524;
+  --bg-sub-surface: #383431;
+  --bg-control: #44403C;
+  --border-card: #44403C;
+  --border-divider: #383431;
+  --border-control: #57534E;
+  --border-control-focus: #10B981;
+  --border-brand: #0F382C;
+  --border-dashed: #57534E;
+  --text-title: #FAF8F2;
+  --text-body-primary: #F5F2EA;
+  --text-body-secondary: #D6D3D1;
+  --text-caption: #A8A29E;
+  --text-lunar-accent: #FB7185;
+  --text-brand-accent: #34D399;
+  --bloc-header-today: #DC2626;
+  --bloc-header-tomorrow: #F59E0B;
+  --bloc-header-upcoming: #047857;
+  --bloc-status-today: #EF4444;
+  --bloc-status-tomorrow: #FBBF24;
+  --bloc-status-upcoming: #94A3B8;
+  --bloc-lunar-num: #FB7185;
+  --tree-bus-stroke: #34D399;
+  --tree-dots-color: #44403C;
+  --clan-logo-bg: #0F382C;
+  --clan-logo-border: #164E3D;
+  --clan-logo-text: #E8D49E;
+  --shadow-card: 0 2px 12px -2px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 20px -4px rgba(0, 0, 0, 0.4);
+  --shadow-floating: 0 12px 32px -4px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme-profile="contemporary_heritage"].dark body,
+html[data-theme-profile="contemporary_heritage"] .dark body {
+  background-color: var(--bg-canvas);
+  color: var(--text-body-primary);
+  background-image: none;
+}
+
+/* ========================================================================= */
+/* CONTEMPORARY HERITAGE COMPREHENSIVE COMPONENT BINDINGS (ZERO-REGRESSION)  */
+/* ========================================================================= */
+
+/* 1. Logo Ấn Triện Chữ 范 (Navbar & Login Gate) */
+html[data-theme-profile="contemporary_heritage"] #navbar-clan-han-logo,
+html[data-theme-profile="contemporary_heritage"] #login-gate-seal {
+  background-color: #0F382C !important;
+  border-color: #164E3D !important;
+  color: #E8D49E !important;
+  box-shadow: 0 4px 14px -2px rgba(15, 56, 44, 0.35) !important;
+}
+html[data-theme-profile="contemporary_heritage"] #navbar-clan-han-logo svg,
+html[data-theme-profile="contemporary_heritage"] #login-gate-seal svg {
+  color: #E8D49E !important;
+}
+
+/* 2. Header & Navbar Đỉnh */
+html[data-theme-profile="contemporary_heritage"] header {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-bottom-color: #EAE5D9 !important;
+}
+html[data-theme-profile="contemporary_heritage"] header span.text-emerald-700\/90 {
+  color: #0F382C !important;
+}
+html[data-theme-profile="contemporary_heritage"] header nav a:hover {
+  color: #0F382C !important;
+  background-color: #FAF8F2 !important;
+}
+html[data-theme-profile="contemporary_heritage"] header nav a:hover svg {
+  color: #0F382C !important;
+}
+
+/* 3. Mobile Bottom Nav */
+html[data-theme-profile="contemporary_heritage"] #mobile-bottom-nav {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-top-color: #EAE5D9 !important;
+}
+html[data-theme-profile="contemporary_heritage"] #mobile-bottom-nav a.text-emerald-700 {
+  color: #0F382C !important;
+  background-color: #F5F2EA !important;
+  border-top: 2px solid #0F382C !important;
+}
+html[data-theme-profile="contemporary_heritage"] #mobile-bottom-nav a.text-emerald-700 span.animate-ping {
+  background-color: #0F382C !important;
+}
+
+/* 4. Loading Badge */
+html[data-theme-profile="contemporary_heritage"] [data-testid="sync-loading-badge"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #EAE5D9 !important;
+}
+html[data-theme-profile="contemporary_heritage"] [data-testid="sync-loading-badge"] svg {
+  color: #0F382C !important;
+}
+html[data-theme-profile="contemporary_heritage"] [data-testid="sync-loading-badge"] span {
+  color: #0F382C !important;
+}
+
+/* 5. Cây Gia Phả & Trục Bus Line & Canvas */
+html[data-theme-profile="contemporary_heritage"] .react-flow {
+  background-color: var(--bg-canvas, #FAF8F2) !important;
+}
+html[data-theme-profile="contemporary_heritage"] .react-flow__edge-path {
+  stroke: var(--tree-bus-stroke, #0F382C) !important;
+  stroke-width: 1.5 !important;
+}
+html[data-theme-profile="contemporary_heritage"] #unlinked-member-guide-banner {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #EAE5D9 !important;
+}
+html[data-theme-profile="contemporary_heritage"] #unlinked-member-guide-banner a {
+  color: #0F382C !important;
+}
+
+/* 6. Thẻ Thành Viên MemberNode */
+html[data-theme-profile="contemporary_heritage"] .react-flow__node-memberNode > div {
+  background-color: #FFFFFF !important;
+  box-shadow: var(--shadow-card, 0 2px 12px -2px rgba(28, 25, 23, 0.04)) !important;
+}
+html[data-theme-profile="contemporary_heritage"] .react-flow__node-memberNode .border-blue-500\/50 {
+  border-color: #38BDF8 !important;
+}
+html[data-theme-profile="contemporary_heritage"] .react-flow__node-memberNode .border-pink-500\/50 {
+  border-color: #FB7185 !important;
+}
+html[data-theme-profile="contemporary_heritage"] .react-flow__node-memberNode .bg-blue-100 {
+  background-color: #E0F2FE !important;
+  color: #0369A1 !important;
+}
+html[data-theme-profile="contemporary_heritage"] .react-flow__node-memberNode .bg-pink-100 {
+  background-color: #FFE4E6 !important;
+  color: #BE123C !important;
+}
+
+/* 7. Trang Chủ & Widgets */
+html[data-theme-profile="contemporary_heritage"] #hero-eyebrow {
+  color: #0F382C !important;
+}
+html[data-theme-profile="contemporary_heritage"] #identity-context-widget {
+  background-color: #FFFFFF !important;
+  border-color: #EAE5D9 !important;
+}
+html[data-theme-profile="contemporary_heritage"] [data-testid="pwa-install-banner"],
+html[data-theme-profile="contemporary_heritage"] [data-testid="pwa-mini-banner"] {
+  background: #F5F2EA !important;
+  border-color: #EAE5D9 !important;
+}
+html[data-theme-profile="contemporary_heritage"] [data-testid="pwa-install-banner"] [data-testid="pwa-install-button"],
+html[data-theme-profile="contemporary_heritage"] [data-testid="pwa-mini-banner"] [data-testid="pwa-install-button"] {
+  background-color: #0F382C !important;
+  color: #FAF8F2 !important;
+}
+html[data-theme-profile="contemporary_heritage"] [data-testid="pwa-install-banner"] [data-testid="pwa-install-button"]:hover,
+html[data-theme-profile="contemporary_heritage"] [data-testid="pwa-mini-banner"] [data-testid="pwa-install-button"]:hover {
+  background-color: #164E3D !important;
+}
+
+/* 8. Lịch Giỗ & Push Banner */
+html[data-theme-profile="contemporary_heritage"] #push-notification-banner {
+  background: #F5F2EA !important;
+  border-color: #EAE5D9 !important;
+}
+html[data-theme-profile="contemporary_heritage"] #push-notification-banner button.bg-emerald-600 {
+  background-color: #0F382C !important;
+  color: #FAF8F2 !important;
+}
+html[data-theme-profile="contemporary_heritage"] #push-notification-banner button.bg-emerald-600:hover {
+  background-color: #164E3D !important;
+}
+
+/* 9. Tra Cứu Vai Vế /kinship */
+html[data-theme-profile="contemporary_heritage"] #kinship-result-container {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FAF8F2 100%) !important;
+  border-color: #EAE5D9 !important;
+}
+html[data-theme-profile="contemporary_heritage"] #calculate-kinship-btn {
+  background-color: #0F382C !important;
+  color: #FAF8F2 !important;
+}
+html[data-theme-profile="contemporary_heritage"] #calculate-kinship-btn:hover {
+  background-color: #164E3D !important;
+}
+
+/* 10. Modals & Dialogs (Kế Thừa Ngữ Nghĩa Toàn Diện - 0 Chắp Vá ID) */
+html[data-theme-profile="contemporary_heritage"] [role="dialog"],
+[data-theme-profile="contemporary_heritage"] [role="dialog"],
+html[data-theme-profile="contemporary_heritage"] .modal-content,
+[data-theme-profile="contemporary_heritage"] .modal-content {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--border-card) !important;
+  box-shadow: var(--shadow-floating) !important;
+}
+html[data-theme-profile="contemporary_heritage"] input,
+html[data-theme-profile="contemporary_heritage"] select,
+html[data-theme-profile="contemporary_heritage"] textarea,
+[data-theme-profile="contemporary_heritage"] input,
+[data-theme-profile="contemporary_heritage"] select,
+[data-theme-profile="contemporary_heritage"] textarea {
+  border-color: #DCD5C6 !important;
+}
+html[data-theme-profile="contemporary_heritage"] input:focus,
+html[data-theme-profile="contemporary_heritage"] select:focus,
+html[data-theme-profile="contemporary_heritage"] textarea:focus,
+[data-theme-profile="contemporary_heritage"] input:focus,
+[data-theme-profile="contemporary_heritage"] select:focus,
+[data-theme-profile="contemporary_heritage"] textarea:focus {
+  border-color: #0F382C !important;
+  --tw-ring-color: rgba(15, 56, 44, 0.15) !important;
+}
+
+/* 11. Admin Shell, Sidebar & Admin Pages */
+html[data-theme-profile="contemporary_heritage"] aside,
+[data-theme-profile="contemporary_heritage"] aside {
+  background-color: #FFFFFF !important;
+  border-right-color: #EAE5D9 !important;
+}
+html[data-theme-profile="contemporary_heritage"] aside .bg-emerald-600,
+[data-theme-profile="contemporary_heritage"] aside .bg-emerald-600 {
+  background-color: #0F382C !important;
+  color: #E8D49E !important;
+}
+html[data-theme-profile="contemporary_heritage"] aside a.border-emerald-600,
+[data-theme-profile="contemporary_heritage"] aside a.border-emerald-600 {
+  background-color: #F5F2EA !important;
+  color: #0F382C !important;
+  border-left-color: #0F382C !important;
+}
+html[data-theme-profile="contemporary_heritage"] aside a.border-emerald-600 svg,
+[data-theme-profile="contemporary_heritage"] aside a.border-emerald-600 svg {
+  color: #0F382C !important;
+}
+html[data-theme-profile="contemporary_heritage"] aside a:not(.border-emerald-600):hover,
+[data-theme-profile="contemporary_heritage"] aside a:not(.border-emerald-600):hover {
+  color: #0F382C !important;
+  background-color: #FAF8F2 !important;
+}
+html[data-theme-profile="contemporary_heritage"] aside a:not(.border-emerald-600):hover svg,
+[data-theme-profile="contemporary_heritage"] aside a:not(.border-emerald-600):hover svg {
+  color: #0F382C !important;
+}
+
+/* ========================================================================= */
+/* SYSTEMIC LEGACY PROXY LAYER (ZERO-DEBT THEME ADAPTER)                     */
+/* Tự động chuyển hóa toàn diện các utility classes di sản sang Design Token */
+/* ========================================================================= */
+
+/* 1. Nền Canvas toàn cục */
+html[data-theme-profile="contemporary_heritage"] .bg-slate-50,
+[data-theme-profile="contemporary_heritage"] .bg-slate-50 {
+  background-color: var(--bg-canvas) !important;
+}
+
+/* 2. Nền Sub-surface (card phụ, rãnh tab, modal header/section) */
+html[data-theme-profile="contemporary_heritage"] .bg-slate-100,
+html[data-theme-profile="contemporary_heritage"] .bg-slate-100\/80,
+html[data-theme-profile="contemporary_heritage"] .bg-slate-50\/50,
+[data-theme-profile="contemporary_heritage"] .bg-slate-100,
+[data-theme-profile="contemporary_heritage"] .bg-slate-100\/80,
+[data-theme-profile="contemporary_heritage"] .bg-slate-50\/50 {
+  background-color: var(--bg-sub-surface) !important;
+}
+
+/* 3. Đường kẻ phân tách (Divider) */
+html[data-theme-profile="contemporary_heritage"] .border-slate-100,
+[data-theme-profile="contemporary_heritage"] .border-slate-100 {
+  border-color: var(--border-divider) !important;
+}
+
+/* 4. Viền khung thẻ Card & Phân chia mục */
+html[data-theme-profile="contemporary_heritage"] .border-slate-200,
+html[data-theme-profile="contemporary_heritage"] .border-slate-200\/80,
+[data-theme-profile="contemporary_heritage"] .border-slate-200,
+[data-theme-profile="contemporary_heritage"] .border-slate-200\/80 {
+  border-color: var(--border-card) !important;
+}
+
+/* 5. Màu chữ điểm nhấn thương hiệu */
+html[data-theme-profile="contemporary_heritage"] .text-emerald-600,
+html[data-theme-profile="contemporary_heritage"] .text-emerald-700,
+html[data-theme-profile="contemporary_heritage"] .text-emerald-800,
+[data-theme-profile="contemporary_heritage"] .text-emerald-600,
+[data-theme-profile="contemporary_heritage"] .text-emerald-700,
+[data-theme-profile="contemporary_heritage"] .text-emerald-800 {
+  color: var(--text-brand-accent) !important;
+}
+
+/* 6. Nút hành động & Banner chính mang màu thương hiệu */
+html[data-theme-profile="contemporary_heritage"] button.bg-emerald-600,
+html[data-theme-profile="contemporary_heritage"] a.bg-emerald-600,
+html[data-theme-profile="contemporary_heritage"] .bg-emerald-600:not([class*="animate-ping"]):not([class*="rounded-full"]):not([class*="h-2"]):not([class*="w-2"]),
+[data-theme-profile="contemporary_heritage"] button.bg-emerald-600,
+[data-theme-profile="contemporary_heritage"] a.bg-emerald-600,
+[data-theme-profile="contemporary_heritage"] .bg-emerald-600:not([class*="animate-ping"]):not([class*="rounded-full"]):not([class*="h-2"]):not([class*="w-2"]) {
+  background-color: var(--bg-brand) !important;
+  color: #FAF8F2 !important;
+}
+html[data-theme-profile="contemporary_heritage"] button.bg-emerald-600:hover,
+html[data-theme-profile="contemporary_heritage"] a.bg-emerald-600:hover,
+[data-theme-profile="contemporary_heritage"] button.bg-emerald-600:hover,
+[data-theme-profile="contemporary_heritage"] a.bg-emerald-600:hover {
+  background-color: var(--border-brand, #164E3D) !important;
+}
+
+/* 7. Nền huy hiệu nhạt & Thẻ trạng thái */
+html[data-theme-profile="contemporary_heritage"] .bg-emerald-50,
+html[data-theme-profile="contemporary_heritage"] .bg-emerald-100,
+[data-theme-profile="contemporary_heritage"] .bg-emerald-50,
+[data-theme-profile="contemporary_heritage"] .bg-emerald-100 {
+  background-color: var(--bg-sub-surface) !important;
+  color: var(--text-brand-accent) !important;
+}
+
+/* 8. Triệt tiêu gradient xanh ngọc trên banners để ăn màu ngà di sản */
+html[data-theme-profile="contemporary_heritage"] [data-testid="pwa-install-banner"],
+html[data-theme-profile="contemporary_heritage"] [data-testid="pwa-mini-banner"],
+html[data-theme-profile="contemporary_heritage"] #push-notification-banner,
+[data-theme-profile="contemporary_heritage"] [data-testid="pwa-install-banner"],
+[data-theme-profile="contemporary_heritage"] [data-testid="pwa-mini-banner"],
+[data-theme-profile="contemporary_heritage"] #push-notification-banner {
+  background-image: none !important;
+  background-color: var(--bg-sub-surface) !important;
+  border-color: var(--border-card) !important;
 }
 

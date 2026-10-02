@@ -40,12 +40,14 @@ export interface ClanFeatureFlags {
   maintenance_mode: boolean;
 }
 
-export type DesignProfileId = 'classic' | 'heritage';
+export type DesignProfileId = 'classic' | 'heritage' | 'contemporary_heritage';
 
 export type ThemeApplyScope = 'all' | 'admin_only' | 'custom_users';
 
 export interface ClanThemeConfig {
   active_profile: DesignProfileId;
+  canary_enabled?: boolean;
+  canary_profile?: DesignProfileId;
   apply_scope: ThemeApplyScope;
   allowed_user_ids: string[];
 }

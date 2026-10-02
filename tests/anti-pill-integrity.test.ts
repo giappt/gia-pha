@@ -173,4 +173,163 @@ describe('Anti-Pill & System-wide Editorial Cleansing Suite', () => {
       'Nhãn Cụ Tổ phải dùng rounded-control mực thước và không dùng icon Sparkles rườm rà'
     );
   });
+
+  // 5. TC_ARCH_ANTI_PILL_THEME_01: Màn hình admin/theme đạt chuẩn 0 emoji và 0 pill badge vi phạm
+  it('TC_ARCH_ANTI_PILL_THEME_01: admin/theme/page.tsx đạt chuẩn 0 emoji và 0 pill badge vi phạm (chỉ micro-dot w-1.5)', () => {
+    const themeAdminPath = path.join(srcDir, 'app/admin/theme/page.tsx');
+    assert.ok(fs.existsSync(themeAdminPath), 'admin/theme/page.tsx phải tồn tại');
+    const content = fs.readFileSync(themeAdminPath, 'utf8');
+
+    // 1. Không chứa rounded-full ngoại trừ micro dot
+    const roundedFullMatches = content.match(/rounded-full/g) || [];
+    const microDotMatches = content.match(/w-1\.5\s+h-1\.5\s+rounded-full/g) || [];
+    assert.strictEqual(
+      roundedFullMatches.length,
+      microDotMatches.length,
+      `admin/theme/page.tsx chỉ được dùng rounded-full cho micro-dots w-1.5. Tìm thấy ${roundedFullMatches.length} rounded-full nhưng chỉ có ${microDotMatches.length} micro-dots`
+    );
+
+    // 2. Không chứa emoji
+    const emojiRegex = new RegExp('[\\u{1F300}-\\u{1FAD6}\\u{1F600}-\\u{1F64F}\\u{1F680}-\\u{1F6FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}\\u{1F900}-\\u{1F9FF}\\u{FE00}-\\u{FE0F}]', 'u');
+    assert.strictEqual(emojiRegex.test(content), false, 'admin/theme/page.tsx không được chứa emoji');
+
+    // 3. Có tích hợp hàm promoteCanaryToProduction
+    assert.ok(
+      content.includes('promoteCanaryToProduction') && content.includes('handlePromoteToProduction'),
+      'admin/theme/page.tsx phải tích hợp hàm promoteCanaryToProduction cho nút 1-click'
+    );
+  });
+
+  // 6. TC_ARCH_ZERO_SPARKLES_THEME_01: Màn hình admin/theme khử sạch 100% icon Sparkles
+  it('TC_ARCH_ZERO_SPARKLES_THEME_01: admin/theme/page.tsx khử sạch 100% icon Sparkles trang trí vô nghĩa', () => {
+    const themeAdminPath = path.join(srcDir, 'app/admin/theme/page.tsx');
+    assert.ok(fs.existsSync(themeAdminPath), 'admin/theme/page.tsx phải tồn tại');
+    const content = fs.readFileSync(themeAdminPath, 'utf8');
+
+    assert.ok(
+      !content.includes('Sparkles') && !content.includes('<Sparkles'),
+      'admin/theme/page.tsx không được chứa bất kỳ instance nào của icon Sparkles'
+    );
+  });
+
+  // 7. TC_ARCH_THEME_SEGMENTED_MODE_01: Segmented Switcher 2 tab và in-place preview
+  it('TC_ARCH_THEME_SEGMENTED_MODE_01: admin/theme/page.tsx áp dụng Segmented Switcher 2 tab, in-place preview và không còn preview chung ở đáy', () => {
+    const themeAdminPath = path.join(srcDir, 'app/admin/theme/page.tsx');
+    assert.ok(fs.existsSync(themeAdminPath), 'admin/theme/page.tsx phải tồn tại');
+    const content = fs.readFileSync(themeAdminPath, 'utf8');
+
+    // 1. Phải có bộ chuyển đổi 2 chế độ
+    assert.ok(content.includes('id="theme-mode-base"'), 'Phải có nút chế độ Base Giao diện chính thức');
+    assert.ok(content.includes('id="theme-mode-canary"'), 'Phải có nút chế độ Canary Thử nghiệm');
+
+    // 2. Không còn preview chung ở đáy (đã xóa setPreviewTarget và previewTarget)
+    assert.ok(
+      !content.includes('setPreviewTarget') && !content.includes("previewTarget === 'canary'"),
+      'Không được chứa state hoặc khối điều khiển previewTarget chung ở đáy'
+    );
+
+    // 3. Có in-place preview trong Base Theme
+    assert.ok(
+      content.includes('AnniversaryBlocCardPreview') && content.includes('Classic Minimalist'),
+      'Phải có in-place preview của component thật trong giao diện chính thức'
+    );
+  });
+
+  // 8. TC_ARCH_THEME_TIERED_PREVIEW_01: Bố cục Tầng Lớp Bề Thế với preview max-w-2xl và bộ gạt đối chiếu Canary
+  it('TC_ARCH_THEME_TIERED_PREVIEW_01: admin/theme/page.tsx áp dụng Bố cục Tầng Lớp Bề Thế với preview max-w-2xl và bộ gạt đối chiếu Canary', () => {
+    const themeAdminPath = path.join(srcDir, 'app/admin/theme/page.tsx');
+    assert.ok(fs.existsSync(themeAdminPath), 'admin/theme/page.tsx phải tồn tại');
+    const content = fs.readFileSync(themeAdminPath, 'utf8');
+
+    // 1. Cả 2 tab đều sử dụng container preview căn giữa bề thế max-w-2xl mx-auto
+    const maxW2xlMatches = content.match(/max-w-2xl\s+mx-auto/g) || [];
+    assert.ok(
+      maxW2xlMatches.length >= 2,
+      `Phải có ít nhất 2 container max-w-2xl mx-auto cho khung preview bề thế trong 2 tab (tìm thấy ${maxW2xlMatches.length})`
+    );
+
+    // 2. Tab 2 có bộ gạt đối chiếu 2 chế độ: Bản Thử Nghiệm và Bản Con Cháu
+    assert.ok(content.includes('id="canary-view-preview-btn"'), 'Tab 2 phải có nút gạt xem Bản Thử Nghiệm');
+    assert.ok(content.includes('id="canary-view-base-btn"'), 'Tab 2 phải có nút gạt xem Bản Con Cháu');
+    assert.ok(content.includes('canaryPreviewMode'), 'Phải có state canaryPreviewMode quản lý bộ gạt đối chiếu');
+
+    // 3. Không còn cấu trúc ép 2 thẻ preview song song vào cột hẹp (sm:grid-cols-2)
+    assert.ok(
+      !content.includes('Đối Chiếu Trực Quan: Ai Thấy Giao Diện Nào?'),
+      'Đã xóa bỏ hoàn toàn khối ép 2 thẻ preview song song vào cột hẹp'
+    );
+  });
+
+  // 9. TC_UT_BLOC_CARD_PROFILE_VARIANTS_01: AnniversaryBlocCard hiển thị style phân biệt rõ rệt theo prop profile
+  it('TC_UT_BLOC_CARD_PROFILE_VARIANTS_01: AnniversaryBlocCard hiển thị style phân biệt rõ rệt theo prop profile', () => {
+    const cardPath = path.join(srcDir, 'components/anniversaries/AnniversaryBlocCard.tsx');
+    assert.ok(fs.existsSync(cardPath), 'AnniversaryBlocCard.tsx phải tồn tại');
+    const content = fs.readFileSync(cardPath, 'utf8');
+
+    // 1. Phải nhận prop profile?: DesignProfileId
+    assert.ok(
+      content.includes('profile?: DesignProfileId'),
+      'AnniversaryBlocCardProps phải khai báo prop profile?: DesignProfileId'
+    );
+
+    // 2. Chứa phân nhánh phong cách cho contemporary_heritage
+    assert.ok(
+      content.includes("profile === 'contemporary_heritage'"),
+      "Phải kiểm tra profile === 'contemporary_heritage' để áp dụng bộ nhận diện Di Sản Đương Đại"
+    );
+
+    // 3. Phải áp dụng màu gáy ngọc bích #065F46 và ruột tờ lịch trắng sứ bg-white
+    assert.ok(
+      content.includes('#065F46') && content.includes('bg-white dark:bg-slate-900'),
+      'Profile contemporary_heritage phải áp dụng gáy ngọc #065F46 và ruột tờ lịch trắng sứ bg-white'
+    );
+
+    // 4. Phải bảo toàn màu gáy đỏ cờ cho heritage
+    assert.ok(
+      content.includes('bg-red-600'),
+      'Profile heritage phải bảo toàn màu gáy đỏ cờ bg-red-600'
+    );
+
+    // 5. AnniversaryBlocCardPreview phải truyền tiếp prop profile
+    assert.ok(
+      content.includes('profile?: DesignProfileId') && content.includes('profile={profile}'),
+      'AnniversaryBlocCardPreview phải nhận và truyền prop profile vào AnniversaryBlocCard'
+    );
+  });
+
+  // 10. TC_ARCH_THEME_PREVIEW_PROFILE_PROP_01: /admin/theme, page.tsx và anniversaries/page.tsx truyền prop profile phân biệt
+  it('TC_ARCH_THEME_PREVIEW_PROFILE_PROP_01: /admin/theme, page.tsx và anniversaries/page.tsx truyền prop profile phân biệt', () => {
+    const adminThemePath = path.join(srcDir, 'app/admin/theme/page.tsx');
+    const pagePath = path.join(srcDir, 'app/page.tsx');
+    const annivPagePath = path.join(srcDir, 'app/anniversaries/page.tsx');
+
+    const adminContent = fs.readFileSync(adminThemePath, 'utf8');
+    const homeContent = fs.readFileSync(pagePath, 'utf8');
+    const annivContent = fs.readFileSync(annivPagePath, 'utf8');
+
+    // 1. Tab 1 trong admin/theme truyền profile active
+    assert.ok(
+      adminContent.includes('profile={themeConfig.active_profile}'),
+      'Tab 1 của /admin/theme phải truyền profile={themeConfig.active_profile} vào AnniversaryBlocCardPreview'
+    );
+
+    // 2. Tab 2 trong admin/theme truyền profile đối chiếu
+    assert.ok(
+      adminContent.includes('profile={profileToRender}'),
+      'Tab 2 của /admin/theme phải truyền profile={profileToRender} vào AnniversaryBlocCardPreview'
+    );
+
+    // 3. Trang chủ truyền effectiveThemeProfile
+    assert.ok(
+      homeContent.includes('profile={effectiveThemeProfile}'),
+      'src/app/page.tsx phải truyền profile={effectiveThemeProfile} vào AnniversaryBlocCard'
+    );
+
+    // 4. Trang anniversaries truyền themeProfile vào AnniversaryBlocTimeline
+    assert.ok(
+      annivContent.includes('profile={themeProfile}'),
+      'src/app/anniversaries/page.tsx phải truyền profile={themeProfile} vào AnniversaryBlocTimeline'
+    );
+  });
 });
+

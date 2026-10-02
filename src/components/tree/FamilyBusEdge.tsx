@@ -31,7 +31,7 @@ export const FamilyBusEdge: React.FC<EdgeProps> = ({
       id={id}
       path={path}
       style={{
-        stroke: '#059669',
+        stroke: 'var(--tree-bus-stroke, #059669)',
         strokeWidth: 1.5,
         ...style,
       }}

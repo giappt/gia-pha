@@ -194,7 +194,7 @@ export default async function HomePage({
 
       {/* Hero Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <p className="text-xs font-bold uppercase tracking-[0.25em] mb-3 text-emerald-700 dark:text-emerald-400">
+        <p id="hero-eyebrow" className="text-xs font-bold uppercase tracking-[0.25em] mb-3 text-emerald-700 dark:text-emerald-400">
           Hệ Thống Gia Phả Trực Tuyến
         </p>
 
@@ -237,9 +237,9 @@ export default async function HomePage({
 
       {/* Spotlight: Ngày Giỗ Gần Nhất (Chỉ hiển thị khi tính năng bật và người dùng đã đăng nhập) */}
       {!isGuest && nearestGroup && nearestMember && featureFlags.enable_anniversaries && (
-        effectiveThemeProfile === 'heritage' ? (
+        effectiveThemeProfile === 'heritage' || effectiveThemeProfile === 'contemporary_heritage' ? (
           <div className="w-full mb-10">
-            <AnniversaryBlocCard group={nearestGroup} />
+            <AnniversaryBlocCard group={nearestGroup} profile={effectiveThemeProfile} />
           </div>
         ) : (
         <div className="max-w-3xl w-full mb-10 p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-emerald-500/10 dark:from-amber-950/40 dark:via-slate-900/60 dark:to-emerald-950/40 border border-amber-500/30 dark:border-amber-700/40 shadow-lg shadow-amber-500/[0.03]">

@@ -4,17 +4,20 @@ import React from 'react';
 import Link from 'next/link';
 import { Flame, Star, Clock, ArrowRight } from 'lucide-react';
 import type { AnniversaryDayGroup } from '@/types/anniversary';
+import type { DesignProfileId } from '@/types/database';
 import { formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
 import { MOCK_ANNIVERSARY_GROUP_TODAY, MOCK_ANNIVERSARY_GROUP_UPCOMING } from '@/fixtures/anniversary-fixtures';
 
 interface AnniversaryBlocCardProps {
   group: AnniversaryDayGroup;
   forceLayout?: 'desktop' | 'mobile';
+  profile?: DesignProfileId;
 }
 
-export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryBlocCardProps) {
+export default function AnniversaryBlocCard({ group, forceLayout, profile }: AnniversaryBlocCardProps) {
   const isToday = group.days_left === 0;
   const isTomorrow = group.days_left === 1;
+  const isContemporary = profile === 'contemporary_heritage';
 
   const statusText = isToday
     ? 'Hôm nay giỗ'
@@ -22,17 +25,29 @@ export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryB
       ? 'Ngày mai giỗ'
       : `Còn ${group.days_left} ngày`;
 
-  const statusColor = isToday
-    ? 'text-red-600 dark:text-red-400'
-    : isTomorrow
-      ? 'text-amber-600 dark:text-amber-400'
-      : 'text-slate-600 dark:text-slate-400';
+  const statusColor = isContemporary
+    ? isToday
+      ? 'text-[#0F382C] dark:text-emerald-400'
+      : isTomorrow
+        ? 'text-amber-700 dark:text-amber-400'
+        : 'text-[#57534E] dark:text-[#A8A29E]'
+    : isToday
+      ? 'text-red-600 dark:text-red-400'
+      : isTomorrow
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-slate-600 dark:text-slate-400';
 
-  const headerBg = isToday
-    ? 'bg-red-600 text-white font-black'
-    : isTomorrow
-      ? 'bg-amber-400 text-slate-950 font-black'
-      : 'bg-emerald-800 text-white font-bold';
+  const headerBg = isContemporary
+    ? isToday
+      ? 'bg-red-600 text-white font-black'
+      : isTomorrow
+        ? 'bg-amber-400 text-slate-950 font-black'
+        : 'bg-[#065F46] text-white font-bold border-b border-[#047857]'
+    : isToday
+      ? 'bg-red-600 text-white font-black'
+      : isTomorrow
+        ? 'bg-amber-400 text-slate-950 font-black'
+        : 'bg-emerald-800 text-white font-bold';
 
   // Format thứ
   const solarFull = formatSolarDateWithDayOfWeek(group.solar_year, group.solar_month, group.solar_day);
@@ -55,12 +70,17 @@ export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryB
       ? 'hidden'
       : 'md:hidden flex flex-col w-full';
 
+  const blocColClasses = 'w-[185px] shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col select-none';
+
   return (
-    <div className="w-full max-w-3xl mx-auto rounded-card border border-slate-300/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden">
+    <div
+      data-theme-profile={profile}
+      className="w-full max-w-3xl mx-auto rounded-card border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden"
+    >
       {/* 1. Phiên bản Desktop (md+): Dàn ngang 2 nửa liền mạch */}
       <div className={desktopClass}>
         {/* Nửa trái: Cột Lịch Bloc 185px fit khít 3 mép */}
-        <div className="w-[185px] shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col select-none">
+        <div className={blocColClasses}>
           {/* Header Tháng / Năm */}
           <div className={`px-4 py-2 flex items-center justify-between text-xs tracking-wide shrink-0 ${headerBg}`}>
             <span>Tháng {monthWord}</span>
@@ -68,7 +88,7 @@ export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryB
           </div>
 
           {/* Số ngày Dương lịch to đậm */}
-          <div className="py-4 text-center bg-white dark:bg-slate-900 shrink-0">
+          <div className="py-4 text-center shrink-0">
             <div className="text-6xl sm:text-7xl font-black text-slate-950 dark:text-white tracking-tighter leading-none">
               {group.solar_day < 10 ? `0${group.solar_day}` : group.solar_day}
             </div>
@@ -80,8 +100,8 @@ export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryB
           {/* Răng cưa xé lịch */}
           <div className="border-t-2 border-dashed border-slate-300 dark:border-slate-700 mx-3 shrink-0" />
 
-          {/* Thân Âm Lịch (Bố cục Lệch Trái 2 Dòng: Số ngày căn trái cao 2 dòng, bên phải là tháng ở trên và năm ở dưới) */}
-          <div className="py-2.5 px-3 flex items-center justify-center bg-white dark:bg-slate-900 shrink-0">
+          {/* Thân Âm Lịch */}
+          <div className="py-2.5 px-3 flex items-center justify-center shrink-0">
             <div className="flex items-center gap-2">
               {/* Số ngày căn trái cao 2 dòng */}
               <span className="text-3xl font-black text-red-600 dark:text-red-400 leading-none tracking-tight">
@@ -118,7 +138,7 @@ export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryB
                       {member.display_name || (member.honorific_prefix ? `${member.honorific_prefix} ${member.full_name}` : member.full_name)}
                     </h3>
                     {member.relative_kinship && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-control bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
                         {member.relative_kinship}
                       </span>
                     )}
@@ -172,7 +192,7 @@ export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryB
         {/* Răng cưa xé lịch */}
         <div className="border-t-2 border-dashed border-slate-300 dark:border-slate-700 mx-4" />
 
-        {/* Thân Âm Lịch (Bố cục Dàn Ngang 2 Mép chuẩn theo ảnh: Trái là ngày & tháng, Phải là năm) */}
+        {/* Thân Âm Lịch */}
         <div className="py-2.5 px-4 flex items-center justify-between text-xs bg-white dark:bg-slate-900">
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl font-black text-red-600 dark:text-red-400 leading-none">
@@ -202,7 +222,7 @@ export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryB
                     {member.display_name || (member.honorific_prefix ? `${member.honorific_prefix} ${member.full_name}` : member.full_name)}
                   </h3>
                   {member.relative_kinship && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-control bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
                       {member.relative_kinship}
                     </span>
                   )}
@@ -243,10 +263,11 @@ export default function AnniversaryBlocCard({ group, forceLayout }: AnniversaryB
  */
 export function AnniversaryBlocCardPreview({
   variant = 'today',
+  profile,
 }: {
   variant?: 'today' | 'upcoming';
+  profile?: DesignProfileId;
 }) {
   const group = variant === 'today' ? MOCK_ANNIVERSARY_GROUP_TODAY : MOCK_ANNIVERSARY_GROUP_UPCOMING;
-  return <AnniversaryBlocCard group={group} />;
+  return <AnniversaryBlocCard group={group} profile={profile} />;
 }
-

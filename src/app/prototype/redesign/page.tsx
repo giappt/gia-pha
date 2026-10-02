@@ -3907,52 +3907,158 @@ export default function ProfessionalDesignSystemShowcase() {
                 <div className="flex items-center justify-between pb-3 border-b border-[#F0EBE1]">
                   <div>
                     <h3 className="font-serif font-bold text-base text-stone-900">
-                      9. Quy Chuẩn Tem Lịch Bloc Di Sản
+                      9. Quy Chuẩn Tem Lịch Bloc Di Sản (3 Trạng Thái Thời Gian)
                     </h3>
-                    <p className="text-[11px] text-stone-500 mt-0.5">Khóa kích thước 90x108px, cấu trúc âm dương truyền thống</p>
+                    <p className="text-[11px] text-stone-500 mt-0.5">
+                      Khóa kích thước 90x108px desktop (76x96px mobile), 3 trạng thái màu gáy tem và nhãn tiến độ
+                    </p>
                   </div>
-                  <span className="text-[11px] font-mono text-stone-400 bg-stone-100 px-2 py-0.5 rounded-md">Bloc Stamp</span>
+                  <span className="text-[11px] font-mono text-stone-400 bg-stone-100 px-2 py-0.5 rounded-md">Bloc Stamp SSOT</span>
                 </div>
-                <div className="space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-[#B91C1C] border border-[#991B1B] shadow-2xs shrink-0" />
-                      <div>
-                        <p className="font-bold text-stone-900">Đỏ Gáy Lịch Bloc (#B91C1C / #C53030)</p>
-                        <p className="text-stone-500 text-[11px]">Sắc đỏ cờ truyền thống, cao 26px, chữ hoa trắng in đậm</p>
+                
+                {/* 1. Ba trạng thái màu gáy tem lịch */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-stone-600">
+                    A. 3 Sắc Màu Gáy Tem Theo Thời Gian (Header Bar):
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                    {/* Trạng thái 1: Hôm nay giỗ */}
+                    <div className="p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-red-100 text-red-700">0 Ngày (Hôm nay)</span>
+                        <span className="font-mono text-stone-400 text-[10px]">bg-red-600</span>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-lg bg-red-600 text-white font-black flex items-center justify-center text-xs shadow-2xs shrink-0">
+                          T.10
+                        </div>
+                        <div>
+                          <p className="font-bold text-stone-900 text-xs">Đỏ Cờ Truyền Thống</p>
+                          <p className="text-stone-500 text-[11px]">#B91C1C / bg-red-600</p>
+                          <p className="text-stone-400 text-[10px]">Chữ trắng in đậm font-black</p>
+                        </div>
                       </div>
                     </div>
-                    <span className="font-mono text-stone-400 text-[11px] shrink-0">--bloc-header-red</span>
-                  </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-white border-2 border-dashed border-stone-300 shrink-0" />
-                      <div>
-                        <p className="font-bold text-stone-900">Đường Xé Răng Cưa (border-dashed)</p>
-                        <p className="text-stone-500 text-[11px]">Nét đứt phân tách ngày dương lịch và phần ghi chú âm lịch</p>
+                    {/* Trạng thái 2: Ngày mai giỗ */}
+                    <div className="p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800">1 Ngày (Ngày mai)</span>
+                        <span className="font-mono text-stone-400 text-[10px]">bg-amber-400</span>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-lg bg-amber-400 text-slate-950 font-black flex items-center justify-center text-xs shadow-2xs shrink-0">
+                          T.10
+                        </div>
+                        <div>
+                          <p className="font-bold text-stone-900 text-xs">Vàng Hổ Phách</p>
+                          <p className="text-stone-500 text-[11px]">#FBBF24 / bg-amber-400</p>
+                          <p className="text-stone-400 text-[10px]">Chữ đen chì text-slate-950</p>
+                        </div>
                       </div>
                     </div>
-                    <span className="font-mono text-stone-400 text-[11px] shrink-0">--bloc-tear-dash</span>
-                  </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-[#FAF8F2] border border-[#EAE5D9] flex items-center justify-center font-bold text-rose-700 text-sm shrink-0">
-                        03
+                    {/* Trạng thái 3: Tương lai */}
+                    <div className="p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800">&gt; 1 Ngày (Tương lai)</span>
+                        <span className="font-mono text-stone-400 text-[10px]">bg-emerald-800</span>
                       </div>
-                      <div>
-                        <p className="font-bold text-stone-900">Số Âm Lịch Lệch Trái (#BE123C)</p>
-                        <p className="text-stone-500 text-[11px]">Neo cố định góc trái dưới, kèm năm Can Chi font-serif</p>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-800 text-white font-bold flex items-center justify-center text-xs shadow-2xs shrink-0">
+                          T.10
+                        </div>
+                        <div>
+                          <p className="font-bold text-stone-900 text-xs">Xanh Ngọc Phỉ Thúy</p>
+                          <p className="text-stone-500 text-[11px]">#065F46 / bg-emerald-800</p>
+                          <p className="text-stone-400 text-[10px]">Chữ trắng in đậm font-bold</p>
+                        </div>
                       </div>
                     </div>
-                    <span className="font-mono text-stone-400 text-[11px] shrink-0">--bloc-lunar-num</span>
+                  </div>
+                </div>
+
+                {/* 2. Ba nhãn trạng thái thời gian & biểu tượng */}
+                <div className="space-y-2 pt-2 border-t border-[#F0EBE1]">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-stone-600">
+                    B. 3 Nhãn Trạng Thái &amp; Biểu Tượng Thời Gian (Status Badges):
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                    {/* Nhãn 1 */}
+                    <div className="p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Flame className="w-4 h-4 text-red-600 shrink-0" />
+                        <div>
+                          <p className="font-bold text-red-600 text-xs tracking-wide">HÔM NAY GIỖ</p>
+                          <p className="text-stone-400 text-[10px]">Flame icon + text-red-600</p>
+                        </div>
+                      </div>
+                      <span className="font-mono text-stone-400 text-[10px]">isToday</span>
+                    </div>
+
+                    {/* Nhãn 2 */}
+                    <div className="p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-400 shrink-0" />
+                        <div>
+                          <p className="font-bold text-amber-600 text-xs tracking-wide">NGÀY MAI GIỖ</p>
+                          <p className="text-stone-400 text-[10px]">Star icon + text-amber-600</p>
+                        </div>
+                      </div>
+                      <span className="font-mono text-stone-400 text-[10px]">isTomorrow</span>
+                    </div>
+
+                    {/* Nhãn 3 */}
+                    <div className="p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-slate-500 shrink-0" />
+                        <div>
+                          <p className="font-semibold text-slate-600 text-xs">Còn 13 ngày</p>
+                          <p className="text-stone-400 text-[10px]">Clock icon + text-slate-500</p>
+                        </div>
+                      </div>
+                      <span className="font-mono text-stone-400 text-[10px]">upcoming</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Cấu trúc âm dương & nét xé */}
+                <div className="space-y-2 pt-2 border-t border-[#F0EBE1]">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-stone-600">
+                    C. Cấu Trúc Âm Dương &amp; Khóa Tỷ Lệ Hình Học:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9]">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-white border-2 border-dashed border-stone-300 flex items-center justify-center text-[10px] text-stone-400 font-mono shrink-0">
+                          - -
+                        </div>
+                        <div>
+                          <p className="font-bold text-stone-900 text-xs">Đường Xé Răng Cưa (border-dashed)</p>
+                          <p className="text-stone-500 text-[11px]">Nét đứt phân tách dương lịch &amp; phần ghi chú âm lịch</p>
+                        </div>
+                      </div>
+                      <span className="font-mono text-stone-400 text-[10px] shrink-0">--bloc-tear-dash</span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9]">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-[#FAF8F2] border border-[#EAE5D9] flex items-center justify-center font-bold text-rose-700 text-sm shrink-0">
+                          19
+                        </div>
+                        <div>
+                          <p className="font-bold text-stone-900 text-xs">Số Âm Lịch Lệch Trái (#BE123C)</p>
+                          <p className="text-stone-500 text-[11px]">Neo cố định góc trái dưới, kèm Can Chi font-serif</p>
+                        </div>
+                      </div>
+                      <span className="font-mono text-stone-400 text-[10px] shrink-0">--bloc-lunar-num</span>
+                    </div>
                   </div>
 
                   <div className="p-3 rounded-xl bg-[#FAF8F2] border border-[#EAE5D9] text-[11px] space-y-1">
-                    <p className="font-bold text-stone-900">Khóa Hình Học Cố Định:</p>
+                    <p className="font-bold text-stone-900">Khóa Hình Học Cố Định (Strict Geometry Lock):</p>
                     <p className="text-stone-600 leading-relaxed">
-                      Desktop: khóa cứng chính xác <code>w-[90px] h-[108px]</code>. Mobile: <code>w-[76px] h-[96px]</code>. Tuyệt đối không dùng <code>flex-1</code> kéo dãn dọc làm méo tỷ lệ tờ lịch bloc.
+                      Desktop: khóa cứng chính xác <code>w-[90px] h-[108px]</code>. Mobile: <code>w-[76px] h-[96px]</code>. Tuyệt đối không dùng <code>flex-1</code> kéo dãn dọc làm méo tỷ lệ tờ lịch bloc. Cả 3 trạng thái màu sắc gáy và nhãn trạng thái đều đồng bộ 100% giữa <code>AnniversaryBlocCard</code> (trang chủ) và <code>AnniversaryBlocTimeline</code> (danh sách giỗ).
                     </p>
                   </div>
                 </div>
@@ -4059,8 +4165,14 @@ export default function ProfessionalDesignSystemShowcase() {
   /* ============================================================ */
   /* 6. TEM LỊCH BLOC DI SẢN (ANNIVERSARY STAMP TOKENS)           */
   /* ============================================================ */
-  --bloc-header-red:        #B91C1C; /* Đỏ gáy lịch bloc */
+  --bloc-header-today:      #B91C1C; /* Đỏ cờ - Hôm nay giỗ (0 ngày) */
+  --bloc-header-tomorrow:   #FBBF24; /* Vàng hổ phách - Ngày mai giỗ (1 ngày) */
+  --bloc-header-upcoming:   #065F46; /* Xanh ngọc phỉ thúy - Ngày tương lai */
+  --bloc-status-today:      #DC2626; /* Chữ đỏ cảnh báo Hôm nay giỗ */
+  --bloc-status-tomorrow:   #D97706; /* Chữ vàng hổ phách Ngày mai giỗ */
+  --bloc-status-upcoming:   #64748B; /* Chữ xám thanh lịch Còn X ngày */
   --bloc-lunar-num:         #BE123C; /* Con số đỏ âm lịch */
+  --bloc-tear-dash:         #D6D3D1; /* Đường xé nét đứt */
   --bloc-width-pc:          90px;
   --bloc-height-pc:         108px;
   --bloc-width-mobile:      76px;
@@ -4111,6 +4223,15 @@ module.exports = {
         brand: {
           DEFAULT: 'var(--bg-brand)',
           border: 'var(--border-brand)',
+        },
+        bloc: {
+          'header-today': 'var(--bloc-header-today)',
+          'header-tomorrow': 'var(--bloc-header-tomorrow)',
+          'header-upcoming': 'var(--bloc-header-upcoming)',
+          'status-today': 'var(--bloc-status-today)',
+          'status-tomorrow': 'var(--bloc-status-tomorrow)',
+          'status-upcoming': 'var(--bloc-status-upcoming)',
+          'lunar-num': 'var(--bloc-lunar-num)',
         },
       },
       borderColor: {

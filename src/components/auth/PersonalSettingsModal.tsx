@@ -119,6 +119,7 @@ export default function PersonalSettingsModal({
       onClick={onClose}
     >
       <div
+        id="personal-settings-modal-dialog"
         className="relative w-full max-w-md max-h-[85vh] flex flex-col my-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >

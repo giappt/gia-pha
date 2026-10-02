@@ -4,29 +4,40 @@ import React from 'react';
 import Link from 'next/link';
 import { Flame, Star, Clock } from 'lucide-react';
 import type { AnniversaryDayGroup, AnniversaryMemberItem } from '@/types/anniversary';
+import type { DesignProfileId } from '@/types/database';
 import { formatSolarDateWithDayOfWeek } from '@/lib/anniversaries/anniversary-engine';
 import FamilyTreeIcon from '@/components/icons/FamilyTreeIcon';
 
 interface AnniversaryBlocTimelineProps {
   groups: AnniversaryDayGroup[];
   onSelectMember?: (member: AnniversaryMemberItem) => void;
+  profile?: DesignProfileId;
 }
 
 export default function AnniversaryBlocTimeline({
   groups,
   onSelectMember,
+  profile,
 }: AnniversaryBlocTimelineProps) {
+  const isContemporary = profile === 'contemporary_heritage';
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {groups.map((group) => {
         const isToday = group.days_left === 0;
         const isTomorrow = group.days_left === 1;
 
-        const stampHeaderBg = isToday
-          ? 'bg-red-600 text-white font-black'
-          : isTomorrow
-            ? 'bg-amber-400 text-slate-950 font-black'
-            : 'bg-emerald-800 text-white font-bold';
+        const stampHeaderBg = isContemporary
+          ? isToday
+            ? 'bg-red-600 text-white font-black'
+            : isTomorrow
+              ? 'bg-amber-400 text-slate-950 font-black'
+              : 'bg-[#065F46] text-white font-bold'
+          : isToday
+            ? 'bg-red-600 text-white font-black'
+            : isTomorrow
+              ? 'bg-amber-400 text-slate-950 font-black'
+              : 'bg-emerald-800 text-white font-bold';
 
         const statusTag = isToday ? (
           <span className="text-red-600 dark:text-red-400 font-bold flex items-center gap-1.5">
@@ -48,6 +59,7 @@ export default function AnniversaryBlocTimeline({
         return (
           <div
             key={group.solar_date_str}
+            data-theme-profile={profile}
             className="rounded-card border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden"
           >
             {/* 1. GIAO DIỆN MOBILE (< sm): CHUẨN XÁC THEO WIREFRAME ĐÃ DUYỆT */}
@@ -104,7 +116,7 @@ export default function AnniversaryBlocTimeline({
                         {member.display_name || (member.honorific_prefix ? `${member.honorific_prefix} ${member.full_name}` : member.full_name)}
                       </h4>
                       {member.relative_kinship && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-control bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
                           {member.relative_kinship}
                         </span>
                       )}
@@ -192,7 +204,7 @@ export default function AnniversaryBlocTimeline({
                             {member.display_name || (member.honorific_prefix ? `${member.honorific_prefix} ${member.full_name}` : member.full_name)}
                           </h4>
                           {member.relative_kinship && (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-control bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/60">
                               {member.relative_kinship}
                             </span>
                           )}

@@ -1,37 +1,58 @@
 # STATE MANIFEST
 ### 1. Key Context
-- **Phiên làm việc:** /feature-brainstorm — Thiết kế lại giao diện toàn bộ hệ thống FAT theo phong cách "Di Sản Đương Đại" (Heritage Minimalism). Xây dựng prototype tương tác tại `src/app/prototype/redesign/page.tsx` gồm 7 màn hình (Trang Chủ, Lịch Giỗ, Cây Gia Phả, Xưng Hô, Quản Trị, Form Nhập Liệu, và Bảng Quy Chuẩn Design Tokens).
-- **Quyết định thiết kế cốt lõi đã chốt:**
-  1. Bảng màu Di Sản: Nền giấy Dó ngà ấm `#FAF8F2`, viền đá hairline ấm `#EAE5D9`, xanh ngọc chủ đạo `#0F382C`, bóng đổ 100% sắc nâu than chì `rgba(28,25,23,...)`.
-  2. Anti-Pill Law: 100% thẻ dùng `rounded-2xl (16px)`, nút/input dùng `rounded-lg (8px)`, huy hiệu dùng `rounded-md (6px)`. Cấm tuyệt đối `rounded-full` trên nút bấm và badge. 0 emoji trong mã nguồn.
-  3. Windows Vietnamese Kerning Fix: 100% `font-sans` cho Form, Admin, Modal, Data Table. Chỉ `font-serif` cho Hero Title trang trọng.
-  4. Phương Án 1 Chọn cho PA Giới Tính Phả Hệ: Sáng & Trong Trẻo (Nam `#38BDF8`, Nữ `#FB7185`) là mặc định.
-  5. Tem Lịch Bloc: Khóa cứng `90×108px` desktop, `76×96px` mobile. Gáy đỏ `#B91C1C`, đường xé nét đứt, số âm lịch lệch trái `#BE123C`.
-  6. Prototype cách ly hoàn toàn trong `src/app/prototype/redesign/` — KHÔNG chạm production components.
-- **Trạng thái kiểm chứng (đã pass tại thời điểm compact):**
-  - `npm.cmd run typecheck` → Exit 0 (0 errors).
-  - `npm.cmd test` → Exit 0 (445/445 tests passed, 0 failures).
-  - `tests/anti-pill-integrity.test.ts` → PASS 4/4 (0 emoji, 0 pill vi phạm).
-- **File chính đang thao tác:**
-  - `d:\pj\other\fat\src\app\prototype\redesign\page.tsx` (4593 dòng, 7 màn hình prototype)
-  - `d:\pj\other\fat\.agents\brain\lessons_learned.md` (đã cập nhật bài học 10 Trụ Cột Thiết Kế)
-  - `d:\pj\other\fat\docs\16_Micro-Spec_Milestone_7_Admin_Portal_Reorganization.md`
-- **Dev server:** `npm run dev` đang chạy liên tục trên port 3000.
+
+**Dự án:** FAT - Family Tree Management System
+**Workspace:** d:\pj\other\fat
+**Spec hiện hành:** docs/18_Micro-Spec_Milestone_9_Design_Profiles_And_Anniversary_Bloc.md
+**Dev Server:** http://localhost:3000 (đang chạy `npm run dev`)
+
+**Diễn biến chính trong phiên này (theo trình tự thời gian):**
+- User phát hiện việc đồng bộ Contemporary Heritage bị "sửa cục bộ / cát cứ ốc đảo": chỉ có AnniversaryBlocCard đổi màu, 90% còn lại (Logo, Navbar, Bottom Nav, Loading, Canvas, Bus Edge, MemberNode, Modals, Admin) vẫn hardcode emerald/slate/blue/pink cũ.
+- Đã brainstorm, spec và code hoàn chỉnh Scoped CSS Cascade toàn hệ thống dưới `html[data-theme-profile="contemporary_heritage"]` trong globals.css.
+- Đã gán `id` cho các thành phần cốt lõi (logo, modals) và binding CSS Variables (--bg-canvas, --tree-bus-stroke, --tree-dots-color) trong components.
+- Đã tạo test suite `tests/heritage-sync-integrity.test.ts` (5 TCs: TC_ARCH_HERITAGE_SYNC_01..05).
+- Đã fix lỗi RG38 (login-gate ClanHanLogo phải giữ className="text-white" cho test tĩnh, CSS cascade !important sẽ override khi Contemporary Heritage active).
+- **Kết quả kiểm chứng 3 tầng (ĐÃ PASS):** Typecheck 0 errors, Build 40/40 routes OK, Test 468/468 PASS (0 fail).
+- Đã tick [x] trong Micro-Spec: TC_ARCH_HERITAGE_SYNC_01..05, RG20, RG21.
+- Đã ghi bài học vào `.agents/brain/lessons_learned.md`.
+
+**User bắt đầu UAT và phát hiện các vấn đề MỚI (chưa xử lý):**
+1. **Trang /anniversaries nền trắng lạc lõng:** Hero header, notification banner, filter bar, và container ngoài trang Lịch Giỗ vẫn hardcode `bg-white`, `bg-slate-50`, `bg-emerald-500/10`, `border-emerald-500/20`... Không ăn theo biến `--bg-canvas: #FAF8F2` của Contemporary Heritage. Khu vực này đang "trắng toát" giữa nền giấy Dó ngà ấm.
+2. **Icon FamilyTreeIcon chỗ có chỗ không:** Một số nơi dùng `text-emerald-600` hardcode trên icon, chỗ khác không chỉ định màu → không đồng bộ.
+3. **User hỏi:** "Hệ Thống Design Tokens Di Sản & Cam Kết Kỹ Thuật (SSOT) có đủ để làm không?" → Câu trả lời: Tokens CSS trong globals.css đã đầy đủ (--bg-canvas, --bg-surface, --border-card...), nhưng các component trên trang /anniversaries CHƯA ĐƯỢC đấu nối tiêu thụ (consume) chúng.
+
+**Files trọng tâm cần xử lý ở vòng kế tiếp:**
+- `src/app/anniversaries/page.tsx` (L270: `bg-slate-50`, L272: `bg-white/60`, L285: `border-slate-200`, L286: `bg-emerald-500/10`, L313: `border-slate-200`, L327: `text-emerald-700`)
+- `src/components/anniversaries/PushNotificationBanner.tsx` (L206: `border-emerald-500/20 bg-gradient-to-r from-emerald-500/5`, L208: `bg-emerald-600/10`, L250: `bg-emerald-600`)
+- `src/components/anniversaries/AnniversaryBlocTimeline.tsx` (một số class hardcode cho desktop top bar, member divider)
+- `src/components/navbar/Navbar.tsx` (L111: `text-emerald-600` trên FamilyTreeIcon)
+- Nhiều nơi khác dùng FamilyTreeIcon với `text-emerald-600` hardcode
 
 ### 2. Task Checklist
-- [x] Prototype 7 màn hình hoàn chỉnh tại `/prototype/redesign` (Trang Chủ, Lịch Giỗ, Cây Gia Phả, Xưng Hô, Quản Trị, Form Nhập Liệu, Tokens)
-- [x] Header Bar thống nhất với logo ấn triện 范, tab điều hướng có trạng thái active, sticky top
-- [x] Studio Inspector Ribbon (dải đen chì 32px) cho DevTools (Desktop/Mobile toggle, kịch bản giỗ, v.v.)
-- [x] Live Modal popup thành viên tương tác thật (form nhập liệu 5 tab)
-- [x] Hệ thống 4 Phương Án màu sắc phả hệ (PA 1-4) với Live Palette Switcher trên tab Cây Gia Phả
-- [x] Màn hình 7: Bảng Quy Chuẩn Thiết Kế Toàn Diện — 10 phân khu thị giác + CSS Variables Manifest + Tailwind Config Extension
-- [x] Fix lỗi TypeScript (duplicate `)`) trên dòng 3771 gây TS1381
-- [x] Ghi bài học kinh nghiệm "10 Trụ Cột Thiết Kế Bắt Buộc" vào lessons_learned.md
-- [x] Kiểm chứng 3 tầng: Typecheck 0 lỗi, Test 445/445 pass, Anti-Pill 4/4 pass
-- [/] **Phản hồi User chưa xử lý xong:** User hỏi "Phân khu 9 (Quy Chuẩn Tem Lịch Bloc) chỉ có mỗi màu đỏ thì có đủ không? Còn ngày mai và ngày bình thường đâu?" — cần bổ sung thêm màu sắc cho 3 trạng thái thời gian của tem lịch bloc (Hôm nay giỗ / Ngày mai giỗ / Ngày bình thường tương lai)
-- [ ] Bổ sung vào Phân Khu 9 đầy đủ 3 trạng thái thời gian: (1) Hôm nay giỗ = Đỏ `#B91C1C`/`bg-red-600`, (2) Ngày mai giỗ = Vàng Hổ Phách `bg-amber-400 text-slate-950`, (3) Ngày bình thường tương lai = Xanh Ngọc `bg-emerald-800 text-white` — phải khớp 100% với logic thực tế trong `AnniversaryBlocCard.tsx` và `AnniversaryBlocTimeline.tsx`
-- [ ] Bổ sung vào Phân Khu 9 màu sắc nhãn trạng thái văn bản: (1) `text-red-600` HÔM NAY GIỖ + icon Flame, (2) `text-amber-600` NGÀY MAI GIỖ + icon Star, (3) `text-slate-500` Còn X ngày + icon Clock
-- [ ] Human Visual UAT toàn bộ 7 màn hình prototype tại `http://localhost:3000/prototype/redesign`
+
+**Phase trước (Hoàn tất ✅):**
+- [x] Brainstorm & Root Cause: Phát hiện căn bệnh "sửa cục bộ / cát cứ ốc đảo"
+- [x] Spec: Cập nhật Micro-Spec Section 5.10, TC_ARCH_HERITAGE_SYNC_01..05, UAT_43..46, RG20..21
+- [x] Code: Scoped CSS Cascade toàn hệ thống trong globals.css
+- [x] Code: Binding CSS Variables vào FamilyBusEdge, FamilyTreeCanvas, ClanHanLogoNavbar, login-gate, page.tsx, 4 Modals
+- [x] Code: Test suite heritage-sync-integrity.test.ts (5 TCs PASS)
+- [x] Fix: RG38 (giữ text-white trên ClanHanLogo login-gate, CSS !important override)
+- [x] Verify: Typecheck 0 errors
+- [x] Verify: Build 40/40 routes OK
+- [x] Verify: Test 468/468 PASS (0 fail)
+- [x] Reverse-sync: Tick [x] TC_ARCH_HERITAGE_SYNC_01..05, RG20, RG21 trong Micro-Spec
+- [x] Ghi lessons_learned.md
+
+**Phase hiện tại (User UAT phát hiện lỗ hổng mới — CHƯA XỬ LÝ):**
+- [ ] Brainstorm & Root Cause: Trang /anniversaries (hero, banner, filter, container) vẫn hardcode bg-white/bg-slate-50, không tiêu thụ --bg-canvas
+- [ ] Brainstorm: PushNotificationBanner vẫn hardcode emerald gradient, không đồng bộ Contemporary Heritage
+- [ ] Brainstorm: FamilyTreeIcon hardcode text-emerald-600 rải rác nhiều nơi (Navbar, PersonalSettingsModal, BranchTaxonomyManager, ClanDashboard, kinship/page, anniversaries/page, prototype pages)
+- [ ] Spec: Cập nhật Micro-Spec bổ sung các đối tượng mới vào phạm vi đồng bộ
+- [ ] Code: Đồng bộ /anniversaries page shell (hero, banner, filter, container ngoài) theo Contemporary Heritage
+- [ ] Code: Đồng bộ PushNotificationBanner
+- [ ] Code: Đồng bộ FamilyTreeIcon toàn hệ thống
+- [ ] Verify 3 tầng
+- [ ] Human UAT
 
 ### 3. Immediate Next Step
-- Bổ sung vào Phân Khu 9 (Quy Chuẩn Tem Lịch Bloc) trong Màn Hình 7 đầy đủ 3 trạng thái thời gian của gáy tem lịch bloc: **Hôm nay giỗ** (đỏ `bg-red-600`), **Ngày mai giỗ** (vàng hổ phách `bg-amber-400`), **Ngày bình thường tương lai** (xanh ngọc `bg-emerald-800`), cùng 3 nhãn trạng thái văn bản tương ứng — phải trích xuất chính xác từ mã nguồn production thực tế trong `AnniversaryBlocCard.tsx` dòng 25-35 và `AnniversaryBlocTimeline.tsx` dòng 25-43. Sau đó cập nhật CSS Variables Manifest và Tailwind Config tương ứng.
+- Chạy `/feature-brainstorm` để mổ xẻ triệt để: (1) Trang /anniversaries page shell (hero header bg-white/60, filter bar bg-slate-100, today info card border-slate-200, container bg-slate-50) cần được đấu nối tiêu thụ biến CSS --bg-canvas, --bg-surface, --border-card, --text-brand-accent; (2) PushNotificationBanner cần đồng bộ; (3) FamilyTreeIcon hardcode text-emerald-600 cần quy hoạch thống nhất toàn hệ thống. Sau đó lập implementation_plan.md và chờ User duyệt trước khi chuyển sang /feature-spec.
