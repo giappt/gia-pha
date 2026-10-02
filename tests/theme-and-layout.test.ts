@@ -1604,6 +1604,140 @@ describe('Theme Synchronization & Canvas Viewport Resilience Suite', () => {
         'Fallback Modal phải có thông điệp giải thích rõ ràng cho người dùng'
       );
     });
+
+    it('TC_UT_NAV_ACTIVE_NO_TOP_BORDER_01: Mobile Bottom Nav loại bỏ hoàn toàn viền cắt ngang thô ráp border-top 2px', () => {
+      const globalsPath = path.resolve(process.cwd(), 'src/app/globals.css');
+      assert.ok(fs.existsSync(globalsPath), 'src/app/globals.css phải tồn tại');
+
+      const cssContent = fs.readFileSync(globalsPath, 'utf8');
+
+      // 1. Selector cho #mobile-bottom-nav a.text-emerald-700 tồn tại
+      assert.ok(
+        cssContent.includes('#mobile-bottom-nav a.text-emerald-700'),
+        'globals.css phải chứa style cho #mobile-bottom-nav a.text-emerald-700'
+      );
+
+      // 2. Tuyệt đối không còn border-top: 2px solid
+      assert.ok(
+        !cssContent.includes('border-top: 2px solid #0F382C'),
+        'globals.css tuyệt đối không được chứa viền thô border-top: 2px solid #0F382C'
+      );
+
+      // 3. Giữ nền kem di sản #F5F2EA
+      assert.ok(
+        cssContent.includes('background-color: #F5F2EA'),
+        'globals.css phải giữ nền kem di sản #F5F2EA'
+      );
+    });
+
+    it('TC_UT_PWA_BANNER_APP_LOGO_01: Banner PWA và Mini Banner hiển thị Logo Dòng Họ ClanHanLogo thay vì icon điện thoại', () => {
+      const buttonPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+      assert.ok(fs.existsSync(buttonPath), 'src/components/pwa/InstallPwaButton.tsx phải tồn tại');
+
+      const content = fs.readFileSync(buttonPath, 'utf8');
+
+      // 1. Phải import ClanHanLogo
+      assert.ok(
+        content.includes("import ClanHanLogo from '@/components/icons/ClanHanLogo'"),
+        'InstallPwaButton.tsx phải import ClanHanLogo'
+      );
+
+      // 2. Banner và Mini Banner phải chứa ClanHanLogo
+      assert.ok(
+        content.includes('<ClanHanLogo size={28}'),
+        'PwaInstallBanner phải sử dụng ClanHanLogo size 28'
+      );
+      assert.ok(
+        content.includes('<ClanHanLogo size={22}'),
+        'PwaMiniBanner phải sử dụng ClanHanLogo size 22'
+      );
+
+      // 3. Không dùng icon Smartphone trong ô vuông đại diện của banner
+      const bannerSection = content.slice(content.indexOf('data-testid="pwa-install-banner"'));
+      assert.ok(
+        !bannerSection.includes('<Smartphone className="w-5 h-5"'),
+        'Banner PWA không được dùng icon Smartphone trong ô nhận diện'
+      );
+    });
+
+    it('TC_UT_PWA_BANNER_DISMISS_LOCALSTORAGE_01: Banner PWA có nút Đóng (X) và lưu trạng thái đã đóng vào localStorage', () => {
+      const buttonPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+      const content = fs.readFileSync(buttonPath, 'utf8');
+
+      // 1. Phải có nút đóng với aria-label chuẩn
+      assert.ok(
+        content.includes('aria-label="Đóng thông báo cài đặt"'),
+        'Banner PWA phải có nút Đóng với aria-label="Đóng thông báo cài đặt"'
+      );
+
+      // 2. Phải có logic lưu fat_pwa_banner_dismissed vào localStorage
+      assert.ok(
+        content.includes("localStorage.setItem('fat_pwa_banner_dismissed', 'true')"),
+        'InstallPwaButton.tsx phải lưu fat_pwa_banner_dismissed vào localStorage khi đóng'
+      );
+
+      // 3. Phải có state isDismissed
+      assert.ok(
+        content.includes('isDismissed'),
+        'InstallPwaButton.tsx phải quản lý state isDismissed'
+      );
+    });
+
+    it('TC_UT_PWA_BANNER_INSTALLED_AUTO_HIDE_01: Banner PWA tự động ẩn khi localStorage đánh dấu đã cài đặt hoặc đã đóng', () => {
+      const buttonPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+      const storePath = path.resolve(process.cwd(), 'src/lib/pwa/pwa-store.ts');
+      const buttonContent = fs.readFileSync(buttonPath, 'utf8');
+      const storeContent = fs.readFileSync(storePath, 'utf8');
+
+      // 1. Kiểm tra đọc fat_pwa_installed và fat_pwa_banner_dismissed từ localStorage
+      assert.ok(
+        buttonContent.includes("localStorage.getItem('fat_pwa_banner_dismissed') === 'true'"),
+        'InstallPwaButton.tsx phải kiểm tra trạng thái đã đóng từ localStorage'
+      );
+      assert.ok(
+        buttonContent.includes("localStorage.getItem('fat_pwa_installed') === 'true'"),
+        'InstallPwaButton.tsx phải kiểm tra trạng thái đã cài từ localStorage'
+      );
+
+      // 2. Điều kiện early return bao gồm isDismissed và isInstalled
+      assert.ok(
+        buttonContent.includes('isStandalone || isDismissed || isInstalled'),
+        'InstallPwaButton.tsx phải ẩn component khi isStandalone, isDismissed hoặc isInstalled'
+      );
+
+      // 3. pwa-store.ts phải lưu fat_pwa_installed khi appinstalled hoặc prompt accepted
+      assert.ok(
+        storeContent.includes("localStorage.setItem('fat_pwa_installed', 'true')"),
+        'pwa-store.ts phải lưu fat_pwa_installed vào localStorage'
+      );
+
+      // 4. Hỗ trợ getInstalledRelatedApps để tự động ẩn trên trình duyệt hỗ trợ
+      assert.ok(
+        buttonContent.includes('getInstalledRelatedApps'),
+        'InstallPwaButton.tsx phải kiểm tra getInstalledRelatedApps nếu trình duyệt hỗ trợ'
+      );
+    });
+
+    it('TC_UT_PWA_BUTTON_NO_PHONE_ICON_01: Nút bấm cài đặt khử sạch icon điện thoại thừa thãi trên cả PC và Mobile', () => {
+      const buttonPath = path.resolve(process.cwd(), 'src/components/pwa/InstallPwaButton.tsx');
+      const content = fs.readFileSync(buttonPath, 'utf8');
+
+      // 1. Hàm renderButtonContent không còn rẽ nhánh Smartphone
+      const renderBtnStart = content.indexOf('const renderButtonContent =');
+      const renderBtnEnd = content.indexOf('const getVariantStyles =');
+      const renderBtnFunc = content.slice(renderBtnStart, renderBtnEnd);
+
+      assert.ok(
+        !renderBtnFunc.includes('Smartphone'),
+        'renderButtonContent tuyệt đối không còn chứa icon Smartphone'
+      );
+
+      // 2. renderButtonContent dùng icon Download chuẩn hành động
+      assert.ok(
+        renderBtnFunc.includes('Download'),
+        'renderButtonContent phải sử dụng icon Download'
+      );
+    });
   });
 });
 

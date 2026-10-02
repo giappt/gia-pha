@@ -843,7 +843,7 @@ Nhằm xóa bỏ triệt để và vĩnh viễn căn bệnh "Sửa cục bộ / 
   - Nav links: Active `bg-[#0F382C] text-[#F3E5C8] font-bold shadow-2xs`, Hover `text-[#0F382C] hover:bg-[#FAF8F2]`.
 - **Thanh Navigation Đáy Di Động (`MobileBottomNav.tsx`):**
   - Nền thanh đáy: `bg-white/95 border-t border-[#EAE5D9]`.
-  - Item Active: `text-[#0F382C] font-bold bg-[#F5F2EA] border-t-2 border-[#0F382C]`.
+  - Item Active: `text-[#0F382C] font-bold bg-[#F5F2EA] rounded-xl` (loại bỏ hoàn toàn viền cắt ngang thô `border-t-2 border-[#0F382C]`, chuyển sang thiết kế dạng pill highlight mềm mại, thanh lịch đồng bộ với theme di sản đương đại).
   - Item Inactive: `text-stone-500 hover:text-stone-900`.
   - Chấm ping: Đổi từ `bg-emerald-500` sang `bg-[#0F382C]`.
 
@@ -855,9 +855,14 @@ Nhằm xóa bỏ triệt để và vĩnh viễn căn bệnh "Sửa cục bộ / 
   - Khung thẻ: `rounded-card bg-white border border-[#EAE5D9] shadow-xs`.
   - Avatar người dùng: `bg-[#0F382C] text-[#EAD096] rounded-xl font-serif font-bold`.
   - Nút hành động xem nhánh: `bg-[#F4F1E8] hover:bg-[#EAE5D9] text-stone-800 rounded-control`.
-- **Banner PWA (`InstallPwaButton.tsx`):**
-  - Nền banner: `bg-[#F5F2EA] border border-[#EAE5D9] rounded-card`.
-  - Icon & Nút cài đặt: `bg-[#0F382C] text-[#FAF8F2] hover:bg-[#164E3D] rounded-control`.
+- **Banner PWA (`InstallPwaButton.tsx`) & Mini Banner PWA:**
+  - Nền banner: `bg-[#F5F2EA] border border-[#EAE5D9] rounded-card relative`.
+  - Biểu Tượng Nhận Diện App (Trái): Thay thế hoàn toàn icon generic điện thoại (`Smartphone`/`Download`) bằng **Logo Dòng Họ Chính Thức (`ClanHanLogo` với chữ 范)** trong khung ngọc di sản `w-10 h-10 rounded-control bg-emerald-600 text-white`, tạo sự trang trọng và nhận diện đúng thương hiệu ứng dụng gia phả.
+  - Nút Thao Tác Cài Đặt: Khử sạch icon chiếc điện thoại thừa thãi trên nút bấm (`Smartphone`), dùng icon thao tác trực quan `Download`; nhãn nút hiển thị thông minh theo ngữ cảnh: Desktop `"Cài đặt ứng dụng"`, Mobile `"Cài đặt ngay"`.
+  - Cơ Chế Tắt / Ẩn Thông Minh & Ghi Nhớ Vĩnh Viễn:
+    - Bổ sung nút Đóng/Tắt banner (`X`) có `aria-label="Đóng thông báo cài đặt"` ở góc trên bên phải banner. Khi bấm, lưu `localStorage.setItem('fat_pwa_banner_dismissed', 'true')` và ẩn ngay lập tức.
+    - Khi cài đặt thành công (`choice.outcome === 'accepted'` hoặc sự kiện `appinstalled`), tự động lưu `localStorage.setItem('fat_pwa_installed', 'true')`.
+    - Tự động ẩn banner (`return null`) khi bất kỳ điều kiện nào thỏa mãn: đang chạy `isStandalone`, hoặc đã cài (`fat_pwa_installed === 'true'`), hoặc người dùng đã đóng (`fat_pwa_banner_dismissed === 'true'`), hoặc `navigator.getInstalledRelatedApps()` báo đã cài.
 
 #### 5.10.4. Trang Lịch Giỗ (`/anniversaries`) & Bộ Lọc & Banner Web Push:
 - **Trang Lịch Giỗ (`src/app/anniversaries/page.tsx`):**
@@ -1068,6 +1073,11 @@ Nhằm giải quyết dứt điểm sự bất đồng bộ giữa Trang Chủ (
 | **TC_THEME_ARCH_04** | Khử sạch các selector ID chắp vá cũ (#*-dialog, #*-modal) và bảo toàn selector hợp lệ | `tests/theme-architecture-integrity.test.ts` | `src/app/globals.css` | Quét các selector CSS mang tiền tố `#` bên trong khối theme profile | Không chứa các selector chắp vá theo ID như `#reorder-children-modal-dialog`, `#member-modal-content`; bảo toàn ID hợp lệ (`#push-notification-banner`) | Code Guard | - [x] PASS |
 | **TC_THEME_BLOC_SYNC_01** | Cột lịch bloc của AnniversaryBlocCard và AnniversaryBlocTimeline bắt buộc sử dụng bg-white, 0% bg-[#FAF8F2] | `tests/theme-architecture-integrity.test.ts` | `AnniversaryBlocCard.tsx`, `AnniversaryBlocTimeline.tsx` | Quét AST / class áp dụng cho ruột cột lịch bloc | Cả 2 component đều dùng `bg-white dark:bg-slate-900`, tuyệt đối không chứa `bg-[#FAF8F2]` trên ruột tờ lịch | UI Invariant | - [x] PASS |
 | **TC_THEME_BLOC_SYNC_02** | Đồng bộ ma trận 3 màu gáy lịch bloc (Hôm nay: đỏ, Ngày mai: vàng, Ngày thường: xanh di sản #0F382C) | `tests/theme-architecture-integrity.test.ts` | `AnniversaryBlocCard.tsx`, `AnniversaryBlocTimeline.tsx` | Phân tích biến thể màu gáy header theo `days_left` | Hôm nay: `bg-red-600`, Ngày mai: `bg-amber-400`, Ngày thường: `bg-[#0F382C]` đồng nhất trên cả 2 component | Visual Contract | - [x] PASS |
+| **TC_UT_NAV_ACTIVE_NO_TOP_BORDER_01** | Mobile Bottom Nav loại bỏ hoàn toàn viền cắt ngang thô ráp border-top 2px | `tests/theme-and-layout.test.ts` | File `src/app/globals.css` | Quét selector `#mobile-bottom-nav a.text-emerald-700` | Tuyệt đối không chứa `border-top: 2px solid`, giữ nguyên `bg-[#F5F2EA]` và `color: #0F382C` | UI Polish | - [x] PASS |
+| **TC_UT_PWA_BANNER_APP_LOGO_01** | Banner PWA và Mini Banner hiển thị Logo Dòng Họ ClanHanLogo thay vì icon điện thoại | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Phân tích cú pháp JSX của Banner và Mini-Banner | Sử dụng component `ClanHanLogo`, không chứa icon `Smartphone` trong ô vuông đại diện ứng dụng | Brand Identity | - [x] PASS |
+| **TC_UT_PWA_BANNER_DISMISS_LOCALSTORAGE_01** | Banner PWA có nút Đóng (X) và lưu trạng thái đã đóng vào localStorage | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Quét JSX và handler của nút Đóng | Có nút đóng `X` với `aria-label`, bấm đóng kích hoạt lưu `fat_pwa_banner_dismissed` vào localStorage | UX Freedom | - [x] PASS |
+| **TC_UT_PWA_BANNER_INSTALLED_AUTO_HIDE_01** | Banner PWA tự động ẩn khi localStorage đánh dấu đã cài đặt hoặc đã đóng | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Kiểm tra điều kiện render của component | Kiểm tra `fat_pwa_installed` và `fat_pwa_banner_dismissed` từ localStorage để ẩn banner | PWA Smart Hide | - [x] PASS |
+| **TC_UT_PWA_BUTTON_NO_PHONE_ICON_01** | Nút bấm cài đặt khử sạch icon điện thoại thừa thãi trên cả PC và Mobile | `tests/theme-and-layout.test.ts` | File `src/components/pwa/InstallPwaButton.tsx` | Quét renderButtonContent và icon nút | Nút bấm không sử dụng icon `Smartphone`, sử dụng icon hành động tải về trực quan | Semantic UX | - [x] PASS |
 
 
 ### 7.2. Danh Sách Tiêu Chí Nghiệm Thu Thị Giác (Human Visual UAT Matrix)
@@ -1144,6 +1154,10 @@ Nhằm giải quyết dứt điểm sự bất đồng bộ giữa Trang Chủ (
 - [ ] **UAT_50 (Nghiệm Thu 12 Màn Hình Thực Địa Sau Khi Khử Nợ Kỹ Thuật):** Đối chiếu 12 màn hình (Trang chủ, Lịch giỗ, Cây phả hệ, Tra cứu vai vế, Cài đặt người dùng, Admin Shell, Admin Theme, Admin Kinship, Admin Users, Admin Backup, Reorder Modal, Member Modal) đảm bảo nhất quán 100% không hạt sạn màu sắc hay bo góc cọc cạch.
 - [ ] **UAT_51 (Nghiệm Thu Nền Trắng Sứ Cột Lịch Bloc Toàn Hệ Thống):** Mở Trang Chủ (`/`) và Màn Lịch Giỗ (`/anniversaries`) $\rightarrow$ Cột lịch bloc của cả hai trang đều có nền trắng sứ `#FFFFFF` sáng sủa, sắc nét, không còn màu ngà đục xỉn trên ruột tờ lịch.
 - [ ] **UAT_52 (Nghiệm Thu Màu Xanh Di Sản Ngày Thường Chuẩn Prototype):** Khi xem ngày giỗ tương lai (> 1 ngày) trên cả Trang Chủ và Màn Lịch Giỗ $\rightarrow$ Gáy header lịch mang màu xanh ngọc di sản `#0F382C` đĩnh đạc (chuẩn màu Prototype Ảnh 4), chữ trắng ngà `#FAF8F2`, phân biệt rõ rệt với ngày Hôm nay (Đỏ son) và Ngày mai (Vàng hổ phách).
+- [ ] **UAT_53 (Nghiệm Thu Mobile Bottom Nav Tab Active Mượt Mà):** Mở giao diện trên thiết bị di động (hoặc viewport < 768px): Tab active (Trang Chủ, Gia Phả, Lịch Giỗ, Xưng hô) hiển thị dạng pill bo cong mềm mại `#F5F2EA`, sạch bóng vệt viền cắt ngang đỉnh 2px cọc cạch.
+- [ ] **UAT_54 (Nghiệm Thu Banner PWA Logo Dòng Họ Trang Trọng):** Mở Trang Chủ và Login Gate: Ô vuông đại diện bên trái Banner PWA hiển thị sắc nét Logo Ấn Triện Dòng Họ chữ 范 chuẩn nhận diện thương hiệu, không còn hình điện thoại vô hồn.
+- [ ] **UAT_55 (Nghiệm Thu Nút Đóng Banner PWA & Ghi Nhớ Vĩnh Viễn):** Bấm nút `X` ở góc banner PWA trên Trang Chủ $\rightarrow$ Banner biến mất ngay lập tức; tải lại trang hoặc mở tab mới trong cùng trình duyệt $\rightarrow$ Banner không bao giờ xuất hiện lại gây phiền hà.
+- [ ] **UAT_56 (Nghiệm Thu Nút Cài Đặt Không Icon Điện Thoại):** Quan sát nút cài đặt trong banner trên cả PC và Mobile $\rightarrow$ Nút mang icon tải về trực quan, không còn icon điện thoại vô nghĩa trên cả máy tính lẫn điện thoại.
 
 
 ---
@@ -1175,7 +1189,9 @@ Nhằm giải quyết dứt điểm sự bất đồng bộ giữa Trang Chủ (
 - [x] **RG23 (Bảo Toàn Dark Mode Token Song Song):** Khi bật Dark Mode ở cả 3 profile, các biến token canvas và surface chuyển sang dải tối than chì tương ứng mà không bị lớp proxy ghi đè màu sáng.
 - [x] **RG24 (Bảo Toàn Hiển Thị Lịch Bloc Mobile):** Thân lịch Mobile giữ nguyên `bg-white` và bố cục dàn ngang 2 mép.
 - [x] **RG25 (Bảo Toàn Profile Classic & Heritage):** Đổi sang `classic` hoặc `heritage` tiếp tục giữ nguyên bản sắc của từng profile mà không bị gãy màu.
-
+- [x] **RG26 (Bảo Toàn Bộ Lọc Quyền Guest & Flags Của Bottom Nav):** Bỏ viền top không làm ảnh hưởng logic ẩn/hiện các tab Gia Phả, Lịch Giỗ, Xưng hô theo `isGuest` và Feature Flags.
+- [x] **RG27 (Bảo Toàn Luồng Cài Đặt PWA Fallback & iOS Modal):** Tích hợp nút Đóng và ClanHanLogo không làm gãy luồng modal hướng dẫn cho iOS Safari và Desktop/Android.
+- [x] **RG28 (Bảo Toàn Khả Năng Kích Hoạt Prompt Gốc):** Trên các trình duyệt Chromium hỗ trợ `beforeinstallprompt`, bấm nút Cài Đặt tiếp tục kích hoạt hộp thoại cài đặt native của trình duyệt bình thường.
 
 ---
 

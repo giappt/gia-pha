@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Download, Smartphone, X, Share, PlusSquare, Monitor, MoreVertical, Loader2, CheckCircle2 } from 'lucide-react';
+import ClanHanLogo from '@/components/icons/ClanHanLogo';
 import {
   type BeforeInstallPromptEvent,
   subscribePwa,
@@ -26,6 +27,8 @@ export default function InstallPwaButton({
 }: InstallPwaButtonProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [showFallbackModal, setShowFallbackModal] = useState(false);
@@ -46,6 +49,35 @@ export default function InstallPwaButton({
 
   useEffect(() => {
     setIsMounted(true);
+
+    // Kiểm tra trạng thái đã đóng hoặc đã cài từ localStorage
+    try {
+      if (typeof window !== 'undefined') {
+        if (localStorage.getItem('fat_pwa_banner_dismissed') === 'true') {
+          setIsDismissed(true);
+        }
+        if (localStorage.getItem('fat_pwa_installed') === 'true') {
+          setIsInstalled(true);
+        }
+      }
+    } catch { }
+
+    // Kiểm tra getInstalledRelatedApps nếu trình duyệt hỗ trợ
+    if (typeof window !== 'undefined' && 'getInstalledRelatedApps' in navigator) {
+      try {
+        (navigator as unknown as { getInstalledRelatedApps: () => Promise<unknown[]> })
+          .getInstalledRelatedApps()
+          .then((apps) => {
+            if (apps && apps.length > 0) {
+              setIsInstalled(true);
+              try {
+                localStorage.setItem('fat_pwa_installed', 'true');
+              } catch { }
+            }
+          })
+          .catch(() => { });
+      } catch { }
+    }
 
     // Đăng ký Service Worker & Khởi tạo PWA listeners toàn cục
     initPwaListeners();
@@ -92,9 +124,17 @@ export default function InstallPwaButton({
     };
   }, []);
 
-  if (!isMounted || isStandalone) {
+  if (!isMounted || isStandalone || isDismissed || isInstalled) {
     return null;
   }
+
+  const handleDismissBanner = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDismissed(true);
+    try {
+      localStorage.setItem('fat_pwa_banner_dismissed', 'true');
+    } catch { }
+  };
 
   const handleInstallClick = async () => {
     if (isIOS) {
@@ -108,6 +148,10 @@ export default function InstallPwaButton({
         const result = await triggerPwaInstall();
         if (result.outcome === 'accepted') {
           setIsStandalone(true);
+          setIsInstalled(true);
+          try {
+            localStorage.setItem('fat_pwa_installed', 'true');
+          } catch { }
           setDeferredPrompt(null);
           showToast('Cài đặt ứng dụng Gia Phả thành công! Bạn có thể mở từ màn hình chính.');
         } else if (result.outcome === 'unsupported') {
@@ -150,11 +194,7 @@ export default function InstallPwaButton({
     return (
       <>
         {showIcon && (
-          isIOS ? (
-            <Smartphone className={`${iconSizeClass} ${variant === 'primary' || variant === 'banner' || variant === 'mini-banner' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
-          ) : (
-            <Download className={`${iconSizeClass} ${variant === 'primary' || variant === 'banner' || variant === 'mini-banner' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
-          )
+          <Download className={`${iconSizeClass} ${variant === 'primary' || variant === 'banner' || variant === 'mini-banner' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
         )}
         {renderLabel()}
       </>
@@ -370,8 +410,8 @@ export default function InstallPwaButton({
         >
           {/* Hàng 1: Icon + Tiêu đề trải dài toàn bộ chiều rộng phía trên */}
           <div className="flex items-center gap-2.5 w-full">
-            <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-              {isIOS ? <Smartphone className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
+            <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs border border-emerald-500/30 overflow-hidden">
+              <ClanHanLogo size={22} className="text-current" />
             </div>
             <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight flex-1">
               Cài đặt ứng dụng Gia Phả lên màn hình chính
@@ -406,11 +446,21 @@ export default function InstallPwaButton({
       <>
         <div
           data-testid="pwa-install-banner"
-          className={`max-w-3xl w-full p-4 sm:p-5 rounded-card bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 dark:from-emerald-950/40 dark:via-slate-900/60 dark:to-emerald-950/40 border border-emerald-500/30 dark:border-emerald-700/40 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${className}`}
+          className={`max-w-3xl w-full p-4 sm:p-5 rounded-card bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 dark:from-emerald-950/40 dark:via-slate-900/60 dark:to-emerald-950/40 border border-emerald-500/30 dark:border-emerald-700/40 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative ${className}`}
         >
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="w-10 h-10 rounded-control bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-              {isIOS ? <Smartphone className="w-5 h-5" /> : <Download className="w-5 h-5" />}
+          {/* Nút Đóng / Tắt thông báo cài đặt */}
+          <button
+            type="button"
+            onClick={handleDismissBanner}
+            aria-label="Đóng thông báo cài đặt"
+            className="absolute top-2.5 right-2.5 p-1 rounded-control text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-start sm:items-center gap-3 pr-6 sm:pr-0">
+            <div className="w-10 h-10 rounded-control bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs border border-emerald-500/30 overflow-hidden">
+              <ClanHanLogo size={28} className="text-current" />
             </div>
             <div>
               <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">

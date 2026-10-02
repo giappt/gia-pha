@@ -133,6 +133,9 @@ export function initPwaListeners(): void {
     globalIsStandalone = true;
     globalDeferredPrompt = null;
     window.__fat_deferred_prompt = null;
+    try {
+      localStorage.setItem('fat_pwa_installed', 'true');
+    } catch { }
     notifyListeners();
   });
 
@@ -147,6 +150,41 @@ export function initPwaListeners(): void {
     // ignore
   }
 
+  notifyListeners();
+}
+
+/**
+ * Kiểm tra xem ứng dụng đã được đánh dấu cài đặt trong localStorage chưa
+ */
+export function isPwaInstalledLocally(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('fat_pwa_installed') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Kiểm tra xem người dùng đã đóng/tắt banner PWA chưa
+ */
+export function isPwaBannerDismissed(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('fat_pwa_banner_dismissed') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Đánh dấu người dùng đã tắt banner PWA vào localStorage
+ */
+export function dismissPwaBannerLocally(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('fat_pwa_banner_dismissed', 'true');
+  } catch { }
   notifyListeners();
 }
 
@@ -170,6 +208,9 @@ export async function triggerPwaInstall(): Promise<{
       globalDeferredPrompt = null;
       if (typeof window !== 'undefined') {
         window.__fat_deferred_prompt = null;
+        try {
+          localStorage.setItem('fat_pwa_installed', 'true');
+        } catch { }
       }
       notifyListeners();
     }

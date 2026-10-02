@@ -1,5 +1,16 @@
 # LESSONS LEARNED (SỔ TAY KINH NGHIỆM DỰ ÁN FAT)
 
+- **Chuẩn Hóa Trải Nghiệm Mobile Bottom Nav & Banner PWA: Khử Bỏ Viền Cắt Ngang Thô Ráp, Nhận Diện Thương Hiệu Dòng Họ (App Logo) & Ẩn Thông Minh Có Ghi Nhớ Vĩnh Viễn (Refined Bottom Nav Active State & Smart Persistent PWA Banner):**
+  1. *Căn nguyên của các phản hồi bức xúc từ người dùng:*
+     - **Viền xanh cọc cạch trên Bottom Nav:** Trong `globals.css`, khi CSS ép `border-top: 2px solid #0F382C !important;` lên thẻ `<a>` có class `rounded-xl`, trình duyệt vẽ một đường viền cụt lơ lửng ở đỉnh, gây cảm giác chắp vá và rẻ tiền. Thanh điều hướng di động hiện đại không bao giờ dùng `border-top` cho từng item con bo cong.
+     - **Thông báo cài đặt PWA vẫn hiện dù đã cài app:** Trình duyệt di động (Safari/Chrome) khi mở ở dạng tab web thông thường luôn chạy ở `display-mode: browser`, không tự động biết app đã được Add to Home Screen. Banner thiếu nút Đóng (`X`) và không lưu trạng thái vào `localStorage`, khiến người dùng bị kẹt với banner vĩnh viễn dù đã cài xong.
+     - **Dư thừa ngữ nghĩa & Mất nhận diện thương hiệu:** Dùng icon generic hình chiếc điện thoại (`Smartphone`) trong ô đại diện và trên nút bấm là vô nghĩa (người dùng đang cầm điện thoại không cần hình vẽ điện thoại; trên Desktop lại gây hiểu lầm). Banner thiếu biểu trưng thương hiệu của dòng họ để người dùng nhận biết ứng dụng sắp cài đặt.
+  2. *Giải pháp kiến trúc & Kỷ luật UX:*
+     - **Pill Active Liền Mạch:** Xóa bỏ hoàn toàn `border-top: 2px solid`, dùng nền kem di sản `#F5F2EA` bo cong `rounded-xl` đồng nhất, chữ và icon màu ngọc lục bảo `#0F382C`, tạo cảm giác mượt mà, cao cấp chuẩn native app.
+     - **App Logo First (`ClanHanLogo`):** Ô vuông đại diện bên trái 100% sử dụng Logo Ấn Triện Dòng Họ chữ 范 trong khung ngọc di sản `w-10 h-10 rounded-control bg-emerald-600 text-white`.
+     - **Nút Đóng Kèm Ghi Nhớ `localStorage` & Ẩn Tự Động:** Bổ sung nút `X` có `aria-label="Đóng thông báo cài đặt"`. Lưu cờ `fat_pwa_installed` và `fat_pwa_banner_dismissed` vào `localStorage`, kết hợp `navigator.getInstalledRelatedApps()` để tự động ẩn triệt để, không bao giờ làm phiền người dùng.
+     - **Khử Icon Điện Thoại Thừa Thãi:** Nút bấm dùng icon hành động tải về (`Download`) chuẩn mực, nhãn nút hiển thị thông minh theo ngữ cảnh (Desktop: "Cài đặt ứng dụng", Mobile: "Cài đặt ngay").
+
 - **Tôn Trọng Tuyệt Đối Phạm Vi Yêu Cầu Của Người Dùng & Chuẩn Xác Mã Màu Thống Nhất (Strict Scope Respect & Exact Color Fidelity):**
   1. *Căn nguyên của Sự Bức Xúc & Mất Lòng Tin Từ Người Dùng:*
      - Khi người dùng phản hồi về một chi tiết cụ thể (như màu bìa lịch ngày thường), việc AI tự ý mở rộng phạm vi sang các trang khác (như tự chế mockup màu sắc cho màn kinship, tự đổi màu logo sang đỏ hoặc tự đưa vào các màu vàng đục không ai yêu cầu) gây ra sự ức chế tột độ và cảm giác làm ẩu, đối phó.
